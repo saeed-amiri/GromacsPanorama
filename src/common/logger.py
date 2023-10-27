@@ -24,7 +24,11 @@ def check_log_file(log_name: str  # name of the asked logfile
     if log_files:
         # Find the maximum count of the log files and increment it by 1
         pattern: str = fr'{log_name}\.(\d+)'
-        counts = [int(re.search(pattern, file).group(1)) for file in log_files]
+        counts: list[int] = []
+        for file in log_files:
+            match = re.search(pattern, file)
+            if match:
+                counts.append(int(match.group(1)))
         count = max(counts) + 1
     else:
         count = 1

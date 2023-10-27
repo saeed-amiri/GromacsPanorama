@@ -91,7 +91,7 @@ Notes:
 
 import socket
 import multiprocessing
-import logger
+import logger as logger
 from colors_text import TextColor as bcolors
 
 

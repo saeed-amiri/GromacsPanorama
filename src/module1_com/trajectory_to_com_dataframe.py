@@ -9,11 +9,12 @@ import multiprocessing
 from datetime import datetime
 import numpy as np
 
-import logger
-import my_tools
-import static_info as stinfo
-from cpuconfig import ConfigCpuNr
-from colors_text import TextColor as bcolors
+import common.logger as logger
+import common.my_tools as my_tools
+import common.static_info as stinfo
+from common.cpuconfig import ConfigCpuNr
+from common.colors_text import TextColor as bcolors
+
 from trajectory_residue_extractor import GetResidues
 
 

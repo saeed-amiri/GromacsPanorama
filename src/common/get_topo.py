@@ -6,8 +6,8 @@ one directory, the "itp" files will be located one back."""
 import os
 import json
 import typing
-import logger
-import my_tools
+import logger as logger
+import my_tools as my_tools
 import static_info as stinfo
 from colors_text import TextColor as bcolors
 

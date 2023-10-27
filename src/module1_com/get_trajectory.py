@@ -5,10 +5,10 @@ frames, and atoms. """
 import sys
 import json
 import typing
-import logger
 import MDAnalysis as mda
-import my_tools
-from colors_text import TextColor as bcolors
+import common.logger as logger
+import common.my_tools as my_tools
+from common.colors_text import TextColor as bcolors
 
 
 class GetInfo:

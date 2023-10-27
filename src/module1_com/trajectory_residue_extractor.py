@@ -27,11 +27,11 @@ The main steps in the script are as follows:
 
 import sys
 import typing
-import logger
-import static_info as stinfo
-import get_topo as topo
+import common.logger as logger
+import common.static_info as stinfo
+import common.get_topo as topo
+from common.colors_text import TextColor as bcolors
 from get_trajectory import GetInfo
-from colors_text import TextColor as bcolors
 
 
 class GetResidues:

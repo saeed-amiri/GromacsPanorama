@@ -3,7 +3,7 @@ import os
 import re
 import sys
 import typing
-import logger
+import logger as logger
 from colors_text import TextColor as bcolors
 
 

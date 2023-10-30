@@ -91,8 +91,8 @@ Notes:
 
 import socket
 import multiprocessing
-import logger as logger
-from colors_text import TextColor as bcolors
+import common.logger as logger
+from common.colors_text import TextColor as bcolors
 
 
 class ConfigCpuNr:

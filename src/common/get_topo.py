@@ -6,10 +6,10 @@ one directory, the "itp" files will be located one back."""
 import os
 import json
 import typing
-import logger as logger
-import my_tools as my_tools
-import static_info as stinfo
-from colors_text import TextColor as bcolors
+import common.logger as logger
+import common.my_tools as my_tools
+import common.static_info as stinfo
+from common.colors_text import TextColor as bcolors
 
 
 class ReadTop:

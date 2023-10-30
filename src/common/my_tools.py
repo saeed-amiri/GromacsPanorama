@@ -3,8 +3,8 @@ import os
 import re
 import sys
 import typing
-import logger as logger
-from colors_text import TextColor as bcolors
+import common.logger as logger
+from common.colors_text import TextColor as bcolors
 
 
 def check_file_exist(fname: str,  # Name of the file to check

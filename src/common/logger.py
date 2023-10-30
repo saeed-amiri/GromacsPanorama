@@ -12,7 +12,7 @@ import os
 import re
 import logging
 import datetime
-from colors_text import TextColor as bcolors
+from .colors_text import TextColor as bcolors
 
 
 def check_log_file(log_name: str  # name of the asked logfile

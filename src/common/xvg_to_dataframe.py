@@ -33,17 +33,28 @@ class XvgParser:
     def get_xvg(self) -> pd.DataFrame:
         """parse xvg file"""
         columns_names: list[str] = []
+        data_list: list[list[str]] = []
         with open(self.fname, 'r', encoding='utf8') as f_r:
             while True:
                 line: str = f_r.readline().strip()
-                if line.startswith('#'):
-                    pass
-                elif line.startswith('@'):
-                    if (column := self.parse_header(line)):
-                        columns_names.append(column)
+                if re.match(pattern=r'^\d', string=line):
+                    data_list.append(self.parse_data_block(line))
+                else:
+                    if line.startswith('#'):
+                        pass
+                    elif line.startswith('@'):
+                        if (column := self.parse_header(line)):
+                            columns_names.append(column)
                 if not line:
                     break
-        print(columns_names)
+        print(data_list)
+
+    @staticmethod
+    def parse_data_block(line: str
+                         ) -> list[str]:
+        """parse data"""
+        tmp: str = re.sub(r'\s+', ' ', line)
+        return tmp.split(' ')
 
     def parse_header(self,
                      line: str  # Read line from the file

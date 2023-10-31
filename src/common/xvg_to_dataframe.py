@@ -1,6 +1,8 @@
 """reading xvg files and return it as ddaframe"""
 
+import re
 import sys
+import typing
 import pandas as pd
 
 from common import logger
@@ -25,23 +27,27 @@ class XvgParser:
         self.fname = fname
 
         self.get_xvg()
+        print(self.__dict__)
         self.write_log_msg(log)
 
     def get_xvg(self) -> pd.DataFrame:
         """parse xvg file"""
+        columns_names: list[str] = []
         with open(self.fname, 'r', encoding='utf8') as f_r:
             while True:
                 line: str = f_r.readline().strip()
                 if line.startswith('#'):
                     pass
                 elif line.startswith('@'):
-                    self.parse_header(line)
+                    if (column := self.parse_header(line)):
+                        columns_names.append(column)
                 if not line:
                     break
+        print(columns_names)
 
     def parse_header(self,
                      line: str  # Read line from the file
-                     ) -> None:
+                     ) -> typing.Union[str, None]:
         """get info from the header with @"""
         line = my_tools.drop_string(line, '@').strip()
         if line.startswith('title'):
@@ -50,6 +56,13 @@ class XvgParser:
             self.xaxis = self.clean_line(line, ['xaxis', 'label'])
         elif line.startswith('yaxis'):
             self.yaxis = self.clean_line(line, ['yaxis', 'label'])
+        else:
+            pattern = r'^s\d+'
+            if (match := re.match(pattern, line)):
+                column_i = match.group(0)
+                column_iname = self.clean_line(line, [column_i, 'legend'])
+                return column_iname
+        return None
 
     @staticmethod
     def clean_line(line: str,  # line to clean

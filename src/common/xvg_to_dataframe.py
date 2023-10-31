@@ -19,45 +19,41 @@ class XvgParser:
     title: str = ''  # Title of the data
     xaxis: str = ''  # Label of the x axis
     yaxis: str = ''  # Label of the y axis
+    columns_names: list[str] = []
 
     def __init__(self,
                  fname: str,  # Name of the xvg file
                  log: logger.logging.Logger
                  ) -> None:
         self.fname = fname
-
-        self.get_xvg(log)
-        print(self.__dict__)
+        print(self.get_xvg(log))
         self.write_log_msg(log)
 
     def get_xvg(self,
                 log: logger.logging.Logger
                 ) -> pd.DataFrame:
         """parse xvg file"""
-        columns_names: list[str] = []
         data_list: list[list[str]] = []
         data_block: bool = False
         with open(self.fname, 'r', encoding='utf8') as f_r:
-            while True:
-                line: str = f_r.readline().strip()
-                if re.match(pattern=r'^\d', string=line):
-                    data_list.append(self.parse_data_block(line))
-                    data_block = True
-                else:
-                    if not data_block:
+            for line in f_r:
+                line = line.strip()
+                if line:
+                    if re.match(pattern=r'^\d', string=line):
+                        data_list.append(self.parse_data_block(line))
+                        data_block = True
+                    elif not data_block:
                         if line.startswith('#'):
                             pass
                         elif line.startswith('@'):
                             if (column := self.parse_header(line)):
-                                columns_names.append(column)
+                                self.columns_names.append(column)
                     else:
-                        msg = \
-                            '\tError! Something is wrong! String after data\n'
+                        msg = ('\tError! Something is wrong! String '
+                                'after data\n')
                         log.error(msg)
                         sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
-                if not line:
-                    break
-        print(data_list)
+        return data_list
 
     @staticmethod
     def parse_data_block(line: str

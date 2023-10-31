@@ -26,25 +26,35 @@ class XvgParser:
                  ) -> None:
         self.fname = fname
 
-        self.get_xvg()
+        self.get_xvg(log)
         print(self.__dict__)
         self.write_log_msg(log)
 
-    def get_xvg(self) -> pd.DataFrame:
+    def get_xvg(self,
+                log: logger.logging.Logger
+                ) -> pd.DataFrame:
         """parse xvg file"""
         columns_names: list[str] = []
         data_list: list[list[str]] = []
+        data_block: bool = False
         with open(self.fname, 'r', encoding='utf8') as f_r:
             while True:
                 line: str = f_r.readline().strip()
                 if re.match(pattern=r'^\d', string=line):
                     data_list.append(self.parse_data_block(line))
+                    data_block = True
                 else:
-                    if line.startswith('#'):
-                        pass
-                    elif line.startswith('@'):
-                        if (column := self.parse_header(line)):
-                            columns_names.append(column)
+                    if not data_block:
+                        if line.startswith('#'):
+                            pass
+                        elif line.startswith('@'):
+                            if (column := self.parse_header(line)):
+                                columns_names.append(column)
+                    else:
+                        msg = \
+                            '\tError! Something is wrong! String after data\n'
+                        log.error(msg)
+                        sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
                 if not line:
                     break
         print(data_list)

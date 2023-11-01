@@ -28,7 +28,7 @@ def check_file_extension(fname: str,  # Name of the file to check
                          log: logger.logging.Logger
                          ) -> None:
     """check if the file name is a correct one"""
-    if (fname_exten := fname.split('.')[0]) == extension:
+    if (fname_exten := fname.split('.')[1]) == extension:
         pass
     else:
         msg = (f'\tThe provided file has the extension: `{fname_exten}` '

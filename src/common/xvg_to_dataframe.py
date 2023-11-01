@@ -29,10 +29,10 @@ class XvgParser:
         self.fname = fname
         self.xvg_df = self.get_xvg(log)
         self.info_msg += (f'\tThe input file: `{self.fname}`\n'
-                  f'\tThe title is: `{self.title}`\n'
-                  f'\tThe xaxis is: `{self.xaxis}`\n'
-                  f'\tThe yaxis is: `{self.yaxis}`\n'
-                  f'\tThe columns are: `{self.columns_names}`\n')
+                          f'\tThe title is: `{self.title}`\n'
+                          f'\tThe xaxis is: `{self.xaxis}`\n'
+                          f'\tThe yaxis is: `{self.yaxis}`\n'
+                          f'\tThe columns are: `{self.columns_names}`\n')
         self.write_log_msg(log)
 
     def get_xvg(self,

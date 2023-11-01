@@ -23,7 +23,9 @@ class BootStrping:
 
     xvg: "xvg_to_df.XvgParser"  # Parsed datafile
     booter: str = 'Surf_SurfTen'  # Name of the columns to bootstrap them
+    raw_stats_dict: dict[str, typing.Any] = {}
     stats_dict: dict[str, typing.Any] = {}
+    convert_rate: float = 2*10  # Since we have two interface
 
     def __init__(self,
                  fname: str,  # Data file xvg format
@@ -39,6 +41,7 @@ class BootStrping:
         """do the sampling here"""
         samples: list[np.float64] = self.random_replacement()
         self.analysis_sample(samples)
+        self.convert_stats()
 
     def random_replacement(self) -> list[np.float64]:
         """Randomly Select With Replacement"""
@@ -54,11 +57,12 @@ class BootStrping:
                         ) -> None:
         """calculate std and averages"""
         sample_arr: np.ndarray = np.asarray(samples)
-        self.stats_dict['std'] = np.std(sample_arr)
-        self.stats_dict['mean'] = np.mean(sample_arr)
-        self.stats_dict['mode'] = \
-            self.calc_mode(sample_arr, self.stats_dict['std']/5)
-        self.info_msg += f'\tstats:{json.dumps(self.stats_dict, indent=8)}'
+        self.raw_stats_dict['std'] = np.std(sample_arr)
+        self.raw_stats_dict['mean'] = np.mean(sample_arr)
+        self.raw_stats_dict['mode'] = \
+            self.calc_mode(sample_arr, self.raw_stats_dict['std']/5)
+        self.info_msg += \
+            f'\traw stats:{json.dumps(self.raw_stats_dict, indent=8)}'
 
     @staticmethod
     def calc_mode(samples: np.ndarray,
@@ -73,6 +77,13 @@ class BootStrping:
         modes \
             = [value for value, count in counts.items() if count == max_count]
         return modes[0]
+
+    def convert_stats(self) -> None:
+        """convert data to the asked unit"""
+        for key, value in self.raw_stats_dict.items():
+            self.stats_dict[key] = value/self.convert_rate
+        self.info_msg += \
+            f'\traw stats:{json.dumps(self.stats_dict, indent=8)}'
 
     def write_log_msg(self,
                       log: logger.logging.Logger  # Name of the output file

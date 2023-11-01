@@ -20,13 +20,15 @@ class XvgParser:
     xaxis: str = ''  # Label of the x axis
     yaxis: str = ''  # Label of the y axis
     columns_names: list[str] = []
+    xvg_df: pd.DataFrame  # The final dataframe
 
     def __init__(self,
                  fname: str,  # Name of the xvg file
                  log: logger.logging.Logger
                  ) -> None:
         self.fname = fname
-        print(self.get_xvg(log))
+        self.xvg_df = self.get_xvg(log)
+        print(self.xvg_df)
         self.write_log_msg(log)
 
     def get_xvg(self,
@@ -50,15 +52,30 @@ class XvgParser:
                                 self.columns_names.append(column)
                     else:
                         msg = ('\tError! Something is wrong! String '
-                                'after data\n')
+                               'after data\n')
                         log.error(msg)
                         sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
-        return data_list
+        return self.make_df(data_list)
+
+    def make_df(self,
+                data_list: list[list[str]],
+                ) -> pd.DataFrame:
+        """make the dataframe from datalist"""
+        columns_names: list[str] = []
+        columns_names.append(self.xaxis)
+        columns_names.extend(self.columns_names)
+        columns_names = \
+            [re.sub(r'\s+', ' ', item) for item in columns_names]
+        self.columns_names = [item.replace(' ', '_') for item in columns_names]
+        xvg_df = pd.DataFrame(data=data_list, columns=self.columns_names)
+        xvg_df.iloc[:, 0] = xvg_df.iloc[:, 0].astype(int)
+        xvg_df.iloc[:, 1:] = xvg_df.iloc[:, 1:].astype(float)
+        return xvg_df
 
     @staticmethod
     def parse_data_block(line: str
                          ) -> list[str]:
-        """parse data"""
+        """parse data block by replacing multispaces with one space"""
         tmp: str = re.sub(r'\s+', ' ', line)
         return tmp.split(' ')
 

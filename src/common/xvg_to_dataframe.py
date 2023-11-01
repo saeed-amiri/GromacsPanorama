@@ -1,4 +1,4 @@
-"""reading xvg files and return it as ddaframe"""
+"""reading xvg files and return it as a dataframe"""
 
 import re
 import sys

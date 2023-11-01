@@ -33,7 +33,9 @@ class BootStrping:
                  ) -> None:
         self.xvg = xvg_to_df.XvgParser(fname=fname, log=log)
         self.info_msg += \
-            f'\tBootstraping for `{fname}` on column `{self.booter}`\n'
+            (f'\tBootstraping for `{fname}` on column `{self.booter}`\n'
+             f'\tConvert rate is: `{self.convert_rate}`\n')
+
         self.initiate_normal()
         self.write_log_msg(log)
 
@@ -62,7 +64,7 @@ class BootStrping:
         self.raw_stats_dict['mode'] = \
             self.calc_mode(sample_arr, self.raw_stats_dict['std']/5)
         self.info_msg += \
-            f'\traw stats:{json.dumps(self.raw_stats_dict, indent=8)}'
+            f'\tStats (raw):{json.dumps(self.raw_stats_dict, indent=8)}\n'
 
     @staticmethod
     def calc_mode(samples: np.ndarray,
@@ -83,7 +85,7 @@ class BootStrping:
         for key, value in self.raw_stats_dict.items():
             self.stats_dict[key] = value/self.convert_rate
         self.info_msg += \
-            f'\traw stats:{json.dumps(self.stats_dict, indent=8)}'
+            f'\tStats (Converted):{json.dumps(self.stats_dict, indent=8)}\n'
 
     def write_log_msg(self,
                       log: logger.logging.Logger  # Name of the output file

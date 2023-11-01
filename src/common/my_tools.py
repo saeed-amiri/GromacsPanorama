@@ -3,8 +3,12 @@ import os
 import re
 import sys
 import typing
-import common.logger as logger
+from common import logger
 from common.colors_text import TextColor as bcolors
+
+
+class InvalidFileExtensionError(Exception):
+    """file extension error"""
 
 
 def check_file_exist(fname: str,  # Name of the file to check
@@ -19,6 +23,20 @@ def check_file_exist(fname: str,  # Name of the file to check
     else:
         log.info(f'Checking: `{fname}`')
 
+def check_file_extension(fname: str,  # Name of the file to check
+                         extension: str,  # Extension of expected file
+                         log: logger.logging.Logger
+                         ) -> None:
+    """check if the file name is a correct one"""
+    if (fname_exten := fname.split('.')[0]) == extension:
+        pass
+    else:
+        msg = (f'\tThe provided file has the extension: `{fname_exten}` '
+                f'which is not `{extension}`\n'
+                f'\tProvid a file with correct extension\n')
+        log.error(msg)
+        raise InvalidFileExtensionError(
+            f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
 
 def check_file_reanme(fname: str,  # Name of the file to check
                       log: logger.logging.Logger

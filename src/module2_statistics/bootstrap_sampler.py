@@ -24,8 +24,10 @@ class BootStrping:
 
     xvg: "xvg_to_df.XvgParser"  # Parsed datafile
     booter: str = 'Surf_SurfTen'  # Name of the columns to bootstrap them
-    raw_stats_dict: dict[str, typing.Any] = {}
-    stats_dict: dict[str, typing.Any] = {}
+    raw_normal: dict[str, typing.Any] = {}
+    raw_block: dict[str, typing.Any] = {}
+    stats_normal: dict[str, typing.Any] = {}
+    stats_block: dict[str, typing.Any] = {}
     convert_rate: float = 2*10  # Since we have two interface
     block_size: int = 10  # Size of each block
 
@@ -45,8 +47,8 @@ class BootStrping:
     def initiate_normal(self) -> None:
         """do the sampling here"""
         samples: list[np.float64] = self.random_replacement()
-        self.analysis_sample(samples, 'normal')
-        self.convert_stats('normal')
+        self.raw_normal = self.analysis_sample(samples, 'normal')
+        self.stats_normal = self.convert_stats(self.raw_normal, 'normal')
 
     def random_replacement(self) -> list[np.float64]:
         """Randomly Select With Replacement"""
@@ -61,7 +63,8 @@ class BootStrping:
         """calculate stats from block bootstraping resamplings"""
         blocks: list[pd.DataFrame] = self.get_blocks_list()
         samples: list[float] = self.sample_blocks(blocks)
-        self.analysis_sample(samples, 'block')
+        self.raw_block = self.analysis_sample(samples, 'block')
+        self.stats_block = self.convert_stats(self.raw_block, style='block')
 
     def get_blocks_list(self) -> list[pd.DataFrame]:
         blocks: list[pd.DataFrame] = \
@@ -84,16 +87,18 @@ class BootStrping:
     def analysis_sample(self,
                         samples: typing.Union[list[np.float64], list[float]],
                         style: str
-                        ) -> None:
+                        ) -> dict[str, typing.Any]:
         """calculate std and averages"""
+        raw_stats_dict: dict[str, typing.Any] = {}
         sample_arr: np.ndarray = np.asarray(samples)
-        self.raw_stats_dict['std'] = np.std(sample_arr)
-        self.raw_stats_dict['mean'] = np.mean(sample_arr)
-        self.raw_stats_dict['mode'] = \
-            self.calc_mode(sample_arr, self.raw_stats_dict['std']/5)
+        raw_stats_dict['std'] = np.std(sample_arr)
+        raw_stats_dict['mean'] = np.mean(sample_arr)
+        raw_stats_dict['mode'] = \
+            self.calc_mode(sample_arr, raw_stats_dict['std']/5)
         self.info_msg += \
             (f'\tStats (raw) for `{style}` bootstraping:'
-             f'{json.dumps(self.raw_stats_dict, indent=8)}\n')
+             f'{json.dumps(raw_stats_dict, indent=8)}\n')
+        return raw_stats_dict
 
     @staticmethod
     def calc_mode(samples: np.ndarray,
@@ -110,14 +115,17 @@ class BootStrping:
         return modes[0]
 
     def convert_stats(self,
+                      raw_stats: dict[str, typing.Any],
                       style: str
-                      ) -> None:
+                      ) -> dict[str, typing.Any]:
         """convert data to the asked unit"""
-        for key, value in self.raw_stats_dict.items():
-            self.stats_dict[key] = value/self.convert_rate
+        stats_dict: dict[str, typing.Any] = {}
+        for key, value in raw_stats.items():
+            stats_dict[key] = value/self.convert_rate
         self.info_msg += \
             (f'\tStats (Converted) for `{style}` bootstraping:'
-             f'{json.dumps(self.stats_dict, indent=8)}\n')
+             f'{json.dumps(stats_dict, indent=8)}\n')
+        return stats_dict
 
     def write_log_msg(self,
                       log: logger.logging.Logger  # Name of the output file

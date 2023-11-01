@@ -19,6 +19,7 @@ class XvgParser:
     title: str = ''  # Title of the data
     xaxis: str = ''  # Label of the x axis
     yaxis: str = ''  # Label of the y axis
+    nr_frames: int  # Number of the frames
     columns_names: list[str] = []
     xvg_df: pd.DataFrame  # The final dataframe
 
@@ -30,11 +31,13 @@ class XvgParser:
         my_tools.check_file_extension(fname, 'xvg', log)
         self.fname = fname
         self.xvg_df = self.get_xvg(log)
+        self.nr_frames = len(self.xvg_df.index)
         self.info_msg += (f'\tThe input file: `{self.fname}`\n'
                           f'\tThe title is: `{self.title}`\n'
                           f'\tThe xaxis is: `{self.xaxis}`\n'
                           f'\tThe yaxis is: `{self.yaxis}`\n'
-                          f'\tThe columns are: `{self.columns_names}`\n')
+                          f'\tThe columns are: `{self.columns_names}`\n'
+                          f'\tNumbers of the frames are: `{self.nr_frames}`\n')
         self.write_log_msg(log)
 
     def get_xvg(self,

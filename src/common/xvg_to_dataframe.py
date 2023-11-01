@@ -78,10 +78,12 @@ class XvgParser:
             raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
         columns_names = \
             [re.sub(r'\s+', ' ', item) for item in columns_names]
-        self.columns_names = [item.replace(' ', '_') for item in columns_names]
+        columns_names = [item.replace(' ', '_') for item in columns_names]
+        self.columns_names = \
+            [my_tools.clean_string(item) for item in columns_names]
         xvg_df = pd.DataFrame(data=data_list, columns=self.columns_names)
+        xvg_df = xvg_df.astype(float)
         xvg_df.iloc[:, 0] = xvg_df.iloc[:, 0].astype(int)
-        xvg_df.iloc[:, 1:] = xvg_df.iloc[:, 1:].astype(float)
         return xvg_df
 
     @staticmethod

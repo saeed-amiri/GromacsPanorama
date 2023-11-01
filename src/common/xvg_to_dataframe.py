@@ -112,6 +112,11 @@ class XvgParser:
                       log: logger.logging.Logger  # Name of the output file
                       ) -> None:
         """writing and logging messages from methods"""
+        self.info_msg += (f'\tThe input file: `{self.fname}`\n'
+                          f'\tThe title is: `{self.title}`\n'
+                          f'\tThe xaxis is: `{self.xaxis}`\n'
+                          f'\tThe yaxis is: `{self.yaxis}`\n'
+                          f'\tThe columns are: `{self.columns_names}`\n')
         log.info(self.info_msg)
         print(f'{bcolors.OKBLUE}{self.__module__}:\n'
               f'\t{self.info_msg}\n{bcolors.ENDC}')

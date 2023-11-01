@@ -11,6 +11,7 @@ import random
 import typing
 from collections import Counter
 import numpy as np
+import pandas as pd
 from common import logger
 import common.xvg_to_dataframe as xvg_to_df
 from common.colors_text import TextColor as bcolors
@@ -44,8 +45,8 @@ class BootStrping:
     def initiate_normal(self) -> None:
         """do the sampling here"""
         samples: list[np.float64] = self.random_replacement()
-        self.analysis_sample(samples)
-        self.convert_stats()
+        self.analysis_sample(samples, 'normal')
+        self.convert_stats('normal')
 
     def random_replacement(self) -> list[np.float64]:
         """Randomly Select With Replacement"""
@@ -56,8 +57,33 @@ class BootStrping:
             samples.append(sum(sample_i)/self.xvg.nr_frames)
         return samples
 
+    def initiate_block(self) -> None:
+        """calculate stats from block bootstraping resamplings"""
+        blocks: list[pd.DataFrame] = self.get_blocks_list()
+        samples: list[float] = self.sample_blocks(blocks)
+        self.analysis_sample(samples, 'block')
+
+    def get_blocks_list(self) -> list[pd.DataFrame]:
+        blocks: list[pd.DataFrame] = \
+            [pd.DataFrame(arr) for arr in
+             np.array_split(self.xvg.xvg_df,
+                            len(self.xvg.xvg_df) // self.block_size)]
+        return blocks
+
+    def sample_blocks(self,
+                      blocks: list[pd.DataFrame]) -> list[float]:
+        """get the samples"""
+        samples: list[float] = []
+        for _ in range(l_1 := len(blocks)):
+            sample_i = random.choices(blocks, k=l_1)
+            df_tmp: pd.DataFrame = pd.concat(sample_i)
+            samples.append(df_tmp[self.booter].mean())
+            del df_tmp
+        return samples
+
     def analysis_sample(self,
-                        samples: list[np.float64]
+                        samples: typing.Union[list[np.float64], list[float]],
+                        style: str
                         ) -> None:
         """calculate std and averages"""
         sample_arr: np.ndarray = np.asarray(samples)
@@ -66,7 +92,7 @@ class BootStrping:
         self.raw_stats_dict['mode'] = \
             self.calc_mode(sample_arr, self.raw_stats_dict['std']/5)
         self.info_msg += \
-            ('\tStats (raw) for normal bootstraping:'
+            (f'\tStats (raw) for `{style}` bootstraping:'
              f'{json.dumps(self.raw_stats_dict, indent=8)}\n')
 
     @staticmethod
@@ -83,12 +109,14 @@ class BootStrping:
             = [value for value, count in counts.items() if count == max_count]
         return modes[0]
 
-    def convert_stats(self) -> None:
+    def convert_stats(self,
+                      style: str
+                      ) -> None:
         """convert data to the asked unit"""
         for key, value in self.raw_stats_dict.items():
             self.stats_dict[key] = value/self.convert_rate
         self.info_msg += \
-            ('\tStats (Converted) for normal bootstraping:'
+            (f'\tStats (Converted) for `{style}` bootstraping:'
              f'{json.dumps(self.stats_dict, indent=8)}\n')
 
     def write_log_msg(self,

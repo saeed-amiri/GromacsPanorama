@@ -26,20 +26,21 @@ class BootStrping:
                  log: logger.logging.Logger
                  ) -> None:
         self.xvg = xvg_to_df.XvgParser(fname=fname, log=log)
-        self.initiate(log)
+        self.initiate_normal(log)
 
-    def initiate(self,
-                 log: logger.logging.Logger
-                 ) -> None:
+    def initiate_normal(self,
+                        log: logger.logging.Logger
+                        ) -> None:
         """do the sampling here"""
-        samples: list[list[np.float64]] = self.random_replacement()
+        samples: list[np.float64] = self.random_replacement()
 
-    def random_replacement(self) -> list[list[np.float64]]:
+    def random_replacement(self) -> list[np.float64]:
         """Randomly Select With Replacement"""
-        samples: list[list[np.float64]] = []
+        samples: list[np.float64] = []
         for _ in range(self.xvg.nr_frames):
-            samples.append(random.choices(self.xvg.xvg_df[self.booter],
-                                          k=self.xvg.nr_frames))
+            sample_i = random.choices(self.xvg.xvg_df[self.booter],
+                                      k=self.xvg.nr_frames)
+            samples.append(sum(sample_i)/self.xvg.nr_frames)
         return samples
 
 

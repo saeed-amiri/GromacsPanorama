@@ -26,6 +26,8 @@ class XvgParser:
                  fname: str,  # Name of the xvg file
                  log: logger.logging.Logger
                  ) -> None:
+        my_tools.check_file_exist(fname, log)
+        my_tools.check_file_extension(fname, 'xvg', log)
         self.fname = fname
         self.xvg_df = self.get_xvg(log)
         self.info_msg += (f'\tThe input file: `{self.fname}`\n'

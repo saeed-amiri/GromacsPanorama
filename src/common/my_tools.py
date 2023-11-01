@@ -71,3 +71,13 @@ def extract_string(input_string: str) -> list[typing.Any]:
     pattern = r'"(.*?)"'
     matches = re.findall(pattern, input_string)
     return matches
+
+def clean_string(input_string: str) -> str:
+    # Remove special characters at the beginning and end of the string
+    cleaned_string: str = \
+        re.sub(r'^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$', '', input_string)
+    
+    # Replace special characters in the middle with underscores
+    cleaned_string = re.sub(r'[^a-zA-Z0-9]+', '_', cleaned_string)
+    
+    return cleaned_string

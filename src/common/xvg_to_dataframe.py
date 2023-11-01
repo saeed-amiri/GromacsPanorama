@@ -28,7 +28,6 @@ class XvgParser:
                  ) -> None:
         self.fname = fname
         self.xvg_df = self.get_xvg(log)
-        print(self.xvg_df)
         self.write_log_msg(log)
 
     def get_xvg(self,
@@ -55,15 +54,21 @@ class XvgParser:
                                'after data\n')
                         log.error(msg)
                         sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
-        return self.make_df(data_list)
+        return self.make_df(data_list, log)
 
     def make_df(self,
                 data_list: list[list[str]],
+                log: logger.logging.Logger
                 ) -> pd.DataFrame:
         """make the dataframe from datalist"""
         columns_names: list[str] = []
         columns_names.append(self.xaxis)
         columns_names.extend(self.columns_names)
+        if (l_1 := len(columns_names)) != (l_2 := len(data_list[0])):
+            msg = (f'\n\tThe number of columns` names: `{l_1}` not the same'
+                   f' as the number of data columns: `{l_2}`\n')
+            log.error(msg)
+            raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
         columns_names = \
             [re.sub(r'\s+', ' ', item) for item in columns_names]
         self.columns_names = [item.replace(' ', '_') for item in columns_names]

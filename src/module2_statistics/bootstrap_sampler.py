@@ -40,17 +40,17 @@ class BootStrping:
             (f'\tBootstraping for `{fname}` on column `{self.booter}`\n'
              f'\tConvert rate is: `{self.convert_rate}`\n')
 
-        self.initiate_normal()
-        self.initiate_block()
+        self.perform_normal_bootstrap()
+        self.perform_block_bootstrap()
         self.write_log_msg(log)
 
-    def initiate_normal(self) -> None:
+    def perform_normal_bootstrap(self) -> None:
         """do the sampling here"""
-        samples: list[np.float64] = self.random_replacement()
-        self.raw_normal = self.analysis_sample(samples, 'normal')
+        samples: list[np.float64] = self.sample_randomly_with_replacement()
+        self.raw_normal = self.calc_raw_stats(samples, 'normal')
         self.stats_normal = self.convert_stats(self.raw_normal, 'normal')
 
-    def random_replacement(self) -> list[np.float64]:
+    def sample_randomly_with_replacement(self) -> list[np.float64]:
         """Randomly Select With Replacement"""
         samples: list[np.float64] = []
         for _ in range(self.xvg.nr_frames):
@@ -59,22 +59,24 @@ class BootStrping:
             samples.append(sum(sample_i)/self.xvg.nr_frames)
         return samples
 
-    def initiate_block(self) -> None:
+    def perform_block_bootstrap(self) -> None:
         """calculate stats from block bootstraping resamplings"""
-        blocks: list[pd.DataFrame] = self.get_blocks_list()
-        samples: list[float] = self.sample_blocks(blocks)
-        self.raw_block = self.analysis_sample(samples, 'block')
+        blocks: list[pd.DataFrame] = self.split_data_into_blocks()
+        samples: list[float] = self.bootstrap_blocks(blocks)
+        self.raw_block = self.calc_raw_stats(samples, 'block')
         self.stats_block = self.convert_stats(self.raw_block, style='block')
 
-    def get_blocks_list(self) -> list[pd.DataFrame]:
+    def split_data_into_blocks(self) -> list[pd.DataFrame]:
+        """make random blocks"""
         blocks: list[pd.DataFrame] = \
             [pd.DataFrame(arr) for arr in
              np.array_split(self.xvg.xvg_df,
                             len(self.xvg.xvg_df) // self.block_size)]
         return blocks
 
-    def sample_blocks(self,
-                      blocks: list[pd.DataFrame]) -> list[float]:
+    def bootstrap_blocks(self,
+                         blocks: list[pd.DataFrame]
+                         ) -> list[float]:
         """get the samples"""
         samples: list[float] = []
         for _ in range(l_1 := len(blocks)):
@@ -84,13 +86,13 @@ class BootStrping:
             del df_tmp
         return samples
 
-    def analysis_sample(self,
-                        samples: typing.Union[list[np.float64], list[float]],
-                        style: str
-                        ) -> dict[str, typing.Any]:
+    def calc_raw_stats(self,
+                       samples: typing.Union[list[np.float64], list[float]],
+                       style: str
+                       ) -> dict[str, typing.Any]:
         """calculate std and averages"""
         raw_stats_dict: dict[str, typing.Any] = {}
-        sample_arr: np.ndarray = np.asarray(samples)
+        sample_arr: np.ndarray = np.array(samples)
         raw_stats_dict['std'] = np.std(sample_arr)
         raw_stats_dict['mean'] = np.mean(sample_arr)
         raw_stats_dict['mode'] = \
@@ -120,8 +122,8 @@ class BootStrping:
                       ) -> dict[str, typing.Any]:
         """convert data to the asked unit"""
         stats_dict: dict[str, typing.Any] = {}
-        for key, value in raw_stats.items():
-            stats_dict[key] = value/self.convert_rate
+        stats_dict = \
+            {key: value/self.convert_rate for key, value in raw_stats.items()}
         self.info_msg += \
             (f'\tStats (Converted) for `{style}` bootstraping:'
              f'{json.dumps(stats_dict, indent=8)}\n')

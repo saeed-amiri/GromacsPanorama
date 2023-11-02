@@ -1,5 +1,6 @@
 """reading xvg files and return it as a dataframe"""
 
+import os
 import re
 import sys
 import typing
@@ -33,6 +34,7 @@ class XvgParser:
         self.xvg_df = self.get_xvg(log)
         self.nr_frames = len(self.xvg_df.index)
         self.info_msg += (f'\tThe input file: `{self.fname}`\n'
+                          f'\tThe title is: `{os.path.abspath(self.fname)}`\n'
                           f'\tThe title is: `{self.title}`\n'
                           f'\tThe xaxis is: `{self.xaxis}`\n'
                           f'\tThe yaxis is: `{self.yaxis}`\n'

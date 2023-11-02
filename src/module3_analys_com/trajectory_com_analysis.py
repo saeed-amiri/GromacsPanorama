@@ -38,16 +38,25 @@ Update:
     the data of the ODN should be split in half.
 """
 
-import sys
-import typing
-import numpy as np
-import pandas as pd
 from common import logger
-import com_file_parser
-from common.colors_text import TextColor as bcolors
+from module3_analys_com.com_file_parser import GetCom
 
+
+class ComAnalysis:
+    """call all the other scripts and analyze them"""
+    def __init__(self,
+                 log: logger.logging.Logger
+                 ) -> None:
+        parsed_com = GetCom()
+        self.initiate(parsed_com, log)
+
+    def initiate(self,
+                 parsed_com: "GetCom",
+                 log: logger.logging.Logger
+                 ) -> None:
+        """first analyze water, to get the interface and other
+        properties"""
 
 
 if __name__ == "__main__":
-    
-    print(com_file_parser.GetCom().__dict__)
+    ComAnalysis(log=logger.setup_logger('com_analysis.log'))

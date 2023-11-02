@@ -4,7 +4,7 @@ Module: get_data
 A data processing module for splitting and organizing data based on
 residue types.
 
-This module defines a class 'GetData' that reads input data from a
+This module defines a class 'GetCom' that reads input data from a
 pickle file and splits it based on the residue types indicated by the
 last row indices. Each split data is organized and stored separately
 for further analysis.
@@ -13,14 +13,14 @@ Attributes:
     None
 
 Classes:
-    GetData: A class for data processing and organization based on
+    GetCom: A class for data processing and organization based on
     residue types.
 
 Usage:
-    from get_data import GetData
+    from get_data import GetCom
 
-    # Create an instance of GetData
-    data_processor = GetData()
+    # Create an instance of GetCom
+    data_processor = GetCom()
 
     # Access split data arrays organized by residue types
     split_data = data_processor.split_arr_dict
@@ -31,7 +31,7 @@ Usage:
     # Get the dimensions of the box
     box_dimensions = data_processor.box_dims
 
-    # Access specific methods of the GetData class for data processing
+    # Access specific methods of the GetCom class for data processing
 
 """
 
@@ -41,7 +41,7 @@ import numpy as np
 import common.static_info as stinfo
 
 
-class GetData:
+class GetCom:
     """
     A data processing class for splitting and organizing data based on
     residue types.
@@ -61,7 +61,7 @@ class GetData:
             the dimensions of the box
 
     Methods:
-        __init__(): Initialize the GetData instance.
+        __init__(): Initialize the GetCom instance.
         initiate_data(): Read and split the data from the pickle file.
         get_numbers(data: dict[str, np.ndarray]) -> dict[str, int]:
             Get the number of time frames and the number of residues
@@ -77,7 +77,7 @@ class GetData:
 
     def __init__(self) -> None:
         """
-        Initialize the GetData instance.
+        Initialize the GetCom instance.
 
         The filename of the input pickle file is set based on the
         stinfo module.
@@ -225,4 +225,4 @@ class GetData:
 
 
 if __name__ == '__main__':
-    GetData()
+    GetCom()

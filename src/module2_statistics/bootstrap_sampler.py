@@ -44,10 +44,17 @@ class BootStrping:
              f'\tConvert rate is: `{self.convert_rate}`\n'
              f'\tblock size is `{self.block_size}`\n\n')
 
+        self.check_initial_data()
         self.perform_normal_bootstrap()
         self.perform_block_bootstrap()
         self.perform_moving_block_bootstrap()
         self.write_log_msg(log)
+
+    def check_initial_data(self) -> None:
+        """check the mean, std, mode of the initial data"""
+        tmp_dict: dict[str, typing.Any] = \
+            self.calc_raw_stats(self.xvg.xvg_df[self.booter], 'initial')
+        self.convert_stats(tmp_dict, 'initial')
 
     def perform_normal_bootstrap(self) -> None:
         """do the sampling here"""
@@ -128,8 +135,12 @@ class BootStrping:
         raw_stats_dict['mean'] = np.mean(sample_arr)
         raw_stats_dict['mode'] = \
             self.calc_mode(sample_arr, raw_stats_dict['std']/5)
+        if style == 'initial':
+            boots = ''
+        else:
+            boots = ' bootstraping'
         self.info_msg += \
-            (f'\tStats (raw) for `{style}` bootstraping:'
+            (f'\tStats (raw) for `{style}`{boots}:'
              f'{json.dumps(raw_stats_dict, indent=8)}\n')
         return raw_stats_dict
 
@@ -155,8 +166,12 @@ class BootStrping:
         stats_dict: dict[str, typing.Any] = {}
         stats_dict = \
             {key: value/self.convert_rate for key, value in raw_stats.items()}
+        if style == 'initial':
+            boots = ''
+        else:
+            boots = ' bootstraping'
         self.info_msg += \
-            (f'\tStats (Converted) for `{style}` bootstraping:'
+            (f'\tStats (Converted) for `{style}`{boots}:'
              f'{json.dumps(stats_dict, indent=8)}\n')
         return stats_dict
 

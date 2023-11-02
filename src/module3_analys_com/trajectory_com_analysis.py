@@ -40,6 +40,7 @@ Update:
 
 from common import logger
 from module3_analys_com.com_file_parser import GetCom
+from module3_analys_com.aquatic_analysis import AnalysisAqua
 
 
 class ComAnalysis:
@@ -56,6 +57,7 @@ class ComAnalysis:
                  ) -> None:
         """first analyze water, to get the interface and other
         properties"""
+        aqua = AnalysisAqua(parsed_com, log)
 
 
 if __name__ == "__main__":

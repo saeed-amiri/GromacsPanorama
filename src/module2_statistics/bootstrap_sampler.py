@@ -23,13 +23,16 @@ class BootStrping:
     info_msg: str = 'Message from BootStrping:\n'  # Meesage in methods to log
 
     xvg: "xvg_to_df.XvgParser"  # Parsed datafile
+    block_size: int = 10  # Size of each block
+    convert_rate: float = 2*10  # Since we have two interface
     booter: str = 'Surf_SurfTen'  # Name of the columns to bootstrap them
+
     raw_normal: dict[str, typing.Any] = {}
     raw_block: dict[str, typing.Any] = {}
+    raw_mbb: dict[str, typing.Any] = {}
     stats_normal: dict[str, typing.Any] = {}
     stats_block: dict[str, typing.Any] = {}
-    convert_rate: float = 2*10  # Since we have two interface
-    block_size: int = 10  # Size of each block
+    stats_mbb: dict[str, typing.Any] = {}
 
     def __init__(self,
                  fname: str,  # Data file xvg format
@@ -38,10 +41,12 @@ class BootStrping:
         self.xvg = xvg_to_df.XvgParser(fname=fname, log=log)
         self.info_msg += \
             (f'\tBootstraping for `{fname}` on column `{self.booter}`\n'
-             f'\tConvert rate is: `{self.convert_rate}`\n')
+             f'\tConvert rate is: `{self.convert_rate}`\n'
+             f'\tblock size is `{self.block_size}`\n\n')
 
         self.perform_normal_bootstrap()
         self.perform_block_bootstrap()
+        self.perform_moving_block_bootstrap()
         self.write_log_msg(log)
 
     def perform_normal_bootstrap(self) -> None:
@@ -85,6 +90,32 @@ class BootStrping:
             samples.append(df_tmp[self.booter].mean())
             del df_tmp
         return samples
+
+    def perform_moving_block_bootstrap(self) -> None:
+        """The moving block bootstrap (MBB) is a variant of the block
+        bootstrap method designed to retain the temporal correlation
+        structure of time-series data when generating bootstrap samples.
+        Unlike the traditional block bootstrap method, which samples
+        blocks of consecutive observations with replacement, the moving
+        block bootstrap allows for overlapping blocks."""
+        blocks: list[pd.DataFrame] = \
+            self.create_overlapping_blocks(self.xvg.xvg_df, self.block_size)
+        samples: list[float] = self.bootstrap_blocks(blocks)
+        self.raw_mbb = self.calc_raw_stats(samples, 'MMB')
+        self.stats_mbb = self.convert_stats(self.raw_mbb, 'MBB')
+
+    @staticmethod
+    def create_overlapping_blocks(dataframe: pd.DataFrame,
+                                  block_size: int
+                                  ) -> list[pd.DataFrame]:
+        """for MBB"""
+        overlapping_blocks: list[pd.DataFrame] = []
+
+        for i in range(len(dataframe) - block_size + 1):
+            block = dataframe.iloc[i:i + block_size]
+            overlapping_blocks.append(block)
+
+        return overlapping_blocks
 
     def calc_raw_stats(self,
                        samples: typing.Union[list[np.float64], list[float]],

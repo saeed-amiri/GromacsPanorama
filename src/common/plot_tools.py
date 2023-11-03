@@ -61,6 +61,7 @@ def mk_circle(radius: float,
 
 def mk_canvas(x_range: tuple[float, float],
               num_xticks: int = 5,
+              width = stinfo.plot['width'],
               nrows: int = 1,  # Numbers of rows
               ncols: int = 1,  # Numbers of rows
               fsize: float = 0,  # Font size
@@ -80,13 +81,12 @@ def mk_canvas(x_range: tuple[float, float],
         tuple[plt.figure, plt.axes]: A tuple containing the figure
         and axes objects.
     """
-    width = stinfo.plot['width']
     fig_main, ax_main = \
         plt.subplots(nrows=nrows, ncols=ncols, figsize=set_sizes(width))
     # Set font for all elements in the plot)
     xticks = np.linspace(x_range[0], x_range[-1], num_xticks)
-    for ax in ax_main:
-        ax.set_xticks(xticks)
+    for ax_i in ax_main:
+        ax_i.set_xticks(xticks)
     ax_main = set_x2ticks(ax_main, add_xtwin)
     ax_main = set_ax_font_label(ax_main, fsize=fsize)
     return fig_main, ax_main
@@ -111,10 +111,12 @@ def save_close_fig(fig: plt.figure,  # The figure to save,
         'upper right'.
     """
     if not legend:
-        legend = axs.legend(loc=loc, bbox_to_anchor=(1.0, 1.0))
+        for ax_i in axs:
+            legend = ax_i.legend(loc=loc, bbox_to_anchor=(1.0, 1.0))
         legend.set_bbox_to_anchor((1.0, 1.0))
     else:
-        legend = axs.legend(loc=loc)
+        for ax_j in axs:
+            legend = ax_j.legend(loc=loc)
     fig.savefig(fname,
                 dpi=300,
                 pad_inches=0.1,
@@ -138,25 +140,25 @@ def set_x2ticks(ax_main: plt.axes,  # The axes to wrok with
     Returns:
         plt.axes: The modified main axes.
     """
-    for ax in ax_main:
-        ax.tick_params(axis='both', direction='in')
+    for ax_i in ax_main:
+        ax_i.tick_params(axis='both', direction='in')
     ax_list: list[plt.axes] = []
     if add_xtwin:
-        for ax in ax_main:
+        for ax_j in ax_main:
         # Set twiny
-            ax2 = ax.twiny()
-            ax2.set_xlim(ax.get_xlim())
+            ax2 = ax_j.twiny()
+            ax2.set_xlim(ax_j.get_xlim())
             # Synchronize x-axis limits and tick positions
-            ax2.xaxis.set_major_locator(ax.xaxis.get_major_locator())
-            ax2.xaxis.set_minor_locator(ax.xaxis.get_minor_locator())
+            ax2.xaxis.set_major_locator(ax_j.xaxis.get_major_locator())
+            ax2.xaxis.set_minor_locator(ax_j.xaxis.get_minor_locator())
             ax2.set_xticklabels([])  # Remove the tick labels on the top x-axis
             ax2.tick_params(axis='x', direction='in')
         ax_list.append(ax2)
-    for ax_i in ax_list:
-        ax_i.xaxis.set_major_locator(matplotlib.ticker.AutoLocator())
-        ax_i.xaxis.set_minor_locator(
+    for ax_k in ax_list:
+        ax_k.xaxis.set_major_locator(matplotlib.ticker.AutoLocator())
+        ax_k.xaxis.set_minor_locator(
             matplotlib.ticker.AutoMinorLocator(n=5))
-        ax_i.tick_params(which='minor', direction='in')
+        ax_k.tick_params(which='minor', direction='in')
     return ax_main
 
 def set_y2ticks(ax_main: plt.axes  # The axes to wrok with
@@ -209,12 +211,12 @@ def set_ax_font_label(ax_main: plt.axes,  # Main axis to set parameters
         fontsize = 14
     else:
         fontsize = fsize
-    for ax in ax_main:
-        ax.set_xlabel(x_label, fontsize=fontsize)
-        ax.set_ylabel(y_label, fontsize=fontsize)
+    for ax_i in ax_main:
+        ax_i.set_xlabel(x_label, fontsize=fontsize)
+        ax_i.set_ylabel(y_label, fontsize=fontsize)
 
         matplotlib.rcParams['font.family'] = 'sans-serif'
         matplotlib.rcParams['font.size'] = fontsize
-        ax.tick_params(axis='x', labelsize=fontsize)
-        ax.tick_params(axis='y', labelsize=fontsize)
+        ax_i.tick_params(axis='x', labelsize=fontsize)
+        ax_i.tick_params(axis='y', labelsize=fontsize)
     return ax_main

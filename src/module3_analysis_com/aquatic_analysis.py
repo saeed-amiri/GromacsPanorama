@@ -5,6 +5,7 @@ reduction of surface from nanoparticle.
 """
 
 import typing
+import numpy as np
 import pandas as pd
 
 from common import logger
@@ -18,27 +19,33 @@ class GetSurface:
 
     info_msg: str = 'Message from GetSurface:\n'  # Meesage in methods to log
     oil_top_ratio: float = 2/3  # Where form top for sure should be oil
+    mesh_nr: float = 100.  # Number of meshes in each directions
 
     def __init__(self,
                  water_df: pd.DataFrame,
                  box_dims: dict[str, float],
                  log: logger.logging.Logger
                  ) -> None:
-        z_treshhold: float = self.get_interface_z_treshhold(box_dims)
-        self.get_water_surface(water_df, z_treshhold, log)
+        self.get_water_surface(water_df, box_dims, log)
         self._write_msg(log)
 
     def get_water_surface(self,
                           water_df: pd.DataFrame,
-                          z_treshhold: float,  # Below this will be water
+                          box_dims: dict[str, float],
                           log: logger.logging.Logger
                           ) -> None:
         """
         mesh the box and find resides with highest z value in them
         """
         # To save a snapshot to see the system
+        x_mesh: np.ndarray  # Mesh grid in x and y
+        y_mesh: np.ndarray  # Mesh grid in x and y
+        mesh_size: np.float64  # Size of the grid
         ComPlotter(
             com_arr=water_df[:-2], index=10, log=log, to_png=True, to_xyz=True)
+        z_treshhold: float = self.get_interface_z_treshhold(box_dims)
+        x_mesh, y_mesh, mesh_size = self._get_xy_grid(box_dims)
+        print(mesh_size)
 
     def get_interface_z_treshhold(self,
                                   box_dims: dict[str, float]
@@ -49,6 +56,23 @@ class GetSurface:
             (f'\tThe oil top ratio was set to `{self.oil_top_ratio:.3f}`\n'
              f'\tThe z treshold is set to `{z_treshhold:.3f}`\n')
         return z_treshhold
+
+    def _get_xy_grid(self,
+                     box_dims: dict[str, float]
+                     ) -> tuple[np.ndarray, np.ndarray, np.float64]:
+        """return the mesh grid for the box"""
+        mesh_size: np.float64 = \
+            (box_dims['x_hi']-box_dims['x_lo'])/self.mesh_nr
+        self.info_msg += f'\tThe number of meshes is `{self.mesh_nr**2}`\n'
+        x_mesh: np.ndarray  # Mesh grid in x and y
+        y_mesh: np.ndarray  # Mesh grid in x and y
+        x_mesh, y_mesh = np.meshgrid(
+            np.arange(
+                box_dims['x_lo'], box_dims['x_hi'] + mesh_size, mesh_size),
+            np.arange(
+                box_dims['y_lo'], box_dims['y_hi'] + mesh_size, mesh_size))
+        return x_mesh, y_mesh, mesh_size
+
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

@@ -7,6 +7,7 @@ reduction of surface from nanoparticle.
 import numpy as np
 
 from common import logger
+from common import cpuconfig
 from common.colors_text import TextColor as bcolors
 from module3_analysis_com.com_file_parser import GetCom
 from module3_analysis_com.com_plotter import ComPlotter
@@ -84,6 +85,10 @@ class GetSurface:
                               log: logger.logging.Logger
                               ) -> dict[int, list[int]]:
         """get max water in each time frame"""
+        cpu_info = cpuconfig.ConfigCpuNr(log)
+        n_cores: int = min(cpu_info.cores_nr, water_arr.shape[0])
+        chunks: list[np.ndarray] = \
+            self._get_chunk_lists(water_arr.shape[0], n_cores)
         max_indices: dict[int, list[int]] = {}
         for i_frame, frame in enumerate(water_arr):
             max_z_index: list[int] = []  # Index of the max value at each grid
@@ -107,6 +112,14 @@ class GetSurface:
                         max_z_index.append(ind_in_mesh[0][max_z])
             max_indices[i_frame] = max_z_index
         return max_indices
+
+    @staticmethod
+    def _get_chunk_lists(arr_size: int,
+                         n_cores: int
+                         ) -> list[np.ndarray]:
+        """chunk the main array"""
+        integer_array: np.ndarray = np.arange(arr_size + 1)
+        return np.array_split(integer_array, n_cores)
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

@@ -125,7 +125,7 @@ class CalculateCom:
         com_arr: np.ndarray = \
             self.mk_allocation(self.n_frames,
                                self.get_residues.nr_sol_res,
-                               self.get_residues.top.mols_num['ODN'])
+                               odn_nr := self.get_residues.top.mols_num['ODN'])
         _, com_col = np.shape(com_arr)
         amino_odn_index: dict[int, int] = \
             self.set_amino_odn_index(com_arr, sol_residues['ODN'])
@@ -137,8 +137,8 @@ class CalculateCom:
             results = pool.starmap(self.process_trj, args)
         # Merge the results
         recvdata: np.ndarray = np.vstack(results)
-        tmp_arr: np.ndarray = \
-                self.set_residue_ind(com_arr, recvdata, residues_index_dict)
+        tmp_arr: np.ndarray = self.set_residue_ind(
+            com_arr, recvdata, residues_index_dict, odn_nr)
         com_arr = self.set_residue_type(tmp_arr, sol_residues).copy()
 
         self.pickle_arr(com_arr, log)
@@ -161,7 +161,8 @@ class CalculateCom:
     @staticmethod
     def set_residue_ind(com_arr: np.ndarray,  # The final array
                         recvdata: np.ndarray,  # Info about time frames
-                        residues_index_dict: dict[int, int]
+                        residues_index_dict: dict[int, int],
+                        odn_nr: int  # Number of ODA in the system
                         ) -> np.ndarray:
         """
         Set the original residues' indices to the com_arr[-2]
@@ -174,7 +175,7 @@ class CalculateCom:
 
         # setting the index of NP and ODA Amino heads
         com_arr[-2, 1:4] = [-1, -1, -1]
-        com_arr[-2, -50:] = np.arange(-1, -51, -1)
+        com_arr[-2, -odn_nr:] = np.arange(-1, -(odn_nr+1), -1)
         for res_ind, col_in_arr in residues_index_dict.items():
             ind = int(res_ind)
             com_arr[-2][col_in_arr:col_in_arr+3] = \

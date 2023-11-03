@@ -39,8 +39,8 @@ Update:
 """
 
 from common import logger
-from module3_analys_com.com_file_parser import GetCom
-from module3_analys_com.aquatic_analysis import AnalysisAqua
+from module3_analysis_com.com_file_parser import GetCom
+from module3_analysis_com.aquatic_analysis import AnalysisAqua
 
 
 class ComAnalysis:

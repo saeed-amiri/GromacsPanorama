@@ -46,8 +46,8 @@ class GetSurface:
         """find the treshhold of water highest point"""
         z_treshhold: float = box_dims['z_hi'] * self.oil_top_ratio
         self.info_msg += \
-            (f'\tThe oil top ratio was set to `{self.oil_top_ratio}`\n'
-             f'\tThe z treshold is set to `{z_treshhold}`\n')
+            (f'\tThe oil top ratio was set to `{self.oil_top_ratio:.3f}`\n'
+             f'\tThe z treshold is set to `{z_treshhold:.3f}`\n')
         return z_treshhold
 
     def _write_msg(self,

@@ -4,9 +4,7 @@ main porpose is getting the interface of water with minimum possible
 reduction of surface from nanoparticle.
 """
 
-import typing
 import numpy as np
-import pandas as pd
 
 from common import logger
 from common.colors_text import TextColor as bcolors
@@ -22,15 +20,15 @@ class GetSurface:
     mesh_nr: float = 100.  # Number of meshes in each directions
 
     def __init__(self,
-                 water_df: pd.DataFrame,
+                 water_arr: np.ndarray,
                  box_dims: dict[str, float],
                  log: logger.logging.Logger
                  ) -> None:
-        self.get_water_surface(water_df, box_dims, log)
+        self.get_water_surface(water_arr, box_dims, log)
         self._write_msg(log)
 
     def get_water_surface(self,
-                          water_df: pd.DataFrame,
+                          water_arr: np.ndarray,
                           box_dims: dict[str, float],
                           log: logger.logging.Logger
                           ) -> None:
@@ -40,12 +38,16 @@ class GetSurface:
         # To save a snapshot to see the system
         x_mesh: np.ndarray  # Mesh grid in x and y
         y_mesh: np.ndarray  # Mesh grid in x and y
-        mesh_size: np.float64  # Size of the grid
-        ComPlotter(
-            com_arr=water_df[:-2], index=10, log=log, to_png=True, to_xyz=True)
+        mesh_size: float  # Size of the grid
+        ComPlotter(com_arr=water_arr[:-2],
+                   index=10,
+                   log=log,
+                   to_png=True,
+                   to_xyz=True)
         z_treshhold: float = self.get_interface_z_treshhold(box_dims)
         x_mesh, y_mesh, mesh_size = self._get_xy_grid(box_dims)
-        print(mesh_size)
+        self._get_surface_topology(
+            water_arr[:-2], x_mesh, y_mesh, mesh_size, z_treshhold, log)
 
     def get_interface_z_treshhold(self,
                                   box_dims: dict[str, float]
@@ -59,9 +61,9 @@ class GetSurface:
 
     def _get_xy_grid(self,
                      box_dims: dict[str, float]
-                     ) -> tuple[np.ndarray, np.ndarray, np.float64]:
+                     ) -> tuple[np.ndarray, np.ndarray, float]:
         """return the mesh grid for the box"""
-        mesh_size: np.float64 = \
+        mesh_size: float = \
             (box_dims['x_hi']-box_dims['x_lo'])/self.mesh_nr
         self.info_msg += f'\tThe number of meshes is `{self.mesh_nr**2}`\n'
         x_mesh: np.ndarray  # Mesh grid in x and y
@@ -73,6 +75,38 @@ class GetSurface:
                 box_dims['y_lo'], box_dims['y_hi'] + mesh_size, mesh_size))
         return x_mesh, y_mesh, mesh_size
 
+    def _get_surface_topology(self,
+                              water_arr: np.ndarray,
+                              x_mesh: np.ndarray,
+                              y_mesh: np.ndarray,
+                              mesh_size: float,
+                              z_tershhold: float,
+                              log: logger.logging.Logger
+                              ) -> dict[int, list[int]]:
+        """get max water in each time frame"""
+        max_indices: dict[int, list[int]] = {}
+        for i_frame, frame in enumerate(water_arr):
+            max_z_index: list[int] = []  # Index of the max value at each grid
+            xyz_i = frame.reshape(-1, 3)
+            for i in range(x_mesh.shape[0]):
+                for j in range(x_mesh.shape[1]):
+                    # Define the boundaries of the current mesh element
+                    x_min_mesh = x_mesh[i, j]
+                    x_max_mesh = x_mesh[i, j] + mesh_size
+                    y_min_mesh = y_mesh[i, j]
+                    y_max_mesh = y_mesh[i, j] + mesh_size
+
+                    # Select atoms within the current mesh element based on XY
+                    ind_in_mesh = np.where((xyz_i[:, 0] >= x_min_mesh) &
+                                           (xyz_i[:, 0] < x_max_mesh) &
+                                           (xyz_i[:, 1] >= y_min_mesh) &
+                                           (xyz_i[:, 1] < y_max_mesh) &
+                                           (xyz_i[:, 2] < z_tershhold))
+                    if len(ind_in_mesh[0]) > 0:
+                        max_z = np.argmax(frame[2::3][ind_in_mesh])
+                        max_z_index.append(ind_in_mesh[0][max_z])
+            max_indices[i_frame] = max_z_index
+        return max_indices
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

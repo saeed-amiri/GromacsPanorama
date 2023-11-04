@@ -151,14 +151,6 @@ class GetSurface:
             del i_arr
         return surface_waters
 
-    @staticmethod
-    def _get_chunk_lists(arr_size: int,
-                         n_cores: int
-                         ) -> list[np.ndarray]:
-        """chunk the main array"""
-        integer_array: np.ndarray = np.arange(arr_size + 1)
-        return np.array_split(integer_array, n_cores)
-
     def _write_msg(self,
                    log: logger.logging.Logger  # To log
                    ) -> None:

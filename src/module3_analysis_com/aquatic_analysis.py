@@ -12,6 +12,7 @@ from common import cpuconfig
 from common.colors_text import TextColor as bcolors
 from module3_analysis_com.com_file_parser import GetCom
 from module3_analysis_com.com_plotter import ComPlotter
+from module3_analysis_com.surface_plotter import SurfPlotter
 
 
 class GetSurface:
@@ -170,12 +171,14 @@ class AnalysisAqua:
             GetSurface(parsed_com.split_arr_dict['SOL'],
                        parsed_com.box_dims,
                        log).surface_waters
-        self._initiate(surface_waters)
+        self._initiate(surface_waters, log)
 
     def _initiate(self,
-                  surface_waters: dict[int, np.ndarray]
+                  surface_waters: dict[int, np.ndarray],
+                  log: logger.logging.Logger
                   ) -> None:
         """initiate surface analysing"""
+        SurfPlotter(surf_dict=surface_waters, log=log)
 
 
 if __name__ == "__main__":

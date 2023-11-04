@@ -166,7 +166,16 @@ class AnalysisAqua:
                  parsed_com: "GetCom",
                  log: logger.logging.Logger
                  ) -> None:
-        GetSurface(parsed_com.split_arr_dict['SOL'], parsed_com.box_dims, log)
+        surface_waters: dict[int, np.ndarray] = \
+            GetSurface(parsed_com.split_arr_dict['SOL'],
+                       parsed_com.box_dims,
+                       log).surface_waters
+        self._initiate(surface_waters)
+
+    def _initiate(self,
+                  surface_waters: dict[int, np.ndarray]
+                  ) -> None:
+        """initiate surface analysing"""
 
 
 if __name__ == "__main__":

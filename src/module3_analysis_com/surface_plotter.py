@@ -50,14 +50,15 @@ class SurfPlotter:
                      ) -> None:
         """plot the surface"""
         for frame, value in selected_frames.items():
-            fig_i, ax_i = plot_tools.mk_canvas((0, 240))
+            fig_i, ax_i = \
+                plot_tools.mk_canvas((0, 240), height_ratio=(5**0.5 - 1))
             scatter = ax_i.scatter(value[:, 0], value[:, 1], c=value[:, 2],
                                    s=15, label=f'frame: {frame}')
-            plt.axis('equal')
             cbar = plt.colorbar(scatter)
             cbar.set_label('Z-Coordinate [A]')
             ax_i.set_xlabel('X_Coordinate [A]')
             ax_i.set_ylabel('Y_Coordinate [A]')
+            plt.axis('equal')
             plot_tools.save_close_fig(
                 fig_i, ax_i, fname=f'{frame}_{fout_suffix}', legend=False)
 

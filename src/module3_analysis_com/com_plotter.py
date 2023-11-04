@@ -52,7 +52,7 @@ class ComPlotter:
                    ) -> None:
         """plot and, if, save it"""
         fig_i, axes = plot_tools.mk_canvas(
-            x_range=(0, 240), ncols=3, width_ratio=4)
+            x_range=(0, 200), ncols=3, width_ratio=4)
 
         labels = ['xy', 'xz', 'yz']
         data = [xyz_arr[:, [0, 1]], xyz_arr[:, [0, 2]], xyz_arr[:, [1, 2]]]

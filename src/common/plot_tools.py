@@ -7,7 +7,8 @@ import common.static_info as stinfo
 
 
 def set_sizes(width: float,  # Width of the plot in points
-              fraction: float = 1
+              fraction: float = 1,
+              height_ratio: float = 3
               ) -> tuple[float, float]:
     """
     Calculate figure dimensions based on width and fraction.
@@ -27,9 +28,9 @@ def set_sizes(width: float,  # Width of the plot in points
     """
     fig_width_pt = width*fraction
     inches_per_pt = 1/72.27
-    golden_ratio = (5**0.5 - 1)/3
+    golden_ratio = (5**0.5 - 1)
     fig_width_in = fig_width_pt * inches_per_pt
-    fig_height_in = fig_width_in * golden_ratio
+    fig_height_in = fig_width_in * golden_ratio / height_ratio
     fig_dim = (fig_width_in, fig_height_in)
     return fig_dim
 
@@ -65,7 +66,9 @@ def mk_canvas(x_range: tuple[float, float],
               nrows: int = 1,  # Numbers of rows
               ncols: int = 1,  # Numbers of rows
               fsize: float = 0,  # Font size
-              add_xtwin: bool = True
+              add_xtwin: bool = True,
+              width_ratio: float = 1,
+              height_ratio: float = 3
               ) -> tuple[plt.figure, plt.axes]:
     """
     Create a canvas for the plot.
@@ -81,8 +84,10 @@ def mk_canvas(x_range: tuple[float, float],
         tuple[plt.figure, plt.axes]: A tuple containing the figure
         and axes objects.
     """
-    fig_main, ax_main = \
-        plt.subplots(nrows=nrows, ncols=ncols, figsize=set_sizes(width))
+    fig_main, ax_main = plt.subplots(
+        nrows=nrows,
+        ncols=ncols,
+        figsize=set_sizes(width*width_ratio, height_ratio=height_ratio))
     # Set font for all elements in the plot)
     xticks = np.linspace(x_range[0], x_range[-1], num_xticks)
     for ax in np.ravel(ax_main):

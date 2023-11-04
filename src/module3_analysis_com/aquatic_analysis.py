@@ -18,10 +18,13 @@ class GetSurface:
     """find the surface of the water"""
 
     info_msg: str = 'Message from GetSurface:\n'  # Meesage in methods to log
+
     oil_top_ratio: float = 2/3  # Where form top for sure should be oil
     mesh_nr: float = 100.  # Number of meshes in each directions
     z_treshhold: float
     mesh_size: float
+
+    surface_waters: dict[int, np.ndarray]  # Water at the surface, include np
 
     def __init__(self,
                  water_arr: np.ndarray,
@@ -49,7 +52,10 @@ class GetSurface:
                    to_xyz=True)
         self.z_treshhold = self.get_interface_z_treshhold(box_dims)
         x_mesh, y_mesh, self.mesh_size = self._get_xy_grid(box_dims)
-        self._get_surface_topology(water_arr[:-2], x_mesh, y_mesh, log)
+        surface_indices: dict[int, list[np.int64]] = \
+            self._get_surface_topology(water_arr[:-2], x_mesh, y_mesh, log)
+        self.surface_waters: dict[int, np.ndarray] = \
+            self.get_xyz_arr(water_arr[:-2], surface_indices)
 
     def get_interface_z_treshhold(self,
                                   box_dims: dict[str, float]
@@ -92,7 +98,7 @@ class GetSurface:
             results = pool.starmap(
                 self._process_single_frame,
                 [(frame, x_mesh, y_mesh, self.mesh_size, self.z_treshhold)
-                 for frame in water_arr[:12]])
+                 for frame in water_arr])
         for i_frame, result in enumerate(results):
             max_indices[i_frame] = result
 
@@ -126,6 +132,24 @@ class GetSurface:
                     max_z = np.argmax(frame[2::3][ind_in_mesh])
                     max_z_index.append(ind_in_mesh[0][max_z])
         return max_z_index
+
+    def get_xyz_arr(self,
+                    water_arr: np.ndarray,  # All the water residues
+                    surface_indices: dict[int, list[np.int64]]
+                    ) -> dict[int, np.ndarray]:
+        """
+        return the surface residues for each time frame as a np.ndarry
+        """
+        surface_waters: dict[int, np.ndarray] = {}
+        for i_frame, indices in surface_indices.items():
+            frame = water_arr[i_frame]
+            i_arr: np.ndarray = np.zeros((len(indices), 3))
+            for i, index in enumerate(indices):
+                residue_ind = int(index*3)
+                i_arr[i] = frame[residue_ind:residue_ind+3]
+            surface_waters[i_frame] = i_arr
+            del i_arr
+        return surface_waters
 
     @staticmethod
     def _get_chunk_lists(arr_size: int,

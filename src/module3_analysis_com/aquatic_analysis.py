@@ -4,6 +4,7 @@ main porpose is getting the interface of water with minimum possible
 reduction of surface from nanoparticle.
 """
 
+import multiprocessing
 import numpy as np
 
 from common import logger
@@ -19,6 +20,8 @@ class GetSurface:
     info_msg: str = 'Message from GetSurface:\n'  # Meesage in methods to log
     oil_top_ratio: float = 2/3  # Where form top for sure should be oil
     mesh_nr: float = 100.  # Number of meshes in each directions
+    z_treshhold: float
+    mesh_size: float
 
     def __init__(self,
                  water_arr: np.ndarray,
@@ -39,16 +42,14 @@ class GetSurface:
         # To save a snapshot to see the system
         x_mesh: np.ndarray  # Mesh grid in x and y
         y_mesh: np.ndarray  # Mesh grid in x and y
-        mesh_size: float  # Size of the grid
         ComPlotter(com_arr=water_arr[:-2],
                    index=10,
                    log=log,
                    to_png=True,
                    to_xyz=True)
-        z_treshhold: float = self.get_interface_z_treshhold(box_dims)
-        x_mesh, y_mesh, mesh_size = self._get_xy_grid(box_dims)
-        self._get_surface_topology(
-            water_arr[:-2], x_mesh, y_mesh, mesh_size, z_treshhold, log)
+        self.z_treshhold = self.get_interface_z_treshhold(box_dims)
+        x_mesh, y_mesh, self.mesh_size = self._get_xy_grid(box_dims)
+        self._get_surface_topology(water_arr[:-2], x_mesh, y_mesh, log)
 
     def get_interface_z_treshhold(self,
                                   box_dims: dict[str, float]
@@ -80,38 +81,51 @@ class GetSurface:
                               water_arr: np.ndarray,
                               x_mesh: np.ndarray,
                               y_mesh: np.ndarray,
-                              mesh_size: float,
-                              z_tershhold: float,
                               log: logger.logging.Logger
-                              ) -> dict[int, list[int]]:
+                              ) -> dict[int, list[np.int64]]:
         """get max water in each time frame"""
         cpu_info = cpuconfig.ConfigCpuNr(log)
         n_cores: int = min(cpu_info.cores_nr, water_arr.shape[0])
-        chunks: list[np.ndarray] = \
-            self._get_chunk_lists(water_arr.shape[0], n_cores)
-        max_indices: dict[int, list[int]] = {}
-        for i_frame, frame in enumerate(water_arr):
-            max_z_index: list[int] = []  # Index of the max value at each grid
-            xyz_i = frame.reshape(-1, 3)
-            for i in range(x_mesh.shape[0]):
-                for j in range(x_mesh.shape[1]):
-                    # Define the boundaries of the current mesh element
-                    x_min_mesh = x_mesh[i, j]
-                    x_max_mesh = x_mesh[i, j] + mesh_size
-                    y_min_mesh = y_mesh[i, j]
-                    y_max_mesh = y_mesh[i, j] + mesh_size
+        results: list[list[np.int64]]
+        max_indices: dict[int, list[np.int64]] = {}
+        with multiprocessing.Pool(processes=n_cores) as pool:
+            results = pool.starmap(
+                self._process_single_frame,
+                [(frame, x_mesh, y_mesh, self.mesh_size, self.z_treshhold)
+                 for frame in water_arr[:12]])
+        for i_frame, result in enumerate(results):
+            max_indices[i_frame] = result
 
-                    # Select atoms within the current mesh element based on XY
-                    ind_in_mesh = np.where((xyz_i[:, 0] >= x_min_mesh) &
-                                           (xyz_i[:, 0] < x_max_mesh) &
-                                           (xyz_i[:, 1] >= y_min_mesh) &
-                                           (xyz_i[:, 1] < y_max_mesh) &
-                                           (xyz_i[:, 2] < z_tershhold))
-                    if len(ind_in_mesh[0]) > 0:
-                        max_z = np.argmax(frame[2::3][ind_in_mesh])
-                        max_z_index.append(ind_in_mesh[0][max_z])
-            max_indices[i_frame] = max_z_index
         return max_indices
+
+    @staticmethod
+    def _process_single_frame(frame: np.ndarray,
+                              x_mesh: np.ndarray,
+                              y_mesh: np.ndarray,
+                              mesh_size: float,
+                              z_treshhold: float
+                              ) -> list[np.int64]:
+        """Process a single frame to find max water indices"""
+        max_z_index: list[np.int64] = []
+        xyz_i = frame.reshape(-1, 3)
+        for i in range(x_mesh.shape[0]):
+            for j in range(x_mesh.shape[1]):
+                # Define the boundaries of the current mesh element
+                x_min_mesh = x_mesh[i, j]
+                x_max_mesh = x_mesh[i, j] + mesh_size
+                y_min_mesh = y_mesh[i, j]
+                y_max_mesh = y_mesh[i, j] + mesh_size
+
+                # Select atoms within the current mesh element based on XY
+                ind_in_mesh = np.where((xyz_i[:, 0] >= x_min_mesh) &
+                                       (xyz_i[:, 0] < x_max_mesh) &
+                                       (xyz_i[:, 1] >= y_min_mesh) &
+                                       (xyz_i[:, 1] < y_max_mesh) &
+                                       (xyz_i[:, 2] < z_treshhold))
+                if len(ind_in_mesh[0]) > 0:
+                    max_z = np.argmax(frame[2::3][ind_in_mesh])
+                    max_z_index.append(ind_in_mesh[0][max_z])
+        return max_z_index
 
     @staticmethod
     def _get_chunk_lists(arr_size: int,

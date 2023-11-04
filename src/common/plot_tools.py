@@ -85,8 +85,8 @@ def mk_canvas(x_range: tuple[float, float],
         plt.subplots(nrows=nrows, ncols=ncols, figsize=set_sizes(width))
     # Set font for all elements in the plot)
     xticks = np.linspace(x_range[0], x_range[-1], num_xticks)
-    for ax_i in ax_main:
-        ax_i.set_xticks(xticks)
+    for ax in np.ravel(ax_main):
+        ax.set_xticks(xticks)
     ax_main = set_x2ticks(ax_main, add_xtwin)
     ax_main = set_ax_font_label(ax_main, fsize=fsize)
     return fig_main, ax_main
@@ -111,11 +111,11 @@ def save_close_fig(fig: plt.figure,  # The figure to save,
         'upper right'.
     """
     if not legend:
-        for ax_i in axs:
+        for ax_i in np.ravel(axs):
             legend = ax_i.legend(loc=loc, bbox_to_anchor=(1.0, 1.0))
         legend.set_bbox_to_anchor((1.0, 1.0))
     else:
-        for ax_j in axs:
+        for ax_j in np.ravel(axs):
             legend = ax_j.legend(loc=loc)
     fig.savefig(fname,
                 dpi=300,
@@ -140,11 +140,11 @@ def set_x2ticks(ax_main: plt.axes,  # The axes to wrok with
     Returns:
         plt.axes: The modified main axes.
     """
-    for ax_i in ax_main:
+    for ax_i in np.ravel(ax_main):
         ax_i.tick_params(axis='both', direction='in')
     ax_list: list[plt.axes] = []
     if add_xtwin:
-        for ax_j in ax_main:
+        for ax_j in np.ravel(ax_main):
         # Set twiny
             ax2 = ax_j.twiny()
             ax2.set_xlim(ax_j.get_xlim())
@@ -211,7 +211,7 @@ def set_ax_font_label(ax_main: plt.axes,  # Main axis to set parameters
         fontsize = 14
     else:
         fontsize = fsize
-    for ax_i in ax_main:
+    for ax_i in np.ravel(ax_main):
         ax_i.set_xlabel(x_label, fontsize=fontsize)
         ax_i.set_ylabel(y_label, fontsize=fontsize)
 

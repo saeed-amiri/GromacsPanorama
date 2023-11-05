@@ -47,11 +47,12 @@ class GetSurface:
         x_mesh: np.ndarray  # Mesh grid in x and y
         y_mesh: np.ndarray  # Mesh grid in x and y
         ComPlotter(com_arr=water_arr[:-2],
-                   index=10,
+                   index=2,
                    log=log,
                    to_png=True,
                    to_xyz=True)
-        self.z_treshhold = self.get_interface_z_treshhold(box_dims)
+        # self.z_treshhold = self.get_interface_z_treshhold(box_dims)
+        self.z_treshhold = 120
         x_mesh, y_mesh, self.mesh_size = self._get_xy_grid(box_dims)
         surface_indices: dict[int, list[np.int64]] = \
             self._get_surface_topology(water_arr[:-2], x_mesh, y_mesh, log)
@@ -99,7 +100,7 @@ class GetSurface:
             results = pool.starmap(
                 self._process_single_frame,
                 [(frame, x_mesh, y_mesh, self.mesh_size, self.z_treshhold)
-                 for frame in water_arr])
+                 for frame in water_arr[:5]])
         for i_frame, result in enumerate(results):
             max_indices[i_frame] = result
 

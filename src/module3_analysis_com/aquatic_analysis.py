@@ -9,6 +9,7 @@ import numpy as np
 
 from common import logger
 from common import cpuconfig
+from common import static_info as stinfo
 from common.colors_text import TextColor as bcolors
 from module3_analysis_com.com_file_parser import GetCom
 from module3_analysis_com.com_plotter import ComPlotter
@@ -164,22 +165,50 @@ class GetSurface:
 
 class AnalysisAqua:
     """get everything from water!"""
+
+    surface_waters: dict[int, np.ndarray]  # All the surface waters
+
     def __init__(self,
                  parsed_com: "GetCom",
                  log: logger.logging.Logger
                  ) -> None:
-        surface_waters: dict[int, np.ndarray] = \
+        self.surface_waters = \
             GetSurface(parsed_com.split_arr_dict['SOL'],
                        parsed_com.box_dims,
                        log).surface_waters
-        self._initiate(surface_waters, log)
+        self.np_com: np.ndarray = parsed_com.split_arr_dict['APT_COR']
+        self._initiate(log)
 
     def _initiate(self,
-                  surface_waters: dict[int, np.ndarray],
                   log: logger.logging.Logger
                   ) -> None:
         """initiate surface analysing"""
-        SurfPlotter(surf_dict=surface_waters, log=log)
+        SurfPlotter(surf_dict=self.surface_waters, log=log)
+        self.drop_water_under_np(log)
+
+    def drop_water_under_np(self,
+                            log: logger.logging.Logger
+                            ) -> None:
+        """Drop the water under the nanoparticle.
+        The com of NP is known, and the radius of the NP is also known
+        with some error. We calculate the contact radius of the np.
+        First, we drop the water under np with radius r, then calculate
+        the contact radius, and then from initial surface_waters, we
+        drop the residues under the contact radius!
+        """
+        np_radius: float = stinfo.np_info['radius']
+        surface_waters_under_r: dict[int, np.ndenumerate] = {}
+        for frame, waters in self.surface_waters.items():
+            np_com_i = self.np_com[frame]
+            print(frame, np_com_i)
+            # Calculate Euclidean distances from each point to the center O
+            distances = np.linalg.norm(waters[:, :2] - np_com_i[:2], axis=1)
+            outside_circle_mask = distances < np_radius
+            surface_waters_under_r[frame] = waters[~outside_circle_mask]
+
+        SurfPlotter(surf_dict=surface_waters_under_r,
+                    log=log,
+                    fout_suffix='under_r.png')
 
 
 if __name__ == "__main__":

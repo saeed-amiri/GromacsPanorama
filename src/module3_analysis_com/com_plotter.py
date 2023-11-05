@@ -64,6 +64,7 @@ class ComPlotter:
                 label=f'{labels[i]},frame:{index}')
             ax_i.set_xlabel('x [nm]' if i != 2 else 'y [nm]')
             ax_i.set_ylabel('y [nm]' if i == 0 else 'z [nm]')
+            ax_i.grid(axis='both', alpha=0.5, color='grey')
 
         if to_png:
             plot_tools.save_close_fig(

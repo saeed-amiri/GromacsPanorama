@@ -9,6 +9,7 @@ import numpy as np
 
 from common import logger
 from common import cpuconfig
+from common import xvg_to_dataframe
 from common import static_info as stinfo
 from common.colors_text import TextColor as bcolors
 from module3_analysis_com.com_file_parser import GetCom
@@ -167,6 +168,7 @@ class AnalysisAqua:
     """get everything from water!"""
 
     surface_waters: dict[int, np.ndarray]  # All the surface waters
+    info_message: str = '\tMessage from AnalysisAqua:\n'
 
     def __init__(self,
                  parsed_com: "GetCom",
@@ -177,7 +179,16 @@ class AnalysisAqua:
                        parsed_com.box_dims,
                        log).surface_waters
         self.np_com: np.ndarray = parsed_com.split_arr_dict['APT_COR']
+        self.get_np_gmx(log)
         self._initiate(log)
+
+    def get_np_gmx(self,
+                   log: logger.logging.Logger
+                   ) -> None:
+        """geeting the COM of the nanoparticles from gmx traj
+        the file name is coord.xvg
+        """
+        print(xvg_to_dataframe.XvgParser('coord.xvg', log).xvg_df)
 
     def _initiate(self,
                   log: logger.logging.Logger
@@ -196,10 +207,18 @@ class AnalysisAqua:
         the contact radius, and then from initial surface_waters, we
         drop the residues under the contact radius!
         """
+        np_com = {}
+        np_com[0] =	np.array([162.648, 66.8229, 86.1353])
+        np_com[1] =	np.array([162.153, 68.5717, 86.6037])
+        np_com[2] =	np.array([161.5, 68.674, 86.0173])
+        np_com[3] =	np.array([161.664, 68.1555, 87.4686])
+        np_com[4] =	np.array([160.438, 68.1909, 85.3563])
+        np_com[5] =	np.array([161.596, 68.3054, 87.468])
         np_radius: float = stinfo.np_info['radius']
         surface_waters_under_r: dict[int, np.ndenumerate] = {}
         for frame, waters in self.surface_waters.items():
-            np_com_i = self.np_com[frame]
+            np_com_i = np_com[frame]
+            print(frame, np_com_i, self.np_com[frame])
             # Calculate Euclidean distances from each point to the center O
             distances: np.ndarray = \
                 np.linalg.norm(waters[:, :2] - np_com_i[:2], axis=1)

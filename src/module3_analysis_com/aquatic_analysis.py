@@ -200,10 +200,10 @@ class AnalysisAqua:
         surface_waters_under_r: dict[int, np.ndenumerate] = {}
         for frame, waters in self.surface_waters.items():
             np_com_i = self.np_com[frame]
-            print(frame, np_com_i)
             # Calculate Euclidean distances from each point to the center O
-            distances = np.linalg.norm(waters[:, :2] - np_com_i[:2], axis=1)
-            outside_circle_mask = distances < np_radius
+            distances: np.ndarray = \
+                np.linalg.norm(waters[:, :2] - np_com_i[:2], axis=1)
+            outside_circle_mask: np.ndarray = distances < np_radius
             surface_waters_under_r[frame] = waters[~outside_circle_mask]
 
         SurfPlotter(surf_dict=surface_waters_under_r,

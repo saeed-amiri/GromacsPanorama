@@ -49,6 +49,7 @@ class SurfPlotter:
                      fout_suffix: str
                      ) -> None:
         """plot the surface"""
+        self.info_msg += f'\tThe suffix of the files is: `{fout_suffix}`\n'
         for frame, value in selected_frames.items():
             fig_i, ax_i = \
                 plot_tools.mk_canvas((0, 200), height_ratio=(5**0.5 - 1))

@@ -206,16 +206,17 @@ class AnalysisAqua:
         np_radius: np.ndarray = \
             np.full((self.np_com.shape[0], 1), stinfo.np_info['radius'])
         surface_water_under_np: dict[int, np.ndarray] = \
-            self.drop_water_under_np(np_radius, 'under_r', log)
+            self.drop_water_inside_radius(np_radius, 'under_r', log)
         interface_z_r: np.ndarray = \
             self.get_interface_z(surface_water_under_np)
-        self.calc_contact_r(interface_z_r)
+        contact_r: np.ndarray = self.calc_contact_r(interface_z_r)
 
-    def drop_water_under_np(self,
-                            radius: np.ndarray,
-                            fout_suffix: str,
-                            log: logger.logging.Logger
-                            ) -> dict[int, np.ndarray]:
+
+    def drop_water_inside_radius(self,
+                                 radius: np.ndarray,
+                                 fout_suffix: str,
+                                 log: logger.logging.Logger
+                                 ) -> dict[int, np.ndarray]:
         """Drop the water under the nanoparticle.
         The com of NP is known, and the radius of the NP is also known
         with some error. We calculate the contact radius of the np.

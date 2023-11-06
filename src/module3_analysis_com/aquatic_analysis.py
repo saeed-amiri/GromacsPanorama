@@ -203,13 +203,17 @@ class AnalysisAqua:
                   ) -> None:
         """initiate surface analysing"""
         SurfPlotter(surf_dict=self.surface_waters, log=log)
+        np_radius: np.ndarray = \
+            np.full((self.np_com.shape[0], 1), stinfo.np_info['radius'])
         surface_water_under_np: dict[int, np.ndarray] = \
-            self.drop_water_under_np(log)
+            self.drop_water_under_np(np_radius, 'under_r', log)
         interface_z_r: np.ndarray = \
             self.get_interface_z(surface_water_under_np)
-        print(self.calc_contact_r(interface_z_r))
+        self.calc_contact_r(interface_z_r)
 
     def drop_water_under_np(self,
+                            radius: np.ndarray,
+                            fout_suffix: str,
                             log: logger.logging.Logger
                             ) -> dict[int, np.ndarray]:
         """Drop the water under the nanoparticle.
@@ -219,9 +223,9 @@ class AnalysisAqua:
         the contact radius, and then from initial surface_waters, we
         drop the residues under the contact radius!
         """
-        np_radius: float = stinfo.np_info['radius']
         surface_waters_under_r: dict[int, np.ndarray] = {}
         for frame, waters in self.surface_waters.items():
+            np_radius = radius[frame]
             np_com_i = self.np_com[frame]
             distances: np.ndarray = \
                 np.linalg.norm(waters[:, :2] - np_com_i[:2], axis=1)
@@ -230,7 +234,7 @@ class AnalysisAqua:
 
         SurfPlotter(surf_dict=surface_waters_under_r,
                     log=log,
-                    fout_suffix='under_r.png')
+                    fout_suffix=fout_suffix)
         return surface_waters_under_r
 
     def get_interface_z(self,

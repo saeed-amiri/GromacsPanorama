@@ -168,9 +168,10 @@ class GetSurface:
 class AnalysisAqua:
     """get everything from water!"""
 
-    np_source: str = 'coord'
-    surface_waters: dict[int, np.ndarray]  # All the surface waters
     info_message: str = '\tMessage from AnalysisAqua:\n'
+    surface_waters: dict[int, np.ndarray]  # All the surface waters
+    contact_df: pd.DataFrame  # Final dataframe contains contact info
+    np_source: str = 'coord'
 
     def __init__(self,
                  parsed_com: "GetCom",
@@ -203,8 +204,9 @@ class AnalysisAqua:
                   ) -> None:
         """initiate surface analysing"""
         SurfPlotter(surf_dict=self.surface_waters, log=log)
-        np_radius: np.ndarray = \
-            np.full((self.np_com.shape[0], 1), stinfo.np_info['radius'])
+        np_radius: np.ndarray = np.full(
+            (self.np_com.shape[0], 1), np_r := stinfo.np_info['radius'])
+        self.info_message += f'\tThe radius of the NP was set to `{np_r}`\n'
         surface_water_under_np: dict[int, np.ndarray] = \
             self.drop_water_inside_radius(np_radius, 'under_r.png', log)
         interface_z_r: np.ndarray = \
@@ -212,7 +214,10 @@ class AnalysisAqua:
         contact_r: np.ndarray = self.calc_contact_r(interface_z_r)
         self.drop_water_inside_radius(contact_r, 'contact_r.png', log)
         contact_angle: np.ndarray = self.calc_contact_angles(contact_r)
-        print(np.mean(contact_angle), np.std(contact_angle))
+        self.contact_df = self.mk_df(contact_r, contact_angle, interface_z_r)
+        self.info_message += \
+            (f'\tThe average of contact angle is: `{np.mean(contact_angle)}`\n'
+             f'\tThe std of contact angle is: `{np.std(contact_angle)}`\n')
 
     def drop_water_inside_radius(self,
                                  radius: np.ndarray,
@@ -274,6 +279,23 @@ class AnalysisAqua:
             h_deep = deep + np_radius
             contact_angles[i] = np.degrees(np.arccos((h_deep/np_radius)-1))
         return contact_angles
+
+    def mk_df(self,
+              contact_r: np.ndarray,
+              contact_angle: np.ndarray,
+              interface_z: np.ndarray
+              ) -> pd.DataFrame:
+        """make a df with everthing in it"""
+        columns: list[str] = \
+            ['contact_radius', 'contact_angles', 'interface_z']
+        df_i = pd.DataFrame(columns=columns)
+        df_i['contact_angles'] = contact_angle
+        df_i['contact_radius'] = contact_r
+        df_i['interface_z'] = interface_z
+        df_i.to_scv(fout := 'contact.info', sep=' ')
+        self.info_message += (f'\tThe dataframe saved to `{fout}` with '
+                              f'columns:\n\t`{columns}`\n')
+        return df_i
 
 
 if __name__ == "__main__":

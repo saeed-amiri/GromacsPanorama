@@ -103,7 +103,7 @@ class GetSurface:
             results = pool.starmap(
                 self._process_single_frame,
                 [(frame, x_mesh, y_mesh, self.mesh_size, self.z_treshhold)
-                 for frame in water_arr])
+                 for frame in water_arr[:5]])
         for i_frame, result in enumerate(results):
             max_indices[i_frame] = result
 
@@ -204,8 +204,8 @@ class AnalysisAqua:
                   ) -> None:
         """initiate surface analysing"""
         SurfPlotter(surf_dict=self.surface_waters, log=log)
-        np_radius: np.ndarray = np.full(
-            (self.np_com.shape[0], 1), np_r := stinfo.np_info['radius'])
+        np_r: float = stinfo.np_info['radius']
+        np_radius: np.ndarray = np.full((self.np_com.shape[0], 1), np_r)
         self.info_message += f'\tThe radius of the NP was set to `{np_r}`\n'
         surface_water_under_np: dict[int, np.ndarray] = \
             self.drop_water_inside_radius(np_radius, 'under_r.png', log)
@@ -288,14 +288,19 @@ class AnalysisAqua:
         """make a df with everthing in it"""
         columns: list[str] = \
             ['contact_radius', 'contact_angles', 'interface_z']
-        df_i = pd.DataFrame(columns=columns)
-        df_i['contact_angles'] = contact_angle
-        df_i['contact_radius'] = contact_r
-        df_i['interface_z'] = interface_z
-        df_i.to_scv(fout := 'contact.info', sep=' ')
-        self.info_message += (f'\tThe dataframe saved to `{fout}` with '
-                              f'columns:\n\t`{columns}`\n')
-        return df_i
+        if len(contact_r) == len(contact_angle) == len(interface_z):
+            data = {
+                'contact_radius': contact_r.ravel(),
+                'contact_angles': contact_angle.ravel(),
+                'interface_z': interface_z.ravel()
+            }
+            df_i = pd.DataFrame(data, columns=columns)
+            df_i.to_csv(fout := 'contact.info', sep=' ', index=False)
+            self.info_message += \
+                (f'\tThe dataframe saved to `{fout}` '
+                 f'with columns:\n\t`{columns}`\n')
+            return df_i
+        raise ValueError("Lengths of input arrays do not match.")
 
 
 if __name__ == "__main__":

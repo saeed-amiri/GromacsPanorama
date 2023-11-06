@@ -203,9 +203,9 @@ class AnalysisAqua:
                   ) -> None:
         """initiate surface analysing"""
         SurfPlotter(surf_dict=self.surface_waters, log=log)
-        
-        surface_under_water: dict[int, np.ndarray] = \
+        surface_water_under_np: dict[int, np.ndarray] = \
             self.drop_water_under_np(log)
+        print(self.get_interface_z(surface_water_under_np))
 
     def drop_water_under_np(self,
                             log: logger.logging.Logger
@@ -218,7 +218,7 @@ class AnalysisAqua:
         drop the residues under the contact radius!
         """
         np_radius: float = stinfo.np_info['radius']
-        surface_waters_under_r: dict[int, np.ndenumerate] = {}
+        surface_waters_under_r: dict[int, np.ndarray] = {}
         for frame, waters in self.surface_waters.items():
             np_com_i = self.np_com[frame]
             distances: np.ndarray = \
@@ -230,6 +230,14 @@ class AnalysisAqua:
                     log=log,
                     fout_suffix='under_r.png')
         return surface_waters_under_r
+
+    def get_interface_z(self,
+                        surface_water: dict[int, np.ndarray]
+                        ) -> np.ndarray:
+        """return the average of the z values for each frame"""
+        return np.array(
+            [np.mean(frame[:, 2]) for frame in surface_water.values()]
+            ).reshape(-1, 1)
 
 
 if __name__ == "__main__":

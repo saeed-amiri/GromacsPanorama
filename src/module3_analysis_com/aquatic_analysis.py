@@ -168,7 +168,7 @@ class GetSurface:
 class AnalysisAqua:
     """get everything from water!"""
 
-    info_message: str = '\tMessage from AnalysisAqua:\n'
+    info_msg: str = '-Message from AnalysisAqua:\n'
     surface_waters: dict[int, np.ndarray]  # All the surface waters
     contact_df: pd.DataFrame  # Final dataframe contains contact info
     np_source: str = 'coord'
@@ -186,6 +186,7 @@ class AnalysisAqua:
         else:
             self.np_com = parsed_com.split_arr_dict['APT_COR']
         self._initiate(log)
+        self._write_msg(log)
 
     def get_np_gmx(self,
                    log: logger.logging.Logger
@@ -206,7 +207,7 @@ class AnalysisAqua:
         SurfPlotter(surf_dict=self.surface_waters, log=log)
         np_r: float = stinfo.np_info['radius']
         np_radius: np.ndarray = np.full((self.np_com.shape[0], 1), np_r)
-        self.info_message += f'\tThe radius of the NP was set to `{np_r}`\n'
+        self.info_msg += f'\tThe radius of the NP was set to `{np_r}`\n'
         surface_water_under_np: dict[int, np.ndarray] = \
             self.drop_water_inside_radius(np_radius, 'under_r.png', log)
         interface_z_r: np.ndarray = \
@@ -215,7 +216,7 @@ class AnalysisAqua:
         self.drop_water_inside_radius(contact_r, 'contact_r.png', log)
         contact_angle: np.ndarray = self.calc_contact_angles(contact_r)
         self.contact_df = self.mk_df(contact_r, contact_angle, interface_z_r)
-        self.info_message += \
+        self.info_msg += \
             (f'\tThe average of contact angle is: `{np.mean(contact_angle)}`\n'
              f'\tThe std of contact angle is: `{np.std(contact_angle)}`\n')
 
@@ -297,11 +298,19 @@ class AnalysisAqua:
             }
             df_i = pd.DataFrame(data, columns=columns)
             df_i.to_csv(fout := 'contact.info', sep=' ', index=False)
-            self.info_message += \
+            self.info_msg += \
                 (f'\tThe dataframe saved to `{fout}` '
                  f'with columns:\n\t`{columns}`\n')
             return df_i
         raise ValueError("Lengths of input arrays do not match.")
+
+    def _write_msg(self,
+                   log: logger.logging.Logger  # To log
+                   ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{AnalysisAqua.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == "__main__":

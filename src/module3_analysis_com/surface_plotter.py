@@ -32,6 +32,7 @@ class SurfPlotter:
             self.get_selected_frames(surf_dict, indices, nr_fout)
         self.plot_surface(selected_frames, fout_suffix)
         self._write_msg(log)
+        self.selected_frames: list[int] = selected_frames
 
     def get_selected_frames(self,
                             surf_dict: dict[int, np.ndarray],

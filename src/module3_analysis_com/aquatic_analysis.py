@@ -287,12 +287,13 @@ class AnalysisAqua:
               ) -> pd.DataFrame:
         """make a df with everthing in it"""
         columns: list[str] = \
-            ['contact_radius', 'contact_angles', 'interface_z']
-        if len(contact_r) == len(contact_angle) == len(interface_z):
+            ['contact_radius', 'contact_angles', 'interface_z', 'np_com_z']
+        if (l_i:=len(contact_r)) == len(contact_angle) == len(interface_z):
             data = {
                 'contact_radius': contact_r.ravel(),
                 'contact_angles': contact_angle.ravel(),
-                'interface_z': interface_z.ravel()
+                'interface_z': interface_z.ravel(),
+                'np_com_z': self.np_com[:l_i, 2].ravel()
             }
             df_i = pd.DataFrame(data, columns=columns)
             df_i.to_csv(fout := 'contact.info', sep=' ', index=False)

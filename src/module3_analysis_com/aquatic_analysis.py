@@ -103,7 +103,7 @@ class GetSurface:
             results = pool.starmap(
                 self._process_single_frame,
                 [(frame, x_mesh, y_mesh, self.mesh_size, self.z_treshhold)
-                 for frame in water_arr[:5]])
+                 for frame in water_arr])
         for i_frame, result in enumerate(results):
             max_indices[i_frame] = result
 
@@ -211,7 +211,8 @@ class AnalysisAqua:
             self.get_interface_z(surface_water_under_np)
         contact_r: np.ndarray = self.calc_contact_r(interface_z_r)
         self.drop_water_inside_radius(contact_r, 'contact_r.png', log)
-        self.calc_contact_angles(contact_r)
+        contact_angle: np.ndarray = self.calc_contact_angles(contact_r)
+        print(np.mean(contact_angle), np.std(contact_angle))
 
     def drop_water_inside_radius(self,
                                  radius: np.ndarray,

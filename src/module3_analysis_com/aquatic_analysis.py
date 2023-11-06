@@ -206,11 +206,12 @@ class AnalysisAqua:
         np_radius: np.ndarray = \
             np.full((self.np_com.shape[0], 1), stinfo.np_info['radius'])
         surface_water_under_np: dict[int, np.ndarray] = \
-            self.drop_water_inside_radius(np_radius, 'under_r', log)
+            self.drop_water_inside_radius(np_radius, 'under_r.png', log)
         interface_z_r: np.ndarray = \
             self.get_interface_z(surface_water_under_np)
         contact_r: np.ndarray = self.calc_contact_r(interface_z_r)
-
+        self.drop_water_inside_radius(contact_r, 'contact_r.png', log)
+        self.calc_contact_angles(contact_r)
 
     def drop_water_inside_radius(self,
                                  radius: np.ndarray,
@@ -258,7 +259,20 @@ class AnalysisAqua:
         for i, frame in enumerate(interface_z_r):
             deep = np.abs(self.np_com[i, 2] - frame)
             r_contact[i] = np.sqrt(r_np_squre - deep**2)
+        r_contact += np.std(r_contact)
         return r_contact
+
+    def calc_contact_angles(self,
+                            contact_r: np.ndarray
+                            ) -> np.ndarray:
+        """calculate contact angles from contact radius"""
+        contact_angles = np.zeros(contact_r.shape)
+        np_radius: float = stinfo.np_info['radius']
+        for i, frame in enumerate(contact_r):
+            deep = np.sqrt(np_radius**2 - frame**2)
+            h_deep = deep + np_radius
+            contact_angles[i] = np.degrees(np.arccos((h_deep/np_radius)-1))
+        return contact_angles
 
 
 if __name__ == "__main__":

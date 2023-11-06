@@ -203,11 +203,13 @@ class AnalysisAqua:
                   ) -> None:
         """initiate surface analysing"""
         SurfPlotter(surf_dict=self.surface_waters, log=log)
-        self.drop_water_under_np(log)
+        
+        surface_under_water: dict[int, np.ndarray] = \
+            self.drop_water_under_np(log)
 
     def drop_water_under_np(self,
                             log: logger.logging.Logger
-                            ) -> None:
+                            ) -> dict[int, np.ndarray]:
         """Drop the water under the nanoparticle.
         The com of NP is known, and the radius of the NP is also known
         with some error. We calculate the contact radius of the np.
@@ -227,6 +229,7 @@ class AnalysisAqua:
         SurfPlotter(surf_dict=surface_waters_under_r,
                     log=log,
                     fout_suffix='under_r.png')
+        return surface_waters_under_r
 
 
 if __name__ == "__main__":

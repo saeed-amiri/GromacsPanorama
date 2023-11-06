@@ -205,7 +205,9 @@ class AnalysisAqua:
         SurfPlotter(surf_dict=self.surface_waters, log=log)
         surface_water_under_np: dict[int, np.ndarray] = \
             self.drop_water_under_np(log)
-        print(self.get_interface_z(surface_water_under_np))
+        interface_z_r: np.ndarray = \
+            self.get_interface_z(surface_water_under_np)
+        print(self.calc_contact_r(interface_z_r))
 
     def drop_water_under_np(self,
                             log: logger.logging.Logger
@@ -238,6 +240,20 @@ class AnalysisAqua:
         return np.array(
             [np.mean(frame[:, 2]) for frame in surface_water.values()]
             ).reshape(-1, 1)
+
+    def calc_contact_r(self,
+                       interface_z_r: np.ndarray
+                       ) -> np.ndarray:
+        """calculate the contact radius based on the np center of mass,
+        average interface location and radius of the np
+        the hypothesis is the np com is under the interface!
+        """
+        r_contact = np.zeros(interface_z_r.shape)
+        r_np_squre: float = stinfo.np_info['radius']**2
+        for i, frame in enumerate(interface_z_r):
+            deep = np.abs(self.np_com[i, 2] - frame)
+            r_contact[i] = np.sqrt(r_np_squre - deep**2)
+        return r_contact
 
 
 if __name__ == "__main__":

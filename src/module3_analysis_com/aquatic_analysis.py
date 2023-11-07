@@ -217,6 +217,7 @@ class AnalysisAqua:
                   ) -> None:
         """initiate surface analysing"""
         self.selected_frames = SurfPlotter(surf_dict=self.surface_waters,
+                                           box_dims=box_dims,
                                            np_com=self.np_com,
                                            log=log).selected_frames
         np_r: float = stinfo.np_info['radius']
@@ -269,6 +270,7 @@ class AnalysisAqua:
 
         SurfPlotter(surf_dict=surface_waters_under_r,
                     np_com=self.np_com,
+                    box_dims=box_dims,
                     log=log,
                     indices=self.selected_frames,
                     fout_suffix=fout_suffix)

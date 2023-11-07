@@ -30,6 +30,7 @@ class SurfPlotter:
     def __init__(self,
                  surf_dict: dict[int, np.ndarray],
                  np_com: np.ndarray,  # Com of the Np
+                 box_dims: dict[str, float],
                  log: logger.logging.Logger,
                  indices: typing.Optional[list[int]] = None,
                  fout_suffix: str = 'surface.png',
@@ -38,7 +39,7 @@ class SurfPlotter:
         self.np_com: np.ndarray = np_com
         selected_frames: dict[int, np.ndarray] = \
             self.get_selected_frames(surf_dict, indices, nr_fout)
-        self.plot_surface(selected_frames, fout_suffix)
+        self.plot_surface(selected_frames, box_dims, fout_suffix)
         self._write_msg(log)
         self.selected_frames: list[int] = list(selected_frames.keys())
 
@@ -55,6 +56,7 @@ class SurfPlotter:
 
     def plot_surface(self,
                      selected_frames: dict[int, np.ndarray],
+                     box_dims: dict[str, float],
                      fout_suffix: str
                      ) -> None:
         """plot the surface"""
@@ -76,6 +78,8 @@ class SurfPlotter:
             self.add_circle_to_axis(ax_i,
                                     origin=self.np_com[frame][:2],
                                     radius=stinfo.np_info['radius'])
+            ax_i.set_xlim(box_dims['x_lo'] - 7, box_dims['x_hi'] + 7)
+            ax_i.set_ylim(box_dims['y_lo'] - 7, box_dims['y_hi'] + 7)
             plt.gca().set_aspect('equal')
             plot_tools.save_close_fig(
                 fig_i, ax_i, fname=f'{frame}_{fout_suffix}', legend=False)

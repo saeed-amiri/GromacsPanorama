@@ -103,7 +103,7 @@ class GetSurface:
             results = pool.starmap(
                 self._process_single_frame,
                 [(frame, x_mesh, y_mesh, self.mesh_size, self.z_treshhold)
-                 for frame in water_arr[:5]])
+                 for frame in water_arr[:50]])
         for i_frame, result in enumerate(results):
             max_indices[i_frame] = result
 
@@ -171,6 +171,7 @@ class AnalysisAqua:
     info_msg: str = '-Message from AnalysisAqua:\n'
     surface_waters: dict[int, np.ndarray]  # All the surface waters
     contact_df: pd.DataFrame  # Final dataframe contains contact info
+    selected_frames: list[int]  # To plot same series of the frames
     np_source: str = 'coord'
 
     def __init__(self,
@@ -204,7 +205,8 @@ class AnalysisAqua:
                   log: logger.logging.Logger
                   ) -> None:
         """initiate surface analysing"""
-        SurfPlotter(surf_dict=self.surface_waters, log=log)
+        self.selected_frames = \
+            SurfPlotter(surf_dict=self.surface_waters, log=log).selected_frames
         np_r: float = stinfo.np_info['radius']
         np_radius: np.ndarray = np.full((self.np_com.shape[0], 1), np_r)
         self.info_msg += f'\tThe radius of the NP was set to `{np_r}`\n'
@@ -243,6 +245,7 @@ class AnalysisAqua:
 
         SurfPlotter(surf_dict=surface_waters_under_r,
                     log=log,
+                    indices=self.selected_frames,
                     fout_suffix=fout_suffix)
         return surface_waters_under_r
 

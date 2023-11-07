@@ -103,7 +103,7 @@ class GetSurface:
             results = pool.starmap(
                 self._process_single_frame,
                 [(frame, x_mesh, y_mesh, self.mesh_size, self.z_treshhold)
-                 for frame in water_arr[:50]])
+                 for frame in water_arr])
         for i_frame, result in enumerate(results):
             max_indices[i_frame] = result
 

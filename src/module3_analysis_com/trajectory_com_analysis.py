@@ -38,6 +38,7 @@ Update:
     the data of the ODN should be split in half.
 """
 
+import sys
 from common import logger
 from module3_analysis_com.com_file_parser import GetCom
 from module3_analysis_com.aquatic_analysis import AnalysisAqua
@@ -46,9 +47,10 @@ from module3_analysis_com.aquatic_analysis import AnalysisAqua
 class ComAnalysis:
     """call all the other scripts and analyze them"""
     def __init__(self,
-                 log: logger.logging.Logger
+                 log: logger.logging.Logger,
+                 fname: str  # Name of the com file
                  ) -> None:
-        parsed_com = GetCom()
+        parsed_com = GetCom(fname)
         self.initiate(parsed_com, log)
 
     def initiate(self,
@@ -61,4 +63,4 @@ class ComAnalysis:
 
 
 if __name__ == "__main__":
-    ComAnalysis(log=logger.setup_logger('com_analysis.log'))
+    ComAnalysis(fname=sys.argv[1], log=logger.setup_logger('com_analysis.log'))

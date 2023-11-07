@@ -75,7 +75,9 @@ class GetCom:
         file.
     """
 
-    def __init__(self) -> None:
+    def __init__(self,
+                 fname: str = stinfo.files['com_pickle']
+                 ) -> None:
         """
         Initialize the GetCom instance.
 
@@ -84,7 +86,7 @@ class GetCom:
         The data is read, split, and relevant numbers are calculated
         during initialization.
         """
-        self.f_name: str = stinfo.files['com_pickle']
+        self.f_name: str = fname
         self.split_arr_dict: dict[str, np.ndarray] = self._initiate_data()
         self.nr_dict: dict[str, int] = self.get_numbers(self.split_arr_dict)
         self.box_dims: dict[str, float] = self.get_box_dimensions()

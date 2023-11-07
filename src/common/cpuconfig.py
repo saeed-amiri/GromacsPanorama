@@ -127,7 +127,7 @@ class ConfigCpuNr:
             cores_nr = int(aval_core_nr // 2)
         else:
             cores_nr = int(aval_core_nr)
-        self.info_msg += (f'\t\tNumber of cores for this computation is'
+        self.info_msg += (f'\tNumber of cores for this computation is'
                           f' set to: `{cores_nr}`\n')
         return cores_nr
 
@@ -135,7 +135,7 @@ class ConfigCpuNr:
         """Retrieve the hostname of the machine."""
         try:
             hostname = socket.gethostname()
-            self.info_msg += f'\t\tHostname is `{hostname}`\n'
+            self.info_msg += f'\tHostname is `{hostname}`\n'
         except socket.error as err:
             raise RuntimeError("Failed to retrieve hostname.") from err
         return hostname
@@ -144,7 +144,7 @@ class ConfigCpuNr:
         """return numbers of cores"""
         aval_core_nr: int = multiprocessing.cpu_count()
         self.info_msg += \
-            f'\t\tNumber of available cores of the host is: `{aval_core_nr}`\n'
+            f'\tNumber of available cores of the host is: `{aval_core_nr}`\n'
         return aval_core_nr
 
     def write_log_msg(self,

@@ -35,6 +35,7 @@ class GetSurface:
                  box_dims: dict[str, float],
                  log: logger.logging.Logger
                  ) -> None:
+        self.np_com: np.ndarray = self._get_np_gmx(log)
         self.get_water_surface(water_arr, box_dims, log)
         self._write_msg(log)
 
@@ -102,15 +103,21 @@ class GetSurface:
         with multiprocessing.Pool(processes=n_cores) as pool:
             results = pool.starmap(
                 self._process_single_frame,
-                [(frame, x_mesh, y_mesh, self.mesh_size, self.z_treshhold)
-                 for frame in water_arr])
+                [(i_frame,
+                  frame,
+                  x_mesh,
+                  y_mesh,
+                  self.mesh_size,
+                  self.z_treshhold)
+                 for i_frame, frame in enumerate(water_arr)])
         for i_frame, result in enumerate(results):
             max_indices[i_frame] = result
 
         return max_indices
 
-    @staticmethod
-    def _process_single_frame(frame: np.ndarray,
+    def _process_single_frame(self,
+                              i_frame: int,  # index of the frame
+                              frame: np.ndarray,  # One frame of water com traj
                               x_mesh: np.ndarray,
                               y_mesh: np.ndarray,
                               mesh_size: float,
@@ -118,6 +125,8 @@ class GetSurface:
                               ) -> list[np.int64]:
         """Process a single frame to find max water indices"""
         max_z_index: list[np.int64] = []
+        min_z_treshhold: float = \
+            self.np_com[i_frame, 2] - stinfo.np_info['radius']
         xyz_i = frame.reshape(-1, 3)
         for i in range(x_mesh.shape[0]):
             for j in range(x_mesh.shape[1]):
@@ -132,7 +141,8 @@ class GetSurface:
                                        (xyz_i[:, 0] < x_max_mesh) &
                                        (xyz_i[:, 1] >= y_min_mesh) &
                                        (xyz_i[:, 1] < y_max_mesh) &
-                                       (xyz_i[:, 2] < z_treshhold))
+                                       (xyz_i[:, 2] < z_treshhold) &
+                                       (xyz_i[:, 2] > min_z_treshhold))
                 if len(ind_in_mesh[0]) > 0:
                     max_z = np.argmax(frame[2::3][ind_in_mesh])
                     max_z_index.append(ind_in_mesh[0][max_z])
@@ -164,6 +174,18 @@ class GetSurface:
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
 
+    def _get_np_gmx(self,
+                    log: logger.logging.Logger
+                    ) -> np.ndarray:
+        """geeting the COM of the nanoparticles from gmx traj
+        the file name is coord.xvg
+        convert AA to nm
+        """
+        xvg_df: pd.Dataframe = \
+            xvg_to_dataframe.XvgParser('coord.xvg', log).xvg_df
+        xvg_arr: np.ndarray = xvg_df.iloc[:, 1:4].to_numpy()
+        return xvg_arr * 10
+
 
 class AnalysisAqua:
     """get everything from water!"""
@@ -178,28 +200,16 @@ class AnalysisAqua:
                  parsed_com: "GetCom",
                  log: logger.logging.Logger
                  ) -> None:
-        self.surface_waters = \
-            GetSurface(parsed_com.split_arr_dict['SOL'],
-                       parsed_com.box_dims,
-                       log).surface_waters
+        surface = GetSurface(parsed_com.split_arr_dict['SOL'],
+                             parsed_com.box_dims,
+                             log)
+        self.surface_waters = surface.surface_waters
         if self.np_source == 'coord':
-            self.np_com: np.ndarray = self.get_np_gmx(log)
+            self.np_com: np.ndarray = surface.np_com
         else:
             self.np_com = parsed_com.split_arr_dict['APT_COR']
         self._initiate(parsed_com.box_dims, log)
         self._write_msg(log)
-
-    def get_np_gmx(self,
-                   log: logger.logging.Logger
-                   ) -> np.ndarray:
-        """geeting the COM of the nanoparticles from gmx traj
-        the file name is coord.xvg
-        convert AA to nm
-        """
-        xvg_df: pd.Dataframe = \
-            xvg_to_dataframe.XvgParser('coord.xvg', log).xvg_df
-        xvg_arr: np.ndarray = xvg_df.iloc[:, 1:4].to_numpy()
-        return xvg_arr * 10
 
     def _initiate(self,
                   box_dims: dict[str, float],

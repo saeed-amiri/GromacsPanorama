@@ -186,7 +186,7 @@ class AnalysisAqua:
             self.np_com: np.ndarray = self.get_np_gmx(log)
         else:
             self.np_com = parsed_com.split_arr_dict['APT_COR']
-        self._initiate(log)
+        self._initiate(parsed_com.box_dims, log)
         self._write_msg(log)
 
     def get_np_gmx(self,
@@ -202,6 +202,7 @@ class AnalysisAqua:
         return xvg_arr * 10
 
     def _initiate(self,
+                  box_dims: dict[str, float],
                   log: logger.logging.Logger
                   ) -> None:
         """initiate surface analysing"""
@@ -211,11 +212,17 @@ class AnalysisAqua:
         np_radius: np.ndarray = np.full((self.np_com.shape[0], 1), np_r)
         self.info_msg += f'\tThe radius of the NP was set to `{np_r}`\n'
         surface_water_under_np: dict[int, np.ndarray] = \
-            self.drop_water_inside_radius(np_radius, 'under_r.png', log)
+            self.drop_water_inside_radius(np_radius,
+                                          box_dims,
+                                          'under_r.png',
+                                          log)
         interface_z_r: np.ndarray = \
             self.get_interface_z(surface_water_under_np)
         contact_r: np.ndarray = self.calc_contact_r(interface_z_r)
-        self.drop_water_inside_radius(contact_r, 'contact_r.png', log)
+        self.drop_water_inside_radius(contact_r,
+                                      box_dims,
+                                      'contact_r.png',
+                                      log)
         contact_angle: np.ndarray = self.calc_contact_angles(contact_r)
         self.contact_df = self.mk_df(contact_r, contact_angle, interface_z_r)
         self.info_msg += \
@@ -224,6 +231,7 @@ class AnalysisAqua:
 
     def drop_water_inside_radius(self,
                                  radius: np.ndarray,
+                                 box_dims: dict[str, float],
                                  fout_suffix: str,
                                  log: logger.logging.Logger
                                  ) -> dict[int, np.ndarray]:
@@ -234,12 +242,17 @@ class AnalysisAqua:
         the contact radius, and then from initial surface_waters, we
         drop the residues under the contact radius!
         """
+        l_xy: tuple[float, float] = (box_dims['x_hi'] - box_dims['x_lo'],
+                                     box_dims['y_hi'] - box_dims['y_lo'])
         surface_waters_under_r: dict[int, np.ndarray] = {}
         for frame, waters in self.surface_waters.items():
             np_radius = radius[frame]
             np_com_i = self.np_com[frame]
-            distances: np.ndarray = \
-                np.linalg.norm(waters[:, :2] - np_com_i[:2], axis=1)
+            dx_or = waters[:, 0] - np_com_i[0]
+            dx_in = dx_or - (l_xy[0] * np.round(dx_or/l_xy[0]))
+            dy_or = waters[:, 1] - np_com_i[1]
+            dy_in = dy_or - (l_xy[1] * np.round(dy_or/l_xy[1]))
+            distances: np.ndarray = np.sqrt(dx_in**2 + dy_in**2)
             outside_circle_mask: np.ndarray = distances < np_radius
             surface_waters_under_r[frame] = waters[~outside_circle_mask]
 
@@ -292,7 +305,7 @@ class AnalysisAqua:
         """make a df with everthing in it"""
         columns: list[str] = \
             ['contact_radius', 'contact_angles', 'interface_z', 'np_com_z']
-        if (l_i:=len(contact_r)) == len(contact_angle) == len(interface_z):
+        if (l_i := len(contact_r)) == len(contact_angle) == len(interface_z):
             data = {
                 'contact_radius': contact_r.ravel(),
                 'contact_angles': contact_angle.ravel(),

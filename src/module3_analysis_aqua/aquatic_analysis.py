@@ -13,9 +13,9 @@ from common import cpuconfig
 from common import xvg_to_dataframe
 from common import static_info as stinfo
 from common.colors_text import TextColor as bcolors
-from module3_analysis_com.com_file_parser import GetCom
-from module3_analysis_com.com_plotter import ComPlotter
-from module3_analysis_com.surface_plotter import SurfPlotter
+from common.com_file_parser import GetCom
+from module3_analysis_aqua.com_plotter import ComPlotter
+from module3_analysis_aqua.surface_plotter import SurfPlotter
 
 
 class GetSurface:

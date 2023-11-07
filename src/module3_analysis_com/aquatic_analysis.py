@@ -216,8 +216,9 @@ class AnalysisAqua:
                   log: logger.logging.Logger
                   ) -> None:
         """initiate surface analysing"""
-        self.selected_frames = \
-            SurfPlotter(surf_dict=self.surface_waters, log=log).selected_frames
+        self.selected_frames = SurfPlotter(surf_dict=self.surface_waters,
+                                           np_com=self.np_com,
+                                           log=log).selected_frames
         np_r: float = stinfo.np_info['radius']
         np_radius: np.ndarray = np.full((self.np_com.shape[0], 1), np_r)
         self.info_msg += f'\tThe radius of the NP was set to `{np_r}`\n'
@@ -267,6 +268,7 @@ class AnalysisAqua:
             surface_waters_under_r[frame] = waters[~outside_circle_mask]
 
         SurfPlotter(surf_dict=surface_waters_under_r,
+                    np_com=self.np_com,
                     log=log,
                     indices=self.selected_frames,
                     fout_suffix=fout_suffix)

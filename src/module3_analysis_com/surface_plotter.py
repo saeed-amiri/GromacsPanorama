@@ -6,6 +6,7 @@ import random
 import typing
 import numpy as np
 import matplotlib.pylab as plt
+from matplotlib.ticker import MaxNLocator
 
 from common import logger
 from common import plot_tools
@@ -32,7 +33,7 @@ class SurfPlotter:
             self.get_selected_frames(surf_dict, indices, nr_fout)
         self.plot_surface(selected_frames, fout_suffix)
         self._write_msg(log)
-        self.selected_frames: list[int] = selected_frames.keys()
+        self.selected_frames: list[int] = list(selected_frames.keys())
 
     def get_selected_frames(self,
                             surf_dict: dict[int, np.ndarray],
@@ -56,11 +57,17 @@ class SurfPlotter:
                 plot_tools.mk_canvas((0, 200), height_ratio=(5**0.5 - 1))
             scatter = ax_i.scatter(value[:, 0], value[:, 1], c=value[:, 2],
                                    s=15, label=f'frame: {frame}')
-            cbar = plt.colorbar(scatter)
-            cbar.set_label('Z-Coordinate [A]')
+            # 'left', 'bottom', 'width', 'height'
+            cbar_ax = fig_i.add_axes([.80, 0.15, 0.25, 0.7])
+            cbar = fig_i.colorbar(scatter, cax=cbar_ax)
+            desired_num_ticks = 5
+            cbar.ax.yaxis.set_major_locator(MaxNLocator(desired_num_ticks))
+
+            cbar.set_label('Z-Coordinate [A]', rotation=90)
             ax_i.set_xlabel('X_Coordinate [A]')
             ax_i.set_ylabel('Y_Coordinate [A]')
-            plt.axis('equal')
+
+            plt.gca().set_aspect('equal')
             plot_tools.save_close_fig(
                 fig_i, ax_i, fname=f'{frame}_{fout_suffix}', legend=False)
 

@@ -15,22 +15,20 @@ class XvgParser:
     """reading and getting info from xvg file"""
 
     info_msg: str = 'Message from XvgParser:\n'  # Meesage in methods to log
-
-    fname: str  # Name of the input file
     title: str = ''  # Title of the data
     xaxis: str = ''  # Label of the x axis
     yaxis: str = ''  # Label of the y axis
-    nr_frames: int  # Number of the frames
-    columns_names: list[str] = []
     xvg_df: pd.DataFrame  # The final dataframe
 
     def __init__(self,
                  fname: str,  # Name of the xvg file
                  log: logger.logging.Logger
                  ) -> None:
+        self.nr_frames: int  # Number of the frames
+        self.columns_names: list[str] = []
         my_tools.check_file_exist(fname, log)
         my_tools.check_file_extension(fname, 'xvg', log)
-        self.fname = fname
+        self.fname: str = fname  # Name of the input file
         self.xvg_df = self.get_xvg(log)
         self.nr_frames = len(self.xvg_df.index)
         self.info_msg += (f'\tThe input file: `{self.fname}`\n'

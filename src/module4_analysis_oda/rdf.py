@@ -17,7 +17,7 @@ from common.colors_text import TextColor as bcolors
 class RdfClculation:
     """calculate radial distribution function"""
 
-    inf_msg: str = '\tMessage from RdfCalculation:\n'
+    info_msg: str = 'Message from RdfCalculation:\n'
 
     def __init__(self,
                  amino_arr: np.ndarray,  # amino head com of the oda
@@ -26,6 +26,7 @@ class RdfClculation:
                  ) -> None:
         self.np_com: np.ndarray = self._get_np_gmx(log)
         self.initiate(amino_arr, box_dims, log)
+        self._write_msg(log)
 
     def initiate(self,
                  amino_arr: np.ndarray,  # amino head com of the oda
@@ -37,7 +38,7 @@ class RdfClculation:
         interface_oda: dict[int, np.ndarray] = \
             self.get_interface_oda(contact_info, amino_arr[:-2])
         oda_distances: dict[int, np.ndarray] = \
-            self.calc_distance_from_np(interface_oda, contact_info, box_dims)
+            self.calc_distance_from_np(interface_oda, box_dims)
 
     def get_contact_info(self,
                          log: logger.logging.Logger
@@ -46,12 +47,11 @@ class RdfClculation:
         read the dataframe made by aqua analysing named "contact.info"
         """
         my_tools.check_file_exist(fname := 'contact.info', log)
-        self.inf_msg += f'\tReading `{fname}`\n'
+        self.info_msg += f'\tReading `{fname}`\n'
         return pd.read_csv(fname, sep=' ')
 
     def calc_distance_from_np(self,
                               interface_oda: dict[int, np.ndarray],
-                              contact_info: pd.DataFrame,
                               box_dims: dict[str, float]
                               ) -> dict[int, np.ndarray]:
         """calculate the oda-np dictances by applying pbc"""
@@ -98,6 +98,13 @@ class RdfClculation:
         xvg_arr: np.ndarray = xvg_df.iloc[:, 1:4].to_numpy()
         return xvg_arr * 10
 
+    def _write_msg(self,
+                   log: logger.logging.Logger  # To log
+                   ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{RdfClculation.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 if __name__ == '__main__':
     pass

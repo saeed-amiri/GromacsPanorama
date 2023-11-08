@@ -33,7 +33,9 @@ class RdfClculation:
                  log: logger.logging.Logger
                  ) -> None:
         """initiate the calculations"""
-        self.get_contact_info(log)
+        contact_info: pd.DataFrame = self.get_contact_info(log)
+        interface_oda: dict[int, np.ndarray] = \
+            self.get_interface_oda(contact_info, amino_arr[:-2])
 
     def get_contact_info(self,
                          log: logger.logging.Logger
@@ -42,7 +44,26 @@ class RdfClculation:
         read the dataframe made by aqua analysing named "contact.info"
         """
         my_tools.check_file_exist(fname := 'contact.info', log)
+        self.inf_msg += f'\tReading `{fname}`\n'
         return pd.read_csv(fname, sep=' ')
+
+    @staticmethod
+    def get_interface_oda(contact_info: pd.DataFrame,
+                          amino_arr: np.ndarray
+                          ) -> dict[int, np.ndarray]:
+        """get the oda at interface"""
+        interface_z: np.ndarray = \
+            contact_info['interface_z'].to_numpy().reshape(-1, 1)
+        interface_std: np.float64 = np.std(interface_z)
+        interface_oda: dict[int, np.ndarray] = {}
+        for i_frame, frame in enumerate(amino_arr):
+            xyz_i: np.ndarray = frame.reshape(-1, 3)
+            ind_at_interface: list[int] = []
+            ind_at_interface = np.where(
+                (xyz_i[:, 2] < interface_z + interface_std) &
+                (xyz_i[:, 2] > interface_z - interface_std))
+            interface_oda[i_frame] = xyz_i[ind_at_interface[0]]
+        return interface_oda
 
     def _get_np_gmx(self,
                     log: logger.logging.Logger

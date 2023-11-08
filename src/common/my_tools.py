@@ -20,8 +20,8 @@ def check_file_exist(fname: str,  # Name of the file to check
         sys.exit(f'{bcolors.FAIL}{__name__}: '
                  f'(Error! `{fname}` dose not '
                  f'exist \n{bcolors.ENDC}')
-    else:
-        log.info(f'Checking: `{fname}`')
+    log.info(msg := f'Checking: `{fname}`')
+    print(f'{bcolors.OKBLUE}my_tools:\n\t{msg}{bcolors.ENDC}\n')
 
 def check_file_extension(fname: str,  # Name of the file to check
                          extension: str,  # Extension of expected file

@@ -9,7 +9,7 @@ import sys
 from common import logger
 from common.com_file_parser import GetCom
 from common.colors_text import TextColor as bcolors
-
+from module4_analysis_oda import rdf
 
 class OdaAnalysis:
     """call all the other scripts here"""
@@ -25,6 +25,8 @@ class OdaAnalysis:
                  log: logger.logging.Logger
                  ) -> None:
         """call the scripts"""
+        rdf.RdfClculation(parsed_com.split_arr_dict['AMINO_ODN'],
+                          parsed_com.box_dims, log)
 
 
 if __name__ == '__main__':

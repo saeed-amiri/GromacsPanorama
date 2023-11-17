@@ -356,7 +356,7 @@ class AnalysisAqua:
 
         with open(fname, 'w', encoding='utf8') as f_w:
             f_w.write(f'# Wrote by {self.__module__}\n')
-            f_w.write(f"# The current directory is: {os.getcwd()}")
+            f_w.write(f"# The current directory is: {os.getcwd()}\n")
             f_w.write('@   title "Contact information"\n')
             f_w.write('@   xaxis label "Frame index"\n')
             f_w.write('@   yaxis label "Varies"\n')

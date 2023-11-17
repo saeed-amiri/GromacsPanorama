@@ -5,6 +5,7 @@ reduction of surface from nanoparticle.
 """
 
 import os
+import warnings
 import multiprocessing
 import pandas as pd
 import numpy as np
@@ -210,7 +211,7 @@ class AnalysisAqua:
         else:
             self.np_com = parsed_com.split_arr_dict['APT_COR']
         self._initiate(parsed_com.box_dims, log)
-        self._write_xvg(self.contact_df)
+        self._write_xvg(self.contact_df, fname="contact.xvg", log=log)
 
         self._write_msg(log)
 
@@ -335,11 +336,25 @@ class AnalysisAqua:
 
     def _write_xvg(self,
                    df_i: pd.DataFrame,
+                   log: logger.logging.Logger,
+                   fname: str = 'df.xvg'
                    ) -> None:
-        """write the data into xvg format"""
-        columns: list[str] = df_i.columns()
+        """
+        Write the data into xvg format
+        Raises:
+            ValueError: If the DataFrame has no columns.
+        """
+        if df_i.columns.empty:
+            log.error(msg := "\tThe DataFrame has no columns.\n")
+            raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}\n')
+        if df_i.empty:
+            log.warning(
+                msg := f"The df is empty. `{fname}` will not contain data.")
+            warnings.warn(msg, UserWarning)
 
-        with open(fout := 'contact.xvg', 'w', encoding='utf8') as f_w:
+        columns: list[str] = df_i.columns.to_list()
+
+        with open(fname, 'w', encoding='utf8') as f_w:
             f_w.write(f'# Wrote by {self.__module__}\n')
             f_w.write(f"# The current directory is: {os.getcwd()}")
             f_w.write('@   title "Contact information"\n')
@@ -356,7 +371,7 @@ class AnalysisAqua:
                 f_w.write(f'@ s{i} legend "{col}"\n')
             df_i.to_csv(f_w, sep=' ', index=True, header=None)
 
-        self.info_msg += (f'\tThe dataframe saved to `{fout}` '
+        self.info_msg += (f'\tThe dataframe saved to `{fname}` '
                           f'with columns:\n\t`{columns}`\n')
 
     def _write_msg(self,

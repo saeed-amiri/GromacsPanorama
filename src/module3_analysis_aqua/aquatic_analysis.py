@@ -384,4 +384,4 @@ class AnalysisAqua:
 
 
 if __name__ == "__main__":
-    AnalysisAqua(GetCom(), log=logger.setup_logger("aqua_log"))
+    AnalysisAqua(GetCom(), log=logger.setup_logger("aqua.log"))

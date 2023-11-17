@@ -4,6 +4,7 @@ main porpose is getting the interface of water with minimum possible
 reduction of surface from nanoparticle.
 """
 
+import os
 import multiprocessing
 import pandas as pd
 import numpy as np
@@ -209,6 +210,8 @@ class AnalysisAqua:
         else:
             self.np_com = parsed_com.split_arr_dict['APT_COR']
         self._initiate(parsed_com.box_dims, log)
+        self._write_xvg(self.contact_df)
+
         self._write_msg(log)
 
     def _initiate(self,
@@ -327,12 +330,34 @@ class AnalysisAqua:
                 'np_com_z': self.np_com[:l_i, 2].ravel()
             }
             df_i = pd.DataFrame(data, columns=columns)
-            df_i.to_csv(fout := 'contact.info', sep=' ', index=False)
-            self.info_msg += \
-                (f'\tThe dataframe saved to `{fout}` '
-                 f'with columns:\n\t`{columns}`\n')
             return df_i
         raise ValueError("Lengths of input arrays do not match.")
+
+    def _write_xvg(self,
+                   df_i: pd.DataFrame,
+                   ) -> None:
+        """write the data into xvg format"""
+        columns: list[str] = df_i.columns()
+
+        with open(fout := 'contact.xvg', 'w', encoding='utf8') as f_w:
+            f_w.write(f'# Wrote by {self.__module__}\n')
+            f_w.write(f"# The current directory is: {os.getcwd()}")
+            f_w.write('@   title "Contact information"\n')
+            f_w.write('@   xaxis label "Frame index"\n')
+            f_w.write('@   yaxis label "Varies"\n')
+            f_w.write('@TYPE xy\n')
+            f_w.write('@ view 0.15, 0.15, 0.75, 0.85\n')
+            f_w.write('@legend on\n')
+            f_w.write('@ legend box on\n')
+            f_w.write('@ legend loctype view\n')
+            f_w.write('@ legend 0.78, 0.8\n')
+            f_w.write('@ legend length 2\n')
+            for i, col in enumerate(columns):
+                f_w.write(f'@ s{i} legend "{col}"\n')
+            df_i.to_csv(f_w, sep=' ', index=True, header=None)
+
+        self.info_msg += (f'\tThe dataframe saved to `{fout}` '
+                          f'with columns:\n\t`{columns}`\n')
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

@@ -196,7 +196,7 @@ class AnalysisAqua:
     surface_waters: dict[int, np.ndarray]  # All the surface waters
     contact_df: pd.DataFrame  # Final dataframe contains contact info
     selected_frames: list[int]  # To plot same series of the frames
-    np_source: str = 'coord'
+    np_source: str = 'coord'  # If want to get the data from gromacs
 
     def __init__(self,
                  parsed_com: "GetCom",

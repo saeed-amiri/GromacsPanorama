@@ -21,9 +21,8 @@ from module3_analysis_aqua.com_plotter import ComPlotter
 from module3_analysis_aqua.surface_plotter import SurfPlotter
 
 
-MeshInfo = \
+MeshInfo: tuple = \
     namedtuple('MeshInfo', ['x_mesh', 'y_mesh', 'mesh_size', 'z_threshold'])
-print(type(MeshInfo))
 
 
 class GetSurface:
@@ -108,8 +107,8 @@ class GetSurface:
         n_cores: int = min(cpu_info.cores_nr, water_arr.shape[0])
         results: list[list[np.int64]]
         max_indices: dict[int, list[np.int64]] = {}
-        mesh_info = MeshInfo(x_mesh, y_mesh, self.mesh_size, self.z_threshold)
-        print(type(mesh_info))
+        mesh_info: "MeshInfo" = \
+            MeshInfo(x_mesh, y_mesh, self.mesh_size, self.z_threshold)
         with multiprocessing.Pool(processes=n_cores) as pool:
             results = pool.starmap(
                 self._process_single_frame,
@@ -125,7 +124,7 @@ class GetSurface:
     def _process_single_frame(self,
                               i_frame: int,  # index of the frame
                               frame: np.ndarray,  # One frame of water com traj
-                              mesh_info,
+                              mesh_info: "MeshInfo",
                               ) -> list[np.int64]:
         """Process a single frame to find max water indices"""
         max_z_indices: list[np.int64] = []

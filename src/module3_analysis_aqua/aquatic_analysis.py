@@ -295,15 +295,20 @@ class AnalysisAqua:
         average interface location and radius of the np
         the hypothesis is the np com is under the interface!
         """
+        under_water: bool = False
         r_contact = np.zeros(interface_z_r.shape)
         r_np_squre: float = stinfo.np_info['radius']**2
         for i, frame in enumerate(interface_z_r):
             deep = np.abs(self.np_com[i, 2] - frame)
             if (h_prime:=r_np_squre - deep**2) >= 0:
                 r_contact[i] = np.sqrt(h_prime)
+                under_water = True
             else:
                 r_contact[i] = np.nan
         r_contact += np.std(r_contact)
+        if under_water:
+            self.info_msg += \
+                '\tIn one or more frames np is under the interface'
         return r_contact
 
     def calc_contact_angles(self,
@@ -356,7 +361,7 @@ class AnalysisAqua:
             warnings.warn(msg, UserWarning)
 
         columns: list[str] = df_i.columns.to_list()
-
+        print(df_i)
         with open(fname, 'w', encoding='utf8') as f_w:
             f_w.write(f'# Wrote by {self.__module__}\n')
             f_w.write(f"# The current directory is: {os.getcwd()}\n")

@@ -281,7 +281,7 @@ class AnalysisAqua:
     def _calculate_distances(waters: np.ndarray,
                              np_com_i: np.ndarray,
                              l_xy: tuple[float, float]
-                             ):
+                             ) -> np.ndarray:
         """
         Calculate distances and return the mask for waters outside the
         radius.

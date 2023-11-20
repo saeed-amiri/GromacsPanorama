@@ -300,7 +300,7 @@ class AnalysisAqua:
         r_np_squre: float = stinfo.np_info['radius']**2
         for i, frame in enumerate(interface_z_r):
             deep = np.abs(self.np_com[i, 2] - frame)
-            if (h_prime:=r_np_squre - deep**2) >= 0:
+            if (h_prime := r_np_squre - deep**2) >= 0:
                 r_contact[i] = np.sqrt(h_prime)
                 under_water = True
             else:
@@ -361,23 +361,28 @@ class AnalysisAqua:
             warnings.warn(msg, UserWarning)
 
         columns: list[str] = df_i.columns.to_list()
-        print(df_i)
+
+        header_lines: list[str] = [
+            f'# Written by {self.__module__}',
+            f"# Current directory: {os.getcwd()}",
+            '@   title "Contact information"',
+            '@   xaxis label "Frame index"',
+            '@   yaxis label "Varies"',
+            '@TYPE xy',
+            '@ view 0.15, 0.15, 0.75, 0.85',
+            '@legend on',
+            '@ legend box on',
+            '@ legend loctype view',
+            '@ legend 0.78, 0.8',
+            '@ legend length 2'
+        ]
+        legend_lines: list[str] = \
+            [f'@ s{i} legend "{col}"' for i, col in enumerate(df_i.columns)]
+
         with open(fname, 'w', encoding='utf8') as f_w:
-            f_w.write(f'# Wrote by {self.__module__}\n')
-            f_w.write(f"# The current directory is: {os.getcwd()}\n")
-            f_w.write('@   title "Contact information"\n')
-            f_w.write('@   xaxis label "Frame index"\n')
-            f_w.write('@   yaxis label "Varies"\n')
-            f_w.write('@TYPE xy\n')
-            f_w.write('@ view 0.15, 0.15, 0.75, 0.85\n')
-            f_w.write('@legend on\n')
-            f_w.write('@ legend box on\n')
-            f_w.write('@ legend loctype view\n')
-            f_w.write('@ legend 0.78, 0.8\n')
-            f_w.write('@ legend length 2\n')
-            for i, col in enumerate(columns):
-                f_w.write(f'@ s{i} legend "{col}"\n')
-            df_i.to_csv(f_w, sep=' ', index=True, header=None)
+            for line in header_lines + legend_lines:
+                f_w.write(line + '\n')
+            df_i.to_csv(f_w, sep=' ', index=True, header=None, na_rep='NaN')
 
         self.info_msg += (f'\tThe dataframe saved to `{fname}` '
                           f'with columns:\n\t`{columns}`\n')

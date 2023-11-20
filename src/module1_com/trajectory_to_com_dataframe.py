@@ -9,13 +9,14 @@ import multiprocessing
 from datetime import datetime
 import numpy as np
 
-import common.logger as logger
-import common.my_tools as my_tools
-import common.static_info as stinfo
+from module1_com.trajectory_residue_extractor import GetResidues
+
+from common import logger
+from common import my_tools
+from common import static_info as stinfo
 from common.cpuconfig import ConfigCpuNr
 from common.colors_text import TextColor as bcolors
 
-from trajectory_residue_extractor import GetResidues
 
 
 class CalculateCom:

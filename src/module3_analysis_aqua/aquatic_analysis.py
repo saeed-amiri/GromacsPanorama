@@ -18,7 +18,8 @@ from common import static_info as stinfo
 from common.colors_text import TextColor as bcolors
 from common.com_file_parser import GetCom
 from module3_analysis_aqua.com_plotter import ComPlotter, OutputConfig
-from module3_analysis_aqua.surface_plotter import SurfPlotter
+from module3_analysis_aqua.surface_plotter import \
+    SurfPlotter, DataConfig, PlotConfig
 
 
 MeshInfo: tuple = \
@@ -224,9 +225,10 @@ class AnalysisAqua:
                   log: logger.logging.Logger
                   ) -> None:
         """initiate surface analysing"""
-        self.selected_frames = SurfPlotter(surf_dict=self.surface_waters,
+        data_config = DataConfig(surf_dict=self.surface_waters,
                                            box_dims=box_dims,
-                                           np_com=self.np_com,
+                                           np_com=self.np_com)
+        self.selected_frames = SurfPlotter(data_config=data_config,
                                            log=log).selected_frames
         np_r: float = stinfo.np_info['radius']
         np_radius: np.ndarray = np.full((self.np_com.shape[0], 1), np_r)
@@ -272,13 +274,14 @@ class AnalysisAqua:
                 self._calculate_distances(waters, np_com_i, l_xy)
             outside_circle_mask: np.ndarray = distances < np_radius
             surface_waters_under_r[frame] = waters[~outside_circle_mask]
-
-        SurfPlotter(surf_dict=surface_waters_under_r,
-                    np_com=self.np_com,
-                    box_dims=box_dims,
-                    log=log,
-                    indices=self.selected_frames,
-                    fout_suffix=fout_suffix)
+        data_config = DataConfig(surf_dict=surface_waters_under_r,
+                                 np_com=self.np_com,
+                                 box_dims=box_dims)
+        plot_config = PlotConfig(indices=self.selected_frames,
+                                 fout_suffix=fout_suffix)
+        SurfPlotter(data_config=data_config,
+                    plot_config=plot_config,
+                    log=log)
         return surface_waters_under_r
 
     @staticmethod

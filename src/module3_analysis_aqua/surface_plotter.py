@@ -4,10 +4,11 @@ plot surface water, in different styles
 
 import random
 import typing
-import numpy as np
-import matplotlib.pylab as plt
+from dataclasses import dataclass
 from matplotlib.ticker import MaxNLocator
 from matplotlib.patches import Circle
+import matplotlib.pylab as plt
+import numpy as np
 
 from common import logger
 from common import plot_tools
@@ -16,6 +17,22 @@ from common.colors_text import TextColor as bcolors
 
 if typing.TYPE_CHECKING:
     import matplotlib
+
+
+@dataclass
+class PlotConfig:
+    """set the output configurations"""
+    fout_suffix: str = 'surface.png'
+    nr_fout: int = 5  # Numbers pics in case the list is empty
+    indices: typing.Optional[list[int]] = None
+
+
+@dataclass
+class DataConfig:
+    """set up the data"""
+    surf_dict: dict[int, np.ndarray]
+    np_com: np.ndarray  # Com of the Np
+    box_dims: dict[str, float]
 
 
 class SurfPlotter:
@@ -28,18 +45,15 @@ class SurfPlotter:
     info_msg: str = 'Messages from SurfPlotter:\n'  # To log
 
     def __init__(self,
-                 surf_dict: dict[int, np.ndarray],
-                 np_com: np.ndarray,  # Com of the Np
-                 box_dims: dict[str, float],
                  log: logger.logging.Logger,
-                 indices: typing.Optional[list[int]] = None,
-                 fout_suffix: str = 'surface.png',
-                 nr_fout: int = 5  # Numbers pics in case the list is empty
+                 data_config: "DataConfig",
+                 plot_config: "PlotConfig" = PlotConfig,
                  ) -> None:
-        self.np_com: np.ndarray = np_com
-        selected_frames: dict[int, np.ndarray] = \
-            self.get_selected_frames(surf_dict, indices, nr_fout)
-        self.plot_surface(selected_frames, box_dims, fout_suffix)
+        self.np_com: np.ndarray = data_config.np_com
+        selected_frames: dict[int, np.ndarray] = self.get_selected_frames(
+            data_config.surf_dict, plot_config.indices, plot_config.nr_fout)
+        self.plot_surface(
+            selected_frames, data_config.box_dims, plot_config.fout_suffix)
         self._write_msg(log)
         self.selected_frames: list[int] = list(selected_frames.keys())
 

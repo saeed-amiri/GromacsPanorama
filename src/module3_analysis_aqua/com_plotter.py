@@ -7,11 +7,23 @@ the array is in the format of the com:
 
 """
 
-import numpy as np
+from dataclasses import dataclass
 import matplotlib.pyplot as plt
+import numpy as np
+
 from common import logger
 from common import plot_tools
 from common.colors_text import TextColor as bcolors
+
+
+@dataclass
+class OutputConfig:
+    """setup for saving the outputs"""
+    to_png: bool = False  # If want to save as png
+    out_suffix: str = 'com.png'  # Suffix for fout, if to_png
+    to_xyz: bool = False  # If want to save the traj to xyz file
+    xyz_suffix: str = 'com.xyz'  # Suffix to xyz file, if to_xyz
+    atom: str = "O"  # Name of atom for make xyz file
 
 
 class ComPlotter:
@@ -23,17 +35,15 @@ class ComPlotter:
                  com_arr: np.ndarray,  # The array to plot
                  index: int,  # Time frame to plot
                  log: logger.logging.Logger,
-                 to_png: bool = False,  # If want to save as png
-                 out_suffix: str = 'com.png',  # Suffix for fout, if to_png
-                 to_xyz: bool = False,  # If want to save the traj to xyz file
-                 xyz_suufix: str = 'com.xyz',  # Suffix to xyz file, if to_xyz
-                 atom: str = "O"
+                 output_config: OutputConfig
                  ) -> None:
         self.info_msg += f'\tmkaing graph for frame: `{index}`\n'
         xyz_arr: np.ndarray = self._parse_arr(com_arr, index)
-        self.make_graph(xyz_arr, index, to_png, out_suffix)
-        if to_xyz:
-            self.write_xyz_file(xyz_arr, index, atom, xyz_suufix)
+        self.make_graph(
+            xyz_arr, index, output_config.to_png, output_config.out_suffix)
+        if output_config.to_xyz:
+            self.write_xyz_file(
+                xyz_arr, index, output_config.atom, output_config.xyz_suffix)
         self._write_msg(log)
 
     def _parse_arr(self,

@@ -17,7 +17,7 @@ from common import xvg_to_dataframe
 from common import static_info as stinfo
 from common.colors_text import TextColor as bcolors
 from common.com_file_parser import GetCom
-from module3_analysis_aqua.com_plotter import ComPlotter
+from module3_analysis_aqua.com_plotter import ComPlotter, OutputConfig
 from module3_analysis_aqua.surface_plotter import SurfPlotter
 
 
@@ -57,11 +57,15 @@ class GetSurface:
         # To save a snapshot to see the system
         x_mesh: np.ndarray  # Mesh grid in x and y
         y_mesh: np.ndarray  # Mesh grid in x and y
+        output_config = OutputConfig(
+            to_png=True,
+            out_suffix='com_output.png',
+            to_xyz=True,
+            xyz_suffix='com_output.xyz')
         ComPlotter(com_arr=water_arr[:-2],
                    index=2,
                    log=log,
-                   to_png=True,
-                   to_xyz=True)
+                   output_config=output_config)
         # self.z_threshold = self.get_interface_z_threshold(box_dims)
         self.z_threshold = 120
         x_mesh, y_mesh, self.mesh_size = self._get_xy_grid(box_dims)

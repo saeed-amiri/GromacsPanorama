@@ -27,7 +27,7 @@ class GetSurface:
 
     oil_top_ratio: float = 2/3  # Where form top for sure should be oil
     mesh_nr: float = 100.  # Number of meshes in each directions
-    z_treshhold: float
+    z_threshold: float
     mesh_size: float
 
     surface_waters: dict[int, np.ndarray]  # Water at the surface, include np
@@ -57,23 +57,23 @@ class GetSurface:
                    log=log,
                    to_png=True,
                    to_xyz=True)
-        # self.z_treshhold = self.get_interface_z_treshhold(box_dims)
-        self.z_treshhold = 120
+        # self.z_threshold = self.get_interface_z_threshold(box_dims)
+        self.z_threshold = 120
         x_mesh, y_mesh, self.mesh_size = self._get_xy_grid(box_dims)
         surface_indices: dict[int, list[np.int64]] = \
             self._get_surface_topology(water_arr[:-2], x_mesh, y_mesh, log)
         self.surface_waters: dict[int, np.ndarray] = \
             self.get_xyz_arr(water_arr[:-2], surface_indices)
 
-    def get_interface_z_treshhold(self,
+    def get_interface_z_threshold(self,
                                   box_dims: dict[str, float]
                                   ) -> float:
-        """find the treshhold of water highest point"""
-        z_treshhold: float = box_dims['z_hi'] * self.oil_top_ratio
+        """find the threshold of water highest point"""
+        z_threshold: float = box_dims['z_hi'] * self.oil_top_ratio
         self.info_msg += \
             (f'\tThe oil top ratio was set to `{self.oil_top_ratio:.3f}`\n'
-             f'\tThe z treshold is set to `{z_treshhold:.3f}`\n')
-        return z_treshhold
+             f'\tThe z threshold is set to `{z_threshold:.3f}`\n')
+        return z_threshold
 
     def _get_xy_grid(self,
                      box_dims: dict[str, float]
@@ -110,7 +110,7 @@ class GetSurface:
                   x_mesh,
                   y_mesh,
                   self.mesh_size,
-                  self.z_treshhold)
+                  self.z_threshold)
                  for i_frame, frame in enumerate(water_arr)])
         for i_frame, result in enumerate(results):
             max_indices[i_frame] = result
@@ -123,11 +123,11 @@ class GetSurface:
                               x_mesh: np.ndarray,
                               y_mesh: np.ndarray,
                               mesh_size: float,
-                              z_treshhold: float
+                              z_threshold: float
                               ) -> list[np.int64]:
         """Process a single frame to find max water indices"""
         max_z_index: list[np.int64] = []
-        min_z_treshhold: float = \
+        min_z_threshold: float = \
             self.np_com[i_frame, 2] - stinfo.np_info['radius']
         xyz_i = frame.reshape(-1, 3)
         for i in range(x_mesh.shape[0]):
@@ -143,8 +143,8 @@ class GetSurface:
                                        (xyz_i[:, 0] < x_max_mesh) &
                                        (xyz_i[:, 1] >= y_min_mesh) &
                                        (xyz_i[:, 1] < y_max_mesh) &
-                                       (xyz_i[:, 2] < z_treshhold) &
-                                       (xyz_i[:, 2] > min_z_treshhold))
+                                       (xyz_i[:, 2] < z_threshold) &
+                                       (xyz_i[:, 2] > min_z_threshold))
                 if len(ind_in_mesh[0]) > 0:
                     max_z = np.argmax(frame[2::3][ind_in_mesh])
                     max_z_index.append(ind_in_mesh[0][max_z])

@@ -6,8 +6,8 @@ import sys
 import json
 import typing
 import MDAnalysis as mda
-import common.logger as logger
-import common.my_tools as my_tools
+from common import logger
+from common import my_tools
 from common.colors_text import TextColor as bcolors
 
 

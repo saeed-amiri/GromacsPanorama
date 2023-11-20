@@ -308,7 +308,7 @@ class AnalysisAqua:
         r_contact += np.std(r_contact)
         if under_water:
             self.info_msg += \
-                '\tIn one or more frames np is under the interface'
+                '\tIn one or more frames np is under the interface\n'
         return r_contact
 
     def calc_contact_angles(self,

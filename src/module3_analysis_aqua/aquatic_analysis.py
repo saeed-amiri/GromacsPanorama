@@ -7,6 +7,7 @@ reduction of surface from nanoparticle.
 import os
 import warnings
 import multiprocessing
+from collections import namedtuple
 import pandas as pd
 import numpy as np
 
@@ -18,6 +19,11 @@ from common.colors_text import TextColor as bcolors
 from common.com_file_parser import GetCom
 from module3_analysis_aqua.com_plotter import ComPlotter
 from module3_analysis_aqua.surface_plotter import SurfPlotter
+
+
+MeshInfo = \
+    namedtuple('MeshInfo', ['x_mesh', 'y_mesh', 'mesh_size', 'z_threshold'])
+print(type(MeshInfo))
 
 
 class GetSurface:
@@ -102,15 +108,14 @@ class GetSurface:
         n_cores: int = min(cpu_info.cores_nr, water_arr.shape[0])
         results: list[list[np.int64]]
         max_indices: dict[int, list[np.int64]] = {}
+        mesh_info = MeshInfo(x_mesh, y_mesh, self.mesh_size, self.z_threshold)
+        print(type(mesh_info))
         with multiprocessing.Pool(processes=n_cores) as pool:
             results = pool.starmap(
                 self._process_single_frame,
                 [(i_frame,
                   frame,
-                  x_mesh,
-                  y_mesh,
-                  self.mesh_size,
-                  self.z_threshold)
+                  mesh_info)
                  for i_frame, frame in enumerate(water_arr)])
         for i_frame, result in enumerate(results):
             max_indices[i_frame] = result
@@ -120,35 +125,31 @@ class GetSurface:
     def _process_single_frame(self,
                               i_frame: int,  # index of the frame
                               frame: np.ndarray,  # One frame of water com traj
-                              x_mesh: np.ndarray,
-                              y_mesh: np.ndarray,
-                              mesh_size: float,
-                              z_threshold: float
+                              mesh_info,
                               ) -> list[np.int64]:
         """Process a single frame to find max water indices"""
-        max_z_index: list[np.int64] = []
+        max_z_indices: list[np.int64] = []
         min_z_threshold: float = \
             self.np_com[i_frame, 2] - stinfo.np_info['radius']
         xyz_i = frame.reshape(-1, 3)
-        for i in range(x_mesh.shape[0]):
-            for j in range(x_mesh.shape[1]):
-                # Define the boundaries of the current mesh element
-                x_min_mesh = x_mesh[i, j]
-                x_max_mesh = x_mesh[i, j] + mesh_size
-                y_min_mesh = y_mesh[i, j]
-                y_max_mesh = y_mesh[i, j] + mesh_size
+        for (i, j), _ in np.ndenumerate(mesh_info.x_mesh):
+            # Define the boundaries of the current mesh element
+            x_min_mesh = mesh_info.x_mesh[i, j]
+            x_max_mesh = mesh_info.x_mesh[i, j] + mesh_info.mesh_size
+            y_min_mesh = mesh_info.y_mesh[i, j]
+            y_max_mesh = mesh_info.y_mesh[i, j] + mesh_info.mesh_size
 
-                # Select atoms within the current mesh element based on XY
-                ind_in_mesh = np.where((xyz_i[:, 0] >= x_min_mesh) &
-                                       (xyz_i[:, 0] < x_max_mesh) &
-                                       (xyz_i[:, 1] >= y_min_mesh) &
-                                       (xyz_i[:, 1] < y_max_mesh) &
-                                       (xyz_i[:, 2] < z_threshold) &
-                                       (xyz_i[:, 2] > min_z_threshold))
-                if len(ind_in_mesh[0]) > 0:
-                    max_z = np.argmax(frame[2::3][ind_in_mesh])
-                    max_z_index.append(ind_in_mesh[0][max_z])
-        return max_z_index
+            # Select atoms within the current mesh element based on XY
+            ind_in_mesh = np.where((xyz_i[:, 0] >= x_min_mesh) &
+                                   (xyz_i[:, 0] < x_max_mesh) &
+                                   (xyz_i[:, 1] >= y_min_mesh) &
+                                   (xyz_i[:, 1] < y_max_mesh) &
+                                   (xyz_i[:, 2] < mesh_info.z_threshold) &
+                                   (xyz_i[:, 2] > min_z_threshold))
+            if len(ind_in_mesh[0]) > 0:
+                max_z = np.argmax(frame[2::3][ind_in_mesh])
+                max_z_indices.append(ind_in_mesh[0][max_z])
+        return max_z_indices
 
     def get_xyz_arr(self,
                     water_arr: np.ndarray,  # All the water residues

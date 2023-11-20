@@ -59,7 +59,7 @@ class ComAnalysis:
                  ) -> None:
         """first analyze water, to get the interface and other
         properties"""
-        aqua = AnalysisAqua(parsed_com, log)
+        AnalysisAqua(parsed_com, log)
 
 
 if __name__ == "__main__":

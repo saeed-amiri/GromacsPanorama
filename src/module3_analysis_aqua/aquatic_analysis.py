@@ -299,7 +299,10 @@ class AnalysisAqua:
         r_np_squre: float = stinfo.np_info['radius']**2
         for i, frame in enumerate(interface_z_r):
             deep = np.abs(self.np_com[i, 2] - frame)
-            r_contact[i] = np.sqrt(r_np_squre - deep**2)
+            if (h_prime:=r_np_squre - deep**2) >= 0:
+                r_contact[i] = np.sqrt(h_prime)
+            else:
+                r_contact[i] = np.nan
         r_contact += np.std(r_contact)
         return r_contact
 

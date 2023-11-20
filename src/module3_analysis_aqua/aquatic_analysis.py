@@ -264,11 +264,8 @@ class AnalysisAqua:
         for frame, waters in self.surface_waters.items():
             np_radius = radius[frame]
             np_com_i = self.np_com[frame]
-            dx_or = waters[:, 0] - np_com_i[0]
-            dx_in = dx_or - (l_xy[0] * np.round(dx_or/l_xy[0]))
-            dy_or = waters[:, 1] - np_com_i[1]
-            dy_in = dy_or - (l_xy[1] * np.round(dy_or/l_xy[1]))
-            distances: np.ndarray = np.sqrt(dx_in**2 + dy_in**2)
+            distances: np.ndarray = \
+                self._calculate_distances(waters, np_com_i, l_xy)
             outside_circle_mask: np.ndarray = distances < np_radius
             surface_waters_under_r[frame] = waters[~outside_circle_mask]
 
@@ -279,6 +276,22 @@ class AnalysisAqua:
                     indices=self.selected_frames,
                     fout_suffix=fout_suffix)
         return surface_waters_under_r
+
+    @staticmethod
+    def _calculate_distances(waters: np.ndarray,
+                             np_com_i: np.ndarray,
+                             l_xy: tuple[float, float]
+                             ):
+        """
+        Calculate distances and return the mask for waters outside the
+        radius.
+        """
+        dx_in = waters[:, 0] - np_com_i[0] - (
+            l_xy[0] * np.round((waters[:, 0] - np_com_i[0]) / l_xy[0]))
+        dy_in = waters[:, 1] - np_com_i[1] - (
+            l_xy[1] * np.round((waters[:, 1] - np_com_i[1]) / l_xy[1]))
+        distances = np.sqrt(dx_in**2 + dy_in**2)
+        return distances
 
     def get_interface_z(self,
                         surface_water: dict[int, np.ndarray]

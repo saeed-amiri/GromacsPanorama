@@ -11,7 +11,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from common import logger
 from common import plot_tools
-from common import static_info as stinfo
 from common.colors_text import TextColor as bcolors
 
 

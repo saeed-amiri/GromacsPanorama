@@ -27,11 +27,24 @@ The main steps in the script are as follows:
 
 import sys
 import typing
+from dataclasses import dataclass
+
 from module1_com.get_trajectory import GetInfo
 from common import logger
 from common import static_info as stinfo
 from common import get_topo as topo
 from common.colors_text import TextColor as bcolors
+
+
+@dataclass
+class ResidueAttributs:
+    """set the attributes for GetResidues"""
+    sol_res: dict[int, int]  # Residues with their type as an integer in SOL
+    np_res: dict[int, int]   # Residues with their type as an integer in NP
+    nr_sol_res: int  # Number of residues in solution (without NP)
+    nr_np_res: int  # Number of residues in NP
+    max_res: int   # Maximum index of the residues in solution
+    min_res: int   # Minimum index of the residues in solution
 
 
 class GetResidues:

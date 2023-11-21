@@ -322,14 +322,15 @@ class AnalysisAqua:
             deep = np.abs(self.np_com[i, 2] - frame)
             if (h_prime := r_np_squre - deep**2) >= 0:
                 r_contact[i] = np.sqrt(h_prime)
-                print(r_contact[i])
             else:
                 r_contact[i] = np.nan
                 under_water = True
+        print(r_contact)
         r_contact += np.std(r_contact)
         if under_water:
             self.info_msg += \
                 '\tIn one or more frames np is under the interface\n'
+        print(r_contact)
         return r_contact
 
     def calc_contact_angles(self,

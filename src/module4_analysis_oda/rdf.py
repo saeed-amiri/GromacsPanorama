@@ -45,7 +45,7 @@ class RdfClculation:
             self.get_interface_oda(contact_info, amino_arr[:-2])
         oda_distances: dict[int, np.ndarray] = \
             self.calc_distance_from_np(interface_oda)
-        bin_edges, rdf = self.calc_rdf_dy(oda_distances, bin_width=0.8)
+        bin_edges, rdf = self.calc_rdf_dy(oda_distances, bin_width=0.9)
         plt.plot(bin_edges, rdf)
         plt.xlim(-10, box_xyz[0]/2)
         plt.show()
@@ -165,7 +165,7 @@ class RdfClculation:
                                    ) -> float:
         """determine max distance for the given frame"""
         box_dimensions = self.box_size[frame]
-        return np.min(box_dimensions) / 2
+        return np.max(box_dimensions) / 2
 
     @staticmethod
     def get_interface_oda(contact_info: pd.DataFrame,

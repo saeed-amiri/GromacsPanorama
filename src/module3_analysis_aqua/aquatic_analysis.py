@@ -322,24 +322,23 @@ class AnalysisAqua:
         average interface location and radius of the np
         the hypothesis is the np com is under the interface!
         """
-        under_water: bool = False
-        r_contact = np.zeros(interface_z_r.shape)
-        r_np_squre: float = stinfo.np_info['radius']**2
+        r_np_square: float = stinfo.np_info['radius'] ** 2
         nan_list: list[int] = []
         interface_std: np.float64 = np.nanstd(interface_z_r)
-        interface_z_r -= interface_std
-        for i, frame_z in enumerate(interface_z_r):
-            deep = np.abs(self.np_com[i, 2] - frame_z)
-            if (h_prime := r_np_squre - deep**2) >= 0:
-                r_contact[i] = np.sqrt(h_prime)
-            else:
-                r_contact[i] = np.nan
-                nan_list.append(i)
-                under_water = True
+        interface_z_r_adjusted: np.ndarray = interface_z_r - interface_std
+        deep: np.ndarray = np.abs(self.np_com[:, 2] - interface_z_r_adjusted)
+        h_prime: np.ndarray = r_np_square - deep**2
+
+        r_contact = np.where(h_prime >= 0, np.sqrt(h_prime), np.nan)
+        nan_list = np.where(h_prime < 0)[0].tolist()
+
+        self.info_msg += f'\tThe interface_z std is {interface_std: .3f}\n'
+        under_water: bool = len(nan_list) > 0
         if under_water:
             self.info_msg += (
                 '\tIn one or more frames np is under the interface\n'
-                f'\tThe list of the those frames is:\n\t{nan_list}\n')
+                f'\tThe list of those frames is:\n\t{nan_list}\n')
+
         return r_contact, nan_list
 
     def _plot_nan_contacts(self,

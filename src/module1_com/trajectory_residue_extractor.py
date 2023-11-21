@@ -63,6 +63,7 @@ class GetResidues:
     nr_np_res: int  # Number of residues in NP
     max_res: int  # Maxmum index of the residues in solution
     min_res: int  # Minimum index of the residues in solution
+    residue_data: "ResidueAttributs"
 
     def __init__(self,
                  fname: str,  # Name of the trajectory file

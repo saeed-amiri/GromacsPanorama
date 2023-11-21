@@ -326,8 +326,10 @@ class AnalysisAqua:
         r_contact = np.zeros(interface_z_r.shape)
         r_np_squre: float = stinfo.np_info['radius']**2
         nan_list: list[int] = []
-        for i, frame in enumerate(interface_z_r):
-            deep = np.abs(self.np_com[i, 2] - frame)
+        interface_std: np.float64 = np.nanstd(interface_z_r)
+        interface_z_r -= interface_std
+        for i, frame_z in enumerate(interface_z_r):
+            deep = np.abs(self.np_com[i, 2] - frame_z)
             if (h_prime := r_np_squre - deep**2) >= 0:
                 r_contact[i] = np.sqrt(h_prime)
             else:
@@ -337,7 +339,6 @@ class AnalysisAqua:
                 r_contact[i] = np.nan
                 nan_list.append(i)
                 under_water = True
-        r_contact += np.nanstd(r_contact)
         if under_water:
             self.info_msg += (
                 '\tIn one or more frames np is under the interface\n'

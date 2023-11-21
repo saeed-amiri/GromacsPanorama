@@ -248,8 +248,9 @@ class AnalysisAqua:
         contact_angle: np.ndarray = self.calc_contact_angles(contact_r)
         self.contact_df = self.mk_df(contact_r, contact_angle, interface_z_r)
         self.info_msg += \
-            (f'\tThe average of contact angle is: `{np.mean(contact_angle)}`\n'
-             f'\tThe std of contact angle is: `{np.std(contact_angle)}`\n')
+            ('\tThe average of contact angle is: '
+             f'`{np.mean(np.nan_to_num(contact_angle.copy(), nan=0))}`\n'
+             f'\tThe std of contact angle is: `{np.nanstd(contact_angle)}`\n')
 
     def drop_water_inside_radius(self,
                                  radius: np.ndarray,

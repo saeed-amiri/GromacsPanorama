@@ -254,9 +254,9 @@ class AnalysisAqua:
             self._plot_nan_contacts(
                 surface_waters_under_r, box_dims, nan_list, log)
         self.info_msg += \
-            ('\tThe average of contact angle is: '
-             f'`{np.mean(np.nan_to_num(contact_angle.copy(), nan=0))}`\n'
-             f'\tThe std of contact angle is: `{np.nanstd(contact_angle)}`\n')
+            ('\tThe contact angle average is: '
+             f'`{np.mean(np.nan_to_num(contact_angle.copy(), nan=0)):.3f}`\n'
+             f'\tThe contact angle std is: `{np.nanstd(contact_angle):.3f}`\n')
 
     def drop_water_inside_radius(self,
                                  radius: np.ndarray,
@@ -333,9 +333,6 @@ class AnalysisAqua:
             if (h_prime := r_np_squre - deep**2) >= 0:
                 r_contact[i] = np.sqrt(h_prime)
             else:
-                print(f'h_prime: {h_prime}')
-                print(f'deep: {deep}')
-                print(f'deep^2: {deep**2}')
                 r_contact[i] = np.nan
                 nan_list.append(i)
                 under_water = True

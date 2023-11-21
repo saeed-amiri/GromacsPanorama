@@ -331,6 +331,9 @@ class AnalysisAqua:
             if (h_prime := r_np_squre - deep**2) >= 0:
                 r_contact[i] = np.sqrt(h_prime)
             else:
+                print(f'h_prime: {h_prime}')
+                print(f'deep: {deep}')
+                print(f'deep^2: {deep**2}')
                 r_contact[i] = np.nan
                 nan_list.append(i)
                 under_water = True

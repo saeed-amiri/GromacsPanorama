@@ -343,7 +343,7 @@ class AnalysisAqua:
         return r_contact, nan_list
 
     def _plot_nan_contacts(self,
-                           surface_waters_under_r,
+                           surface_waters_under_r: dict[int, np.ndarray],
                            box_dims: dict[str, float],
                            nan_list: list[int],  # Index of the nan contact_r
                            log: logger.logging.Logger

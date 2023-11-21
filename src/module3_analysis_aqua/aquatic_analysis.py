@@ -240,13 +240,19 @@ class AnalysisAqua:
                                           log)
         interface_z_r: np.ndarray = \
             self.get_interface_z(surface_water_under_np)
-        contact_r: np.ndarray = self.calc_contact_r(interface_z_r)
-        self.drop_water_inside_radius(contact_r,
-                                      box_dims,
-                                      'contact_r.png',
-                                      log)
+        contact_r: np.ndarray
+        nan_list: list[int]  # Index of the frames with nan contact
+        contact_r, nan_list = self.calc_contact_r(interface_z_r)
+        surface_waters_under_r: dict[int, np.ndarray] = \
+            self.drop_water_inside_radius(contact_r,
+                                          box_dims,
+                                          'contact_r.png',
+                                          log)
         contact_angle: np.ndarray = self.calc_contact_angles(contact_r)
         self.contact_df = self.mk_df(contact_r, contact_angle, interface_z_r)
+        if nan_list:
+            self._plot_nan_contacts(
+                surface_waters_under_r, box_dims, nan_list, log)
         self.info_msg += \
             ('\tThe average of contact angle is: '
              f'`{np.mean(np.nan_to_num(contact_angle.copy(), nan=0))}`\n'
@@ -311,7 +317,7 @@ class AnalysisAqua:
 
     def calc_contact_r(self,
                        interface_z_r: np.ndarray
-                       ) -> np.ndarray:
+                       ) -> tuple[np.ndarray, list[int]]:
         """calculate the contact radius based on the np center of mass,
         average interface location and radius of the np
         the hypothesis is the np com is under the interface!
@@ -333,7 +339,25 @@ class AnalysisAqua:
             self.info_msg += (
                 '\tIn one or more frames np is under the interface\n'
                 f'\tThe list of the those frames is:\n\t{nan_list}\n')
-        return r_contact
+        return r_contact, nan_list
+
+    def _plot_nan_contacts(self,
+                           surface_waters_under_r,
+                           box_dims: dict[str, float],
+                           nan_list: list[int],  # Index of the nan contact_r
+                           log: logger.logging.Logger
+                           ) -> None:
+        """plot the frames which contact_r is nan -> below water
+        average interface"""
+        fout_suffix: str = 'nan_contact'
+        data_config = DataConfig(surf_dict=surface_waters_under_r,
+                                 np_com=self.np_com,
+                                 box_dims=box_dims)
+        plot_config = PlotConfig(indices=nan_list,
+                                 fout_suffix=fout_suffix)
+        SurfPlotter(data_config=data_config,
+                    plot_config=plot_config,
+                    log=log)
 
     def calc_contact_angles(self,
                             contact_r: np.ndarray

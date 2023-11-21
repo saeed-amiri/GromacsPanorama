@@ -226,8 +226,8 @@ class AnalysisAqua:
                   ) -> None:
         """initiate surface analysing"""
         data_config = DataConfig(surf_dict=self.surface_waters,
-                                           box_dims=box_dims,
-                                           np_com=self.np_com)
+                                 box_dims=box_dims,
+                                 np_com=self.np_com)
         self.selected_frames = SurfPlotter(data_config=data_config,
                                            log=log).selected_frames
         np_r: float = stinfo.np_info['radius']
@@ -318,31 +318,35 @@ class AnalysisAqua:
         under_water: bool = False
         r_contact = np.zeros(interface_z_r.shape)
         r_np_squre: float = stinfo.np_info['radius']**2
+        nan_list: list[int] = []
         for i, frame in enumerate(interface_z_r):
             deep = np.abs(self.np_com[i, 2] - frame)
             if (h_prime := r_np_squre - deep**2) >= 0:
                 r_contact[i] = np.sqrt(h_prime)
             else:
                 r_contact[i] = np.nan
+                nan_list.append(i)
                 under_water = True
-        print(r_contact)
-        r_contact += np.std(r_contact)
+        r_contact += np.nanstd(r_contact)
         if under_water:
-            self.info_msg += \
+            self.info_msg += (
                 '\tIn one or more frames np is under the interface\n'
-        print(r_contact)
+                f'\tThe list of the those frames is:\n\t{nan_list}\n')
         return r_contact
 
     def calc_contact_angles(self,
                             contact_r: np.ndarray
                             ) -> np.ndarray:
         """calculate contact angles from contact radius"""
-        contact_angles = np.zeros(contact_r.shape)
         np_radius: float = stinfo.np_info['radius']
-        for i, frame in enumerate(contact_r):
-            deep = np.sqrt(np_radius**2 - frame**2)
-            h_deep = deep + np_radius
-            contact_angles[i] = np.degrees(np.arccos((h_deep/np_radius)-1))
+        deep: np.ndarray = np.sqrt(np_radius**2 - np.nan_to_num(contact_r)**2)
+
+        # Calculate the height (h_deep) and the contact angle
+        h_deep: np.ndarray = deep + np_radius
+        contact_angles: np.ndarray = \
+            np.degrees(np.arccos(np.clip((h_deep / np_radius) - 1, -1, 1)))
+
+        contact_angles[np.isnan(contact_r)] = np.nan
         return contact_angles
 
     def mk_df(self,

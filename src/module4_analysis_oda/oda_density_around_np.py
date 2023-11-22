@@ -80,6 +80,5 @@ class SurfactantDensityAroundNanoparticle:
 
 
 if __name__ == "__main__":
-    print(
-        f'{bcolors.CAUTION}\tThis script runs within '
-        f'trajectory_oda_analysis.py{bcolors.ENDC}')
+    print(f'{bcolors.CAUTION}\tThis script runs within '
+          f'trajectory_oda_analysis.py{bcolors.ENDC}')

@@ -7,6 +7,8 @@ region and dividing by the volume of that region.
 import sys
 from dataclasses import dataclass
 
+import numpy as np
+
 from common import logger
 from common import xvg_to_dataframe as xvg
 from common import my_tools
@@ -25,12 +27,16 @@ class SurfactantDensityAroundNanoparticle:
     info_msg: str = '\tMessage from SurfactantDensityAroundNanoparticle:\n'
 
     def __init__(self,
+                 amino_arr: np.ndarray,  # amino head com of the oda
+                 box_dims: dict[str, float],  # Dimension of the Box
                  log: logger.logging.Logger,
                  input_config: "OdaInputConfig" = OdaInputConfig()
                  ) -> None:
-        self._initiate(log, input_config)
+        self._initiate(amino_arr, box_dims, log, input_config)
 
     def _initiate(self,
+                  amino_arr: np.ndarray,  # amino head com of the oda
+                  box_dims: dict[str, float],  # Dimension of the Box
                   log: logger.logging.Logger,
                   input_config: "OdaInputConfig"
                   ) -> None:
@@ -46,4 +52,6 @@ class SurfactantDensityAroundNanoparticle:
 
 
 if __name__ == "__main__":
-    pass
+    print(
+        f'{bcolors.CAUTION}\tThis script runs within '
+        f'trajectory_oda_analysis.py{bcolors.ENDC}')

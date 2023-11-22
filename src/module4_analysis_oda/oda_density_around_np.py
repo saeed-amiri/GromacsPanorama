@@ -51,6 +51,15 @@ class SurfactantDensityAroundNanoparticle:
         contact_data: pd.DataFrame = self.load_contact_data(log)
         np_com_df: pd.DataFrame = self.load_np_com_data(log)
         box_df: pd.DataFrame = self.load_box_data(log)
+        self.initialize_data_arrays(contact_data, np_com_df, box_df, log)
+
+    def initialize_data_arrays(self,
+                              contact_data: pd.DataFrame,
+                              np_com_df: pd.DataFrame,
+                              box_df: pd.DataFrame,
+                              log: logger.logging.Logger
+                              ) -> None:
+        """set the main arrays as attibutes for the further calculationsa"""
         self.interface_z = self.parse_contact_data(contact_data,
                                                    'interface_z',
                                                    log)

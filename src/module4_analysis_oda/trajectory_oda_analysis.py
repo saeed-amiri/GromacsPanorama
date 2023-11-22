@@ -6,10 +6,12 @@ This script uses the out put of the module3_aqua_analysis/contact.info
 
 import sys
 
+from module4_analysis_oda import rdf
+from module4_analysis_oda.oda_density_around_np import \
+    OdaInputConfig, SurfactantDensityAroundNanoparticle
 from common import logger
 from common.com_file_parser import GetCom
 from common.colors_text import TextColor as bcolors
-from module4_analysis_oda import rdf
 
 class OdaAnalysis:
     """call all the other scripts here"""
@@ -25,8 +27,11 @@ class OdaAnalysis:
                  log: logger.logging.Logger
                  ) -> None:
         """call the scripts"""
-        rdf.RdfClculation(parsed_com.split_arr_dict['AMINO_ODN'],
-                          parsed_com.box_dims, log)
+        # rdf.RdfClculation(parsed_com.split_arr_dict['AMINO_ODN'],
+                        #   parsed_com.box_dims, log)
+        SurfactantDensityAroundNanoparticle(
+            parsed_com.split_arr_dict['AMINO_ODN'],
+            parsed_com.box_dims, log)
 
 
 if __name__ == '__main__':

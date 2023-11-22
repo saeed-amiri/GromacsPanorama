@@ -30,8 +30,7 @@ class OdaAnalysis:
         # rdf.RdfClculation(parsed_com.split_arr_dict['AMINO_ODN'],
                         #   parsed_com.box_dims, log)
         SurfactantDensityAroundNanoparticle(
-            parsed_com.split_arr_dict['AMINO_ODN'],
-            parsed_com.box_dims, log)
+            parsed_com.split_arr_dict['AMINO_ODN'], log)
 
 
 if __name__ == '__main__':

@@ -10,8 +10,8 @@ import numpy as np
 import pandas as pd
 
 from common import logger
-from common import xvg_to_dataframe as xvg
 from common import my_tools
+from common import xvg_to_dataframe as xvg
 from common.colors_text import TextColor as bcolors
 
 
@@ -20,6 +20,7 @@ class OdaInputConfig:
     """set the input for analysing"""
     contact_xvg: str = 'contact.xvg'
     np_coord_xvg: str = 'coord.xvg'
+    box_xvg: str = 'box.xvg'
 
 
 class SurfactantDensityAroundNanoparticle:
@@ -47,10 +48,13 @@ class SurfactantDensityAroundNanoparticle:
             xvg.XvgParser(input_config.contact_xvg, log).xvg_df
         np_com_df: pd.DataFrame = \
             xvg.XvgParser(input_config.np_coord_xvg, log).xvg_df
+        box_df: pd.DataFrame = \
+            xvg.XvgParser(input_config.box_xvg, log).xvg_df
 
         interface_z: np.ndarray = \
             self.parse_contact_data(contact_data, 'interface_z')
-        np_com: np.ndarray = self.parse_np_com(np_com_df)
+        np_com: np.ndarray = self.parse_gmx_xvg(np_com_df)
+        box: np.ndarray = self.parse_gmx_xvg(box_df)
         amino_coms: np.ndarray = amino_arr[:-2]
 
     @staticmethod
@@ -65,10 +69,10 @@ class SurfactantDensityAroundNanoparticle:
         return contact_data[column_name].to_numpy().reshape(-1, 1)
 
     @staticmethod
-    def parse_np_com(np_com_df: pd.DataFrame
-                     ) -> np.ndarray:
+    def parse_gmx_xvg(np_com_df: pd.DataFrame
+                      ) -> np.ndarray:
         """return the nanoparticle center of mass as an array"""
-        return np_com_df.to_numpy()
+        return np_com_df.iloc[:, 1:4].to_numpy() * 10
 
     @staticmethod
     def check_input_files(log: logger.logging.Logger,
@@ -77,6 +81,7 @@ class SurfactantDensityAroundNanoparticle:
         """check the existence of the input files"""
         my_tools.check_file_exist(input_config.contact_xvg, log)
         my_tools.check_file_exist(input_config.np_coord_xvg, log)
+        my_tools.check_file_exist(input_config.box_xvg, log)
 
 
 if __name__ == "__main__":

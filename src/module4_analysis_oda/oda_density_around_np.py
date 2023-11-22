@@ -60,9 +60,8 @@ class SurfactantDensityAroundNanoparticle:
                               log: logger.logging.Logger
                               ) -> None:
         """set the main arrays as attibutes for the further calculationsa"""
-        self.interface_z = self.parse_contact_data(contact_data,
-                                                   'interface_z',
-                                                   log)
+        self.interface_z = \
+            self.parse_contact_data(contact_data, 'interface_z', log)
         self.np_com = self.parse_gmx_xvg(np_com_df)
         self.box = self.parse_gmx_xvg(box_df)
 

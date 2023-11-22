@@ -117,9 +117,7 @@ class GetSurface:
         with multiprocessing.Pool(processes=n_cores) as pool:
             results = pool.starmap(
                 self._process_single_frame,
-                [(i_frame,
-                  frame,
-                  mesh_info)
+                [(i_frame, frame, mesh_info)
                  for i_frame, frame in enumerate(water_arr)])
         for i_frame, result in enumerate(results):
             max_indices[i_frame] = result

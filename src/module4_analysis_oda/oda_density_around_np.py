@@ -4,10 +4,10 @@ This is typically done by counting the number of ODA molecules in each
 region and dividing by the volume of that region.
 """
 
-import sys
 from dataclasses import dataclass
 
 import numpy as np
+import pandas as pd
 
 from common import logger
 from common import xvg_to_dataframe as xvg
@@ -41,12 +41,40 @@ class SurfactantDensityAroundNanoparticle:
                   input_config: "OdaInputConfig"
                   ) -> None:
         """Initiate the calculation by checking necessary files."""
-        self._check_files(log, input_config)
+        self.check_input_files(log, input_config)
+
+        contact_data: pd.DataFrame = \
+            xvg.XvgParser(input_config.contact_xvg, log).xvg_df
+        np_com_df: pd.DataFrame = \
+            xvg.XvgParser(input_config.np_coord_xvg, log).xvg_df
+
+        interface_z: np.ndarray = \
+            self.parse_contact_data(contact_data, 'interface_z')
+        np_com: np.ndarray = self.parse_np_com(np_com_df)
+        amino_coms: np.ndarray = amino_arr[:-2]
 
     @staticmethod
-    def _check_files(log: logger.logging.Logger,
-                     input_config: "OdaInputConfig"
-                     ) -> None:
+    def parse_contact_data(contact_data: pd.DataFrame,
+                           column_name: str
+                           ) -> np.ndarray:
+        """return the selected column of the contact data as an array"""
+        if column_name not in contact_data.columns.to_list():
+            raise ValueError(
+                f'{bcolors.FAIL}The column {column_name} does not '
+                f'exist in the contact.xvg{bcolors.ENDC}\n')
+        return contact_data[column_name].to_numpy().reshape(-1, 1)
+
+    @staticmethod
+    def parse_np_com(np_com_df: pd.DataFrame
+                     ) -> np.ndarray:
+        """return the nanoparticle center of mass as an array"""
+        return np_com_df.to_numpy()
+
+    @staticmethod
+    def check_input_files(log: logger.logging.Logger,
+                          input_config: "OdaInputConfig"
+                          ) -> None:
+        """check the existence of the input files"""
         my_tools.check_file_exist(input_config.contact_xvg, log)
         my_tools.check_file_exist(input_config.np_coord_xvg, log)
 

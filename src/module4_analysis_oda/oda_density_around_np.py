@@ -11,6 +11,7 @@ import pandas as pd
 
 from common import logger
 from common import my_tools
+from common import static_info as stinfo
 from common import xvg_to_dataframe as xvg
 from common.colors_text import TextColor as bcolors
 
@@ -52,13 +53,26 @@ class SurfactantDensityAroundNanoparticle:
         np_com_df: pd.DataFrame = self.load_np_com_data(log)
         box_df: pd.DataFrame = self.load_box_data(log)
         self.initialize_data_arrays(contact_data, np_com_df, box_df, log)
+        self.initialize_calculation(log)
+
+    def initialize_calculation(self,
+                               log: logger.logging.Logger
+                               ) -> None:
+        """getting the density number from the parsed data"""
+        z_threshold: np.ndarray = self.compute_surfactant_vertical_threshold()
+
+    def compute_surfactant_vertical_threshold(self) -> np.ndarray:
+        """find the vertical threshold for the surfactants, to drop from
+        calculation"""
+        return (stinfo.np_info['radius'] +
+                self.np_com[:, 2] + np.std(self.np_com[:, 2])).reshape(-1, 1)
 
     def initialize_data_arrays(self,
-                              contact_data: pd.DataFrame,
-                              np_com_df: pd.DataFrame,
-                              box_df: pd.DataFrame,
-                              log: logger.logging.Logger
-                              ) -> None:
+                               contact_data: pd.DataFrame,
+                               np_com_df: pd.DataFrame,
+                               box_df: pd.DataFrame,
+                               log: logger.logging.Logger
+                               ) -> None:
         """set the main arrays as attibutes for the further calculationsa"""
         self.interface_z = \
             self.parse_contact_data(contact_data, 'interface_z', log)

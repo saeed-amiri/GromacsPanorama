@@ -26,53 +26,69 @@ class OdaInputConfig:
 class SurfactantDensityAroundNanoparticle:
     """self explained"""
     info_msg: str = '\tMessage from SurfactantDensityAroundNanoparticle:\n'
+    input_config: "OdaInputConfig"
+    box: np.ndarray  # Size of the box at each frame (from gromacs)
+    np_com: np.ndarray  # COM of the NP at each frame (from gromacs)
+    amino_arr: np.ndarray  # Com of the oda_amino head (from module1)
+    interface_z: np.ndarray  # Z location of the interface (from module3)
 
     def __init__(self,
                  amino_arr: np.ndarray,  # amino head com of the oda
-                 box_dims: dict[str, float],  # Dimension of the Box
                  log: logger.logging.Logger,
                  input_config: "OdaInputConfig" = OdaInputConfig()
                  ) -> None:
-        self._initiate(amino_arr, box_dims, log, input_config)
+        # The two last columns of amino_arr are indicies from main trr file
+        self.amino_arr = amino_arr[:-2]
+        self.input_config = input_config
+        self._initiate(log)
 
     def _initiate(self,
-                  amino_arr: np.ndarray,  # amino head com of the oda
-                  box_dims: dict[str, float],  # Dimension of the Box
                   log: logger.logging.Logger,
-                  input_config: "OdaInputConfig"
                   ) -> None:
         """Initiate the calculation by checking necessary files."""
-        self.check_input_files(log, input_config)
+        self.check_input_files(log, self.input_config)
 
-        contact_data: pd.DataFrame = \
-            xvg.XvgParser(input_config.contact_xvg, log).xvg_df
-        np_com_df: pd.DataFrame = \
-            xvg.XvgParser(input_config.np_coord_xvg, log).xvg_df
-        box_df: pd.DataFrame = \
-            xvg.XvgParser(input_config.box_xvg, log).xvg_df
+        contact_data: pd.DataFrame = self.load_contact_data(log)
+        np_com_df: pd.DataFrame = self.load_np_com_data(log)
+        box_df: pd.DataFrame = self.load_box_data(log)
+        self.interface_z = self.parse_contact_data(contact_data,
+                                                   'interface_z',
+                                                   log)
+        self.np_com = self.parse_gmx_xvg(np_com_df)
+        self.box = self.parse_gmx_xvg(box_df)
 
-        interface_z: np.ndarray = \
-            self.parse_contact_data(contact_data, 'interface_z')
-        np_com: np.ndarray = self.parse_gmx_xvg(np_com_df)
-        box: np.ndarray = self.parse_gmx_xvg(box_df)
-        amino_coms: np.ndarray = amino_arr[:-2]
+    def load_contact_data(self, log: logger.logging.Logger) -> pd.DataFrame:
+        """Load and return the contact data from XVG file."""
+        return xvg.XvgParser(self.input_config.contact_xvg, log).xvg_df
+
+    def load_np_com_data(self, log: logger.logging.Logger) -> pd.DataFrame:
+        """
+        Load and return the nanoparticle center of mass data from XVG
+        file."""
+        return xvg.XvgParser(self.input_config.np_coord_xvg, log).xvg_df
+
+    def load_box_data(self, log: logger.logging.Logger) -> pd.DataFrame:
+        """Load and return the box dimension data from XVG file."""
+        return xvg.XvgParser(self.input_config.box_xvg, log).xvg_df
 
     @staticmethod
     def parse_contact_data(contact_data: pd.DataFrame,
-                           column_name: str
+                           column_name: str,
+                           log: logger.logging.Logger
                            ) -> np.ndarray:
         """return the selected column of the contact data as an array"""
         if column_name not in contact_data.columns.to_list():
-            raise ValueError(
-                f'{bcolors.FAIL}The column {column_name} does not '
-                f'exist in the contact.xvg{bcolors.ENDC}\n')
+            log.error(msg := f'The column {column_name} does not '
+                      'exist in the contact.xvg\n')
+            raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}\n')
         return contact_data[column_name].to_numpy().reshape(-1, 1)
 
     @staticmethod
     def parse_gmx_xvg(np_com_df: pd.DataFrame
                       ) -> np.ndarray:
         """return the nanoparticle center of mass as an array"""
-        return np_com_df.iloc[:, 1:4].to_numpy() * 10
+        unit_nm_to_angestrom: float = 10
+        return np_com_df.iloc[:, 1:4].to_numpy() * unit_nm_to_angestrom
 
     @staticmethod
     def check_input_files(log: logger.logging.Logger,

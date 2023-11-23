@@ -62,11 +62,19 @@ class SurfactantDensityAroundNanoparticle:
         z_threshold: np.ndarray = self.compute_surfactant_vertical_threshold()
         distance_oda_np: dict[int, np.ndarray] = {}
         for i, frame_i in enumerate(self.amino_arr):
-            frame_reshaped: np.ndarray = frame_i.reshape(-1, 3)
-            below_threshold_indices: np.ndarray = \
-                np.where(frame_reshaped[:, 2] < z_threshold[i])
-            tmp_arr: np.ndarray = frame_reshaped[below_threshold_indices]
-            distance_oda_np[i] = self.compute_pbc_distance(i, tmp_arr)
+            arr_i: np.ndarray = \
+                self._get_surfactant_at_interface(frame_i, z_threshold[i])
+            distance_oda_np[i] = self.compute_pbc_distance(i, arr_i)
+
+    @staticmethod
+    def _get_surfactant_at_interface(frame_i: np.ndarray,
+                                     z_threshold_i: float
+                                     ) -> np.ndarray:
+        """return the oda at the interface"""
+        frame_reshaped: np.ndarray = frame_i.reshape(-1, 3)
+        below_threshold_indices: np.ndarray = \
+            np.where(frame_reshaped[:, 2] < z_threshold_i)
+        return frame_reshaped[below_threshold_indices]
 
     def compute_pbc_distance(self,
                              frame_index: int,

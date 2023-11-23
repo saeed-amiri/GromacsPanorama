@@ -32,6 +32,7 @@ class SurfactantDensityAroundNanoparticle:
     np_com: np.ndarray  # COM of the NP at each frame (from gromacs)
     amino_arr: np.ndarray  # Com of the oda_amino head (from module1)
     interface_z: np.ndarray  # Z location of the interface (from module3)
+    avg_density_per_region: dict[float, list[float]]  # Density per area
 
     def __init__(self,
                  amino_arr: np.ndarray,  # amino head com of the oda
@@ -53,12 +54,12 @@ class SurfactantDensityAroundNanoparticle:
         np_com_df: pd.DataFrame = self.load_np_com_data(log)
         box_df: pd.DataFrame = self.load_box_data(log)
         self.initialize_data_arrays(contact_data, np_com_df, box_df, log)
-        self.initialize_calculation()
+        self.avg_density_per_region = self.initialize_calculation()
 
-    def initialize_calculation(self) -> None:
+    def initialize_calculation(self) -> dict[float, list[float]]:
         """getting the density number from the parsed data"""
         z_threshold: np.ndarray = self.compute_surfactant_vertical_threshold()
-        regions: list[float] = self.generate_regions()
+        regions: list[float] = self.generate_regions(100)
         # Initialize a dictionary to store densities for each region
         density_per_region: dict[float, list[float]] = \
             {region: [] for region in regions}
@@ -73,7 +74,7 @@ class SurfactantDensityAroundNanoparticle:
         avg_density_per_region = \
             {region: np.mean(densities) for region, densities
              in density_per_region.items()}
-        print(avg_density_per_region)
+        return avg_density_per_region
 
     @staticmethod
     def _compute_density_per_region(regions: list[float],

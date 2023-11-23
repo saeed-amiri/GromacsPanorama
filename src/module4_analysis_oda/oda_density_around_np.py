@@ -32,7 +32,8 @@ class SurfactantDensityAroundNanoparticle:
     np_com: np.ndarray  # COM of the NP at each frame (from gromacs)
     amino_arr: np.ndarray  # Com of the oda_amino head (from module1)
     interface_z: np.ndarray  # Z location of the interface (from module3)
-    avg_density_per_region: dict[float, list[float]]  # Density per area
+    density_per_region: dict[float, list[float]]  # Density per area
+    avg_density_per_region: dict[float, float]
 
     def __init__(self,
                  amino_arr: np.ndarray,  # amino head com of the oda
@@ -54,7 +55,7 @@ class SurfactantDensityAroundNanoparticle:
         np_com_df: pd.DataFrame = self.load_np_com_data(log)
         box_df: pd.DataFrame = self.load_box_data(log)
         self.initialize_data_arrays(contact_data, np_com_df, box_df, log)
-        self.avg_density_per_region = self.initialize_calculation()
+        self.density_per_region = self.initialize_calculation()
 
     def initialize_calculation(self) -> dict[float, list[float]]:
         """getting the density number from the parsed data"""
@@ -71,10 +72,17 @@ class SurfactantDensityAroundNanoparticle:
                 self._compute_density_per_region(regions,
                                                  distance,
                                                  density_per_region)
-        avg_density_per_region = \
-            {region: np.mean(densities) for region, densities
-             in density_per_region.items()}
-        return avg_density_per_region
+        self._comput_and_set_avg_density_as_attibute(density_per_region)
+        return density_per_region
+
+    def _comput_and_set_avg_density_as_attibute(self,
+                                                density_per_region:
+                                                dict[float, list[float]]
+                                                ) -> None:
+        """self explanatory"""
+        self.avg_density_per_region = {
+            region: np.mean(densities) for region, densities
+            in density_per_region.items()}
 
     @staticmethod
     def _compute_density_per_region(regions: list[float],

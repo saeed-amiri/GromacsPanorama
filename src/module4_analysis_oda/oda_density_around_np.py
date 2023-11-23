@@ -39,7 +39,7 @@ class SurfactantDensityAroundNanoparticle:
                  log: logger.logging.Logger,
                  input_config: "OdaInputConfig" = OdaInputConfig()
                  ) -> None:
-        # The two last columns of amino_arr are indicies from main trr file
+        # The two last rows of amino_arr are indicies from main trr file
         self.amino_arr = amino_arr[:-2]
         self.input_config = input_config
         self._initiate(log)

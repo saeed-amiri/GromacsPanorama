@@ -53,18 +53,50 @@ class SurfactantDensityAroundNanoparticle:
         np_com_df: pd.DataFrame = self.load_np_com_data(log)
         box_df: pd.DataFrame = self.load_box_data(log)
         self.initialize_data_arrays(contact_data, np_com_df, box_df, log)
-        self.initialize_calculation(log)
+        self.initialize_calculation()
 
-    def initialize_calculation(self,
-                               log: logger.logging.Logger
-                               ) -> None:
+    def initialize_calculation(self) -> None:
         """getting the density number from the parsed data"""
         z_threshold: np.ndarray = self.compute_surfactant_vertical_threshold()
-        distance_oda_np: dict[int, np.ndarray] = {}
+        regions: list[float] = self.generate_regions()
+        # Initialize a dictionary to store densities for each region
+        density_per_region: dict[float, list[float]] = \
+            {region: [] for region in regions}
         for i, frame_i in enumerate(self.amino_arr):
             arr_i: np.ndarray = \
                 self._get_surfactant_at_interface(frame_i, z_threshold[i])
-            distance_oda_np[i] = self.compute_pbc_distance(i, arr_i)
+            distance: np.ndarray = self.compute_pbc_distance(i, arr_i)
+            density_per_region = \
+                self._compute_density_per_region(regions,
+                                                 distance,
+                                                 density_per_region)
+        avg_density_per_region = \
+            {region: np.mean(densities) for region, densities
+             in density_per_region.items()}
+        print(avg_density_per_region)
+
+    @staticmethod
+    def _compute_density_per_region(regions: list[float],
+                                    distance: np.ndarray,
+                                    density_per_region:
+                                    dict[float, list[float]]
+                                    ) -> dict[float, list[float]]:
+        """self explanatory"""
+        for ith in range(len(regions) - 1):
+            r_inner = regions[ith]
+            r_outer = regions[ith + 1]
+            count = np.sum((distance >= r_inner) & (distance < r_outer))
+            area = np.pi * (r_outer**2 - r_inner**2)
+            density = count / area
+            density_per_region[r_outer].append(density)
+        return density_per_region
+
+    def generate_regions(self,
+                         number_of_regions: int = 10
+                         ) -> list[float]:
+        """divide the the area around the np for generating regions"""
+        max_box_len: np.float64 = np.max(self.box[0][:2]) / 2
+        return np.linspace(0, max_box_len, number_of_regions).tolist()
 
     @staticmethod
     def _get_surfactant_at_interface(frame_i: np.ndarray,

@@ -60,6 +60,29 @@ class SurfactantDensityAroundNanoparticle:
                                ) -> None:
         """getting the density number from the parsed data"""
         z_threshold: np.ndarray = self.compute_surfactant_vertical_threshold()
+        distance_oda_np: dict[int, np.ndarray] = {}
+        for i, frame_i in enumerate(self.amino_arr):
+            frame_reshaped: np.ndarray = frame_i.reshape(-1, 3)
+            below_threshold_indices: np.ndarray = \
+                np.where(frame_reshaped[:, 2] < z_threshold[i])
+            tmp_arr: np.ndarray = frame_reshaped[below_threshold_indices]
+            distance_oda_np[i] = self.compute_pbc_distance(i, tmp_arr)
+
+    def compute_pbc_distance(self,
+                             frame_index: int,
+                             arr: np.ndarray
+                             ) -> np.ndarray:
+        """claculating the distance between the np and the surfactants
+        at each frame and return an array
+        Only considering 2d distance, in the XY plane
+        """
+        np_com: np.ndarray = self.np_com[frame_index]
+        box: np.ndarray = self.box[frame_index] / 2
+        dx_i = arr[:, 0] - np_com[0]
+        dx_pbc = dx_i - (box[0] * np.round(dx_i/box[0]))
+        dy_i = arr[:, 1] - np_com[1]
+        dy_pbc = dy_i - (box[1] * np.round(dy_i/box[1]))
+        return np.sqrt(dx_pbc*dx_pbc + dy_pbc*dy_pbc)
 
     def compute_surfactant_vertical_threshold(self) -> np.ndarray:
         """find the vertical threshold for the surfactants, to drop from

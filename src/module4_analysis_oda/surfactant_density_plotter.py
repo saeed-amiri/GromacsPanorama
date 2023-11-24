@@ -40,6 +40,7 @@ class SurfactantDensityPlotter:
     density: dict[float, list[float]]
     ave_density: dict[float, float]
     contact_data: pd.DataFrame
+    box: np.ndarray  # Size of the box at each frame (from gromacs)
 
     def __init__(self,
                  density_obj: "SurfactantDensityAroundNanoparticle",
@@ -49,6 +50,7 @@ class SurfactantDensityPlotter:
         self.density = density_obj.density_per_region
         self.ave_density = density_obj.avg_density_per_region
         self.contact_data = density_obj.contact_data
+        self.box = density_obj.box
         self.plot_config = plot_config
         self._initialize_plotting()
         self.write_msg(log)
@@ -106,13 +108,14 @@ class SurfactantDensityPlotter:
                                cmap='Greys'
                                )
         ax_i = self._add_heatmap_grid(ax_i)
-        ax_i = self._add_np_radii(ax_i)
+        ax_i, contact_radius, np_radius = self._add_np_radii(ax_i)
+        ax_i = self._add_radius_arrows(ax_i, contact_radius, np_radius)
         plt.colorbar(cbar, ax=ax_i, label='Average Density')
         return ax_i
 
     def _add_np_radii(self,
                       ax_i: plt.axes
-                      ) -> plt.axes:
+                      ) -> tuple[plt.axes, float, float]:
         """attach circle denoting the np"""
         contact_radius: float = self._get_avg_contact_raduis()
         np_radius: float = stinfo.np_info['radius']
@@ -120,8 +123,38 @@ class SurfactantDensityPlotter:
             f'\tThe radius of the nanoparticle was set to `{np_radius:.3f}`\n'
             f'\tThe average contact radius is {contact_radius:.3f}\n')
         ax_i = self._add_heatmap_circle(ax_i, contact_radius)
-        ax_i = self._add_heatmap_circle(ax_i, np_radius)
+        ax_i = self._add_heatmap_circle(ax_i, np_radius, color='blue')
+        return ax_i, contact_radius, np_radius
+
+    def _add_radius_arrows(self,
+                           ax_i: plt.axes,
+                           contact_radius: float,
+                           np_radius: float
+                           ) -> plt.axes:
+        """self explanatory"""
+        self._add_polar_arrow(ax_i, length=contact_radius, theta=np.pi/2)
+        self._add_polar_arrow(ax_i, length=np_radius, theta=0, color='blue')
         return ax_i
+
+    @staticmethod
+    def _add_polar_arrow(ax_i: plt.axes,
+                         length: float,  # Radial direction of the arrow
+                         theta: float,  # Angle of the arrow's location
+                         dtheta: float = 0,  # Angular direction of the arrow
+                         color: str = 'red'
+                         ) -> None:
+        """Add an arrow to the polar plot."""
+        # The quiver function adds the arrow to the plot
+        r_loc: float = 0  # Radius of the arrow's location
+        ax_i.quiver(theta,
+                    r_loc,
+                    dtheta,
+                    length,
+                    angles='xy',
+                    scale_units='xy',
+                    scale=1,
+                    width=0.005,
+                    color=color)
 
     def _get_avg_contact_raduis(self) -> float:
         """self explanatory"""

@@ -8,6 +8,7 @@ from collections import namedtuple
 
 import numpy as np
 import matplotlib.pylab as plt
+from matplotlib.patches import Circle
 
 from common import logger
 from common import plot_tools
@@ -98,6 +99,9 @@ class SurfactantDensityPlotter:
                                cmap='Greys'
                                )
         ax_i = self._add_heatmap_grid(ax_i)
+        circle_radius = 22
+        ax_i = self._add_heatmap_circle(ax_i, circle_radius)
+        ax_i = self._add_heatmap_circle(ax_i, 30)
         plt.colorbar(cbar, ax=ax_i, label='Average Density')
         plt.show()
         plot_tools.save_close_fig(
@@ -105,19 +109,36 @@ class SurfactantDensityPlotter:
         self.info_msg += \
             f'\tThe heatmap of the density is saved as {fout}\n'
 
-    def _add_heatmap_grid(self,
-                          ax_i: plt.axes
+    @staticmethod
+    def _add_heatmap_grid(ax_i: plt.axes
                           ) -> plt.axes:
         """self explantory"""
         # Customizing grid lines
-        ax_i.yaxis.grid(True, color='gray', linestyle='dashed', linewidth=0.5)
-        ax_i.xaxis.grid(True, color='gray', linestyle='dashed', linewidth=0.5)
+        ax_i.yaxis.grid(True, color='green', linestyle='dashed', linewidth=0.5)
+        ax_i.xaxis.grid(True, color='green', linestyle='dashed', linewidth=0.5)
 
         # Positioning grid lines and ticks to the top and right
         ax_i.xaxis.tick_top()
         ax_i.yaxis.tick_right()
         ax_i.xaxis.set_label_position('top')
         ax_i.yaxis.set_label_position('right')
+        return ax_i
+
+    @staticmethod
+    def _add_heatmap_circle(ax_i: plt.axes,
+                            radius: float,
+                            origin: tuple[float, float] = (0, 0),
+                            color: str = 'red',
+                            line_style: str = '--'
+                            ) -> plt.axes:
+        """add circle for representing the nanoparticle"""
+        circle = Circle(origin,
+                        radius,
+                        transform=ax_i.transData._b,
+                        color=color,
+                        ls=line_style,
+                        fill=False)
+        ax_i.add_patch(circle)
         return ax_i
 
     def write_msg(self,

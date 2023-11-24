@@ -60,7 +60,7 @@ class SurfactantDensityAroundNanoparticle:
     def initialize_calculation(self) -> dict[float, list[float]]:
         """getting the density number from the parsed data"""
         z_threshold: np.ndarray = self.compute_surfactant_vertical_threshold()
-        regions: list[float] = self.generate_regions(100)
+        regions: list[float] = self.generate_regions(50)
         # Initialize a dictionary to store densities for each region
         density_per_region: dict[float, list[float]] = \
             {region: [] for region in regions}
@@ -126,7 +126,7 @@ class SurfactantDensityAroundNanoparticle:
         Only considering 2d distance, in the XY plane
         """
         np_com: np.ndarray = self.np_com[frame_index]
-        box: np.ndarray = self.box[frame_index] / 2
+        box: np.ndarray = self.box[frame_index] / 1
         dx_i = arr[:, 0] - np_com[0]
         dx_pbc = dx_i - (box[0] * np.round(dx_i/box[0]))
         dy_i = arr[:, 1] - np_com[1]

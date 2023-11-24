@@ -7,11 +7,13 @@ from dataclasses import dataclass
 from collections import namedtuple
 
 import numpy as np
+import pandas as pd
 import matplotlib.pylab as plt
 from matplotlib.patches import Circle
 
 from common import logger
 from common import plot_tools
+from common import static_info as stinfo
 from common.colors_text import TextColor as bcolors
 
 if typing.TYPE_CHECKING:
@@ -37,6 +39,7 @@ class SurfactantDensityPlotter:
     info_msg: str = 'Message from SurfactantDensityPlotter:\n'
     density: dict[float, list[float]]
     ave_density: dict[float, float]
+    contact_data: pd.DataFrame
 
     def __init__(self,
                  density_obj: "SurfactantDensityAroundNanoparticle",
@@ -45,6 +48,7 @@ class SurfactantDensityPlotter:
                  ) -> None:
         self.density = density_obj.density_per_region
         self.ave_density = density_obj.avg_density_per_region
+        self.contact_data = density_obj.contact_data
         self.plot_config = plot_config
         self._initialize_plotting()
         self.write_msg(log)
@@ -99,9 +103,7 @@ class SurfactantDensityPlotter:
                                cmap='Greys'
                                )
         ax_i = self._add_heatmap_grid(ax_i)
-        circle_radius = 22
-        ax_i = self._add_heatmap_circle(ax_i, circle_radius)
-        ax_i = self._add_heatmap_circle(ax_i, 30)
+        ax_i = self._add_np_radii(ax_i)
         plt.colorbar(cbar, ax=ax_i, label='Average Density')
         plt.show()
         plot_tools.save_close_fig(
@@ -109,10 +111,27 @@ class SurfactantDensityPlotter:
         self.info_msg += \
             f'\tThe heatmap of the density is saved as {fout}\n'
 
+    def _add_np_radii(self,
+                      ax_i: plt.axes
+                      ) -> plt.axes:
+        """attach circle denoting the np"""
+        contact_radius: float = self._get_avg_contact_raduis()
+        np_radius: float = stinfo.np_info['radius']
+        self.info_msg += (
+            f'\tThe radius of the nanoparticle was set to `{np_radius:.3f}`\n'
+            f'\tThe average contact radius is {contact_radius:.3f}\n')
+        ax_i = self._add_heatmap_circle(ax_i, contact_radius)
+        ax_i = self._add_heatmap_circle(ax_i, np_radius)
+        return ax_i
+
+    def _get_avg_contact_raduis(self) -> float:
+        """self explanatory"""
+        return self.contact_data.loc[:, 'contact_radius'].mean()
+
     @staticmethod
     def _add_heatmap_grid(ax_i: plt.axes
                           ) -> plt.axes:
-        """self explantory"""
+        """self explanatory"""
         # Customizing grid lines
         ax_i.yaxis.grid(True, color='green', linestyle='dashed', linewidth=0.5)
         ax_i.xaxis.grid(True, color='green', linestyle='dashed', linewidth=0.5)

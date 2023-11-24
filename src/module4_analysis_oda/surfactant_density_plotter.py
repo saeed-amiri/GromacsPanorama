@@ -68,7 +68,11 @@ class SurfactantDensityPlotter:
         radial_distances, theta, density_grid = self._create_density_grid()
         plot_params = \
             HeatPlotParams(fig_i, ax_i, radial_distances, theta, density_grid)
-        self._plot_and_save_heatmap(plot_params)
+        ax_i = self._plot_heatmap(plot_params)
+        plot_tools.save_close_fig(
+            fig_i, ax_i, fout := self.plot_config.graph_suffix)
+        self.info_msg += \
+            f'\tThe heatmap of the density is saved as {fout}\n'
 
     def _create_density_grid(self) -> tuple[np.ndarray, ...]:
         """Create a grid in polar coordinates with interpolated densities."""
@@ -90,12 +94,11 @@ class SurfactantDensityPlotter:
         ax_i.grid(False)
         return fig_i, ax_i
 
-    def _plot_and_save_heatmap(self,
-                               plot_params: "HeatPlotParams"
-                               ) -> None:
+    def _plot_heatmap(self,
+                      plot_params: "HeatPlotParams"
+                      ) -> plt.axes:
         """Plot the heatmap and save the figure."""
         ax_i: plt.axes = plot_params.ax
-        fig_i: plt.figure = plot_params.fig
         cbar = ax_i.pcolormesh(plot_params.theta,
                                plot_params.radial_distances,
                                plot_params.density_grid,
@@ -105,11 +108,7 @@ class SurfactantDensityPlotter:
         ax_i = self._add_heatmap_grid(ax_i)
         ax_i = self._add_np_radii(ax_i)
         plt.colorbar(cbar, ax=ax_i, label='Average Density')
-        plt.show()
-        plot_tools.save_close_fig(
-            fig_i, ax_i, fout := self.plot_config.graph_suffix)
-        self.info_msg += \
-            f'\tThe heatmap of the density is saved as {fout}\n'
+        return ax_i
 
     def _add_np_radii(self,
                       ax_i: plt.axes

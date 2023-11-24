@@ -28,6 +28,7 @@ class SurfactantDensityAroundNanoparticle:
     """self explained"""
     info_msg: str = '\tMessage from SurfactantDensityAroundNanoparticle:\n'
     input_config: "OdaInputConfig"
+    contact_data: pd.DataFrame  # The contact data (from module3)
     box: np.ndarray  # Size of the box at each frame (from gromacs)
     np_com: np.ndarray  # COM of the NP at each frame (from gromacs)
     amino_arr: np.ndarray  # Com of the oda_amino head (from module1)
@@ -51,10 +52,10 @@ class SurfactantDensityAroundNanoparticle:
         """Initiate the calculation by checking necessary files."""
         self.check_input_files(log, self.input_config)
 
-        contact_data: pd.DataFrame = self.load_contact_data(log)
+        self.contact_data: pd.DataFrame = self.load_contact_data(log)
         np_com_df: pd.DataFrame = self.load_np_com_data(log)
         box_df: pd.DataFrame = self.load_box_data(log)
-        self.initialize_data_arrays(contact_data, np_com_df, box_df, log)
+        self.initialize_data_arrays(np_com_df, box_df, log)
         self.density_per_region = self.initialize_calculation()
 
     def initialize_calculation(self) -> dict[float, list[float]]:
@@ -140,14 +141,13 @@ class SurfactantDensityAroundNanoparticle:
                 self.np_com[:, 2] + np.std(self.np_com[:, 2])).reshape(-1, 1)
 
     def initialize_data_arrays(self,
-                               contact_data: pd.DataFrame,
                                np_com_df: pd.DataFrame,
                                box_df: pd.DataFrame,
                                log: logger.logging.Logger
                                ) -> None:
         """set the main arrays as attibutes for the further calculationsa"""
         self.interface_z = \
-            self.parse_contact_data(contact_data, 'interface_z', log)
+            self.parse_contact_data(self.contact_data, 'interface_z', log)
         self.np_com = self.parse_gmx_xvg(np_com_df)
         self.box = self.parse_gmx_xvg(box_df)
 

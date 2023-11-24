@@ -97,12 +97,28 @@ class SurfactantDensityPlotter:
                                shading='auto',
                                cmap='Greys'
                                )
+        ax_i = self._add_heatmap_grid(ax_i)
         plt.colorbar(cbar, ax=ax_i, label='Average Density')
         plt.show()
         plot_tools.save_close_fig(
             fig_i, ax_i, fout := self.plot_config.graph_suffix)
         self.info_msg += \
             f'\tThe heatmap of the density is saved as {fout}\n'
+
+    def _add_heatmap_grid(self,
+                          ax_i: plt.axes
+                          ) -> plt.axes:
+        """self explantory"""
+        # Customizing grid lines
+        ax_i.yaxis.grid(True, color='gray', linestyle='dashed', linewidth=0.5)
+        ax_i.xaxis.grid(True, color='gray', linestyle='dashed', linewidth=0.5)
+
+        # Positioning grid lines and ticks to the top and right
+        ax_i.xaxis.tick_top()
+        ax_i.yaxis.tick_right()
+        ax_i.xaxis.set_label_position('top')
+        ax_i.yaxis.set_label_position('right')
+        return ax_i
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

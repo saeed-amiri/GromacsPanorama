@@ -26,8 +26,8 @@ class PlotConfig:
 
 
 # Define a named tuple for plot parameters
-PlotParams = \
-    namedtuple('PlotParams', 'fig ax radial_distances theta density_grid')
+HeatPlotParams = \
+    namedtuple('HeatPlotParams', 'fig ax radial_distances theta density_grid')
 
 
 class SurfactantDensityPlotter:
@@ -62,7 +62,7 @@ class SurfactantDensityPlotter:
         fig_i, ax_i = self._setup_plot()
         radial_distances, theta, density_grid = self._create_density_grid()
         plot_params = \
-            PlotParams(fig_i, ax_i, radial_distances, theta, density_grid)
+            HeatPlotParams(fig_i, ax_i, radial_distances, theta, density_grid)
         self._plot_and_save_heatmap(plot_params)
 
     def _create_density_grid(self) -> tuple[np.ndarray, ...]:
@@ -86,7 +86,7 @@ class SurfactantDensityPlotter:
         return fig_i, ax_i
 
     def _plot_and_save_heatmap(self,
-                               plot_params: "PlotParams"
+                               plot_params: "HeatPlotParams"
                                ) -> None:
         """Plot the heatmap and save the figure."""
         ax_i: plt.axes = plot_params.ax

@@ -39,16 +39,13 @@ class SurfactantDensityPlotter:
         self.density = density_obj.density_per_region
         self.ave_density = density_obj.avg_density_per_region
         self.plot_config = plot_config
-        self._initialize_plotting(log)
+        self._initialize_plotting()
+        self.write_msg(log)
 
-    def _initialize_plotting(self,
-                             log: logger.logging.Logger
-                             ) -> None:
-        self.plot_density_heatmap(log)
+    def _initialize_plotting(self) -> None:
+        self.plot_density_heatmap()
 
-    def plot_density_heatmap(self,
-                             log: logger.logging.Logger
-                             ) -> None:
+    def plot_density_heatmap(self) -> None:
         """self explanetory"""
         ax_i: plt.axes
         fig_i: plt.figure
@@ -94,8 +91,18 @@ class SurfactantDensityPlotter:
             )
         plt.colorbar(cbar, ax=ax_i, label='Average Density')
         plt.show()
-        plot_tools.save_close_fig(fig_i, ax_i, self.plot_config.graph_suffix)
+        plot_tools.save_close_fig(
+            fig_i, ax_i, fout:=self.plot_config.graph_suffix)
+        self.info_msg += \
+            f'\tThe heatmap of the density is saved as {fout}\n'
 
+    def write_msg(self,
+                  log: logger.logging.Logger  # To log
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 if __name__ == "__main__":
     print(f'{bcolors.CAUTION}\tThis script runs within '

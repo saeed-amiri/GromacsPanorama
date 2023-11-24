@@ -4,6 +4,7 @@ plot the density of the ODA from SurfactantDensityAroundNanoparticle.
 
 import typing
 from dataclasses import dataclass
+from collections import namedtuple
 
 import numpy as np
 import matplotlib.pylab as plt
@@ -22,6 +23,11 @@ class PlotConfig:
     """set the parameters for the the plot"""
     heatmap_suffix: str = 'heatmap.png'
     graph_suffix: str = 'desnty.png'
+
+
+# Define a named tuple for plot parameters
+PlotParams = \
+    namedtuple('PlotParams', 'fig ax radial_distances theta density_grid')
 
 
 class SurfactantDensityPlotter:
@@ -55,8 +61,9 @@ class SurfactantDensityPlotter:
 
         fig_i, ax_i = self._setup_plot()
         radial_distances, theta, density_grid = self._create_density_grid()
-        self._plot_and_save_heatmap(
-            fig_i, ax_i, radial_distances, theta, density_grid)
+        plot_params = \
+            PlotParams(fig_i, ax_i, radial_distances, theta, density_grid)
+        self._plot_and_save_heatmap(plot_params)
 
     def _create_density_grid(self) -> tuple[np.ndarray, ...]:
         """Create a grid in polar coordinates with interpolated densities."""
@@ -79,20 +86,21 @@ class SurfactantDensityPlotter:
         return fig_i, ax_i
 
     def _plot_and_save_heatmap(self,
-                               fig_i: plt.Figure,
-                               ax_i: plt.axes,
-                               radial_distances: np.ndarray,
-                               theta: np.ndarray,
-                               density_grid: np.ndarray
+                               plot_params: "PlotParams"
                                ) -> None:
         """Plot the heatmap and save the figure."""
-        cbar = ax_i.pcolormesh(
-            theta, radial_distances, density_grid, shading='auto', cmap='Greys'
-            )
+        ax_i: plt.axes = plot_params.ax
+        fig_i: plt.figure = plot_params.fig
+        cbar = ax_i.pcolormesh(plot_params.theta,
+                               plot_params.radial_distances,
+                               plot_params.density_grid,
+                               shading='auto',
+                               cmap='Greys'
+                               )
         plt.colorbar(cbar, ax=ax_i, label='Average Density')
         plt.show()
         plot_tools.save_close_fig(
-            fig_i, ax_i, fout:=self.plot_config.graph_suffix)
+            fig_i, ax_i, fout := self.plot_config.graph_suffix)
         self.info_msg += \
             f'\tThe heatmap of the density is saved as {fout}\n'
 
@@ -103,6 +111,7 @@ class SurfactantDensityPlotter:
         print(f'{bcolors.OKCYAN}{self.__module__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
+
 
 if __name__ == "__main__":
     print(f'{bcolors.CAUTION}\tThis script runs within '

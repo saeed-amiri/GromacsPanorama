@@ -9,9 +9,11 @@ import sys
 from module4_analysis_oda import rdf
 from module4_analysis_oda.oda_density_around_np import \
     OdaInputConfig, SurfactantDensityAroundNanoparticle
+from module4_analysis_oda.surfactant_density_plotter import \
+    PlotConfig, SurfactantDensityPlotter
 from common import logger
 from common.com_file_parser import GetCom
-from common.colors_text import TextColor as bcolors
+
 
 class OdaAnalysis:
     """call all the other scripts here"""
@@ -28,9 +30,10 @@ class OdaAnalysis:
                  ) -> None:
         """call the scripts"""
         # rdf.RdfClculation(parsed_com.split_arr_dict['AMINO_ODN'],
-                        #   parsed_com.box_dims, log)
-        SurfactantDensityAroundNanoparticle(
+        # #               #   parsed_com.box_dims, log)
+        oda_density = SurfactantDensityAroundNanoparticle(
             parsed_com.split_arr_dict['AMINO_ODN'], log)
+        SurfactantDensityPlotter(oda_density, log)
 
 
 if __name__ == '__main__':

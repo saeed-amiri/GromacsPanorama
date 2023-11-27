@@ -8,7 +8,7 @@ import sys
 
 from module4_analysis_oda import rdf
 from module4_analysis_oda.oda_density_around_np import \
-    OdaInputConfig, SurfactantDensityAroundNanoparticle
+    OdaInputFilesConfig, ParameterConfig ,SurfactantDensityAroundNanoparticle
 from module4_analysis_oda.surfactant_density_plotter import \
     PlotConfig, SurfactantDensityPlotter
 from common import logger
@@ -31,8 +31,9 @@ class OdaAnalysis:
         """call the scripts"""
         # rdf.RdfClculation(parsed_com.split_arr_dict['AMINO_ODN'],
         # #               #   parsed_com.box_dims, log)
+        params: "ParameterConfig" = ParameterConfig(number_of_regins=50)
         oda_density = SurfactantDensityAroundNanoparticle(
-            parsed_com.split_arr_dict['AMINO_ODN'], log)
+            parsed_com.split_arr_dict['AMINO_ODN'], log, param_config=params)
         SurfactantDensityPlotter(oda_density, log)
 
 

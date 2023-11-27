@@ -24,10 +24,17 @@ class OdaInputConfig:
     box_xvg: str = 'box.xvg'
 
 
+@dataclass
+class ParameterConfig:
+    """set the default paramters for the calculataion"""
+    number_of_regins: int = 50
+
+
 class SurfactantDensityAroundNanoparticle:
     """self explained"""
     info_msg: str = '\tMessage from SurfactantDensityAroundNanoparticle:\n'
     input_config: "OdaInputConfig"
+    param_config: "ParameterConfig"
     contact_data: pd.DataFrame  # The contact data (from module3)
     box: np.ndarray  # Size of the box at each frame (from gromacs)
     np_com: np.ndarray  # COM of the NP at each frame (from gromacs)
@@ -39,11 +46,13 @@ class SurfactantDensityAroundNanoparticle:
     def __init__(self,
                  amino_arr: np.ndarray,  # amino head com of the oda
                  log: logger.logging.Logger,
-                 input_config: "OdaInputConfig" = OdaInputConfig()
+                 input_config: "OdaInputConfig" = OdaInputConfig(),
+                 param_config: "ParameterConfig" = ParameterConfig()
                  ) -> None:
         # The two last rows of amino_arr are indicies from main trr file
         self.amino_arr = amino_arr[:-2]
         self.input_config = input_config
+        self.param_config = param_config
         self._initiate(log)
 
     def _initiate(self,
@@ -61,7 +70,8 @@ class SurfactantDensityAroundNanoparticle:
     def initialize_calculation(self) -> dict[float, list[float]]:
         """getting the density number from the parsed data"""
         z_threshold: np.ndarray = self.compute_surfactant_vertical_threshold()
-        regions: list[float] = self.generate_regions(50)
+        regions: list[float] = \
+            self.generate_regions(self.param_config.number_of_regins)
         # Initialize a dictionary to store densities for each region
         density_per_region: dict[float, list[float]] = \
             {region: [] for region in regions}
@@ -102,7 +112,7 @@ class SurfactantDensityAroundNanoparticle:
         return density_per_region
 
     def generate_regions(self,
-                         number_of_regions: int = 10
+                         number_of_regions: int
                          ) -> list[float]:
         """divide the the area around the np for generating regions"""
         max_box_len: np.float64 = np.max(self.box[0][:2]) / 2

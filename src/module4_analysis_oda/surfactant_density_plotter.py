@@ -87,14 +87,17 @@ class SurfactantDensityPlotter:
         ax_i: plt.axes
         fig_i: plt.figure
         fig_i, ax_i = plot_tools.mk_canvas((np.min(radii), np.max(radii)),
-                                           height_ratio=2.5)
-        ax_i.plot(radii, densities, marker='o', linestyle='-')
+                                           height_ratio=(5**0.5-1))
+        ax_i.plot(radii,
+                  densities,
+                  marker='o',
+                  linestyle='-',
+                  color='k',
+                  label='density')
         ax_i.set_xlabel('Distance from Nanoparticle (units)')
         ax_i.set_ylabel('Average Density (units)')
-        ax_i.set_title('Surfactant Density vs Distance from Nanoparticle')
-        plt.grid(True)
-
-        plot_tools.save_close_fig(fig_i, ax_i, self.plot_config.heatmap_suffix)
+        ax_i.set_title('ODA Density vs Distance from NP')
+        plot_tools.save_close_fig(fig_i, ax_i, self.plot_config.graph_suffix)
         self.info_msg += \
             f'\nThe density graph is saved: {self.plot_config.graph_suffix}\n'
 

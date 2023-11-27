@@ -3,7 +3,7 @@ plot the density of the ODA from SurfactantDensityAroundNanoparticle.
 """
 
 import typing
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from collections import namedtuple
 
 import numpy as np
@@ -22,12 +22,28 @@ if typing.TYPE_CHECKING:
 
 
 @dataclass
-class PlotConfig:
-    """set the parameters for the the plot"""
+class HeatMapConfig:
+    """set the parameters for the heatmap"""
     heatmap_suffix: str = 'heatmap.png'
-    graph_suffix: str = 'desnty.png'
     heatmap_color: str = 'Greys'
     show_grid: bool = False
+    cbar_label: str = 'Average Density'
+
+
+@dataclass
+class GraphConfig:
+    """set the parameters for the graph"""
+    graph_suffix: str = 'desnty.png'
+    graph_legend: str = 'density'
+    xlabel: str = 'Distance from Nanoparticle (units)'
+    ylabel: str = 'Average Density (units)'
+    title: str = 'ODA Density vs Distance from NP'
+    graph_style: dict = field(default_factory=lambda: {
+        'legend': 'density',
+        'color': 'k',
+        'marker': 'o',
+        'linestyle': '-'
+    })
 
 
 # Define a named tuple for plot parameters
@@ -47,13 +63,15 @@ class SurfactantDensityPlotter:
     def __init__(self,
                  density_obj: "SurfactantDensityAroundNanoparticle",
                  log: logger.logging.Logger,
-                 plot_config: "PlotConfig" = PlotConfig()
+                 heat_map_config: "HeatMapConfig" = HeatMapConfig(),
+                 graph_config: "GraphConfig" = GraphConfig()
                  ) -> None:
         self.density = density_obj.density_per_region
         self.ave_density = density_obj.avg_density_per_region
         self.contact_data = density_obj.contact_data
         self.box = density_obj.box
-        self.plot_config = plot_config
+        self.heat_map_config = heat_map_config
+        self.graph_config = graph_config
         self._initialize_plotting()
         self.write_msg(log)
 
@@ -75,7 +93,7 @@ class SurfactantDensityPlotter:
             HeatPlotParams(fig_i, ax_i, radial_distances, theta, density_grid)
         ax_i = self._plot_heatmap(plot_params)
         plot_tools.save_close_fig(
-            fig_i, ax_i, fout := self.plot_config.heatmap_suffix)
+            fig_i, ax_i, fout := self.heat_map_config.heatmap_suffix)
         self.info_msg += \
             f'\tThe heatmap of the density is saved as {fout}\n'
 
@@ -87,19 +105,19 @@ class SurfactantDensityPlotter:
         ax_i: plt.axes
         fig_i: plt.figure
         fig_i, ax_i = plot_tools.mk_canvas((np.min(radii), np.max(radii)),
-                                           height_ratio=(5**0.5-1))
+                                           height_ratio=5**0.5-1)
         ax_i.plot(radii,
                   densities,
-                  marker='o',
-                  linestyle='-',
-                  color='k',
-                  label='density')
-        ax_i.set_xlabel('Distance from Nanoparticle (units)')
-        ax_i.set_ylabel('Average Density (units)')
-        ax_i.set_title('ODA Density vs Distance from NP')
-        plot_tools.save_close_fig(fig_i, ax_i, self.plot_config.graph_suffix)
+                  marker=self.graph_config.graph_style['marker'],
+                  linestyle=self.graph_config.graph_style['linestyle'],
+                  color=self.graph_config.graph_style['color'],
+                  label=self.graph_config.graph_legend)
+        ax_i.set_xlabel(self.graph_config.xlabel)
+        ax_i.set_ylabel(self.graph_config.ylabel)
+        ax_i.set_title(self.graph_config.title)
+        plot_tools.save_close_fig(fig_i, ax_i, self.graph_config.graph_suffix)
         self.info_msg += \
-            f'\nThe density graph is saved: {self.plot_config.graph_suffix}\n'
+            f'\tThe density graph saved: `{self.graph_config.graph_suffix}`\n'
 
     def _create_density_grid(self) -> tuple[np.ndarray, ...]:
         """Create a grid in polar coordinates with interpolated densities."""
@@ -130,13 +148,13 @@ class SurfactantDensityPlotter:
                                plot_params.radial_distances,
                                plot_params.density_grid,
                                shading='auto',
-                               cmap=self.plot_config.heatmap_color
+                               cmap=self.heat_map_config.heatmap_color
                                )
-        if self.plot_config.show_grid:
+        if self.heat_map_config.show_grid:
             ax_i = self._add_heatmap_grid(ax_i)
         ax_i, contact_radius, np_radius = self._add_np_radii(ax_i)
         ax_i = self._add_radius_arrows(ax_i, contact_radius, np_radius)
-        plt.colorbar(cbar, ax=ax_i, label='Average Density')
+        plt.colorbar(cbar, ax=ax_i, label=self.heat_map_config.cbar_label)
         return ax_i
 
     def _add_np_radii(self,

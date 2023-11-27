@@ -26,6 +26,8 @@ class PlotConfig:
     """set the parameters for the the plot"""
     heatmap_suffix: str = 'heatmap.png'
     graph_suffix: str = 'desnty.png'
+    heatmap_color: str = 'Greys'
+    show_grid: bool = False
 
 
 # Define a named tuple for plot parameters
@@ -105,9 +107,10 @@ class SurfactantDensityPlotter:
                                plot_params.radial_distances,
                                plot_params.density_grid,
                                shading='auto',
-                               cmap='Greys'
+                               cmap=self.plot_config.heatmap_color
                                )
-        ax_i = self._add_heatmap_grid(ax_i)
+        if self.plot_config.show_grid:
+            ax_i = self._add_heatmap_grid(ax_i)
         ax_i, contact_radius, np_radius = self._add_np_radii(ax_i)
         ax_i = self._add_radius_arrows(ax_i, contact_radius, np_radius)
         plt.colorbar(cbar, ax=ax_i, label='Average Density')

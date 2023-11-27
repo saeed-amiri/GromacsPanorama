@@ -17,7 +17,7 @@ from common.colors_text import TextColor as bcolors
 
 
 @dataclass
-class OdaInputConfig:
+class OdaInputFilesConfig:
     """set the input for analysing"""
     contact_xvg: str = 'contact.xvg'
     np_coord_xvg: str = 'coord.xvg'
@@ -33,7 +33,7 @@ class ParameterConfig:
 class SurfactantDensityAroundNanoparticle:
     """self explained"""
     info_msg: str = '\tMessage from SurfactantDensityAroundNanoparticle:\n'
-    input_config: "OdaInputConfig"
+    input_config: "OdaInputFilesConfig"
     param_config: "ParameterConfig"
     contact_data: pd.DataFrame  # The contact data (from module3)
     box: np.ndarray  # Size of the box at each frame (from gromacs)
@@ -46,7 +46,7 @@ class SurfactantDensityAroundNanoparticle:
     def __init__(self,
                  amino_arr: np.ndarray,  # amino head com of the oda
                  log: logger.logging.Logger,
-                 input_config: "OdaInputConfig" = OdaInputConfig(),
+                 input_config: "OdaInputFilesConfig" = OdaInputFilesConfig(),
                  param_config: "ParameterConfig" = ParameterConfig()
                  ) -> None:
         # The two last rows of amino_arr are indicies from main trr file
@@ -199,7 +199,7 @@ class SurfactantDensityAroundNanoparticle:
 
     @staticmethod
     def check_input_files(log: logger.logging.Logger,
-                          input_config: "OdaInputConfig"
+                          input_config: "OdaInputFilesConfig"
                           ) -> None:
         """check the existence of the input files"""
         my_tools.check_file_exist(input_config.contact_xvg, log)

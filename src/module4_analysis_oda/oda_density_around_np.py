@@ -91,9 +91,12 @@ class SurfactantDensityAroundNanoparticle:
                                                 dict[float, list[float]]
                                                 ) -> None:
         """self explanatory"""
-        self.avg_density_per_region = {
-            region: np.mean(densities) for region, densities
-            in density_per_region.items()}
+        self.avg_density_per_region = {}
+        for region, densities in density_per_region.items():
+            if densities:
+                self.avg_density_per_region[region] = np.mean(densities)
+            else:
+                self.avg_density_per_region[region] = 0
 
     @staticmethod
     def _compute_density_per_region(regions: list[float],

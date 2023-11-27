@@ -59,6 +59,7 @@ class SurfactantDensityPlotter:
 
     def _initialize_plotting(self) -> None:
         self.plot_density_heatmap()
+        self.plot_density_graph()
 
     def plot_density_heatmap(self) -> None:
         """self explanetory"""
@@ -74,9 +75,28 @@ class SurfactantDensityPlotter:
             HeatPlotParams(fig_i, ax_i, radial_distances, theta, density_grid)
         ax_i = self._plot_heatmap(plot_params)
         plot_tools.save_close_fig(
-            fig_i, ax_i, fout := self.plot_config.graph_suffix)
+            fig_i, ax_i, fout := self.plot_config.heatmap_suffix)
         self.info_msg += \
             f'\tThe heatmap of the density is saved as {fout}\n'
+
+    def plot_density_graph(self) -> None:
+        """Plot a simple graph of density vs distance."""
+        # Extracting radii and average densities
+        radii = np.array(list(self.ave_density.keys()))
+        densities = np.array(list(self.ave_density.values()))
+        ax_i: plt.axes
+        fig_i: plt.figure
+        fig_i, ax_i = plot_tools.mk_canvas((np.min(radii), np.max(radii)),
+                                           height_ratio=2.5)
+        ax_i.plot(radii, densities, marker='o', linestyle='-')
+        ax_i.set_xlabel('Distance from Nanoparticle (units)')
+        ax_i.set_ylabel('Average Density (units)')
+        ax_i.set_title('Surfactant Density vs Distance from Nanoparticle')
+        plt.grid(True)
+
+        plot_tools.save_close_fig(fig_i, ax_i, self.plot_config.heatmap_suffix)
+        self.info_msg += \
+            f'\nThe density graph is saved: {self.plot_config.graph_suffix}\n'
 
     def _create_density_grid(self) -> tuple[np.ndarray, ...]:
         """Create a grid in polar coordinates with interpolated densities."""

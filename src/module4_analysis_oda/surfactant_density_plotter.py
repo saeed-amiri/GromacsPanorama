@@ -21,9 +21,21 @@ if typing.TYPE_CHECKING:
         import SurfactantDensityAroundNanoparticle
 
 
+# Define a named tuple for plot parameters
+HeatMapPlottingData = namedtuple(
+    'HeatMapPlottingData', 'fig ax radial_distances theta density_grid')
+
+
 @dataclass
 class HeatMapConfig:
-    """set the parameters for the heatmap"""
+    """Configuration parameters for heatmap plotting.
+
+    Attributes:
+        heatmap_suffix (str): Filename suffix for the saved heatmap image.
+        heatmap_color (str): Color scheme used for the heatmap.
+        show_grid (bool): To indicate whether a grid is shown on the heatmap.
+        cbar_label (str): Label for the heatmap's color bar.
+    """
     heatmap_suffix: str = 'heatmap.png'
     heatmap_color: str = 'Greys'
     show_grid: bool = False
@@ -44,11 +56,6 @@ class GraphConfig:
         'marker': 'o',
         'linestyle': '-'
     })
-
-
-# Define a named tuple for plot parameters
-HeatPlotParams = \
-    namedtuple('HeatPlotParams', 'fig ax radial_distances theta density_grid')
 
 
 class SurfactantDensityPlotter:
@@ -89,8 +96,8 @@ class SurfactantDensityPlotter:
 
         fig_i, ax_i = self._setup_plot()
         radial_distances, theta, density_grid = self._create_density_grid()
-        plot_params = \
-            HeatPlotParams(fig_i, ax_i, radial_distances, theta, density_grid)
+        plot_params = HeatMapPlottingData(
+            fig_i, ax_i, radial_distances, theta, density_grid)
         ax_i = self._plot_heatmap(plot_params)
         plot_tools.save_close_fig(
             fig_i, ax_i, fout := self.heat_map_config.heatmap_suffix)
@@ -140,7 +147,7 @@ class SurfactantDensityPlotter:
         return fig_i, ax_i
 
     def _plot_heatmap(self,
-                      plot_params: "HeatPlotParams"
+                      plot_params: "HeatMapPlottingData"
                       ) -> plt.axes:
         """Plot the heatmap and save the figure."""
         ax_i: plt.axes = plot_params.ax

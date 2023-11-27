@@ -10,7 +10,7 @@ from module4_analysis_oda import rdf
 from module4_analysis_oda.oda_density_around_np import \
     OdaInputFilesConfig, ParameterConfig ,SurfactantDensityAroundNanoparticle
 from module4_analysis_oda.surfactant_density_plotter import \
-    PlotConfig, SurfactantDensityPlotter
+    HeatMapConfig, GraphConfig, SurfactantDensityPlotter
 from common import logger
 from common.com_file_parser import GetCom
 

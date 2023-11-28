@@ -104,35 +104,21 @@ class SurfactantDensityPlotter:
         self.contact_data = density_obj.contact_data
         self.box = density_obj.box
 
-        self.heat_map_config = graphs_config.heat_map_config
         self.graph_config = graphs_config.graph_config
         self.rdf_config = graphs_config.rdf_config
 
-        self._initialize_plotting()
+        self._initialize_plotting(log)
         self.write_msg(log)
 
-    def _initialize_plotting(self) -> None:
-        self.plot_density_heatmap()
+    def _initialize_plotting(self,
+                             log: logger.logging.Logger
+                             ) -> None:
+        HeatmapPlotter(ave_density=self.ave_density,
+                       contact_data=self.contact_data,
+                       config=HeatMapConfig(),
+                       log=log)
         self.plot_density_graph()
         self.plot_2d_rdf()
-
-    def plot_density_heatmap(self) -> None:
-        """self explanetory"""
-        ax_i: plt.axes
-        fig_i: plt.figure
-        theta: np.ndarray
-        density_grid: np.ndarray
-        radial_distances: np.ndarray
-
-        fig_i, ax_i = self._setup_plot()
-        radial_distances, theta, density_grid = self._create_density_grid()
-        plot_params = HeatMapPlottingData(
-            fig_i, ax_i, radial_distances, theta, density_grid)
-        ax_i = self._plot_heatmap(plot_params)
-        plot_tools.save_close_fig(
-            fig_i, ax_i, fout := self.heat_map_config.heatmap_suffix)
-        self.info_msg += \
-            f'\tThe heatmap of the density is saved as {fout}\n'
 
     def plot_density_graph(self) -> None:
         """Plot a simple graph of density vs distance."""
@@ -177,7 +163,44 @@ class SurfactantDensityPlotter:
         self.info_msg += \
             f'\tThe density graph saved: `{self.rdf_config.graph_suffix}`\n'
 
-    def _create_density_grid(self) -> tuple[np.ndarray, ...]:
+    def write_msg(self,
+                  log: logger.logging.Logger  # To log
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
+class HeatmapPlotter:
+    """Class for plotting heatmap of surfactant density."""
+
+    info_msg: str = "Messages from HeatmapPlotter:\n"
+
+    def __init__(self,
+                 ave_density: dict[float, float],
+                 contact_data: pd.DataFrame,
+                 config: HeatMapConfig,
+                 log: logger.logging.Logger
+                 ) -> None:
+        self.ave_density = ave_density
+        self.config = config
+        self.contact_data = contact_data
+        self.plot_density_heatmap()
+        self._write_msg(log)
+
+    def plot_density_heatmap(self) -> None:
+        """Plot and save the density heatmap."""
+        fig_i, ax_i = self.setup_plot()
+        radial_distances, theta, density_grid = self.create_density_grid()
+        plot_params = HeatMapPlottingData(
+            fig_i, ax_i, radial_distances, theta, density_grid)
+        ax_i = self.plot_heatmap(plot_params)
+        plot_tools.save_close_fig(
+            fig_i, ax_i, fout := self.config.heatmap_suffix)
+        self.info_msg += f'\tThe heatmap of the density is saved as {fout}\n'
+
+    def create_density_grid(self) -> tuple[np.ndarray, ...]:
         """Create a grid in polar coordinates with interpolated densities."""
         radii = np.array(list(self.ave_density.keys()))
         densities = np.array(list(self.ave_density.values()))
@@ -188,7 +211,7 @@ class SurfactantDensityPlotter:
         density_grid = np.tile(densities, (len(radii), 1))
         return radial_distances, theta, density_grid
 
-    def _setup_plot(self) -> tuple[plt.figure, plt.axes]:
+    def setup_plot(self) -> tuple[plt.figure, plt.axes]:
         """Set up the polar plot."""
         fig_i, ax_i = plt.subplots(
             subplot_kw={'projection': 'polar'}, figsize=(8, 8))
@@ -197,22 +220,22 @@ class SurfactantDensityPlotter:
         ax_i.grid(False)
         return fig_i, ax_i
 
-    def _plot_heatmap(self,
-                      plot_params: "HeatMapPlottingData"
-                      ) -> plt.axes:
+    def plot_heatmap(self,
+                     plot_params: "HeatMapPlottingData"
+                     ) -> plt.axes:
         """Plot the heatmap and save the figure."""
         ax_i: plt.axes = plot_params.ax
         cbar = ax_i.pcolormesh(plot_params.theta,
                                plot_params.radial_distances,
                                plot_params.density_grid,
                                shading='auto',
-                               cmap=self.heat_map_config.heatmap_color
+                               cmap=self.config.heatmap_color
                                )
-        if self.heat_map_config.show_grid:
+        if self.config.show_grid:
             ax_i = self._add_heatmap_grid(ax_i)
         ax_i, contact_radius, np_radius = self._add_np_radii(ax_i)
         ax_i = self._add_radius_arrows(ax_i, contact_radius, np_radius)
-        plt.colorbar(cbar, ax=ax_i, label=self.heat_map_config.cbar_label)
+        plt.colorbar(cbar, ax=ax_i, label=self.config.cbar_label)
         return ax_i
 
     def _add_np_radii(self,
@@ -294,9 +317,9 @@ class SurfactantDensityPlotter:
         ax_i.add_patch(circle)
         return ax_i
 
-    def write_msg(self,
-                  log: logger.logging.Logger  # To log
-                  ) -> None:
+    def _write_msg(self,
+                   log: logger.logging.Logger  # To log
+                   ) -> None:
         """write and log messages"""
         print(f'{bcolors.OKCYAN}{self.__module__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')

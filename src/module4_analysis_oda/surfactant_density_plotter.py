@@ -97,7 +97,7 @@ class SurfactantDensityPlotter:
                  graphs_config: "GrpahsConfig" = GrpahsConfig()
                  ) -> None:
 
-        self.density = density_obj.density_per_region
+        density = density_obj.density_per_region
         self.ave_density = density_obj.avg_density_per_region
         self.rdf_2d = density_obj.rdf_2d
 
@@ -107,13 +107,14 @@ class SurfactantDensityPlotter:
         self.graph_config = graphs_config.graph_config
         self.rdf_config = graphs_config.rdf_config
 
-        self._initialize_plotting(log)
+        self._initialize_plotting(density, log)
         self.write_msg(log)
 
     def _initialize_plotting(self,
+                             density: dict[float, float],
                              log: logger.logging.Logger
                              ) -> None:
-        HeatmapPlotter(ave_density=self.ave_density,
+        HeatmapPlotter(ave_density=density,
                        contact_data=self.contact_data,
                        config=HeatMapConfig(),
                        log=log)

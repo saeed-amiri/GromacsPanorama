@@ -42,6 +42,7 @@ class SurfactantDensityAroundNanoparticle:
     interface_z: np.ndarray  # Z location of the interface (from module3)
     density_per_region: dict[float, list[float]]  # Density per area
     avg_density_per_region: dict[float, float]
+    rdf_2d: dict[float, float]  # rdf (g((r)) in 2d
 
     def __init__(self,
                  amino_arr: np.ndarray,  # amino head com of the oda
@@ -75,6 +76,7 @@ class SurfactantDensityAroundNanoparticle:
         # Initialize a dictionary to store densities for each region
         density_per_region: dict[float, list[float]] = \
             {region: [] for region in regions}
+        num_oda: list[int] = []
         for i, frame_i in enumerate(self.amino_arr):
             arr_i: np.ndarray = \
                 self._get_surfactant_at_interface(frame_i, z_threshold[i])
@@ -83,7 +85,9 @@ class SurfactantDensityAroundNanoparticle:
                 self._compute_density_per_region(regions,
                                                  distance,
                                                  density_per_region)
+            num_oda.append(len(arr_i))
         self._comput_and_set_avg_density_as_attibute(density_per_region)
+        self._comput_and_set_2d_rdf(density_per_region, max(num_oda))
         return density_per_region
 
     def _comput_and_set_avg_density_as_attibute(self,
@@ -98,6 +102,21 @@ class SurfactantDensityAroundNanoparticle:
             else:
                 self.avg_density_per_region[region] = 0
 
+    def _comput_and_set_2d_rdf(self,
+                               density_per_region: dict[float, list[float]],
+                               num_oda: int
+                               ) -> None:
+        """set the 2d rdf (g(r))"""
+        max_radius_area: float = \
+            max(item for item in density_per_region.keys())
+        density: float = num_oda/(np.pi * max_radius_area**2)
+        self.rdf_2d = {}
+        for region, densities in density_per_region.items():
+            if densities:
+                self.rdf_2d[region] = np.mean(densities)/density
+            else:
+                self.rdf_2d[region] = 0
+
     @staticmethod
     def _compute_density_per_region(regions: list[float],
                                     distance: np.ndarray,
@@ -105,6 +124,7 @@ class SurfactantDensityAroundNanoparticle:
                                     dict[float, list[float]]
                                     ) -> dict[float, list[float]]:
         """self explanatory"""
+
         for ith in range(len(regions) - 1):
             r_inner = regions[ith]
             r_outer = regions[ith + 1]

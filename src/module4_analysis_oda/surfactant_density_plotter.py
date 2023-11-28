@@ -43,7 +43,7 @@ class HeatMapConfig:
 
 
 @dataclass
-class GraphConfig:
+class DensityGraphConfig:
     """set the parameters for the graph"""
     graph_suffix: str = 'desnty.png'
     graph_legend: str = 'density'
@@ -52,6 +52,22 @@ class GraphConfig:
     title: str = 'ODA Density vs Distance from NP'
     graph_style: dict = field(default_factory=lambda: {
         'legend': 'density',
+        'color': 'k',
+        'marker': 'o',
+        'linestyle': '-'
+    })
+
+
+@dataclass
+class Rdf2dGraphConfig:
+    """set the parameters for the graph"""
+    graph_suffix: str = 'rdf_2d.png'
+    graph_legend: str = 'g(r)'
+    xlabel: str = 'Distance from Nanoparticle [A]'
+    ylabel: str = 'g(r)'
+    title: str = 'ODA density vs Distance from NP'
+    graph_style: dict = field(default_factory=lambda: {
+        'legend': 'g(r)',
         'color': 'k',
         'marker': 'o',
         'linestyle': '-'
@@ -71,20 +87,24 @@ class SurfactantDensityPlotter:
                  density_obj: "SurfactantDensityAroundNanoparticle",
                  log: logger.logging.Logger,
                  heat_map_config: "HeatMapConfig" = HeatMapConfig(),
-                 graph_config: "GraphConfig" = GraphConfig()
+                 graph_config: "DensityGraphConfig" = DensityGraphConfig(),
+                 rdf_config: "Rdf2dGraphConfig" = Rdf2dGraphConfig()
                  ) -> None:
         self.density = density_obj.density_per_region
         self.ave_density = density_obj.avg_density_per_region
+        self.rdf_2d = density_obj.rdf_2d
         self.contact_data = density_obj.contact_data
         self.box = density_obj.box
         self.heat_map_config = heat_map_config
         self.graph_config = graph_config
+        self.rdf_config = rdf_config
         self._initialize_plotting()
         self.write_msg(log)
 
     def _initialize_plotting(self) -> None:
         self.plot_density_heatmap()
         self.plot_density_graph()
+        self.plot_2d_rdf()
 
     def plot_density_heatmap(self) -> None:
         """self explanetory"""
@@ -125,6 +145,27 @@ class SurfactantDensityPlotter:
         plot_tools.save_close_fig(fig_i, ax_i, self.graph_config.graph_suffix)
         self.info_msg += \
             f'\tThe density graph saved: `{self.graph_config.graph_suffix}`\n'
+
+    def plot_2d_rdf(self) -> None:
+        """Plot a simple graph of 2d rdf vs distance."""
+        radii = np.array(list(self.rdf_2d.keys()))
+        densities = np.array(list(self.rdf_2d.values()))
+        ax_i: plt.axes
+        fig_i: plt.figure
+        fig_i, ax_i = plot_tools.mk_canvas((np.min(radii), np.max(radii)),
+                                           height_ratio=5**0.5-1)
+        ax_i.plot(radii,
+                  densities,
+                  marker=self.rdf_config.graph_style['marker'],
+                  linestyle=self.rdf_config.graph_style['linestyle'],
+                  color=self.rdf_config.graph_style['color'],
+                  label=self.rdf_config.graph_legend)
+        ax_i.set_xlabel(self.rdf_config.xlabel)
+        ax_i.set_ylabel(self.rdf_config.ylabel)
+        ax_i.set_title(self.rdf_config.title)
+        plot_tools.save_close_fig(fig_i, ax_i, self.rdf_config.graph_suffix)
+        self.info_msg += \
+            f'\tThe density graph saved: `{self.rdf_config.graph_suffix}`\n'
 
     def _create_density_grid(self) -> tuple[np.ndarray, ...]:
         """Create a grid in polar coordinates with interpolated densities."""

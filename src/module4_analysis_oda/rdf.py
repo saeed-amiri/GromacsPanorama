@@ -24,21 +24,39 @@ class FilePaths:
     contact_xvg: str = 'contact.xvg'
 
 
+@dataclass
+class ParameterConfig:
+    """parameters of the rdf"""
+    bin_size: float = 0.9
+
+
+@dataclass
+class RdfCalculationConfig:
+    """all the inputs"""
+    amino_arr: np.ndarray  # amino head com of the oda
+    box_dims: dict[str, float]  # Dimension of the Box
+
+
 class RdfClculation:
     """calculate radial distribution function"""
 
     info_msg: str = 'Message from RdfCalculation:\n'
+    file_pathes: "FilePaths"
+    params: "ParameterConfig"
+    np_com: np.ndarray
+    box_size: np.ndarray
 
     def __init__(self,
-                 amino_arr: np.ndarray,  # amino head com of the oda
-                 box_dims: dict[str, float],  # Dimension of the Box
                  log: logger.logging.Logger,
-                 file_pathes: "FilePaths" = FilePaths()
+                 config: "RdfCalculationConfig",
+                 file_pathes: "FilePaths" = FilePaths(),
+                 params: "ParameterConfig" = ParameterConfig()
                  ) -> None:
         self.file_pathes = file_pathes
-        self.np_com: np.ndarray = self.get_xvg_gmx(file_pathes.coord_xvg, log)
-        self.box_size: np.ndarray = self.get_xvg_gmx(file_pathes.box_xvg, log)
-        self.initiate(amino_arr, box_dims, log)
+        self.params = params
+        self.np_com = self.get_xvg_gmx(file_pathes.coord_xvg, log)
+        self.box_size = self.get_xvg_gmx(file_pathes.box_xvg, log)
+        self.initiate(config.amino_arr, config.box_dims, log)
         self._write_msg(log)
 
     def initiate(self,
@@ -57,9 +75,10 @@ class RdfClculation:
             self.get_interface_oda(contact_info, amino_arr[:-2])
         oda_distances: dict[int, np.ndarray] = \
             self.calc_distance_from_np(interface_oda)
-        bin_edges, rdf = self.calc_rdf(oda_distances, bin_width=0.9)
+        bin_edges, rdf = \
+            self.calc_rdf(oda_distances, bin_width=self.params.bin_size)
         plt.plot(bin_edges, rdf)
-        plt.xlim(-10, box_xyz[0]/2)
+        plt.xlim(-10, box_xyz[0])
         plt.show()
 
     def get_contact_info(self,
@@ -112,9 +131,9 @@ class RdfClculation:
 
         max_distance: float = self._get_max_distance(distances_dict)
         num_bins = int(max_distance / bin_width)
+        volume = 4/3 * np.pi * max_distance**3
 
         for _, distances in distances_dict.items():
-            volume = 4/3 * np.pi * max_distance**3
             rdf, bin_centers = self._calculate_histogram(
                 distances, max_distance, num_bins, volume)
             rdf_list.append(rdf)
@@ -154,7 +173,7 @@ class RdfClculation:
         rdf_counts += counts
 
         bin_volumes = (4/3) * np.pi * (bin_edges[1:]**3 - bin_edges[:-1]**3)
-        rdf = rdf_counts / (bin_volumes * num_surfactants / volume)
+        rdf = rdf_counts / (bin_volumes * (num_surfactants / volume))
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
         return rdf, bin_centers
 

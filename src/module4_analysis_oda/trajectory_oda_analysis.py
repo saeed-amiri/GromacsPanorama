@@ -6,7 +6,7 @@ This script uses the out put of the module3_aqua_analysis/contact.info
 
 import sys
 
-from module4_analysis_oda import rdf
+from module4_analysis_oda.rdf import RdfCalculationConfig, RdfClculation
 from module4_analysis_oda.oda_density_around_np import \
     OdaInputFilesConfig, ParameterConfig ,SurfactantDensityAroundNanoparticle
 from module4_analysis_oda.surfactant_density_plotter import \
@@ -29,8 +29,9 @@ class OdaAnalysis:
                  log: logger.logging.Logger
                  ) -> None:
         """call the scripts"""
-        # rdf.RdfClculation(parsed_com.split_arr_dict['AMINO_ODN'],
-        # #               #   parsed_com.box_dims, log)
+        rdf_config = RdfCalculationConfig(amino_arr=parsed_com.split_arr_dict['AMINO_ODN'],
+                                          box_dims=parsed_com.box_dims)
+        RdfClculation(log, rdf_config)
         params: "ParameterConfig" = ParameterConfig(number_of_regins=50)
         oda_density = SurfactantDensityAroundNanoparticle(
             parsed_com.split_arr_dict['AMINO_ODN'], log, param_config=params)

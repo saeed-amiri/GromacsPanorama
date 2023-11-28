@@ -11,8 +11,8 @@ import pandas as pd
 import matplotlib.pylab as plt
 
 from common import logger
-from common import xvg_to_dataframe
 from common import static_info as stinfo
+from common import xvg_to_dataframe as xvg
 from common.colors_text import TextColor as bcolors
 
 
@@ -21,6 +21,7 @@ class FilePaths:
     """path of the all the needed files"""
     coord_xvg: str = 'coord.xvg'
     box_xvg: str = 'box.xvg'
+    contact_xvg: str = 'contact.xvg'
 
 
 class RdfClculation:
@@ -37,12 +38,13 @@ class RdfClculation:
         self.file_pathes = file_pathes
         self.np_com: np.ndarray = self.get_xvg_gmx(file_pathes.coord_xvg, log)
         self.box_size: np.ndarray = self.get_xvg_gmx(file_pathes.box_xvg, log)
-        self.initiate(amino_arr, box_dims)
+        self.initiate(amino_arr, box_dims, log)
         self._write_msg(log)
 
     def initiate(self,
                  amino_arr: np.ndarray,  # amino head com of the oda
-                 box_dims: dict[str, float]  # Dimension of the Box
+                 box_dims: dict[str, float],  # Dimension of the Box
+                 log: logger.logging.Logger
                  ) -> None:
         """initiate the calculations"""
         box_xyz: tuple[float, float, float] = \
@@ -50,7 +52,7 @@ class RdfClculation:
              box_dims['y_hi'] - box_dims['y_lo'],
              box_dims['z_hi'] - box_dims['z_lo'])
         contact_info: pd.DataFrame = \
-            self.get_contact_info(self.file_pathes.coord_xvg)
+            self.get_contact_info(self.file_pathes.contact_xvg, log)
         interface_oda: dict[int, np.ndarray] = \
             self.get_interface_oda(contact_info, amino_arr[:-2])
         oda_distances: dict[int, np.ndarray] = \
@@ -61,13 +63,14 @@ class RdfClculation:
         plt.show()
 
     def get_contact_info(self,
-                         fname: str
+                         fname: str,
+                         log: logger.logging.Logger
                          ) -> pd.DataFrame:
         """
         read the dataframe made by aqua analysing named "contact.xvg"
         """
         self.info_msg += f'\tReading `{fname}`\n'
-        return pd.read_csv(fname, sep=' ')
+        return xvg.XvgParser(fname, log).xvg_df
 
     def calc_distance_from_np(self,
                               interface_oda: dict[int, np.ndarray]
@@ -91,7 +94,7 @@ class RdfClculation:
                    frame: int  # Index of the frame
                    ) -> np.ndarray:
         """apply pbc to each axis"""
-        dx_i = arr[:, axis] - self.np_com[:len(arr), axis]
+        dx_i = arr[:, axis] - self.np_com[frame, axis]
         dx_pbc = dx_i - (self.box_size[frame][axis] *
                          np.round(dx_i/self.box_size[frame][axis]))
         return dx_pbc
@@ -107,28 +110,13 @@ class RdfClculation:
         rdf_list = []
         bin_centers_list = []
 
-        for frame, distances in distances_dict.items():
-            max_distance = self.get_max_distance_for_frame(frame)
-            num_bins = int(max_distance / bin_width)
+        max_distance: float = self._get_max_distance(distances_dict)
+        num_bins = int(max_distance / bin_width)
+
+        for _, distances in distances_dict.items():
             volume = 4/3 * np.pi * max_distance**3
-
-            rdf_counts = np.zeros(num_bins)
-            num_surfactants = len(distances)
-
-            # Calculate the histogram for the current frame
-            counts, bin_edges = \
-                np.histogram(distances, bins=num_bins, range=(0, max_distance))
-            rdf_counts += counts
-
-            # Calculate the volume of each bin
-            bin_volumes = \
-                (4/3) * np.pi * (bin_edges[1:]**3 - bin_edges[:-1]**3)
-
-            # Normalize the RDF for the current frame
-            rdf = rdf_counts / (bin_volumes * num_surfactants / volume)
-            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-
-            # Collect the RDF and bin centers
+            rdf, bin_centers = self._calculate_histogram(
+                distances, max_distance, num_bins, volume)
             rdf_list.append(rdf)
             bin_centers_list.append(bin_centers)
 
@@ -138,12 +126,37 @@ class RdfClculation:
 
         return avg_bin_centers, avg_rdf
 
+    def _get_max_distance(self,
+                          distances_dict: dict[int, np.ndarray]
+                          ) -> float:
+        """Get the maximum distance across all frames."""
+        return max(self.get_max_distance_for_frame(frame) for
+                   frame in distances_dict.keys())
+
     def get_max_distance_for_frame(self,
                                    frame: int
                                    ) -> float:
         """determine max distance for the given frame"""
         box_dimensions = self.box_size[frame]
-        return np.max(box_dimensions) / 2
+        return float(np.max(box_dimensions) / 2)
+
+    def _calculate_histogram(self,
+                             distances: np.ndarray,
+                             max_distance: float,
+                             num_bins: int,
+                             volume: float
+                             ) -> tuple[np.ndarray, np.ndarray]:
+        rdf_counts = np.zeros(num_bins)
+        num_surfactants = len(distances)
+
+        counts, bin_edges = \
+            np.histogram(distances, bins=num_bins, range=(0, max_distance))
+        rdf_counts += counts
+
+        bin_volumes = (4/3) * np.pi * (bin_edges[1:]**3 - bin_edges[:-1]**3)
+        rdf = rdf_counts / (bin_volumes * num_surfactants / volume)
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+        return rdf, bin_centers
 
     @staticmethod
     def get_interface_oda(contact_info: pd.DataFrame,
@@ -172,7 +185,7 @@ class RdfClculation:
         convert AA to nm
         """
         xvg_df: pd.Dataframe = \
-            xvg_to_dataframe.XvgParser(fxvg, log).xvg_df
+            xvg.XvgParser(fxvg, log).xvg_df
         xvg_arr: np.ndarray = xvg_df.iloc[:, 1:4].to_numpy()
         return xvg_arr * 10
 

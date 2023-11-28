@@ -55,7 +55,7 @@ class RdfClculation:
             self.get_interface_oda(contact_info, amino_arr[:-2])
         oda_distances: dict[int, np.ndarray] = \
             self.calc_distance_from_np(interface_oda)
-        bin_edges, rdf = self.calc_rdf_dy(oda_distances, bin_width=0.9)
+        bin_edges, rdf = self.calc_rdf(oda_distances, bin_width=0.9)
         plt.plot(bin_edges, rdf)
         plt.xlim(-10, box_xyz[0]/2)
         plt.show()
@@ -98,42 +98,8 @@ class RdfClculation:
 
     def calc_rdf(self,
                  distances_dict: dict[int, np.ndarray],
-                 max_distance: float,
                  bin_width: float
                  ) -> tuple[np.ndarray, np.ndarray]:
-        """
-        Calculate the radial distribution function (RDF) for a set of
-        distances.
-        Returns:
-        tuple: A tuple containing the bin centers and the RDF values.
-        """
-        # Determine the number of bins
-        num_bins = int(max_distance / bin_width)
-        volume: float = 4/3 * np.pi * max_distance**3
-
-        rdf_counts: np.ndarray = np.zeros(num_bins)
-
-        num_surfactants: int = \
-            sum(len(distances) for distances in distances_dict.values())
-        for distances in distances_dict.values():
-            counts, _ = \
-                np.histogram(distances, bins=num_bins, range=(0, max_distance))
-            rdf_counts += counts
-        # Normalize the RDF
-        bin_edges = np.linspace(0, max_distance, num_bins + 1)
-        bin_volumes: np.ndarray = \
-            (4/3) * np.pi * (bin_edges[1:]**3 - bin_edges[:-1]**3)
-        rdf: np.ndarray = rdf_counts / (
-            bin_volumes * len(distances_dict) * (num_surfactants / volume))
-
-        bin_centers: np.ndarray = (bin_edges[:-1] + bin_edges[1:]) / 2
-
-        return bin_centers, rdf
-
-    def calc_rdf_dy(self,
-                    distances_dict: dict[int, np.ndarray],
-                    bin_width: float
-                    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Calculate the radial distribution function (RDF) for each frame,
         accounting for the changing box size.

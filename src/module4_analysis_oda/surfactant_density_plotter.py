@@ -74,6 +74,14 @@ class Rdf2dGraphConfig:
     })
 
 
+@dataclass
+class GrpahsConfig:
+    """all the graphs configurations"""
+    heat_map_config: "HeatMapConfig" = HeatMapConfig()
+    graph_config:  "DensityGraphConfig" = DensityGraphConfig()
+    rdf_config: "Rdf2dGraphConfig" = Rdf2dGraphConfig()
+
+
 class SurfactantDensityPlotter:
     """plot the desinty of the oda around the NP"""
 
@@ -86,18 +94,20 @@ class SurfactantDensityPlotter:
     def __init__(self,
                  density_obj: "SurfactantDensityAroundNanoparticle",
                  log: logger.logging.Logger,
-                 heat_map_config: "HeatMapConfig" = HeatMapConfig(),
-                 graph_config: "DensityGraphConfig" = DensityGraphConfig(),
-                 rdf_config: "Rdf2dGraphConfig" = Rdf2dGraphConfig()
+                 graphs_config: "GrpahsConfig" = GrpahsConfig()
                  ) -> None:
+
         self.density = density_obj.density_per_region
         self.ave_density = density_obj.avg_density_per_region
         self.rdf_2d = density_obj.rdf_2d
+
         self.contact_data = density_obj.contact_data
         self.box = density_obj.box
-        self.heat_map_config = heat_map_config
-        self.graph_config = graph_config
-        self.rdf_config = rdf_config
+
+        self.heat_map_config = graphs_config.heat_map_config
+        self.graph_config = graphs_config.graph_config
+        self.rdf_config = graphs_config.rdf_config
+
         self._initialize_plotting()
         self.write_msg(log)
 

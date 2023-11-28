@@ -123,31 +123,21 @@ class SurfactantDensityPlotter:
                            config: "DensityGraphConfig") -> None:
         """Plot a simple graph of density vs distance."""
         # Extracting radii and average densities
-        radii = np.array(list(self.ave_density.keys()))
-        densities = np.array(list(self.ave_density.values()))
-        ax_i: plt.axes
-        fig_i: plt.figure
-        fig_i, ax_i = plot_tools.mk_canvas((np.min(radii), np.max(radii)),
-                                           height_ratio=5**0.5-1)
-        ax_i.plot(radii,
-                  densities,
-                  marker=config.graph_style['marker'],
-                  linestyle=config.graph_style['linestyle'],
-                  color=config.graph_style['color'],
-                  label=config.graph_legend)
-        ax_i.set_xlabel(config.xlabel)
-        ax_i.set_ylabel(config.ylabel)
-        ax_i.set_title(config.title)
-        plot_tools.save_close_fig(fig_i, ax_i, config.graph_suffix)
-        self.info_msg += \
-            f'\tThe density graph saved: `{config.graph_suffix}`\n'
+        self._plot_graphes(self.ave_density, config)
 
     def plot_2d_rdf(self,
                     config: "Rdf2dGraphConfig"
                     ) -> None:
         """Plot a simple graph of 2d rdf vs distance."""
-        radii = np.array(list(self.rdf_2d.keys()))
-        densities = np.array(list(self.rdf_2d.values()))
+        self._plot_graphes(self.rdf_2d, config)
+
+    def _plot_graphes(self,
+                      data,
+                      config
+                      ) -> None:
+        """plot graphs"""
+        radii = np.array(list(data.keys()))
+        densities = np.array(list(data.values()))
         ax_i: plt.axes
         fig_i: plt.figure
         fig_i, ax_i = plot_tools.mk_canvas((np.min(radii), np.max(radii)),

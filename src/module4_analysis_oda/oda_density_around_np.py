@@ -87,7 +87,7 @@ class SurfactantDensityAroundNanoparticle:
                                                  density_per_region)
             num_oda.append(len(arr_i))
         self._comput_and_set_avg_density_as_attibute(density_per_region)
-        self._comput_and_set_2d_rdf(density_per_region, max(num_oda))
+        self._comput_and_set_2d_rdf(density_per_region, np.mean(num_oda))
         return density_per_region
 
     def _comput_and_set_avg_density_as_attibute(self,
@@ -104,7 +104,7 @@ class SurfactantDensityAroundNanoparticle:
 
     def _comput_and_set_2d_rdf(self,
                                density_per_region: dict[float, list[float]],
-                               num_oda: int
+                               num_oda: float
                                ) -> None:
         """set the 2d rdf (g(r))"""
         max_radius_area: float = \

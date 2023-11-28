@@ -97,31 +97,30 @@ class SurfactantDensityPlotter:
                  graphs_config: "GrpahsConfig" = GrpahsConfig()
                  ) -> None:
 
-        density = density_obj.density_per_region
+        self.density = density_obj.density_per_region
         self.ave_density = density_obj.avg_density_per_region
         self.rdf_2d = density_obj.rdf_2d
 
         self.contact_data = density_obj.contact_data
         self.box = density_obj.box
 
-        self.graph_config = graphs_config.graph_config
-        self.rdf_config = graphs_config.rdf_config
+        self.graph_configs = graphs_config
 
-        self._initialize_plotting(density, log)
+        self._initialize_plotting(log)
         self.write_msg(log)
 
     def _initialize_plotting(self,
-                             density: dict[float, float],
                              log: logger.logging.Logger
                              ) -> None:
-        HeatmapPlotter(ave_density=density,
+        HeatmapPlotter(ave_density=self.ave_density,
                        contact_data=self.contact_data,
                        config=HeatMapConfig(),
                        log=log)
-        self.plot_density_graph()
-        self.plot_2d_rdf()
+        self.plot_density_graph(self.graph_configs.graph_config)
+        self.plot_2d_rdf(self.graph_configs.rdf_config)
 
-    def plot_density_graph(self) -> None:
+    def plot_density_graph(self,
+                           config: "DensityGraphConfig") -> None:
         """Plot a simple graph of density vs distance."""
         # Extracting radii and average densities
         radii = np.array(list(self.ave_density.keys()))
@@ -132,18 +131,20 @@ class SurfactantDensityPlotter:
                                            height_ratio=5**0.5-1)
         ax_i.plot(radii,
                   densities,
-                  marker=self.graph_config.graph_style['marker'],
-                  linestyle=self.graph_config.graph_style['linestyle'],
-                  color=self.graph_config.graph_style['color'],
-                  label=self.graph_config.graph_legend)
-        ax_i.set_xlabel(self.graph_config.xlabel)
-        ax_i.set_ylabel(self.graph_config.ylabel)
-        ax_i.set_title(self.graph_config.title)
-        plot_tools.save_close_fig(fig_i, ax_i, self.graph_config.graph_suffix)
+                  marker=config.graph_style['marker'],
+                  linestyle=config.graph_style['linestyle'],
+                  color=config.graph_style['color'],
+                  label=config.graph_legend)
+        ax_i.set_xlabel(config.xlabel)
+        ax_i.set_ylabel(config.ylabel)
+        ax_i.set_title(config.title)
+        plot_tools.save_close_fig(fig_i, ax_i, config.graph_suffix)
         self.info_msg += \
-            f'\tThe density graph saved: `{self.graph_config.graph_suffix}`\n'
+            f'\tThe density graph saved: `{config.graph_suffix}`\n'
 
-    def plot_2d_rdf(self) -> None:
+    def plot_2d_rdf(self,
+                    config: "Rdf2dGraphConfig"
+                    ) -> None:
         """Plot a simple graph of 2d rdf vs distance."""
         radii = np.array(list(self.rdf_2d.keys()))
         densities = np.array(list(self.rdf_2d.values()))
@@ -153,16 +154,16 @@ class SurfactantDensityPlotter:
                                            height_ratio=5**0.5-1)
         ax_i.plot(radii,
                   densities,
-                  marker=self.rdf_config.graph_style['marker'],
-                  linestyle=self.rdf_config.graph_style['linestyle'],
-                  color=self.rdf_config.graph_style['color'],
-                  label=self.rdf_config.graph_legend)
-        ax_i.set_xlabel(self.rdf_config.xlabel)
-        ax_i.set_ylabel(self.rdf_config.ylabel)
-        ax_i.set_title(self.rdf_config.title)
-        plot_tools.save_close_fig(fig_i, ax_i, self.rdf_config.graph_suffix)
+                  marker=config.graph_style['marker'],
+                  linestyle=config.graph_style['linestyle'],
+                  color=config.graph_style['color'],
+                  label=config.graph_legend)
+        ax_i.set_xlabel(config.xlabel)
+        ax_i.set_ylabel(config.ylabel)
+        ax_i.set_title(config.title)
+        plot_tools.save_close_fig(fig_i, ax_i, config.graph_suffix)
         self.info_msg += \
-            f'\tThe density graph saved: `{self.rdf_config.graph_suffix}`\n'
+            f'\tThe density graph saved: `{config.graph_suffix}`\n'
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

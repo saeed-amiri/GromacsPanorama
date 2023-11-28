@@ -4,15 +4,23 @@ The nanoparticle com for this situation (x, y, z_interface)
 The z valu is only used for droping the oda which are not at interface
 """
 
+from dataclasses import dataclass
+
 import numpy as np
 import pandas as pd
 import matplotlib.pylab as plt
 
 from common import logger
-from common import my_tools
 from common import xvg_to_dataframe
 from common import static_info as stinfo
 from common.colors_text import TextColor as bcolors
+
+
+@dataclass
+class FilePaths:
+    """path of the all the needed files"""
+    coord_xvg: str = 'coord.xvg'
+    box_xvg: str = 'box.xvg'
 
 
 class RdfClculation:
@@ -23,24 +31,26 @@ class RdfClculation:
     def __init__(self,
                  amino_arr: np.ndarray,  # amino head com of the oda
                  box_dims: dict[str, float],  # Dimension of the Box
-                 log: logger.logging.Logger
+                 log: logger.logging.Logger,
+                 file_pathes: "FilePaths" = FilePaths()
                  ) -> None:
-        self.np_com: np.ndarray = self._get_xvg_gmx('coord.xvg', log)
-        self.box_size: np.ndarray = self._get_xvg_gmx('box.xvg', log)
-        self.initiate(amino_arr, box_dims, log)
+        self.file_pathes = file_pathes
+        self.np_com: np.ndarray = self.get_xvg_gmx(file_pathes.coord_xvg, log)
+        self.box_size: np.ndarray = self.get_xvg_gmx(file_pathes.box_xvg, log)
+        self.initiate(amino_arr, box_dims)
         self._write_msg(log)
 
     def initiate(self,
                  amino_arr: np.ndarray,  # amino head com of the oda
-                 box_dims: dict[str, float],  # Dimension of the Box
-                 log: logger.logging.Logger
+                 box_dims: dict[str, float]  # Dimension of the Box
                  ) -> None:
         """initiate the calculations"""
         box_xyz: tuple[float, float, float] = \
             (box_dims['x_hi'] - box_dims['x_lo'],
              box_dims['y_hi'] - box_dims['y_lo'],
              box_dims['z_hi'] - box_dims['z_lo'])
-        contact_info: pd.DataFrame = self.get_contact_info(log)
+        contact_info: pd.DataFrame = \
+            self.get_contact_info(self.file_pathes.coord_xvg)
         interface_oda: dict[int, np.ndarray] = \
             self.get_interface_oda(contact_info, amino_arr[:-2])
         oda_distances: dict[int, np.ndarray] = \
@@ -51,12 +61,11 @@ class RdfClculation:
         plt.show()
 
     def get_contact_info(self,
-                         log: logger.logging.Logger
+                         fname: str
                          ) -> pd.DataFrame:
         """
-        read the dataframe made by aqua analysing named "contact.info"
+        read the dataframe made by aqua analysing named "contact.xvg"
         """
-        my_tools.check_file_exist(fname := 'contact.info', log)
         self.info_msg += f'\tReading `{fname}`\n'
         return pd.read_csv(fname, sep=' ')
 
@@ -68,21 +77,24 @@ class RdfClculation:
         for frame, arr in interface_oda.items():
             distance_i = np.zeros((arr.shape[0], 1))
 
-            dx_i = arr[:, 0] - self.np_com[:len(arr), 0]
-            dx_pbc = dx_i - (self.box_size[frame][0] *
-                             np.round(dx_i/self.box_size[frame][0]))
-
-            dy_i = arr[:, 1] - self.np_com[:len(arr), 1]
-            dy_pbc = dy_i - (self.box_size[frame][1] *
-                             np.round(dy_i/self.box_size[frame][1]))
-
-            dz_i = arr[:, 2] - self.np_com[:len(arr), 2]
-            dz_pbc = dz_i - (self.box_size[frame][2] *
-                             np.round(dz_i/self.box_size[frame][2]))
+            dx_pbc = self._apply_pbc(arr, axis=0, frame=frame)
+            dy_pbc = self._apply_pbc(arr, axis=1, frame=frame)
+            dz_pbc = self._apply_pbc(arr, axis=2, frame=frame)
 
             distance_i = np.sqrt(dx_pbc**2 + dy_pbc**2 + dz_pbc**2)
             oda_distances[frame] = distance_i
         return oda_distances
+
+    def _apply_pbc(self,
+                   arr: np.ndarray,
+                   axis: int,  # 0 -> x, 1 -> y, 2 -> z
+                   frame: int  # Index of the frame
+                   ) -> np.ndarray:
+        """apply pbc to each axis"""
+        dx_i = arr[:, axis] - self.np_com[:len(arr), axis]
+        dx_pbc = dx_i - (self.box_size[frame][axis] *
+                         np.round(dx_i/self.box_size[frame][axis]))
+        return dx_pbc
 
     def calc_rdf(self,
                  distances_dict: dict[int, np.ndarray],
@@ -185,10 +197,10 @@ class RdfClculation:
             interface_oda[i_frame] = xyz_i[ind_at_interface[0]]
         return interface_oda
 
-    def _get_xvg_gmx(self,
-                     fxvg: str,  # Name of the xvg file
-                     log: logger.logging.Logger
-                     ) -> np.ndarray:
+    def get_xvg_gmx(self,
+                    fxvg: str,  # Name of the xvg file
+                    log: logger.logging.Logger
+                    ) -> np.ndarray:
         """geeting the COM of the nanoparticles from gmx traj
         the file name is coord.xvg
         convert AA to nm

@@ -132,8 +132,9 @@ class SurfactantDensityPlotter:
         self._plot_graphes(self.rdf_2d, config)
 
     def _plot_graphes(self,
-                      data,
-                      config
+                      data: dict[float, float],
+                      config: typing.Union["Rdf2dGraphConfig",
+                                           "DensityGraphConfig"]
                       ) -> None:
         """plot graphs"""
         radii = np.array(list(data.keys()))

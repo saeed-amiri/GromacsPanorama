@@ -27,7 +27,7 @@ HeatMapPlottingData = namedtuple(
 
 
 @dataclass
-class HeatMapConfig:
+class DensityHeatMapConfig:
     """Configuration parameters for heatmap plotting.
 
     Attributes:
@@ -77,7 +77,7 @@ class Rdf2dGraphConfig:
 @dataclass
 class GrpahsConfig:
     """all the graphs configurations"""
-    heat_map_config: "HeatMapConfig" = HeatMapConfig()
+    heat_map_config: "DensityHeatMapConfig" = DensityHeatMapConfig()
     graph_config:  "DensityGraphConfig" = DensityGraphConfig()
     rdf_config: "Rdf2dGraphConfig" = Rdf2dGraphConfig()
 
@@ -112,9 +112,9 @@ class SurfactantDensityPlotter:
     def _initialize_plotting(self,
                              log: logger.logging.Logger
                              ) -> None:
-        HeatmapPlotter(ave_density=self.ave_density,
+        HeatmapPlotter(ave_density=self.rdf_2d,
                        contact_data=self.contact_data,
-                       config=HeatMapConfig(),
+                       config=DensityHeatMapConfig(),
                        log=log)
         self.plot_density_graph(self.graph_configs.graph_config)
         self.plot_2d_rdf(self.graph_configs.rdf_config)
@@ -173,7 +173,7 @@ class HeatmapPlotter:
     def __init__(self,
                  ave_density: dict[float, float],
                  contact_data: pd.DataFrame,
-                 config: HeatMapConfig,
+                 config: DensityHeatMapConfig,
                  log: logger.logging.Logger
                  ) -> None:
         self.ave_density = ave_density
@@ -190,7 +190,7 @@ class HeatmapPlotter:
             fig_i, ax_i, radial_distances, theta, density_grid)
         ax_i = self.plot_heatmap(plot_params)
         plot_tools.save_close_fig(
-            fig_i, ax_i, fout := self.config.heatmap_suffix)
+            fig_i, ax_i, fout := self.config.heatmap_suffix, legend=False)
         self.info_msg += f'\tThe heatmap of the density is saved as {fout}\n'
 
     def create_density_grid(self) -> tuple[np.ndarray, ...]:

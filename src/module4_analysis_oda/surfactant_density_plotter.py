@@ -81,7 +81,7 @@ class Rdf2dGraphConfig:
     graph_legend: str = 'g(r)'
     xlabel: str = 'Distance from Nanoparticle [A]'
     ylabel: str = 'g(r)'
-    title: str = 'ODA density vs Distance from NP'
+    title: str = 'Rdf vs Distance from NP'
     graph_style: dict = field(default_factory=lambda: {
         'legend': 'g(r)',
         'color': 'k',
@@ -161,7 +161,7 @@ class SurfactantDensityPlotter:
         densities = np.array(list(data.values()))
         ax_i: plt.axes
         fig_i: plt.figure
-        fig_i, ax_i = plot_tools.mk_canvas((np.min(radii), np.max(radii)),
+        fig_i, ax_i = plot_tools.mk_canvas(x_range:=(np.min(radii), np.max(radii)),
                                            height_ratio=5**0.5-1)
         ax_i.plot(radii,
                   densities,
@@ -172,6 +172,9 @@ class SurfactantDensityPlotter:
         ax_i.set_xlabel(config.xlabel)
         ax_i.set_ylabel(config.ylabel)
         ax_i.set_title(config.title)
+        # Set grid for primary axis
+        ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
+
         plot_tools.save_close_fig(fig_i, ax_i, config.graph_suffix)
         self.info_msg += \
             f'\tThe density graph saved: `{config.graph_suffix}`\n'

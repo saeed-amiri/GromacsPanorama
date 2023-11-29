@@ -89,12 +89,23 @@ def mk_canvas(x_range: tuple[float, float],
         ncols=ncols,
         figsize=set_sizes(width*width_ratio, height_ratio=height_ratio))
     # Set font for all elements in the plot)
-    xticks = np.linspace(x_range[0], x_range[-1], num_xticks)
+    xticks = _set_xrange_for_xticks(x_range, num_xticks)
     for ax in np.ravel(ax_main):
         ax.set_xticks(xticks)
-    ax_main = set_x2ticks(ax_main, add_xtwin)
+    # ax_main = set_x2ticks(ax_main, add_xtwin)
     ax_main = set_ax_font_label(ax_main, fsize=fsize)
     return fig_main, ax_main
+
+def _set_xrange_for_xticks(xrange: tuple[float, float],
+                           num_ticks: int
+                           ) -> list[float]:
+    """set the place of the ticks"""
+    x_i: float = num_ticks * (int(xrange[0]/num_ticks) - 1)
+    x_f: float = num_ticks * (int(xrange[1]/num_ticks) + 1)
+    x_r: list[float] = np.linspace(x_i, x_f, num_ticks).tolist()
+    xticks: list[float] = [0]
+    xticks.extend(int(item) for item in x_r[1:])
+    return xticks
 
 def save_close_fig(fig: plt.figure,  # The figure to save,
                    axs: plt.axes,  # Axes to plot
@@ -145,9 +156,6 @@ def set_x2ticks(ax_main: plt.axes,  # The axes to wrok with
     Returns:
         plt.axes: The modified main axes.
     """
-    for ax_i in np.ravel(ax_main):
-        ax_i.tick_params(axis='both', direction='in')
-    ax_list: list[plt.axes] = []
     if add_xtwin:
         for ax_j in np.ravel(ax_main):
         # Set twiny
@@ -158,12 +166,6 @@ def set_x2ticks(ax_main: plt.axes,  # The axes to wrok with
             ax2.xaxis.set_minor_locator(ax_j.xaxis.get_minor_locator())
             ax2.set_xticklabels([])  # Remove the tick labels on the top x-axis
             ax2.tick_params(axis='x', direction='in')
-        ax_list.append(ax2)
-    for ax_k in ax_list:
-        ax_k.xaxis.set_major_locator(matplotlib.ticker.AutoLocator())
-        ax_k.xaxis.set_minor_locator(
-            matplotlib.ticker.AutoMinorLocator(n=5))
-        ax_k.tick_params(which='minor', direction='in')
     return ax_main
 
 def set_y2ticks(ax_main: plt.axes  # The axes to wrok with

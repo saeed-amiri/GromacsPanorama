@@ -27,7 +27,7 @@ class OdaInputFilesConfig:
 @dataclass
 class ParameterConfig:
     """set the default paramters for the calculataion"""
-    number_of_regins: int = 50
+    number_of_regins: int = 150
 
 
 class SurfactantDensityAroundNanoparticle:
@@ -87,7 +87,7 @@ class SurfactantDensityAroundNanoparticle:
                                                  density_per_region)
             num_oda.append(len(arr_i))
         self._comput_and_set_avg_density_as_attibute(density_per_region)
-        self._comput_and_set_2d_rdf(density_per_region, np.mean(num_oda))
+        self._comput_and_set_2d_rdf(density_per_region, num_oda)
         return density_per_region
 
     def _comput_and_set_avg_density_as_attibute(self,
@@ -104,18 +104,22 @@ class SurfactantDensityAroundNanoparticle:
 
     def _comput_and_set_2d_rdf(self,
                                density_per_region: dict[float, list[float]],
-                               num_oda: float
+                               num_oda: list[int]
                                ) -> None:
         """set the 2d rdf (g(r))"""
         max_radius_area: float = \
             max(item for item in density_per_region.keys())
-        density: float = num_oda/(np.pi * max_radius_area**2)
         self.rdf_2d = {}
         for region, densities in density_per_region.items():
-            if densities:
-                self.rdf_2d[region] = np.mean(densities)/density
-            else:
+            if not densities:
                 self.rdf_2d[region] = 0
+                continue
+
+            tmp = []
+            for j, item in enumerate(densities):
+                density: float = num_oda[j]/(np.pi * max_radius_area**2)
+                tmp.append(item/density)
+            self.rdf_2d[region] = np.mean(tmp)
 
     @staticmethod
     def _compute_density_per_region(regions: list[float],

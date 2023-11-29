@@ -59,6 +59,22 @@ class DensityGraphConfig:
 
 
 @dataclass
+class Rdf2dHeatMapConfig:
+    """Configuration parameters for heatmap plotting of 2d rdf.
+
+    Attributes:
+        heatmap_suffix (str): Filename suffix for the saved heatmap image.
+        heatmap_color (str): Color scheme used for the heatmap.
+        show_grid (bool): To indicate whether a grid is shown on the heatmap.
+        cbar_label (str): Label for the heatmap's color bar.
+    """
+    heatmap_suffix: str = 'rdf2dheatmap.png'
+    heatmap_color: str = 'Greys'
+    show_grid: bool = False
+    cbar_label: str = 'g(r)'
+
+
+@dataclass
 class Rdf2dGraphConfig:
     """set the parameters for the graph"""
     graph_suffix: str = 'rdf_2d.png'
@@ -112,9 +128,13 @@ class SurfactantDensityPlotter:
     def _initialize_plotting(self,
                              log: logger.logging.Logger
                              ) -> None:
-        HeatmapPlotter(ave_density=self.rdf_2d,
+        HeatmapPlotter(ave_density=self.ave_density,
                        contact_data=self.contact_data,
                        config=DensityHeatMapConfig(),
+                       log=log)
+        HeatmapPlotter(ave_density=self.rdf_2d,
+                       contact_data=self.contact_data,
+                       config=Rdf2dHeatMapConfig(),
                        log=log)
         self.plot_density_graph(self.graph_configs.graph_config)
         self.plot_2d_rdf(self.graph_configs.rdf_config)
@@ -173,7 +193,8 @@ class HeatmapPlotter:
     def __init__(self,
                  ave_density: dict[float, float],
                  contact_data: pd.DataFrame,
-                 config: DensityHeatMapConfig,
+                 config: typing.Union["DensityHeatMapConfig",
+                                      "Rdf2dHeatMapConfig"],
                  log: logger.logging.Logger
                  ) -> None:
         self.ave_density = ave_density

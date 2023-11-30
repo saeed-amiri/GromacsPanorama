@@ -161,7 +161,7 @@ class SurfactantDensityPlotter:
         densities = np.array(list(data.values()))
         ax_i: plt.axes
         fig_i: plt.figure
-        fig_i, ax_i = plot_tools.mk_canvas(x_range:=(np.min(radii), np.max(radii)),
+        fig_i, ax_i = plot_tools.mk_canvas((np.min(radii), np.max(radii)),
                                            height_ratio=5**0.5-1)
         ax_i.plot(radii,
                   densities,
@@ -274,8 +274,17 @@ class HeatmapPlotter:
                            np_radius: float
                            ) -> plt.axes:
         """self explanatory"""
-        self._add_polar_arrow(ax_i, length=contact_radius, theta=np.pi/2)
+        self._add_polar_arrow(
+            ax_i, length=contact_radius, theta=np.pi/2, color='red')
+        ax_i = self._add_radii_label(ax_i,
+                                     label=rf'$r_c$={contact_radius:.2f}',
+                                     location=(1, 1),
+                                     color='red')
         self._add_polar_arrow(ax_i, length=np_radius, theta=0, color='blue')
+        ax_i = self._add_radii_label(ax_i,
+                                     label=rf'$a$={np_radius:.2f}',
+                                     location=(1, 0.95),
+                                     color='blue')
         return ax_i
 
     @staticmethod
@@ -332,6 +341,23 @@ class HeatmapPlotter:
                         ls=line_style,
                         fill=False)
         ax_i.add_patch(circle)
+        return ax_i
+
+    @staticmethod
+    def _add_radii_label(ax_i: plt.axes,
+                         label: str,
+                         location: tuple[float, float],
+                         color: str,
+                         fontsize: float = 12
+                         ) -> plt.axes:
+        """add text for the label of the radiii"""
+        ax_i.text(location[0], location[1],
+                  label,
+                  horizontalalignment='right',
+                  verticalalignment='center',
+                  color=color,
+                  fontsize=fontsize,
+                  transform=ax_i.transAxes)
         return ax_i
 
     def _write_msg(self,

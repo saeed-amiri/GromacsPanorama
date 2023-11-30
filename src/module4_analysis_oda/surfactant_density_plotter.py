@@ -213,7 +213,7 @@ class HeatmapPlotter:
         plot_params = HeatMapPlottingData(
             fig_i, ax_i, radial_distances, theta, density_grid)
         ax_i = self.plot_heatmap(plot_params)
-        plot_tools.save_close_fig(
+        self._save_close_fig(
             fig_i, ax_i, fout := self.config.heatmap_suffix, legend=False)
         self.info_msg += f'\tThe heatmap of the density is saved as {fout}\n'
 
@@ -359,6 +359,32 @@ class HeatmapPlotter:
                   fontsize=fontsize,
                   transform=ax_i.transAxes)
         return ax_i
+
+    @staticmethod
+    def _save_close_fig(fig: plt.figure,  # The figure to save,
+                        axs: plt.axes,  # Axes to plot
+                        fname: str,  # Name of the output for the fig
+                        loc: str = 'upper right',  # Location of the legend
+                        transparent=False,
+                        legend=True
+                        ) -> None:
+        """
+        Cannot use the plot_tools
+        Save the figure and close it.
+
+        This method saves the given figure and closes it after saving.
+        """
+        if legend:
+            for ax_j in np.ravel(axs):
+                legend = ax_j.legend(loc=loc)
+        fig.savefig(fname,
+                    dpi=300,
+                    pad_inches=0.1,
+                    edgecolor='auto',
+                    bbox_inches='tight',
+                    transparent=transparent
+                    )
+        plt.close(fig)
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

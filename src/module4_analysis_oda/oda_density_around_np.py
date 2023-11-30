@@ -26,8 +26,8 @@ class OdaInputFilesConfig:
 
 @dataclass
 class ParameterConfig:
-    """set the default paramters for the calculataion"""
-    number_of_regins: int = 150
+    """set the default parameters for the calculataion"""
+    number_of_regions: int = 150
 
 
 class SurfactantDensityAroundNanoparticle:
@@ -73,7 +73,7 @@ class SurfactantDensityAroundNanoparticle:
         """getting the density number from the parsed data"""
         z_threshold: np.ndarray = self.compute_surfactant_vertical_threshold()
         regions: list[float] = \
-            self.generate_regions(self.param_config.number_of_regins)
+            self.generate_regions(self.param_config.number_of_regions)
         # Initialize a dictionary to store densities for each region
         density_per_region: dict[float, list[float]] = \
             {region: [] for region in regions}
@@ -87,14 +87,14 @@ class SurfactantDensityAroundNanoparticle:
                                                  distance,
                                                  density_per_region)
             num_oda.append(len(arr_i))
-        self._comput_and_set_avg_density_as_attibute(density_per_region)
+        self._comput_and_set_avg_density_as_attribute(density_per_region)
         self._comput_and_set_2d_rdf(density_per_region, num_oda)
         return density_per_region
 
-    def _comput_and_set_avg_density_as_attibute(self,
-                                                density_per_region:
-                                                dict[float, list[float]]
-                                                ) -> None:
+    def _comput_and_set_avg_density_as_attribute(self,
+                                                 density_per_region:
+                                                 dict[float, list[float]]
+                                                 ) -> None:
         """self explanatory"""
         self.avg_density_per_region = {}
         for region, densities in density_per_region.items():
@@ -188,7 +188,7 @@ class SurfactantDensityAroundNanoparticle:
                                box_df: pd.DataFrame,
                                log: logger.logging.Logger
                                ) -> None:
-        """set the main arrays as attibutes for the further calculationsa"""
+        """set the main arrays as attributes for the further calculations"""
         self.interface_z = \
             self.parse_contact_data(self.contact_data, 'interface_z', log)
         self.np_com = self.parse_gmx_xvg(np_com_df)

@@ -32,7 +32,7 @@ class ParameterConfig:
 
 class SurfactantDensityAroundNanoparticle:
     """self explained"""
-    info_msg: str = '\tMessage from SurfactantDensityAroundNanoparticle:\n'
+    info_msg: str = 'Message from SurfactantDensityAroundNanoparticle:\n'
     input_config: "OdaInputFilesConfig"
     param_config: "ParameterConfig"
     contact_data: pd.DataFrame  # The contact data (from module3)
@@ -55,6 +55,7 @@ class SurfactantDensityAroundNanoparticle:
         self.input_config = input_config
         self.param_config = param_config
         self._initiate(log)
+        self.write_msg(log)
 
     def _initiate(self,
                   log: logger.logging.Logger,
@@ -139,11 +140,16 @@ class SurfactantDensityAroundNanoparticle:
         return density_per_region
 
     def generate_regions(self,
-                         number_of_regions: int
+                         nr_of_regions: int
                          ) -> list[float]:
         """divide the the area around the np for generating regions"""
         max_box_len: np.float64 = np.max(self.box[0][:2]) / 2
-        return np.linspace(0, max_box_len, number_of_regions).tolist()
+        self.info_msg += (
+            f'\tThe number of regions is: `{nr_of_regions}`\n'
+            f'\tThe half of the max length of the box is `{max_box_len:.3f}`\n'
+            f'\tThe bin size, thus, is: `{max_box_len/nr_of_regions:.3f}`\n'
+            )
+        return np.linspace(0, max_box_len, nr_of_regions).tolist()
 
     @staticmethod
     def _get_surfactant_at_interface(frame_i: np.ndarray,
@@ -229,6 +235,14 @@ class SurfactantDensityAroundNanoparticle:
         my_tools.check_file_exist(input_config.contact_xvg, log)
         my_tools.check_file_exist(input_config.np_coord_xvg, log)
         my_tools.check_file_exist(input_config.box_xvg, log)
+
+    def write_msg(self,
+                  log: logger.logging.Logger  # To log
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKGREEN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == "__main__":

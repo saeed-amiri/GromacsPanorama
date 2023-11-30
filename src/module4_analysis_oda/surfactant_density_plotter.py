@@ -277,7 +277,7 @@ class HeatmapPlotter:
         self._add_polar_arrow(
             ax_i, length=contact_radius, theta=np.pi/2, color='red')
         ax_i = self._add_radii_label(ax_i,
-                                     label=rf'$r_c$={contact_radius:.2f}',
+                                     label=rf'$r_{{c, avg}}$={contact_radius:.2f}',
                                      location=(1, 1),
                                      color='red')
         self._add_polar_arrow(ax_i, length=np_radius, theta=0, color='blue')

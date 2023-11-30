@@ -34,7 +34,7 @@ class OdaAnalysis:
             amino_arr=parsed_com.split_arr_dict['AMINO_ODN'],
             box_dims=parsed_com.box_dims)
         RdfClculation(log, rdf_config)
-        params: "ParameterConfig" = ParameterConfig(number_of_regins=50)
+        params: "ParameterConfig" = ParameterConfig(number_of_regions=50)
         oda_density = SurfactantDensityAroundNanoparticle(
             parsed_com.split_arr_dict['AMINO_ODN'], log, param_config=params)
         SurfactantDensityPlotter(oda_density, log)

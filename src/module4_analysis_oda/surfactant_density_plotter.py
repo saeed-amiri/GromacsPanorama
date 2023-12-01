@@ -43,22 +43,6 @@ class DensityHeatMapConfig:
 
 
 @dataclass
-class DensityGraphConfig:
-    """set the parameters for the graph"""
-    graph_suffix: str = 'desnty.png'
-    graph_legend: str = 'density'
-    xlabel: str = 'Distance from Nanoparticle (units)'
-    ylabel: str = 'Average Density (units)'
-    title: str = 'ODA Density vs Distance from NP'
-    graph_style: dict = field(default_factory=lambda: {
-        'legend': 'density',
-        'color': 'k',
-        'marker': 'o',
-        'linestyle': '-'
-    })
-
-
-@dataclass
 class Rdf2dHeatMapConfig:
     """Configuration parameters for heatmap plotting of 2d rdf.
 
@@ -75,6 +59,39 @@ class Rdf2dHeatMapConfig:
 
 
 @dataclass
+class FittedsRdf2dHeatMapConfig:
+    """Configuration parameters for heatmap plotting of fitted 2d rdf.
+
+    Attributes:
+        heatmap_suffix (str): Filename suffix for the saved heatmap image.
+        heatmap_color (str): Color scheme used for the heatmap.
+        show_grid (bool): To indicate whether a grid is shown on the heatmap.
+        cbar_label (str): Label for the heatmap's color bar.
+    """
+    heatmap_suffix: str = 'fittedRdf2dheatmap.png'
+    heatmap_color: str = 'Greys'
+    show_grid: bool = False
+    cbar_label: str = r'$g_{fitted}(r)$'
+
+
+@dataclass
+class DensityGraphConfig:
+    """set the parameters for the graph"""
+    graph_suffix: str = 'desnty.png'
+    graph_legend: str = 'density'
+    xlabel: str = 'Distance from Nanoparticle (units)'
+    ylabel: str = 'Average Density (units)'
+    title: str = 'ODA Density vs Distance from NP'
+    graph_style: dict = field(default_factory=lambda: {
+        'legend': 'density',
+        'color': 'k',
+        'marker': 'o',
+        'linestyle': '-',
+        'markersize': 5
+    })
+
+
+@dataclass
 class Rdf2dGraphConfig:
     """set the parameters for the graph"""
     graph_suffix: str = 'rdf_2d.png'
@@ -86,16 +103,37 @@ class Rdf2dGraphConfig:
         'legend': 'g(r)',
         'color': 'k',
         'marker': 'o',
-        'linestyle': '-'
+        'linestyle': '-',
+        'markersize': 5
+    })
+
+
+@dataclass
+class FittedRdf2dGraphConfig:
+    """set the parameters for the graph"""
+    graph_suffix: str = 'fitted_rdf_2d.png'
+    graph_legend: str = r'$g_{fitted}(r)$'
+    graph_legend_2: str = 'g(r)'
+    xlabel: str = 'Distance from Nanoparticle [A]'
+    ylabel: str = 'g(r)'
+    title: str = 'fitted Rdf vs Distance from NP'
+
+    graph_style: dict = field(default_factory=lambda: {
+        'legend': 'g(r)',
+        'color': 'k',
+        'marker': 'o',
+        'linestyle': '-',
+        'markersize': 1,
+        'unfit_markersize': 5
     })
 
 
 @dataclass
 class GrpahsConfig:
     """all the graphs configurations"""
-    heat_map_config: "DensityHeatMapConfig" = DensityHeatMapConfig()
     graph_config:  "DensityGraphConfig" = DensityGraphConfig()
     rdf_config: "Rdf2dGraphConfig" = Rdf2dGraphConfig()
+    fitted_rdf_config: FittedRdf2dGraphConfig = FittedRdf2dGraphConfig()
 
 
 class SurfactantDensityPlotter:
@@ -116,6 +154,7 @@ class SurfactantDensityPlotter:
         self.density = density_obj.density_per_region
         self.ave_density = density_obj.avg_density_per_region
         self.rdf_2d = density_obj.rdf_2d
+        self.fitted_rdf = density_obj.fitted_rdf
 
         self.contact_data = density_obj.contact_data
         self.box = density_obj.box
@@ -136,8 +175,13 @@ class SurfactantDensityPlotter:
                        contact_data=self.contact_data,
                        config=Rdf2dHeatMapConfig(),
                        log=log)
+        HeatmapPlotter(ave_density=self.fitted_rdf,
+                       contact_data=self.contact_data,
+                       config=FittedsRdf2dHeatMapConfig(),
+                       log=log)
         self.plot_density_graph(self.graph_configs.graph_config)
         self.plot_2d_rdf(self.graph_configs.rdf_config)
+        self.plot_fitted_2d_rdf(self.graph_configs.fitted_rdf_config)
 
     def plot_density_graph(self,
                            config: "DensityGraphConfig") -> None:
@@ -151,11 +195,30 @@ class SurfactantDensityPlotter:
         """Plot a simple graph of 2d rdf vs distance."""
         self._plot_graphes(self.rdf_2d, config)
 
+    def plot_fitted_2d_rdf(self,
+                           config: "FittedRdf2dGraphConfig"
+                           ) -> None:
+        """plot the fitted graph alongside main data"""
+        fig_i, ax_i = self._plot_graphes(self.fitted_rdf, config, return_ax=True)
+        radii = np.array(list(self.rdf_2d.keys()))
+        densities = np.array(list(self.rdf_2d.values()))
+        ax_i.plot(radii,
+                  densities,
+                  marker=config.graph_style['marker'],
+                  linestyle=config.graph_style['linestyle'],
+                  color='r',
+                  label=config.graph_legend_2,
+                  markersize=config.graph_style['unfit_markersize'])
+        plot_tools.save_close_fig(fig_i, ax_i, config.graph_suffix)
+        self.info_msg += \
+            f'\tThe fitted graph saved: `{config.graph_suffix}`\n'
+
     def _plot_graphes(self,
                       data: dict[float, float],
                       config: typing.Union["Rdf2dGraphConfig",
-                                           "DensityGraphConfig"]
-                      ) -> None:
+                                           "DensityGraphConfig"],
+                      return_ax: bool = False   
+                      ) -> typing.Union[None, tuple[plt.figure, plt.axes]]:
         """plot graphs"""
         radii = np.array(list(data.keys()))
         densities = np.array(list(data.values()))
@@ -168,13 +231,16 @@ class SurfactantDensityPlotter:
                   marker=config.graph_style['marker'],
                   linestyle=config.graph_style['linestyle'],
                   color=config.graph_style['color'],
-                  label=config.graph_legend)
+                  label=config.graph_legend,
+                  markersize=config.graph_style['markersize'])
         ax_i.set_xlabel(config.xlabel)
         ax_i.set_ylabel(config.ylabel)
         ax_i.set_title(config.title)
         # Set grid for primary axis
         ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
 
+        if return_ax:
+            return fig_i, ax_i
         plot_tools.save_close_fig(fig_i, ax_i, config.graph_suffix)
         self.info_msg += \
             f'\tThe density graph saved: `{config.graph_suffix}`\n'
@@ -197,7 +263,8 @@ class HeatmapPlotter:
                  ave_density: dict[float, float],
                  contact_data: pd.DataFrame,
                  config: typing.Union["DensityHeatMapConfig",
-                                      "Rdf2dHeatMapConfig"],
+                                      "Rdf2dHeatMapConfig",
+                                      "FittedsRdf2dHeatMapConfig"],
                  log: logger.logging.Logger
                  ) -> None:
         self.ave_density = ave_density

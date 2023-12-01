@@ -15,6 +15,8 @@ from common import static_info as stinfo
 from common import xvg_to_dataframe as xvg
 from common.colors_text import TextColor as bcolors
 
+from module4_analysis_oda import fit_rdf
+
 
 @dataclass
 class OdaInputFilesConfig:
@@ -43,6 +45,7 @@ class SurfactantDensityAroundNanoparticle:
     density_per_region: dict[float, list[float]]  # Density per area
     avg_density_per_region: dict[float, float]
     rdf_2d: dict[float, float]  # rdf (g((r)) in 2d
+    fitted_rdf: dict[float, float]  # fitted rdf
 
     def __init__(self,
                  amino_arr: np.ndarray,  # amino head com of the oda
@@ -67,9 +70,11 @@ class SurfactantDensityAroundNanoparticle:
         np_com_df: pd.DataFrame = self.load_np_com_data(log)
         box_df: pd.DataFrame = self.load_box_data(log)
         self.initialize_data_arrays(np_com_df, box_df, log)
-        self.density_per_region = self.initialize_calculation()
+        self.density_per_region = self.initialize_calculation(log)
 
-    def initialize_calculation(self) -> dict[float, list[float]]:
+    def initialize_calculation(self,
+                               log: logger.logging.Logger
+                               ) -> dict[float, list[float]]:
         """getting the density number from the parsed data"""
         z_threshold: np.ndarray = self.compute_surfactant_vertical_threshold()
         regions: list[float] = \
@@ -89,6 +94,7 @@ class SurfactantDensityAroundNanoparticle:
             num_oda.append(len(arr_i))
         self._comput_and_set_avg_density_as_attribute(density_per_region)
         self._comput_and_set_2d_rdf(density_per_region, num_oda)
+        self._fit_and_set_fitted2d_rdf(log)
         return density_per_region
 
     def _comput_and_set_avg_density_as_attribute(self,
@@ -121,6 +127,15 @@ class SurfactantDensityAroundNanoparticle:
                 density: float = num_oda[j]/(np.pi * max_radius_area**2)
                 tmp.append(item/density)
             self.rdf_2d[region] = np.mean(tmp)
+
+    def _fit_and_set_fitted2d_rdf(self,
+                                  log: logger.logging.Logger
+                                  ) -> None:
+        """
+        fit and smooth the rdf using the 5PL2S function with initial
+        guesses based on derivatives"""
+        self.fitted_rdf = \
+            fit_rdf.FitRdf2dTo5PL2S(self.rdf_2d, log).fitted_rdf
 
     @staticmethod
     def _compute_density_per_region(regions: list[float],

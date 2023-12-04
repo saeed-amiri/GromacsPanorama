@@ -129,7 +129,7 @@ class SmoothedRdf2dGraphConfig(BaseGraphConfig):
 
 
 @dataclass
-class GrpahsConfigs:
+class GraphsConfigs:
     """all the graphs configurations"""
     graph_config:  "DensityGraphConfig" = DensityGraphConfig()
     rdf_config: "Rdf2dGraphConfig" = Rdf2dGraphConfig()
@@ -150,7 +150,7 @@ class SurfactantDensityPlotter:
     def __init__(self,
                  density_obj: "SurfactantDensityAroundNanoparticle",
                  log: logger.logging.Logger,
-                 graphs_config: "GrpahsConfigs" = GrpahsConfigs()
+                 graphs_config: "GraphsConfigs" = GraphsConfigs()
                  ) -> None:
 
         self.density = density_obj.density_per_region

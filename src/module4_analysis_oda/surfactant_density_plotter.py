@@ -75,6 +75,22 @@ class FittedsRdf2dHeatMapConfig:
 
 
 @dataclass
+class SmoothedRdf2dHeatMapConfig:
+    """Configuration parameters for heatmap plotting of smoothed 2d rdf.
+
+    Attributes:
+        heatmap_suffix (str): Filename suffix for the saved heatmap image.
+        heatmap_color (str): Color scheme used for the heatmap.
+        show_grid (bool): To indicate whether a grid is shown on the heatmap.
+        cbar_label (str): Label for the heatmap's color bar.
+    """
+    heatmap_suffix: str = 'smoothedRdf2dheatmap.png'
+    heatmap_color: str = 'Greys'
+    show_grid: bool = False
+    cbar_label: str = r'$g_{smoothed}(r)$'
+
+
+@dataclass
 class DensityGraphConfig:
     """set the parameters for the graph"""
     graph_suffix: str = 'desnty.png'
@@ -120,7 +136,27 @@ class FittedRdf2dGraphConfig:
 
     graph_style: dict = field(default_factory=lambda: {
         'legend': 'g(r)',
-        'color': 'k',
+        'color': 'r',
+        'marker': 'o',
+        'linestyle': '-',
+        'markersize': 1,
+        'unfit_markersize': 5
+    })
+
+
+@dataclass
+class SmoothedRdf2dGraphConfig:
+    """set the parameters for the graph"""
+    graph_suffix: str = 'smoothed_rdf_2d.png'
+    graph_legend: str = r'$g_{smoothed}(r)$'
+    graph_legend_2: str = 'g(r)'
+    xlabel: str = 'Distance from Nanoparticle [A]'
+    ylabel: str = 'g(r)'
+    title: str = 'smoothed Rdf vs Distance from NP'
+
+    graph_style: dict = field(default_factory=lambda: {
+        'legend': 'g(r)',
+        'color': 'r',
         'marker': 'o',
         'linestyle': '-',
         'markersize': 1,
@@ -133,7 +169,9 @@ class GrpahsConfig:
     """all the graphs configurations"""
     graph_config:  "DensityGraphConfig" = DensityGraphConfig()
     rdf_config: "Rdf2dGraphConfig" = Rdf2dGraphConfig()
-    fitted_rdf_config: FittedRdf2dGraphConfig = FittedRdf2dGraphConfig()
+    fitted_rdf_config: "FittedRdf2dGraphConfig" = FittedRdf2dGraphConfig()
+    smoothed_rdf_config: "SmoothedRdf2dGraphConfig" = \
+        SmoothedRdf2dGraphConfig()
 
 
 class SurfactantDensityPlotter:
@@ -154,7 +192,8 @@ class SurfactantDensityPlotter:
         self.density = density_obj.density_per_region
         self.ave_density = density_obj.avg_density_per_region
         self.rdf_2d = density_obj.rdf_2d
-        self.fitted_rdf = density_obj.rdf_2d_ma
+        self.fitted_rdf = density_obj.fitted_rdf
+        self.smoothed_rdf = density_obj.smoothed_rdf
 
         self.contact_data = density_obj.contact_data
         self.box = density_obj.box
@@ -179,9 +218,20 @@ class SurfactantDensityPlotter:
                        contact_data=self.contact_data,
                        config=FittedsRdf2dHeatMapConfig(),
                        log=log)
+        HeatmapPlotter(ave_density=self.smoothed_rdf,
+                       contact_data=self.contact_data,
+                       config=SmoothedRdf2dHeatMapConfig(),
+                       log=log)
         self.plot_density_graph(self.graph_configs.graph_config)
         self.plot_2d_rdf(self.graph_configs.rdf_config)
-        self.plot_fitted_2d_rdf(self.graph_configs.fitted_rdf_config)
+        self.plot_fitted_or_smoothed_rdf(self.fitted_rdf,
+                                         'fitted',
+                                         self.graph_configs.fitted_rdf_config
+                                         )
+        self.plot_fitted_or_smoothed_rdf(self.smoothed_rdf,
+                                         'smoothed',
+                                         self.graph_configs.smoothed_rdf_config
+                                         )
 
     def plot_density_graph(self,
                            config: "DensityGraphConfig") -> None:
@@ -195,31 +245,38 @@ class SurfactantDensityPlotter:
         """Plot a simple graph of 2d rdf vs distance."""
         self._plot_graphes(self.rdf_2d, config)
 
-    def plot_fitted_2d_rdf(self,
-                           config: "FittedRdf2dGraphConfig"
-                           ) -> None:
+    def plot_fitted_or_smoothed_rdf(self,
+                                    rdf: dict[float, float],
+                                    style: str,
+                                    config: typing.Union[
+                                        "FittedRdf2dGraphConfig",
+                                        "SmoothedRdf2dGraphConfig"]
+                                    ) -> None:
         """plot the fitted graph alongside main data"""
-        fig_i, ax_i = self._plot_graphes(self.fitted_rdf, config, return_ax=True)
+        fig_i, ax_i = self._plot_graphes(rdf, config, return_ax=True)
         radii = np.array(list(self.rdf_2d.keys()))
         densities = np.array(list(self.rdf_2d.values()))
         ax_i.plot(radii,
                   densities,
                   marker=config.graph_style['marker'],
                   linestyle=config.graph_style['linestyle'],
-                  color='r',
+                  color='k',
                   label=config.graph_legend_2,
                   markersize=config.graph_style['unfit_markersize'],
                   zorder=1)
-        plot_tools.save_close_fig(fig_i, ax_i, config.graph_suffix)
+        plot_tools.save_close_fig(
+            fig_i, ax_i, config.graph_suffix, loc='upper left')
         self.info_msg += \
-            f'\tThe fitted graph saved: `{config.graph_suffix}`\n'
+            f'\tThe `{style}` graph saved: `{config.graph_suffix}`\n'
 
     def _plot_graphes(self,
                       data: dict[float, float],
                       config: typing.Union["Rdf2dGraphConfig",
-                                           "DensityGraphConfig"],
-                      return_ax: bool = False   
-                      ) -> typing.Union[None, tuple[plt.figure, plt.axes]]:
+                                           "DensityGraphConfig",
+                                           "FittedRdf2dGraphConfig",
+                                           "SmoothedRdf2dGraphConfig"],
+                      return_ax: bool = False
+                      ) -> tuple[plt.figure, plt.axes]:
         """plot graphs"""
         radii = np.array(list(data.keys()))
         densities = np.array(list(data.values()))
@@ -240,11 +297,12 @@ class SurfactantDensityPlotter:
         # Set grid for primary axis
         ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
 
-        if return_ax:
-            return fig_i, ax_i
-        plot_tools.save_close_fig(fig_i, ax_i, config.graph_suffix)
-        self.info_msg += \
-            f'\tThe density graph saved: `{config.graph_suffix}`\n'
+        if not return_ax:
+            plot_tools.save_close_fig(
+                fig_i, ax_i, config.graph_suffix, loc='upper left')
+            self.info_msg += \
+                f'\tThe density graph saved: `{config.graph_suffix}`\n'
+        return fig_i, ax_i
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log
@@ -265,7 +323,8 @@ class HeatmapPlotter:
                  contact_data: pd.DataFrame,
                  config: typing.Union["DensityHeatMapConfig",
                                       "Rdf2dHeatMapConfig",
-                                      "FittedsRdf2dHeatMapConfig"],
+                                      "FittedsRdf2dHeatMapConfig",
+                                      "SmoothedRdf2dHeatMapConfig"],
                  log: logger.logging.Logger
                  ) -> None:
         self.ave_density = ave_density
@@ -320,7 +379,9 @@ class HeatmapPlotter:
             ax_i = self._add_heatmap_grid(ax_i)
         ax_i, contact_radius, np_radius = self._add_np_radii(ax_i)
         ax_i = self._add_radius_arrows(ax_i, contact_radius, np_radius)
-        plt.colorbar(cbar, ax=ax_i, label=self.config.cbar_label)
+        cbar = plt.colorbar(cbar, ax=ax_i)
+        cbar.ax.tick_params(labelsize=13)  # Adjust tick label font size
+        cbar.set_label(label=self.config.cbar_label, fontsize=13)
         return ax_i
 
     def _add_np_radii(self,
@@ -344,10 +405,12 @@ class HeatmapPlotter:
         """self explanatory"""
         self._add_polar_arrow(
             ax_i, length=contact_radius, theta=np.pi/2, color='red')
-        ax_i = self._add_radii_label(ax_i,
-                                     label=rf'$r_{{c, avg}}$={contact_radius:.2f}',
-                                     location=(1, 1),
-                                     color='red')
+        ax_i = \
+            self._add_radii_label(ax_i,
+                                  label=(
+                                    rf'$r_{{c, avg}}$={contact_radius:.2f}'),
+                                  location=(1, 1),
+                                  color='red')
         self._add_polar_arrow(ax_i, length=np_radius, theta=0, color='blue')
         ax_i = self._add_radii_label(ax_i,
                                      label=rf'$a$={np_radius:.2f}',

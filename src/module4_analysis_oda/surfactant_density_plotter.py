@@ -25,68 +25,46 @@ if typing.TYPE_CHECKING:
 HeatMapPlottingData = namedtuple(
     'HeatMapPlottingData', 'fig ax radial_distances theta density_grid')
 
+@dataclass
+class BaseHeatMapConfig:
+    cbar_label: str
+    heatmap_suffix: str
+    show_grid: bool = False
+    heatmap_color: str = 'Greys'
 
 @dataclass
-class DensityHeatMapConfig:
-    """Configuration parameters for heatmap plotting.
-
-    Attributes:
-        heatmap_suffix (str): Filename suffix for the saved heatmap image.
-        heatmap_color (str): Color scheme used for the heatmap.
-        show_grid (bool): To indicate whether a grid is shown on the heatmap.
-        cbar_label (str): Label for the heatmap's color bar.
+class DensityHeatMapConfig(BaseHeatMapConfig):
+    """
+    Configuration parameters for heatmap plotting of density.
     """
     heatmap_suffix: str = 'heatmap.png'
-    heatmap_color: str = 'Greys'
-    show_grid: bool = False
     cbar_label: str = 'Average Density'
 
 
 @dataclass
-class Rdf2dHeatMapConfig:
-    """Configuration parameters for heatmap plotting of 2d rdf.
-
-    Attributes:
-        heatmap_suffix (str): Filename suffix for the saved heatmap image.
-        heatmap_color (str): Color scheme used for the heatmap.
-        show_grid (bool): To indicate whether a grid is shown on the heatmap.
-        cbar_label (str): Label for the heatmap's color bar.
+class Rdf2dHeatMapConfig(BaseHeatMapConfig):
+    """
+    Configuration parameters for heatmap plotting of 2d rdf.
     """
     heatmap_suffix: str = 'rdf2dheatmap.png'
-    heatmap_color: str = 'Greys'
-    show_grid: bool = False
     cbar_label: str = 'g(r)'
 
 
 @dataclass
-class FittedsRdf2dHeatMapConfig:
-    """Configuration parameters for heatmap plotting of fitted 2d rdf.
-
-    Attributes:
-        heatmap_suffix (str): Filename suffix for the saved heatmap image.
-        heatmap_color (str): Color scheme used for the heatmap.
-        show_grid (bool): To indicate whether a grid is shown on the heatmap.
-        cbar_label (str): Label for the heatmap's color bar.
+class FittedsRdf2dHeatMapConfig(BaseHeatMapConfig):
+    """
+    Configuration parameters for heatmap plotting of fitted 2d rdf.
     """
     heatmap_suffix: str = 'fittedRdf2dheatmap.png'
-    heatmap_color: str = 'Greys'
-    show_grid: bool = False
     cbar_label: str = r'$g_{fitted}(r)$'
 
 
 @dataclass
-class SmoothedRdf2dHeatMapConfig:
-    """Configuration parameters for heatmap plotting of smoothed 2d rdf.
-
-    Attributes:
-        heatmap_suffix (str): Filename suffix for the saved heatmap image.
-        heatmap_color (str): Color scheme used for the heatmap.
-        show_grid (bool): To indicate whether a grid is shown on the heatmap.
-        cbar_label (str): Label for the heatmap's color bar.
+class SmoothedRdf2dHeatMapConfig(BaseHeatMapConfig):
+    """
+    Configuration parameters for heatmap plotting of smoothed 2d rdf.
     """
     heatmap_suffix: str = 'smoothedRdf2dheatmap.png'
-    heatmap_color: str = 'Greys'
-    show_grid: bool = False
     cbar_label: str = r'$g_{smoothed}(r)$'
 
 

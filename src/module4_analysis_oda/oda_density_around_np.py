@@ -46,6 +46,7 @@ class SurfactantDensityAroundNanoparticle:
     avg_density_per_region: dict[float, float]
     rdf_2d: dict[float, float]  # rdf (g((r)) in 2d
     fitted_rdf: dict[float, float]  # fitted rdf
+    smoothed_rdf: dict[float, float]  # smoothed rdf
 
     def __init__(self,
                  amino_arr: np.ndarray,  # amino head com of the oda
@@ -95,6 +96,7 @@ class SurfactantDensityAroundNanoparticle:
         self._comput_and_set_avg_density_as_attribute(density_per_region)
         self._comput_and_set_2d_rdf(density_per_region, num_oda)
         self._fit_and_set_fitted2d_rdf(log)
+        self._comput_and_set_moving_average(3)
         return density_per_region
 
     def _comput_and_set_avg_density_as_attribute(self,
@@ -165,6 +167,29 @@ class SurfactantDensityAroundNanoparticle:
             f'\tThe bin size, thus, is: `{max_box_len/nr_of_regions:.3f}`\n'
             )
         return np.linspace(0, max_box_len, nr_of_regions).tolist()
+
+    def _comput_and_set_moving_average(self,
+                                       window_size: int
+                                       ) -> None:
+        """
+        Apply moving average on rdf_2d data.
+
+        Parameters:
+        window_size (int): The number of data points to include in each
+        average.
+
+        Returns:
+        ndarray: The rdf_2d data after applying the moving average.
+        """
+        radii = np.array(list(self.rdf_2d.keys()))
+        rdf_values = np.array(list(self.rdf_2d.values()))
+
+        if not isinstance(window_size, int) or window_size <= 0:
+            raise ValueError("window_size must be a positive integer.")
+
+        smoothed_rdf = np.convolve(
+            rdf_values, np.ones(window_size)/window_size, mode='valid')
+        self.smoothed_rdf = dict(zip(radii, smoothed_rdf))
 
     @staticmethod
     def _get_surfactant_at_interface(frame_i: np.ndarray,

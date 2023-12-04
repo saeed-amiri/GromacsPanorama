@@ -25,12 +25,15 @@ if typing.TYPE_CHECKING:
 HeatMapPlottingData = namedtuple(
     'HeatMapPlottingData', 'fig ax radial_distances theta density_grid')
 
+
 @dataclass
 class BaseHeatMapConfig:
+    """base configuration for the heatmap plots"""
     cbar_label: str
     heatmap_suffix: str
     show_grid: bool = False
     heatmap_color: str = 'Greys'
+
 
 @dataclass
 class DensityHeatMapConfig(BaseHeatMapConfig):
@@ -69,81 +72,64 @@ class SmoothedRdf2dHeatMapConfig(BaseHeatMapConfig):
 
 
 @dataclass
-class DensityGraphConfig:
-    """set the parameters for the graph"""
-    graph_suffix: str = 'desnty.png'
-    graph_legend: str = 'density'
-    xlabel: str = 'Distance from Nanoparticle (units)'
-    ylabel: str = 'Average Density (units)'
-    title: str = 'ODA Density vs Distance from NP'
+class BaseGraphConfig:
+    """Configurations for the simple graphs"""
+    graph_suffix: str
+    graph_legend: str
+    title: str
+    ylabel: str
+    xlabel: str = 'Distance from Nanoparticle [A]'
     graph_style: dict = field(default_factory=lambda: {
         'legend': 'density',
         'color': 'k',
         'marker': 'o',
         'linestyle': '-',
-        'markersize': 5
+        'markersize': 5,
+        '2nd_marksize': 1
     })
+    graph_2nd_legend: str = 'g(r)'
 
 
 @dataclass
-class Rdf2dGraphConfig:
+class DensityGraphConfig(BaseGraphConfig):
+    """set the parameters for the graph"""
+    graph_suffix: str = 'desnty.png'
+    graph_legend: str = 'density'
+    ylabel: str = 'Average Density'
+    title: str = 'ODA Density vs Distance from NP'
+
+
+@dataclass
+class Rdf2dGraphConfig(BaseGraphConfig):
     """set the parameters for the graph"""
     graph_suffix: str = 'rdf_2d.png'
     graph_legend: str = 'g(r)'
-    xlabel: str = 'Distance from Nanoparticle [A]'
     ylabel: str = 'g(r)'
     title: str = 'Rdf vs Distance from NP'
-    graph_style: dict = field(default_factory=lambda: {
-        'legend': 'g(r)',
-        'color': 'k',
-        'marker': 'o',
-        'linestyle': '-',
-        'markersize': 5
-    })
 
 
 @dataclass
-class FittedRdf2dGraphConfig:
+class FittedRdf2dGraphConfig(BaseGraphConfig):
     """set the parameters for the graph"""
     graph_suffix: str = 'fitted_rdf_2d.png'
-    graph_legend: str = r'$g_{fitted}(r)$'
-    graph_legend_2: str = 'g(r)'
-    xlabel: str = 'Distance from Nanoparticle [A]'
+    graph_legend: str = 'g(r)'
+    graph_2nd_legend: str = r'$g_{fitted}(r)$'
     ylabel: str = 'g(r)'
     title: str = 'fitted Rdf vs Distance from NP'
 
-    graph_style: dict = field(default_factory=lambda: {
-        'legend': 'g(r)',
-        'color': 'r',
-        'marker': 'o',
-        'linestyle': '-',
-        'markersize': 1,
-        'unfit_markersize': 5
-    })
-
 
 @dataclass
-class SmoothedRdf2dGraphConfig:
+class SmoothedRdf2dGraphConfig(BaseGraphConfig):
     """set the parameters for the graph"""
     graph_suffix: str = 'smoothed_rdf_2d.png'
-    graph_legend: str = r'$g_{smoothed}(r)$'
-    graph_legend_2: str = 'g(r)'
-    xlabel: str = 'Distance from Nanoparticle [A]'
+    graph_legend: str = 'g(r)'
+    graph_2nd_legend: str = r'$g_{smoothed}(r)$'
     ylabel: str = 'g(r)'
     title: str = 'smoothed Rdf vs Distance from NP'
 
-    graph_style: dict = field(default_factory=lambda: {
-        'legend': 'g(r)',
-        'color': 'r',
-        'marker': 'o',
-        'linestyle': '-',
-        'markersize': 1,
-        'unfit_markersize': 5
-    })
-
 
 @dataclass
-class GrpahsConfig:
+class GrpahsConfigs:
     """all the graphs configurations"""
     graph_config:  "DensityGraphConfig" = DensityGraphConfig()
     rdf_config: "Rdf2dGraphConfig" = Rdf2dGraphConfig()
@@ -164,7 +150,7 @@ class SurfactantDensityPlotter:
     def __init__(self,
                  density_obj: "SurfactantDensityAroundNanoparticle",
                  log: logger.logging.Logger,
-                 graphs_config: "GrpahsConfig" = GrpahsConfig()
+                 graphs_config: "GrpahsConfigs" = GrpahsConfigs()
                  ) -> None:
 
         self.density = density_obj.density_per_region
@@ -231,16 +217,16 @@ class SurfactantDensityPlotter:
                                         "SmoothedRdf2dGraphConfig"]
                                     ) -> None:
         """plot the fitted graph alongside main data"""
-        fig_i, ax_i = self._plot_graphes(rdf, config, return_ax=True)
-        radii = np.array(list(self.rdf_2d.keys()))
-        densities = np.array(list(self.rdf_2d.values()))
+        fig_i, ax_i = self._plot_graphes(self.rdf_2d, config, return_ax=True)
+        radii = np.array(list(rdf.keys()))
+        densities = np.array(list(rdf.values()))
         ax_i.plot(radii,
                   densities,
                   marker=config.graph_style['marker'],
                   linestyle=config.graph_style['linestyle'],
-                  color='k',
-                  label=config.graph_legend_2,
-                  markersize=config.graph_style['unfit_markersize'],
+                  color='r',
+                  label=config.graph_2nd_legend,
+                  markersize=config.graph_style['2nd_marksize'],
                   zorder=1)
         plot_tools.save_close_fig(
             fig_i, ax_i, config.graph_suffix, loc='upper left')

@@ -21,7 +21,6 @@ for such data.
 from dataclasses import dataclass
 
 import numpy as np
-import matplotlib.pylab as plt
 from scipy.optimize import curve_fit
 from scipy.interpolate import interp1d
 
@@ -32,7 +31,7 @@ from common.colors_text import TextColor as bcolors
 @dataclass
 class FitConfigur:
     """parameters and sets for the fitting class"""
-    maxfev: int = 1500
+    maxfev: int = 3000
 
 
 class FitRdf2dTo5PL2S:
@@ -81,12 +80,6 @@ class FitRdf2dTo5PL2S:
         fitted_data: np.ndarray = self.fit_data(radii_interpolated,
                                                 rdf_interpolated,
                                                 initial_guesses)
-        plt.plot(radii, rdf_values, 'o', label='Original Data')
-        plt.plot(radii_interpolated, fitted_data, '-', label='Fitted Curve')
-        plt.xlabel('Radius')
-        plt.ylabel('RDF')
-        plt.legend()
-        plt.show()
         self.fitted_rdf = dict(zip(radii_interpolated, fitted_data))
 
     def initiate_data(self,

@@ -154,7 +154,7 @@ class SurfactantDensityPlotter:
         self.density = density_obj.density_per_region
         self.ave_density = density_obj.avg_density_per_region
         self.rdf_2d = density_obj.rdf_2d
-        self.fitted_rdf = density_obj.fitted_rdf
+        self.fitted_rdf = density_obj.rdf_2d_ma
 
         self.contact_data = density_obj.contact_data
         self.box = density_obj.box
@@ -208,7 +208,8 @@ class SurfactantDensityPlotter:
                   linestyle=config.graph_style['linestyle'],
                   color='r',
                   label=config.graph_legend_2,
-                  markersize=config.graph_style['unfit_markersize'])
+                  markersize=config.graph_style['unfit_markersize'],
+                  zorder=1)
         plot_tools.save_close_fig(fig_i, ax_i, config.graph_suffix)
         self.info_msg += \
             f'\tThe fitted graph saved: `{config.graph_suffix}`\n'

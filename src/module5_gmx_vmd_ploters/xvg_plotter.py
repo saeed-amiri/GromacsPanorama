@@ -1,5 +1,8 @@
-"""must be updated
-for PRE
+"""
+Plotting output files from GROMACS (xvg) or self prepared xvg files,
+output from vmd and also other simple data files.
+It should supprt multi files, and multi columns plotting.
+still thinking about the structures...
 """
 
 from dataclasses import dataclass, field

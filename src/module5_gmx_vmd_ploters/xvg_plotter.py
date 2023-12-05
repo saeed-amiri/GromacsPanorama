@@ -5,9 +5,10 @@ It should supprt multi files, and multi columns plotting.
 still thinking about the structures...
 """
 
+import sys
 from dataclasses import dataclass, field
 
-import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 from common import logger
@@ -30,9 +31,11 @@ class XvgBaseConfig:
 @dataclass
 class XvgPlotterConfig(XvgBaseConfig):
     """set the parameters"""
-    f_names: list[str] = field(default_factory=lambda: ['coord.xvg'])
+    f_names: list[str] = field(
+        default_factory=lambda: ['coord.xvg', 'coord_cp.xvg'])
     x_column: str = 'frame'
-    y_columns: list[str] = field(default_factory=lambda: ['COR_APT_Z'])
+    y_columns: list[str] = field(
+        default_factory=lambda: ['COR_APT_Z', 'COR_APT_X'])
 
 
 class PlotXvg:
@@ -53,14 +56,36 @@ class PlotXvg:
                       ) -> None:
         """check the data and return them in a pd.Dataframe"""
         self.file_existence(self.configs.f_names, log)
+        self.make_plot_df()
+
+    def make_plot_df(self) -> pd.DataFrame:
+        """make a data frame of the columns of a same x_data and
+        the same y_column name from different files"""
+        if (l_f := len(self.configs.f_names)) == 1:
+            columns: list[str] = [self.configs.x_column]
+            columns.extend(self.configs.y_columns)
+        elif l_f > 1:
+            if (l_y := len(self.configs.y_columns)) == 1:
+                columns = [self.configs.x_column]
+                columns.extend(
+                    f'{fname}-{self.configs.y_columns[0]}' for
+                    fname in self.configs.f_names)
+            elif l_y > 1:
+                for col in range(l_y):
+                    print(f'columns_{col}')
 
     @staticmethod
     def file_existence(f_names: list[str],
                        log: logger.logging.Logger
                        ) -> None:
         """check if the files exist"""
-        for fname in f_names:
-            my_tools.check_file_exist(fname, log)
+        if f_names:
+            for fname in f_names:
+                my_tools.check_file_exist(fname, log)
+        else:
+            log.error(
+                msg := '\n\tError!The list of the file names is empty!\n')
+            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}\n')
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

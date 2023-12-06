@@ -41,12 +41,11 @@ class XvgBaseConfig:
 class XvgPlotterConfig(XvgBaseConfig):
     """set the parameters"""
     f_names: list[str] = field(
-        default_factory=lambda: ['coord.xvg'])
+        default_factory=lambda: ['coord.xvg', 'coord_cp.xvg'])
     x_column_labels: dict[str, str] = \
         field(default_factory=lambda: {'Time_ps': 'time [ns]'})
     y_columns_labels: dict[str, str] = \
-        field(default_factory=lambda: {'COR_APT_Z': r'np$_{com,z}$',
-                                       'COR_APT_X': r'np$_{com,x}$'})
+        field(default_factory=lambda: {'COR_APT_Z': r'np$_{com,z}$'})
     x_column: str = field(init=False)
     y_columns: list[str] = field(init=False)
     subtract_initial: bool = True
@@ -85,11 +84,14 @@ class PlotXvg:
         num_y_cols: int = len(self.configs.y_columns)
         if num_files == 1:
             self._plot_single_file(dfs_plot)
+        elif num_files > 1:
+            if num_y_cols == 1:
+                self._plot_single_ycol_multi_file(dfs_plot)
 
     def _plot_single_file(self,
                           dfs_plot: list[pd.DataFrame]
                           ) -> None:
-        """plot and save figure when theere is only one file"""
+        """plot and save figure when there is only one file"""
         df_i: pd.DataFrame = dfs_plot[0]
         xrange: tuple[float, float] = (min(df_i[self.configs.x_column]),
                                        max(df_i[self.configs.x_column]))
@@ -105,6 +107,31 @@ class PlotXvg:
                       color=self.configs.line_colors[i])
         ax_i.set_xlabel(self.configs.x_axis_label)
         ax_i.set_ylabel(self.configs.y_axis_label)
+        ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
+        plot_tools.save_close_fig(fig_i, ax_i, fname=fout)
+        self.info_msg += (f'\tThe fig for {self.configs.f_names} is saved '
+                         f'with name {fout}\n')
+
+    def _plot_single_ycol_multi_file(self,
+                                     dfs_plot: list[pd.DataFrame]
+                                     ) -> None:
+        """
+        plot and save figure when there is multi files with one type
+        of data"""
+        df_i: pd.DataFrame = dfs_plot[0]
+        xrange: tuple[float, float] = (min(df_i[self.configs.x_column]),
+                                       max(df_i[self.configs.x_column]))
+        fig_i: plt.figure
+        ax_i: plt.axes
+        fig_i, ax_i = plot_tools.mk_canvas(xrange, height_ratio=(5**0.5-1)*1.8)
+        fout_prefix: str = '-'.join(
+            item.split('.', maxsplit=1)[0] for item in self.configs.f_names)
+        fout: str = f'{fout_prefix}-{self.configs.out_suffix}'
+        for i, col in enumerate(df_i.iloc[:, 1:]):
+            ax_i.plot(df_i[self.configs.x_column],
+                      df_i[col],
+                      label=self.configs.y_columns_labels[col.split('-')[0]],
+                      color=self.configs.line_colors[i])
         ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
         plot_tools.save_close_fig(fig_i, ax_i, fname=fout)
         self.info_msg += (f'\tThe fig for {self.configs.f_names} is saved '
@@ -194,11 +221,12 @@ class ProccessData:
         Subtract the initial value of specific columns from those
         columns.
         """
+        columns: list[str] = list(dfs_plot[0].columns)
         if self.configs.subtract_initial:
             updated_dfs = []
             for df_i in dfs_plot:
                 df_copy = df_i.copy()
-                for col in self.configs.y_columns:
+                for col in columns:
                     initial_value = df_copy[col].iloc[0]
                     df_copy[col] = df_copy[col] - initial_value
 
@@ -218,8 +246,13 @@ class ProccessData:
                                          ) -> list[pd.DataFrame]:
         """Process multiple files with a single y column."""
         y_col = self.configs.y_columns[0]
-        return pd.concat({f'{y_col}-{fname}': df[y_col] for
-                         fname, df in xvg_dict.items()}, axis=1)
+        df_f = pd.DataFrame()
+        for i, (fname, df_i) in enumerate(xvg_dict.items()):
+            if i == 0:
+                df_f[self.configs.x_column] = \
+                    df_i[self.configs.x_column].copy()
+            df_f[f'{y_col}-{fname.split(".")[0]}'] = df_i[y_col].copy()
+        return df_f
 
     def _process_multi_ycol_multi_files(self,
                                         xvg_dict: dict[str, pd.DataFrame]

@@ -48,12 +48,12 @@ class PlotXvg:
                  configs: "XvgPlotterConfig" = XvgPlotterConfig()
                  ) -> None:
         self.configs = configs
-        self.initiate_data(log)
+        self.initiate_plots(log)
         self._write_msg(log)
 
-    def initiate_data(self,
-                      log: logger.logging.Logger
-                      ) -> None:
+    def initiate_plots(self,
+                       log: logger.logging.Logger
+                       ) -> None:
         """check the data and return them in a pd.Dataframe"""
         dfs_plot: list[pd.DataFrame] = ProccessData(self.configs, log).dfs_plot
 
@@ -101,23 +101,23 @@ class ProccessData:
                      ) -> list[pd.DataFrame]:
         """make a data frame of the columns of a same x_data and
         the same y_column name from different files"""
-        df_plot: list[pd.DataFrame]
-        if (l_f := len(self.configs.f_names)) == 1:
-            df_plot = self._process_single_file(xvg_dict)
-        elif l_f > 1:
-            if (l_y := len(self.configs.y_columns)) == 1:
-                df_plot = \
-                    self._process_single_ycol_multi_files(xvg_dict)
-            elif l_y > 1:
-                df_plot = \
-                    self._process_multi_ycol_multi_files(xvg_dict)
-            else:
-                log.error(msg := '\n\tError! The y coolumns is not set\n')
-                sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+        num_files = len(self.configs.f_names)
+        num_y_cols = len(self.configs.y_columns)
         self.info_msg += (
             f'\tThe xvg files are:\n\t\t`{self.configs.f_names}`\n'
             f'\tThe y columns are:\n\t\t`{self.configs.y_columns}`')
-        return df_plot
+
+        if num_files == 1:
+            return [self._process_single_file(xvg_dict)]
+
+        if num_files > 1:
+            if num_y_cols == 1:
+                return [self._process_single_ycol_multi_files(xvg_dict)]
+            if num_y_cols > 1:
+                return self._process_multi_ycol_multi_files(xvg_dict)
+
+        log.error(msg := '\n\tError! The y columns are not set\n')
+        sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
 
     def _process_single_file(self,
                              xvg_dict: dict[str, pd.DataFrame]
@@ -131,10 +131,8 @@ class ProccessData:
                                          ) -> list[pd.DataFrame]:
         """Process multiple files with a single y column."""
         y_col = self.configs.y_columns[0]
-        df_f = pd.DataFrame()
-        for fname, df_i in xvg_dict.items():
-            df_f[f'{y_col}-{fname}'] = df_i[y_col]
-        return df_f
+        return pd.concat({f'{y_col}-{fname}': df[y_col] for \
+                         fname, df in xvg_dict.items()}, axis=1)
 
     def _process_multi_ycol_multi_files(self,
                                         xvg_dict: dict[str, pd.DataFrame]

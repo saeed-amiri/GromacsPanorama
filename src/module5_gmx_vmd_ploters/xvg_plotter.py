@@ -84,7 +84,6 @@ class ProccessData:
                      log: logger.logging.Logger
                      ) -> list[pd.DataFrame]:
         """proccess all the xvg files"""
-        # self.file_existence(self.configs.f_names, log)
         xvg_dict: dict[str, pd.DataFrame] = self.get_all_xvg(log)
         return self.make_plot_df(xvg_dict, log)
 
@@ -147,19 +146,6 @@ class ProccessData:
                 col for col in df_f.columns]
             dfs.append(df_f)
         return dfs
-
-    @staticmethod
-    def file_existence(f_names: list[str],
-                       log: logger.logging.Logger
-                       ) -> None:
-        """check if the files exist"""
-        if f_names:
-            for fname in f_names:
-                my_tools.check_file_exist(fname, log)
-        else:
-            log.error(
-                msg := '\n\tError!The list of the file names is empty!\n')
-            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}\n')
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

@@ -33,7 +33,7 @@ class XvgPlotterConfig(XvgBaseConfig):
     """set the parameters"""
     f_names: list[str] = field(
         default_factory=lambda: ['coord.xvg', 'coord_cp.xvg'])
-    x_column: str = 'frame'
+    x_column: str = 'Time_ps'
     y_columns: list[str] = field(
         default_factory=lambda: ['COR_APT_Z', 'COR_APT_X'])
 
@@ -55,24 +55,100 @@ class PlotXvg:
                       log: logger.logging.Logger
                       ) -> None:
         """check the data and return them in a pd.Dataframe"""
-        self.file_existence(self.configs.f_names, log)
-        self.make_plot_df()
+        dfs_plot: list[pd.DataFrame] = ProccessData(self.configs, log).dfs_plot
 
-    def make_plot_df(self) -> pd.DataFrame:
+    def _write_msg(self,
+                   log: logger.logging.Logger  # To log
+                   ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
+class ProccessData:
+    """process data based on the number of files and columns"""
+
+    info_msg: str = 'Messeges from ProccessData:\n'
+    dfs_plot: list[pd.DataFrame]
+
+    def __init__(self,
+                 configs: "XvgPlotterConfig",
+                 log: logger.logging.Logger
+                 ) -> None:
+        self.configs: "XvgPlotterConfig" = configs
+        self.dfs_plot = self.process_data(log)
+        self._write_msg(log)
+
+    def process_data(self,
+                     log: logger.logging.Logger
+                     ) -> list[pd.DataFrame]:
+        """proccess all the xvg files"""
+        # self.file_existence(self.configs.f_names, log)
+        xvg_dict: dict[str, pd.DataFrame] = self.get_all_xvg(log)
+        return self.make_plot_df(xvg_dict, log)
+
+    def get_all_xvg(self,
+                    log: logger.logging.Logger
+                    ) -> dict[str, pd.DataFrame]:
+        """retrun a dict of all the xvg dataframes"""
+        return {fname: xvg.XvgParser(fname, log).xvg_df for
+                fname in self.configs.f_names}
+
+    def make_plot_df(self,
+                     xvg_dict: dict[str, pd.DataFrame],
+                     log: logger.logging.Logger
+                     ) -> list[pd.DataFrame]:
         """make a data frame of the columns of a same x_data and
         the same y_column name from different files"""
+        df_plot: list[pd.DataFrame]
         if (l_f := len(self.configs.f_names)) == 1:
-            columns: list[str] = [self.configs.x_column]
-            columns.extend(self.configs.y_columns)
+            df_plot = self._process_single_file(xvg_dict)
         elif l_f > 1:
             if (l_y := len(self.configs.y_columns)) == 1:
-                columns = [self.configs.x_column]
-                columns.extend(
-                    f'{fname}-{self.configs.y_columns[0]}' for
-                    fname in self.configs.f_names)
+                df_plot = \
+                    self._process_single_ycol_multi_files(xvg_dict)
             elif l_y > 1:
-                for col in range(l_y):
-                    print(f'columns_{col}')
+                df_plot = \
+                    self._process_multi_ycol_multi_files(xvg_dict)
+            else:
+                log.error(msg := '\n\tError! The y coolumns is not set\n')
+                sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+        self.info_msg += (
+            f'\tThe xvg files are:\n\t\t`{self.configs.f_names}`\n'
+            f'\tThe y columns are:\n\t\t`{self.configs.y_columns}`')
+        return df_plot
+
+    def _process_single_file(self,
+                             xvg_dict: dict[str, pd.DataFrame]
+                             ) -> list[pd.DataFrame]:
+        """Process a single file."""
+        df_f = pd.concat(xvg_dict.values(), ignore_index=True)
+        return df_f[[self.configs.x_column] + self.configs.y_columns]
+
+    def _process_single_ycol_multi_files(self,
+                                         xvg_dict: dict[str, pd.DataFrame]
+                                         ) -> list[pd.DataFrame]:
+        """Process multiple files with a single y column."""
+        y_col = self.configs.y_columns[0]
+        df_f = pd.DataFrame()
+        for fname, df_i in xvg_dict.items():
+            df_f[f'{y_col}-{fname}'] = df_i[y_col]
+        return df_f
+
+    def _process_multi_ycol_multi_files(self,
+                                        xvg_dict: dict[str, pd.DataFrame]
+                                        ) -> list[pd.DataFrame]:
+        """Process multiple files with multiple y columns."""
+        dfs: list[pd.DataFrame] = []
+        for fname, df_i in xvg_dict.items():
+            df_f: pd.DataFrame = \
+                df_i[[self.configs.x_column] + self.configs.y_columns].copy()
+            df_f.columns = [
+                f'{col}-{fname}' if col != self.configs.x_column else
+                col for col in df_f.columns]
+            dfs.append(df_f)
+        return dfs
 
     @staticmethod
     def file_existence(f_names: list[str],

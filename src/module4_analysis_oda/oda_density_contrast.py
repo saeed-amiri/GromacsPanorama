@@ -29,6 +29,12 @@ class InputFilesConfig:
 
 
 DataArrays = namedtuple('DataArrays', ['contact_radius', 'np_com', 'box'])
+NumberDensity = namedtuple('NumberDensity', [
+                           'nr_oda_in_zone',
+                           'dens_oda_in_zone',
+                           'nr_oda_out_zone',
+                           'dens_oda_out_zone']
+                           )
 
 
 class SurfactantsLocalizedDensityContrast:
@@ -41,6 +47,7 @@ class SurfactantsLocalizedDensityContrast:
     amino_arr: pd.DataFrame  # Amino heads location
     input_config: "InputFilesConfig"
     data_arrays: "DataArrays"  # Loaded data
+    number_density: "NumberDensity"  # Number and density in the system
 
     def __init__(self,
                  amino_arr: np.ndarray,  # amino head com of the oda
@@ -57,19 +64,51 @@ class SurfactantsLocalizedDensityContrast:
         """Initiate the calculation by checking necessary files."""
         self.data_arrays = \
             self.initialize_data_arrays(*self.load_data(log), log)
-        self.initialize_calculation()
+        self.number_density = self.initialize_calculation()
 
-    def initialize_calculation(self) -> None:
+    def initialize_calculation(self) -> "NumberDensity":
         """initiate the the calculations"""
-        oda_in_zone: np.ndarray = self.get_oda_in_zone()
+        nr_oda_in_zone: np.ndarray
+        dens_oda_in_zone: np.ndarray
+        nr_oda_out_zone: np.ndarray
+        dens_oda_out_zone: np.ndarray
+        nr_oda_in_zone, dens_oda_in_zone = self.get_oda_in_zone()
+        nr_oda_out_zone, dens_oda_out_zone = \
+            self.get_oda_out_zone(nr_oda_in_zone)
+        return NumberDensity(nr_oda_in_zone,
+                             dens_oda_in_zone,
+                             nr_oda_out_zone,
+                             dens_oda_out_zone)
 
     def get_oda_in_zone(self) -> np.ndarray:
         """return the numbers of oda on the contact area at each frame"""
-        oda_in_zone_dict: dict[int, int] = {}
+        oda_nr_in_zone_dict: dict[int, int] = {}
+        oda_dens_in_zone_dict: dict[int, int] = {}
         for i, frame_i in enumerate(self.amino_arr):
+            contact_radius: float = self.data_arrays.contact_radius[i]
             oda_frame = self.apply_pbc_distance(i, frame_i.reshape(-1, 3))
-            oda_in_zone_dict[i] = self.get_oda_nr_in_np_zone(i, oda_frame)
-        return np.array(list(oda_in_zone_dict.items()))
+            oda_nr_in_zone_dict[i] = \
+                self.get_oda_nr_in_np_zone(i, oda_frame, contact_radius)
+            oda_dens_in_zone_dict[i] = \
+                self.get_oda_density_in_zone(oda_nr_in_zone_dict[i],
+                                             contact_radius)
+        number_in_zone = \
+            np.array(list(oda_nr_in_zone_dict.values()), dtype=float)
+        density_in_zone = \
+            np.array(list(oda_dens_in_zone_dict.values()), dtype=float)
+        return number_in_zone, density_in_zone
+
+    def get_oda_out_zone(self,
+                         nr_oda_in_zone: np.ndarray
+                         ) -> tuple[np.ndarray, np.ndarray]:
+        """calculate the number and density outside the contact zone"""
+        totat_nr: int = self.amino_arr[0].reshape(-1, 3).shape[0]
+        nr_oda_out_zone: np.ndarray = totat_nr - nr_oda_in_zone
+        area: np.ndarray = (self.data_arrays.box[:, 0] *
+                            self.data_arrays.box[:, 1] -
+                            np.pi*self.data_arrays.contact_radius)
+        dens_oda_out_zone: np.ndarray = nr_oda_out_zone / (area)
+        return nr_oda_out_zone, dens_oda_out_zone
 
     def apply_pbc_distance(self,
                            frame_index: int,
@@ -85,17 +124,24 @@ class SurfactantsLocalizedDensityContrast:
         return arr_pbc
 
     def get_oda_nr_in_np_zone(self,
-                               frame_index: int,
-                               arr: np.ndarray
-                               ) -> int:
+                              frame_index: int,
+                              arr: np.ndarray,
+                              contact_radius: float
+                              ) -> int:
         """find the numbers of the oda in the area of contact radius"""
-        contact_radius: float = self.data_arrays.contact_radius[frame_index]
         np_com: np.ndarray = self.data_arrays.np_com[frame_index]
         dx_i: np.ndarray = arr[:, 0] - np_com[0]
         dy_i: np.ndarray = arr[:, 1] - np_com[1]
         distances: np.ndarray = np.sqrt(dx_i*dx_i + dy_i*dy_i)
         mask = distances < contact_radius
         return len(arr[mask])
+
+    @staticmethod
+    def get_oda_density_in_zone(oda_in_zone: int,
+                                contact_radius: float
+                                ) -> float:
+        """return density of the oda in contact area"""
+        return oda_in_zone / (np.pi*contact_radius**2)
 
     def load_data(self,
                   log: logger.logging.Logger

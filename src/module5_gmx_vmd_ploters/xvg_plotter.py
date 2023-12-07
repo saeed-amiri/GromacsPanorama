@@ -20,13 +20,15 @@ from common.colors_text import TextColor as bcolors
 @dataclass
 class XvgBaseConfig:
     """Patameters for the plotting the xvg files"""
-    f_names: list[str]  # Names of the xvg files
     x_column_labels: dict[str, str]
     y_columns_labels: dict[str, str]
+    f_names_labels: dict[str, str]
     x_column: str  # Name of the x data
+    f_names: list[str]  # Names of the xvg files
     y_columns: list[str]  # Names of the second columns to plots
+    title: str  # Title of the graph
     x_axis_label: str = 'frame index'
-    y_axis_label: str = r'$\Delta$X'
+    y_axis_label: str = r'$\Delta$X [A]'
     out_suffix: str = 'xvg.png'  # Suffix for the output file
     line_colors: list[str] = \
         field(default_factory=lambda: ['k', 'r', 'b', 'g', 'y'])
@@ -40,12 +42,16 @@ class XvgBaseConfig:
 @dataclass
 class XvgPlotterConfig(XvgBaseConfig):
     """set the parameters"""
-    f_names: list[str] = field(
-        default_factory=lambda: ['coord.xvg', 'coord_cp.xvg'])
+    f_names_labels: list[str] = field(
+        default_factory=lambda: {'298.xvg': '298 K', '315.xvg': '315 K'})
     x_column_labels: dict[str, str] = \
         field(default_factory=lambda: {'Time_ps': 'time [ns]'})
     y_columns_labels: dict[str, str] = \
         field(default_factory=lambda: {'COR_APT_Z': r'np$_{com,z}$'})
+    x_axis_label: str = 'time [ns]'
+    y_axis_label: str = r'$\Delta$com$_{z}$ [A]'
+    title: str = 'Oda200'
+    f_names: list[str] = field(init=False)
     x_column: str = field(init=False)
     y_columns: list[str] = field(init=False)
     subtract_initial: bool = True
@@ -54,6 +60,7 @@ class XvgPlotterConfig(XvgBaseConfig):
     def __post_init__(self):
         self.x_column = list(self.x_column_labels.keys())[0]
         self.y_columns = list(self.y_columns_labels.keys())
+        self.f_names = list(self.f_names_labels.keys())
 
 
 class PlotXvg:
@@ -86,7 +93,7 @@ class PlotXvg:
             self._plot_single_file(dfs_plot)
         elif num_files > 1:
             if num_y_cols == 1:
-                self._plot_single_ycol_multi_file(dfs_plot)
+                self._plot_single_ycol_multi_files(dfs_plot)
 
     def _plot_single_file(self,
                           dfs_plot: list[pd.DataFrame]
@@ -112,9 +119,9 @@ class PlotXvg:
         self.info_msg += (f'\tThe fig for {self.configs.f_names} is saved '
                          f'with name {fout}\n')
 
-    def _plot_single_ycol_multi_file(self,
-                                     dfs_plot: list[pd.DataFrame]
-                                     ) -> None:
+    def _plot_single_ycol_multi_files(self,
+                                      dfs_plot: list[pd.DataFrame]
+                                      ) -> None:
         """
         plot and save figure when there is multi files with one type
         of data"""
@@ -126,14 +133,19 @@ class PlotXvg:
         fig_i, ax_i = plot_tools.mk_canvas(xrange, height_ratio=(5**0.5-1)*1.8)
         fout_prefix: str = '-'.join(
             item.split('.', maxsplit=1)[0] for item in self.configs.f_names)
+        fout_prefix += f'-{self.configs.title}'
         fout: str = f'{fout_prefix}-{self.configs.out_suffix}'
         for i, col in enumerate(df_i.iloc[:, 1:]):
+            fname: str = col.split('-', maxsplit=1)[1] + '.xvg'
             ax_i.plot(df_i[self.configs.x_column],
                       df_i[col],
-                      label=self.configs.y_columns_labels[col.split('-')[0]],
+                      label=self.configs.f_names_labels[fname],
                       color=self.configs.line_colors[i])
+        ax_i.set_xlabel(self.configs.x_axis_label)
+        ax_i.set_ylabel(self.configs.y_axis_label)
+        ax_i.set_title(self.configs.title)
         ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
-        plot_tools.save_close_fig(fig_i, ax_i, fname=fout)
+        plot_tools.save_close_fig(fig_i, ax_i, fname=fout, loc='lower left')
         self.info_msg += (f'\tThe fig for {self.configs.f_names} is saved '
                          f'with name {fout}\n')
 

@@ -55,7 +55,6 @@ class SurfactantsLocalizedDensityContrast:
                                    log: logger.logging.Logger
                                    ) -> None:
         """Initiate the calculation by checking necessary files."""
-        self.check_input_files(log, self.input_config)
         self.data_arrays = \
             self.initialize_data_arrays(*self.load_data(log), log)
 
@@ -63,6 +62,7 @@ class SurfactantsLocalizedDensityContrast:
                   log: logger.logging.Logger
                   ) -> tuple[pd.DataFrame, ...]:
         """load the data in the config"""
+        self.check_input_files(log, self.input_config)
         contact_data: pd.DataFrame = self.load_contact_data(log)
         np_com_df: pd.DataFrame = self.load_np_com_data(log)
         box_df: pd.DataFrame = self.load_box_data(log)

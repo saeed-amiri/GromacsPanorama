@@ -40,6 +40,7 @@ class SurfactantsLocalizedDensityContrast:
     info_msg: str = 'Messeges from SurfactantsLocalizedDensityContrast:\n'
     amino_arr: pd.DataFrame  # Amino heads location
     input_config: "InputFilesConfig"
+    data_arrays: "DataArrays"  # Loaded data
 
     def __init__(self,
                  amino_arr: np.ndarray,  # amino head com of the oda
@@ -55,12 +56,17 @@ class SurfactantsLocalizedDensityContrast:
                                    ) -> None:
         """Initiate the calculation by checking necessary files."""
         self.check_input_files(log, self.input_config)
+        self.data_arrays = \
+            self.initialize_data_arrays(*self.load_data(log), log)
 
+    def load_data(self,
+                  log: logger.logging.Logger
+                  ) -> tuple[pd.DataFrame, ...]:
+        """load the data in the config"""
         contact_data: pd.DataFrame = self.load_contact_data(log)
         np_com_df: pd.DataFrame = self.load_np_com_data(log)
         box_df: pd.DataFrame = self.load_box_data(log)
-        self.data_arrays: "DataArrays" = \
-            self.initialize_data_arrays(contact_data, np_com_df, box_df, log)
+        return contact_data, np_com_df, box_df
 
     def load_contact_data(self, log: logger.logging.Logger) -> pd.DataFrame:
         """Load and return the contact data from XVG file."""

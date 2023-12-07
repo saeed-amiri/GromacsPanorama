@@ -48,11 +48,11 @@ class SurfactantsLocalizedDensityContrast:
                  ) -> None:
         self.input_config = input_configs
         self.amino_arr = amino_arr[:-2]
-        self._initiate(log)
+        self._prepare_data_and_analysis(log)
 
-    def _initiate(self,
-                  log: logger.logging.Logger
-                  ) -> None:
+    def _prepare_data_and_analysis(self,
+                                   log: logger.logging.Logger
+                                   ) -> None:
         """Initiate the calculation by checking necessary files."""
         self.check_input_files(log, self.input_config)
 

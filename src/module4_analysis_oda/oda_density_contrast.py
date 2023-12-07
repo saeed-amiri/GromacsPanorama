@@ -68,7 +68,7 @@ class SurfactantsLocalizedDensityContrast:
         oda_in_zone_dict: dict[int, int] = {}
         for i, frame_i in enumerate(self.amino_arr):
             oda_frame = self.apply_pbc_distance(i, frame_i.reshape(-1, 3))
-            oda_in_zone_dict[i] = self.get_density_in_np_zone(i, oda_frame)
+            oda_in_zone_dict[i] = self.get_oda_nr_in_np_zone(i, oda_frame)
         return np.array(list(oda_in_zone_dict.items()))
 
     def apply_pbc_distance(self,
@@ -84,7 +84,7 @@ class SurfactantsLocalizedDensityContrast:
             arr_pbc[:, i] = dx_i - (box[i] * np.round(dx_i/box[i]))
         return arr_pbc
 
-    def get_density_in_np_zone(self,
+    def get_oda_nr_in_np_zone(self,
                                frame_index: int,
                                arr: np.ndarray
                                ) -> int:

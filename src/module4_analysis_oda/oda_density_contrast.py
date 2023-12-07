@@ -57,6 +57,45 @@ class SurfactantsLocalizedDensityContrast:
         """Initiate the calculation by checking necessary files."""
         self.data_arrays = \
             self.initialize_data_arrays(*self.load_data(log), log)
+        self.initialize_calculation()
+
+    def initialize_calculation(self) -> None:
+        """initiate the the calculations"""
+        oda_in_zone: np.ndarray = self.get_oda_in_zone()
+
+    def get_oda_in_zone(self) -> np.ndarray:
+        """return the numbers of oda on the contact area at each frame"""
+        oda_in_zone_dict: dict[int, int] = {}
+        for i, frame_i in enumerate(self.amino_arr):
+            oda_frame = self.apply_pbc_distance(i, frame_i.reshape(-1, 3))
+            oda_in_zone_dict[i] = self.get_density_in_np_zone(i, oda_frame)
+        return np.array(list(oda_in_zone_dict.items()))
+
+    def apply_pbc_distance(self,
+                           frame_index: int,
+                           arr: np.ndarray
+                           ) -> np.ndarray:
+        """apply pbc to all the oda with np as refrence"""
+        np_com: np.ndarray = self.data_arrays.np_com[frame_index]
+        box: np.ndarray = self.data_arrays.box[frame_index]
+        arr_pbc: np.ndarray = np.zeros(arr.shape)
+        for i in range(arr.shape[1]):
+            dx_i = arr[:, i] - np_com[i]
+            arr_pbc[:, i] = dx_i - (box[i] * np.round(dx_i/box[i]))
+        return arr_pbc
+
+    def get_density_in_np_zone(self,
+                               frame_index: int,
+                               arr: np.ndarray
+                               ) -> int:
+        """find the numbers of the oda in the area of contact radius"""
+        contact_radius: float = self.data_arrays.contact_radius[frame_index]
+        np_com: np.ndarray = self.data_arrays.np_com[frame_index]
+        dx_i: np.ndarray = arr[:, 0] - np_com[0]
+        dy_i: np.ndarray = arr[:, 1] - np_com[1]
+        distances: np.ndarray = np.sqrt(dx_i*dx_i + dy_i*dy_i)
+        mask = distances < contact_radius
+        return len(arr[mask])
 
     def load_data(self,
                   log: logger.logging.Logger

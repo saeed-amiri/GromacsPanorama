@@ -8,6 +8,8 @@ insights into the distribution and aggregation of surfactants in
 different zones.
 """
 
+import os
+import warnings
 from dataclasses import dataclass
 from collections import namedtuple
 
@@ -65,6 +67,8 @@ class SurfactantsLocalizedDensityContrast:
         self.data_arrays = \
             self.initialize_data_arrays(*self.load_data(log), log)
         self.number_density = self.initialize_calculation()
+        density_df: pd.DataFrame = self.mk_df()
+        self.write_xvg(density_df, log, fname='contrast.xvg')
 
     def initialize_calculation(self) -> "NumberDensity":
         """initiate the the calculations"""
@@ -72,43 +76,119 @@ class SurfactantsLocalizedDensityContrast:
         dens_oda_in_zone: np.ndarray
         nr_oda_out_zone: np.ndarray
         dens_oda_out_zone: np.ndarray
-        nr_oda_in_zone, dens_oda_in_zone = self.get_oda_in_zone()
-        nr_oda_out_zone, dens_oda_out_zone = \
-            self.get_oda_out_zone(nr_oda_in_zone)
+        nr_oda_in_zone, dens_oda_in_zone, \
+            nr_oda_out_zone, dens_oda_out_zone = self.get_oda_in_zone()
         return NumberDensity(nr_oda_in_zone,
                              dens_oda_in_zone,
                              nr_oda_out_zone,
                              dens_oda_out_zone)
 
-    def get_oda_in_zone(self) -> np.ndarray:
+    def mk_df(self) -> pd.DataFrame:
+        """make a df with everthing in it"""
+        columns: list[str] = ['contact_radius',
+                              'nr_oda_in_zone',
+                              'dens_oda_in_zone',
+                              'nr_oda_out_zone',
+                              'dens_oda_out_zone']
+
+        if len(self.data_arrays.contact_radius) == \
+            len(self.number_density.nr_oda_in_zone) == \
+                len(self.number_density.dens_oda_in_zone):
+            data = {
+                'contact_radius': self.data_arrays.contact_radius.ravel(),
+                'nr_oda_in_zone': self.number_density.nr_oda_in_zone.ravel(),
+                'dens_oda_in_zone':
+                    self.number_density.dens_oda_in_zone.ravel(),
+                'nr_oda_out_zone': self.number_density.nr_oda_out_zone.ravel(),
+                'dens_oda_out_zone':
+                    self.number_density.dens_oda_out_zone.ravel(),
+            }
+            df_i = pd.DataFrame(data, columns=columns)
+            return df_i
+        raise ValueError("Lengths of input arrays do not match.")
+
+    def write_xvg(self,
+                  df_i: pd.DataFrame,
+                  log: logger.logging.Logger,
+                  fname: str = 'df.xvg'
+                  ) -> None:
+        """
+        Write the data into xvg format
+        Raises:
+            ValueError: If the DataFrame has no columns.
+        """
+        if df_i.columns.empty:
+            log.error(msg := "\tThe DataFrame has no columns.\n")
+            raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}\n')
+        if df_i.empty:
+            log.warning(
+                msg := f"The df is empty. `{fname}` will not contain data.")
+            warnings.warn(msg, UserWarning)
+
+        columns: list[str] = df_i.columns.to_list()
+
+        header_lines: list[str] = [
+            f'# Written by {self.__module__}',
+            f"# Current directory: {os.getcwd()}",
+            '@   title "Contact information"',
+            '@   xaxis label "Frame index"',
+            '@   yaxis label "Varies"',
+            '@TYPE xy',
+            '@ view 0.15, 0.15, 0.75, 0.85',
+            '@legend on',
+            '@ legend box on',
+            '@ legend loctype view',
+            '@ legend 0.78, 0.8',
+            '@ legend length 2'
+        ]
+        legend_lines: list[str] = \
+            [f'@ s{i} legend "{col}"' for i, col in enumerate(df_i.columns)]
+
+        with open(fname, 'w', encoding='utf8') as f_w:
+            for line in header_lines + legend_lines:
+                f_w.write(line + '\n')
+            df_i.to_csv(f_w, sep=' ', index=True, header=None, na_rep='NaN')
+
+        self.info_msg += (f'\tThe dataframe saved to `{fname}` '
+                          f'with columns:\n\t`{columns}`\n')
+
+    def get_oda_in_zone(self) -> tuple[np.ndarray, ...]:
         """return the numbers of oda on the contact area at each frame"""
         oda_nr_in_zone_dict: dict[int, int] = {}
-        oda_dens_in_zone_dict: dict[int, int] = {}
+        oda_dens_in_zone_dict: dict[int, float] = {}
+        oda_nr_out_zone_dict: dict[int, int] = {}
+        oda_dens_out_zone_dict: dict[int, float] = {}
         for i, frame_i in enumerate(self.amino_arr):
             contact_radius: float = self.data_arrays.contact_radius[i]
             oda_frame = self.apply_pbc_distance(i, frame_i.reshape(-1, 3))
-            oda_nr_in_zone_dict[i] = \
-                self.get_oda_nr_in_np_zone(i, oda_frame, contact_radius)
+            oda_nr_in_zone_dict[i], oda_nr_out_zone_dict[i] = \
+                self.get_oda_nr_in_out_zone(i, oda_frame, contact_radius)
             oda_dens_in_zone_dict[i] = \
                 self.get_oda_density_in_zone(oda_nr_in_zone_dict[i],
                                              contact_radius)
+            oda_dens_out_zone_dict[i] = \
+                self.get_oda_dens_out_zone(i, oda_nr_in_zone_dict[i])
         number_in_zone = \
             np.array(list(oda_nr_in_zone_dict.values()), dtype=float)
         density_in_zone = \
             np.array(list(oda_dens_in_zone_dict.values()), dtype=float)
-        return number_in_zone, density_in_zone
+        number_out_zone = \
+            np.array(list(oda_nr_out_zone_dict.values()), dtype=float)
+        density_out_zone = \
+            np.array(list(oda_dens_out_zone_dict.values()), dtype=float)
+        return \
+            number_in_zone, density_in_zone, number_out_zone, density_out_zone
 
-    def get_oda_out_zone(self,
-                         nr_oda_in_zone: np.ndarray
-                         ) -> tuple[np.ndarray, np.ndarray]:
+    def get_oda_dens_out_zone(self,
+                              frame_index: int,
+                              nr_oda_out_zone: int
+                              ) -> float:
         """calculate the number and density outside the contact zone"""
-        totat_nr: int = self.amino_arr[0].reshape(-1, 3).shape[0]
-        nr_oda_out_zone: np.ndarray = totat_nr - nr_oda_in_zone
-        area: np.ndarray = (self.data_arrays.box[:, 0] *
-                            self.data_arrays.box[:, 1] -
-                            np.pi*self.data_arrays.contact_radius)
-        dens_oda_out_zone: np.ndarray = nr_oda_out_zone / (area)
-        return nr_oda_out_zone, dens_oda_out_zone
+        area: float = (self.data_arrays.box[frame_index, 0] *
+                       self.data_arrays.box[frame_index, 1] -
+                       np.pi*self.data_arrays.contact_radius[frame_index])
+        dens_oda_out_zone: float = nr_oda_out_zone / area
+        return dens_oda_out_zone
 
     def apply_pbc_distance(self,
                            frame_index: int,
@@ -123,18 +203,18 @@ class SurfactantsLocalizedDensityContrast:
             arr_pbc[:, i] = dx_i - (box[i] * np.round(dx_i/box[i]))
         return arr_pbc
 
-    def get_oda_nr_in_np_zone(self,
-                              frame_index: int,
-                              arr: np.ndarray,
-                              contact_radius: float
-                              ) -> int:
+    def get_oda_nr_in_out_zone(self,
+                               frame_index: int,
+                               arr: np.ndarray,
+                               contact_radius: float
+                               ) -> tuple[int, int]:
         """find the numbers of the oda in the area of contact radius"""
         np_com: np.ndarray = self.data_arrays.np_com[frame_index]
         dx_i: np.ndarray = arr[:, 0] - np_com[0]
         dy_i: np.ndarray = arr[:, 1] - np_com[1]
         distances: np.ndarray = np.sqrt(dx_i*dx_i + dy_i*dy_i)
         mask = distances < contact_radius
-        return len(arr[mask])
+        return len(arr[mask]), len(arr)-len(arr[mask])
 
     @staticmethod
     def get_oda_density_in_zone(oda_in_zone: int,

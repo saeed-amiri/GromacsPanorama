@@ -23,6 +23,7 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.optimize import curve_fit
 from scipy.interpolate import interp1d
+from scipy.signal import savgol_filter
 
 from common import logger
 from common.colors_text import TextColor as bcolors
@@ -32,6 +33,8 @@ from common.colors_text import TextColor as bcolors
 class FitConfigur:
     """parameters and sets for the fitting class"""
     maxfev: int = 3000
+    response_zero: float = 0
+    response_infinite: float = 1
 
 
 class FitRdf2dTo5PL2S:
@@ -67,14 +70,13 @@ class FitRdf2dTo5PL2S:
 
         radii, rdf_values = self.initiate_data(rdf_2d)
         radii_interpolated, rdf_interpolated = \
-            self.initiate_interpolation(radii, rdf_values)
+            self.interpolation_smoothing(radii, rdf_values)
         first_derivative, second_derivative = \
             self.initiate_derivative(radii_interpolated, rdf_interpolated)
         curvature: np.ndarray = \
             self.initiate_curvature(first_derivative, second_derivative)
         initial_guesses: list[float] = \
             self.set_initial_guess(radii_interpolated,
-                                   rdf_values,
                                    second_derivative,
                                    curvature)
         fitted_data: np.ndarray = self.fit_data(radii_interpolated,
@@ -92,12 +94,10 @@ class FitRdf2dTo5PL2S:
 
     def set_initial_guess(self,
                           radii_interpolated,
-                          rdf_values,
                           second_derivative,
                           curvature
                           ) -> list[float]:
         """set the initial guesses for the fitting"""
-        a_initial_guess: float = max(rdf_values)
 
         inflection_point_index: np.int64 = np.argmin(second_derivative)
         c_initial_guess: float = \
@@ -106,16 +106,11 @@ class FitRdf2dTo5PL2S:
         eta_initial_guess: float = \
             float(np.abs(np.min(curvature)/np.max(curvature)))
 
-        d_initial_guess: float = 0
         mu_initial_guess: float = 1.0
-        initial_guesses = [a_initial_guess,
-                           d_initial_guess,
-                           c_initial_guess,
+        initial_guesses = [c_initial_guess,
                            mu_initial_guess,
                            eta_initial_guess]
         self.info_msg += ('\tinitial guesses:\n'
-                          f'\t\ta {a_initial_guess:.3f}\n'
-                          f'\t\td {d_initial_guess:.3f}\n'
                           f'\t\tc {c_initial_guess:.3f}\n'
                           f'\t\tmu {mu_initial_guess:.3f}\n'
                           f'\t\teta {eta_initial_guess:.3f}\n'
@@ -133,17 +128,23 @@ class FitRdf2dTo5PL2S:
                             rdf_interpolated,
                             p0=initial_guesses,
                             maxfev=self.config.maxfev)
+        self.info_msg += ('\tfitted constants:\n'
+                          f'\t\tc {popt[0]:.3f}\n'
+                          f'\t\tmu {popt[1]:.3f}\n'
+                          f'\t\teta {popt[2]:.3f}\n'
+                          )
         return self.logistic_5pl2s(radii_interpolated, *popt)
 
     @staticmethod
-    def initiate_interpolation(radii: np.ndarray,
-                               rdf_values: np.ndarray
-                               ) -> tuple[np.ndarray, ...]:
-        """calculatet the interploations"""
-        radii_interpolated = np.linspace(radii.min(), radii.max(), 500)
-        interpolation = interp1d(radii, rdf_values, kind='cubic')
-        rdf_interpolated = interpolation(radii_interpolated)
-        return radii_interpolated, rdf_interpolated
+    def interpolation_smoothing(radii: np.ndarray,
+                                rdf_values: np.ndarray
+                                ) -> tuple[np.ndarray, ...]:
+        """calculatet the interploations and smoothing the rdf"""
+        radii_interpolated = np.linspace(radii.min(), radii.max(), 1000)
+        itp = interp1d(radii, rdf_values, kind='cubic')
+        window_size, poly_order = 100, 3
+        yy_sg = savgol_filter(itp(radii_interpolated), window_size, poly_order)
+        return radii_interpolated, yy_sg
 
     @staticmethod
     def initiate_derivative(xdata,
@@ -161,21 +162,18 @@ class FitRdf2dTo5PL2S:
         """calculate the cuvature"""
         return second_derivative / (1 + first_derivative**2)**(1.5)
 
-    @staticmethod
-    def logistic_5pl2s(y_data,
-                       a_init_guess: float,
-                       b_init_guess: float,
+    def logistic_5pl2s(self,
+                       x_data: np.ndarray,
                        c_init_guess: float,
                        mu_init_guess: float,
-                       eta_init_guess: float
-                       ):
-        """ Five-parameters logistic function with double slopes """
-        mu_bar = \
+                       eta_init_guess: float,
+                       ) -> np.ndarray:
+        """Five-parameters logistic function with double slopes"""
+        mu_bar: float = \
             2 * abs(mu_init_guess) * eta_init_guess / (1 + eta_init_guess)
-        f_x = 1 + (y_data/c_init_guess)**mu_bar - 1
-        return (a_init_guess + (a_init_guess - b_init_guess) /
-                (1 + (y_data/c_init_guess)**(-mu_init_guess) + (1 - f_x) *
-                (y_data/c_init_guess)**(-mu_init_guess*eta_init_guess)))
+        return self.config.response_infinite + \
+            (self.config.response_zero - self.config.response_infinite) /\
+            (1+(x_data/c_init_guess)**mu_init_guess) ** mu_bar
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

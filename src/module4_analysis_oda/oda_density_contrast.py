@@ -9,6 +9,7 @@ different zones.
 """
 
 import os
+import typing
 import warnings
 from dataclasses import dataclass
 from collections import namedtuple
@@ -153,11 +154,16 @@ class SurfactantsLocalizedDensityContrast:
                           f'with columns:\n\t`{columns}`\n')
 
     def get_oda_in_zone(self) -> tuple[np.ndarray, ...]:
-        """return the numbers of oda on the contact area at each frame"""
+        """
+        Return the numbers of oda in and out the contact area at each
+        frame.
+        """
+
         oda_nr_in_zone_dict: dict[int, int] = {}
         oda_dens_in_zone_dict: dict[int, float] = {}
         oda_nr_out_zone_dict: dict[int, int] = {}
         oda_dens_out_zone_dict: dict[int, float] = {}
+
         for i, frame_i in enumerate(self.amino_arr):
             contact_radius: float = self.data_arrays.contact_radius[i]
             oda_frame = self.apply_pbc_distance(i, frame_i.reshape(-1, 3))
@@ -167,26 +173,34 @@ class SurfactantsLocalizedDensityContrast:
                 self.get_oda_density_in_zone(oda_nr_in_zone_dict[i],
                                              contact_radius)
             oda_dens_out_zone_dict[i] = \
-                self.get_oda_dens_out_zone(i, oda_nr_in_zone_dict[i])
-        number_in_zone = \
-            np.array(list(oda_nr_in_zone_dict.values()), dtype=float)
-        density_in_zone = \
-            np.array(list(oda_dens_in_zone_dict.values()), dtype=float)
-        number_out_zone = \
-            np.array(list(oda_nr_out_zone_dict.values()), dtype=float)
-        density_out_zone = \
-            np.array(list(oda_dens_out_zone_dict.values()), dtype=float)
+                self.get_oda_dens_out_zone(i,
+                                           oda_nr_in_zone_dict[i],
+                                           contact_radius)
+
+        number_in_zone = self._dict_to_array(oda_nr_in_zone_dict, int)
+        density_in_zone = self._dict_to_array(oda_dens_in_zone_dict, float)
+        number_out_zone = self._dict_to_array(oda_nr_out_zone_dict, int)
+        density_out_zone = self._dict_to_array(oda_dens_out_zone_dict, float)
+
         return \
             number_in_zone, density_in_zone, number_out_zone, density_out_zone
 
+    @staticmethod
+    def _dict_to_array(data_dict: dict[int, typing.Any],
+                       data_type: type
+                       ) -> np.ndarray:
+        """convert dict to array"""
+        return np.array(list(data_dict.values()), dtype=data_type)
+
     def get_oda_dens_out_zone(self,
                               frame_index: int,
-                              nr_oda_out_zone: int
+                              nr_oda_out_zone: int,
+                              contact_radius: float
                               ) -> float:
         """calculate the number and density outside the contact zone"""
         area: float = (self.data_arrays.box[frame_index, 0] *
                        self.data_arrays.box[frame_index, 1] -
-                       np.pi*self.data_arrays.contact_radius[frame_index])
+                       np.pi*contact_radius)
         dens_oda_out_zone: float = nr_oda_out_zone / area
         return dens_oda_out_zone
 

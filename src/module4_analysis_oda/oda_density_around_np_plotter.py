@@ -167,6 +167,9 @@ class SurfactantDensityPlotter:
         self.fitted_rdf = density_obj.fitted_rdf
         self.smoothed_rdf = density_obj.smoothed_rdf
         self.midpoint: float = density_obj.midpoint
+        self.first_turn: float = density_obj.first_turn
+        self.second_turn: float = density_obj.second_turn
+        self.midpoint: float = density_obj.midpoint
         self.contact_data = density_obj.contact_data
         self.box = density_obj.box
 
@@ -237,7 +240,9 @@ class SurfactantDensityPlotter:
                   markersize=config.graph_style['2nd_marksize'],
                   zorder=1)
         if style == 'fitted':
+            ax_i = self._add_vline(ax_i, self.first_turn, legend='1st')
             ax_i = self._add_vline(ax_i, self.midpoint)
+            ax_i = self._add_vline(ax_i, self.second_turn, legend='2nd')
         plot_tools.save_close_fig(
             fig_i, ax_i, config.graph_suffix, loc='lower right')
         self.info_msg += \

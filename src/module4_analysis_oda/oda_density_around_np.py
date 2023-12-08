@@ -48,6 +48,8 @@ class SurfactantDensityAroundNanoparticle:
     fitted_rdf: dict[float, float]  # fitted rdf
     smoothed_rdf: dict[float, float]  # smoothed rdf
     midpoint: float  # midpoint of the fit
+    first_turn: float
+    second_turn: float
 
     def __init__(self,
                  amino_arr: np.ndarray,  # amino head com of the oda
@@ -140,6 +142,8 @@ class SurfactantDensityAroundNanoparticle:
         fitted_rdf = fit_rdf.FitRdf2dTo5PL2S(self.rdf_2d, log)
         self.fitted_rdf = fitted_rdf.fitted_rdf
         self.midpoint = fitted_rdf.midpoind
+        self.first_turn = fitted_rdf.first_turn
+        self.second_turn = fitted_rdf.second_turn
 
     @staticmethod
     def _compute_density_per_region(regions: list[float],

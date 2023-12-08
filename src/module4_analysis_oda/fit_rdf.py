@@ -86,6 +86,22 @@ class FitRdf2dTo5PL2S:
                                                 rdf_interpolated,
                                                 initial_guesses)
         self.fitted_rdf = dict(zip(radii_interpolated, fitted_data))
+        self._comput_and_set_turn_points()
+
+    def _comput_and_set_turn_points(self) -> None:
+        """find the set the turns points on the fitted rdf"""
+        first_derivative: np.ndarray
+        second_derivative: np.ndarray
+
+        radii: np.ndarray = np.array(list(self.fitted_rdf.keys()))
+        fitted_rdf: np.ndarray = np.array(list(self.fitted_rdf.values()))
+
+        first_derivative, second_derivative = \
+            self.initiate_derivative(radii, fitted_rdf)
+        curvature: np.ndarray = \
+            self.initiate_curvature(first_derivative, second_derivative)
+        self.first_turn = radii[np.argmax(curvature)]
+        self.second_turn = radii[np.argmin(curvature)]
 
     def initiate_data(self,
                       rdf_2d: dict[float, float]

@@ -116,6 +116,14 @@ class FittedRdf2dGraphConfig(BaseGraphConfig):
     graph_2nd_legend: str = r'$g_{fitted}(r)$'
     ylabel: str = 'g(r)'
     title: str = 'fitted Rdf vs Distance from NP'
+    graph_style: dict = field(default_factory=lambda: {
+        'legend': 'density',
+        'color': 'k',
+        'marker': 'o',
+        'linestyle': ':',
+        'markersize': 4,
+        '2nd_marksize': 1
+    })
 
 
 @dataclass
@@ -158,7 +166,7 @@ class SurfactantDensityPlotter:
         self.rdf_2d = density_obj.rdf_2d
         self.fitted_rdf = density_obj.fitted_rdf
         self.smoothed_rdf = density_obj.smoothed_rdf
-
+        self.midpoint: float = density_obj.midpoint
         self.contact_data = density_obj.contact_data
         self.box = density_obj.box
 
@@ -228,10 +236,28 @@ class SurfactantDensityPlotter:
                   label=config.graph_2nd_legend,
                   markersize=config.graph_style['2nd_marksize'],
                   zorder=1)
+        if style == 'fitted':
+            ax_i = self._add_vline(ax_i, self.midpoint)
         plot_tools.save_close_fig(
-            fig_i, ax_i, config.graph_suffix, loc='upper left')
+            fig_i, ax_i, config.graph_suffix, loc='lower right')
         self.info_msg += \
             f'\tThe `{style}` graph saved: `{config.graph_suffix}`\n'
+
+    @staticmethod
+    def _add_vline(ax_i: plt.axes,
+                   x_loc: float,
+                   legend: str = 'c'
+                   ) -> plt.axes:
+        """add vline to the axes"""
+
+        ylims: tuple[float, float] = ax_i.get_ylim()
+        ax_i.vlines(x=x_loc,
+                    ymin=ylims[0],
+                    ymax=ylims[1],
+                    ls='--',
+                    label=f'{legend}={x_loc:.1f}')
+        ax_i.set_ylim(ylims)
+        return ax_i
 
     def _plot_graphes(self,
                       data: dict[float, float],

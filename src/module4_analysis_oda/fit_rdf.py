@@ -33,8 +33,8 @@ from common.colors_text import TextColor as bcolors
 class FitConfigur:
     """parameters and sets for the fitting class"""
     maxfev: int = 3000
-    response_zero: float = 0
-    response_infinite: float = 1
+    response_zero: float = 0.0
+    response_infinite: float = 1.0
 
 
 class FitRdf2dTo5PL2S:
@@ -47,6 +47,9 @@ class FitRdf2dTo5PL2S:
 
     config: "FitConfigur"
     fitted_rdf: dict[float, float]
+    midpoind: float  # Midpoint of fitting: c
+    first_turn: float  # First turnning point
+    second_turn: float  # Second turnning point
 
     def __init__(self,
                  rdf_2d: dict[float, float],
@@ -133,6 +136,7 @@ class FitRdf2dTo5PL2S:
                           f'\t\tmu {popt[1]:.3f}\n'
                           f'\t\teta {popt[2]:.3f}\n'
                           )
+        self.midpoind = popt[0]
         return self.logistic_5pl2s(radii_interpolated, *popt)
 
     @staticmethod

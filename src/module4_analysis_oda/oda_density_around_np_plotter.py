@@ -152,7 +152,13 @@ class SurfactantDensityPlotter:
     info_msg: str = 'Message from SurfactantDensityPlotter:\n'
     density: dict[float, list[float]]
     ave_density: dict[float, float]
+    rdf_2d: dict[float, float]
+    fitted_rdf: dict[float, float]
+    smoothed_rdf: dict[float, float]
     contact_data: pd.DataFrame
+    midpoint: float
+    first_turn: float
+    second_turn: float
     box: np.ndarray  # Size of the box at each frame (from gromacs)
 
     def __init__(self,
@@ -166,10 +172,9 @@ class SurfactantDensityPlotter:
         self.rdf_2d = density_obj.rdf_2d
         self.fitted_rdf = density_obj.fitted_rdf
         self.smoothed_rdf = density_obj.smoothed_rdf
-        self.midpoint: float = density_obj.midpoint
-        self.first_turn: float = density_obj.first_turn
-        self.second_turn: float = density_obj.second_turn
-        self.midpoint: float = density_obj.midpoint
+        self.midpoint = density_obj.midpoint
+        self.first_turn = density_obj.first_turn
+        self.second_turn = density_obj.second_turn
         self.contact_data = density_obj.contact_data
         self.box = density_obj.box
 

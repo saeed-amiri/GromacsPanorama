@@ -116,7 +116,7 @@ class Plot5PLF2S:
         ax_i.plot(xdata,
                   curvature/curvature_norm_factor,
                   c='k',
-                  ls='-.',
+                  ls=':',
                   label=r'$\kappa$ [normalized]')
 
         ylims: tuple[float, float] = ax_i.get_ylim()
@@ -125,7 +125,7 @@ class Plot5PLF2S:
                     ymin=ylims[0],
                     ymax=ylims[1],
                     color='b',
-                    ls=':',
+                    ls='--',
                     label='midpoint')
 
         ax_i.vlines(first_turn_vline,

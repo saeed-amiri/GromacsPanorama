@@ -70,6 +70,7 @@ class FitRdf2dTo5PL2S:
         rdf_interpolated: np.ndarray
         first_derivative: np.ndarray
         second_derivative: np.ndarray
+        fitted_data: np.ndarray
 
         radii, rdf_values = self.initiate_data(rdf_2d)
         radii_interpolated, rdf_interpolated = \
@@ -82,9 +83,9 @@ class FitRdf2dTo5PL2S:
             self.set_initial_guess(radii_interpolated,
                                    second_derivative,
                                    curvature)
-        fitted_data: np.ndarray = self.fit_data(radii_interpolated,
-                                                rdf_interpolated,
-                                                initial_guesses)
+        fitted_data, _ = self.fit_data(radii_interpolated,
+                                       rdf_interpolated,
+                                       initial_guesses)
         self.fitted_rdf = dict(zip(radii_interpolated, fitted_data))
         self._comput_and_set_turn_points()
 
@@ -102,6 +103,7 @@ class FitRdf2dTo5PL2S:
             self.initiate_curvature(first_derivative, second_derivative)
         self.first_turn = radii[np.argmax(curvature)]
         self.second_turn = radii[np.argmin(curvature)]
+        self.midpoind = radii[np.argmax(first_derivative)]
 
     def initiate_data(self,
                       rdf_2d: dict[float, float]
@@ -140,7 +142,7 @@ class FitRdf2dTo5PL2S:
                  radii_interpolated,
                  rdf_interpolated,
                  initial_guesses
-                 ) -> np.ndarray:
+                 ) -> tuple[np.ndarray, np.ndarray]:
         """do the fit"""
         popt, _ = curve_fit(self.logistic_5pl2s,
                             radii_interpolated,
@@ -152,8 +154,7 @@ class FitRdf2dTo5PL2S:
                           f'\t\tb {popt[1]:.3f}\n'
                           f'\t\tg {popt[2]:.3f}\n'
                           )
-        self.midpoind = popt[0]
-        return self.logistic_5pl2s(radii_interpolated, *popt)
+        return self.logistic_5pl2s(radii_interpolated, *popt), popt
 
     @staticmethod
     def interpolation_smoothing(radii: np.ndarray,

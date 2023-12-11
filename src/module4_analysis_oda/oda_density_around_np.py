@@ -87,17 +87,19 @@ class SurfactantDensityAroundNanoparticle:
         density_per_region: dict[float, list[float]] = \
             {region: [] for region in regions}
         num_oda: list[int] = []
+        num_oda_in_raius: list[int] = []
         for i, frame_i in enumerate(self.amino_arr):
             arr_i: np.ndarray = \
                 self._get_surfactant_at_interface(frame_i, z_threshold[i])
             distance: np.ndarray = self.compute_pbc_distance(i, arr_i)
-            density_per_region = \
+            density_per_region, count_in_radius = \
                 self._compute_density_per_region(regions,
                                                  distance,
                                                  density_per_region)
             num_oda.append(len(arr_i))
+            num_oda_in_raius.append(count_in_radius)
         self._comput_and_set_avg_density_as_attribute(density_per_region)
-        self._comput_and_set_2d_rdf(density_per_region, num_oda)
+        self._comput_and_set_2d_rdf(density_per_region, num_oda_in_raius)
         self._fit_and_set_fitted2d_rdf(log)
         self._comput_and_set_moving_average(3)
         return density_per_region
@@ -150,9 +152,16 @@ class SurfactantDensityAroundNanoparticle:
                                     distance: np.ndarray,
                                     density_per_region:
                                     dict[float, list[float]]
-                                    ) -> dict[float, list[float]]:
+                                    ) -> tuple[dict[float, list[float]], int]:
         """self explanatory"""
-
+        # Here, the code increments the count in the appropriate bin
+        # by 2. The increment by 2 is necessary because each pair
+        # contributes to two interactions: one for each atom in the
+        # pair being considered as the reference atom. In simpler
+        # terms, for each pair of atoms, both atoms contribute to the
+        # density at this distance, so the count for this bin is
+        # increased by 2 to account for both contributions.
+        count_in_radius = 2
         for ith in range(len(regions) - 1):
             r_inner = regions[ith]
             r_outer = regions[ith + 1]
@@ -160,7 +169,8 @@ class SurfactantDensityAroundNanoparticle:
             area = np.pi * (r_outer**2 - r_inner**2)
             density = count / area
             density_per_region[r_outer].append(density)
-        return density_per_region
+            count_in_radius += count
+        return density_per_region, count_in_radius
 
     def generate_regions(self,
                          nr_of_regions: int

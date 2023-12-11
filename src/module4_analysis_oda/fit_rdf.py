@@ -80,7 +80,8 @@ class FitRdf2dTo5PL2S:
         curvature: np.ndarray = \
             self.initiate_curvature(first_derivative, second_derivative)
         initial_guesses: list[float] = \
-            self.set_initial_guess(radii_interpolated,
+            self.set_initial_guess(rdf_values,
+                                   radii_interpolated,
                                    second_derivative,
                                    curvature)
         fitted_data, _ = self.fit_data(radii_interpolated,
@@ -114,9 +115,10 @@ class FitRdf2dTo5PL2S:
         return radii, rdf_values
 
     def set_initial_guess(self,
-                          radii_interpolated,
-                          second_derivative,
-                          curvature
+                          rdf_values: np.ndarray,
+                          radii_interpolated: np.ndarray,
+                          second_derivative: np.ndarray,
+                          curvature: np.ndarray
                           ) -> list[float]:
         """set the initial guesses for the fitting"""
 
@@ -128,10 +130,13 @@ class FitRdf2dTo5PL2S:
             float(np.abs(np.min(curvature)/np.max(curvature)))
 
         b_initial_guess: float = 1.0
+        response_infinite = max(rdf_values)
         initial_guesses = [c_initial_guess,
                            b_initial_guess,
-                           g_initial_guess]
+                           g_initial_guess,
+                           response_infinite]
         self.info_msg += ('\tinitial guesses:\n'
+                          f'\t\td {response_infinite:.3f}\n'
                           f'\t\tc {c_initial_guess:.3f}\n'
                           f'\t\tb {b_initial_guess:.3f}\n'
                           f'\t\tg {g_initial_guess:.3f}\n'
@@ -153,6 +158,7 @@ class FitRdf2dTo5PL2S:
                           f'\t\tc {popt[0]:.3f}\n'
                           f'\t\tb {popt[1]:.3f}\n'
                           f'\t\tg {popt[2]:.3f}\n'
+                          f'\t\td {popt[3]:.3f}\n'
                           )
         return self.logistic_5pl2s(radii_interpolated, *popt), popt
 
@@ -188,12 +194,13 @@ class FitRdf2dTo5PL2S:
                        c_init_guess: float,
                        b_init_guess: float,
                        g_init_guess: float,
+                       response_infinite: float
                        ) -> np.ndarray:
         """Five-parameters logistic function with double slopes"""
         g_modified_guess: float = \
             2 * abs(b_init_guess) * g_init_guess / (1 + g_init_guess)
-        return self.config.response_infinite + \
-            (self.config.response_zero - self.config.response_infinite) /\
+        return response_infinite + \
+            (self.config.response_zero - response_infinite) /\
             (1+(x_data/c_init_guess)**b_init_guess) ** g_modified_guess
 
     def write_msg(self,

@@ -122,17 +122,17 @@ class FitRdf2dTo5PL2S:
         c_initial_guess: float = \
             float(radii_interpolated[inflection_point_index])
 
-        eta_initial_guess: float = \
+        g_initial_guess: float = \
             float(np.abs(np.min(curvature)/np.max(curvature)))
 
-        mu_initial_guess: float = 1.0
+        b_initial_guess: float = 1.0
         initial_guesses = [c_initial_guess,
-                           mu_initial_guess,
-                           eta_initial_guess]
+                           b_initial_guess,
+                           g_initial_guess]
         self.info_msg += ('\tinitial guesses:\n'
                           f'\t\tc {c_initial_guess:.3f}\n'
-                          f'\t\tmu {mu_initial_guess:.3f}\n'
-                          f'\t\teta {eta_initial_guess:.3f}\n'
+                          f'\t\tb {b_initial_guess:.3f}\n'
+                          f'\t\tg {g_initial_guess:.3f}\n'
                           )
         return initial_guesses
 
@@ -149,8 +149,8 @@ class FitRdf2dTo5PL2S:
                             maxfev=self.config.maxfev)
         self.info_msg += ('\tfitted constants:\n'
                           f'\t\tc {popt[0]:.3f}\n'
-                          f'\t\tmu {popt[1]:.3f}\n'
-                          f'\t\teta {popt[2]:.3f}\n'
+                          f'\t\tb {popt[1]:.3f}\n'
+                          f'\t\tg {popt[2]:.3f}\n'
                           )
         self.midpoind = popt[0]
         return self.logistic_5pl2s(radii_interpolated, *popt)
@@ -185,15 +185,15 @@ class FitRdf2dTo5PL2S:
     def logistic_5pl2s(self,
                        x_data: np.ndarray,
                        c_init_guess: float,
-                       mu_init_guess: float,
-                       eta_init_guess: float,
+                       b_init_guess: float,
+                       g_init_guess: float,
                        ) -> np.ndarray:
         """Five-parameters logistic function with double slopes"""
-        mu_bar: float = \
-            2 * abs(mu_init_guess) * eta_init_guess / (1 + eta_init_guess)
+        g_modified_guess: float = \
+            2 * abs(b_init_guess) * g_init_guess / (1 + g_init_guess)
         return self.config.response_infinite + \
             (self.config.response_zero - self.config.response_infinite) /\
-            (1+(x_data/c_init_guess)**mu_init_guess) ** mu_bar
+            (1+(x_data/c_init_guess)**b_init_guess) ** g_modified_guess
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

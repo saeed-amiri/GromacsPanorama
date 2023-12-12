@@ -202,6 +202,7 @@ class SurfactantDensityPlotter:
                        contact_data=self.contact_data,
                        config=SmoothedRdf2dHeatMapConfig(),
                        log=log)
+        DensityTimePlotter(density=self.density, log=log)
         self.plot_density_graph(self.graph_configs.graph_config)
         self.plot_2d_rdf(self.graph_configs.rdf_config)
         self.plot_fitted_or_smoothed_rdf(self.fitted_rdf,
@@ -524,6 +525,50 @@ class HeatmapPlotter:
         print(f'{bcolors.OKCYAN}{self.__module__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
+
+
+@dataclass
+class DensityTimeConfig(BaseGraphConfig):
+    """set the parameters for the rdf(t) plots"""
+    graph_suffix: str = 'rdf_2d_time.png'
+    graph_legend: str = 'g(r,t)'
+    ylabel: str = 'g(r)'
+    title: str = 'Rdf vs Distance from NP'
+    interval: int = 10
+
+
+class DensityTimePlotter:
+    """plot the densities (density, rdf, fitted, ...) over times,
+    in order to see the changes over time"""
+
+    info_msg: str = 'Messege from DensityTimePlotter:\n'
+    config: "DensityTimeConfig"
+
+    def __init__(self,
+                 density: dict[float, list[float]],
+                 log: logger.logging.Logger,
+                 config: "DensityTimeConfig" = DensityTimeConfig()
+                 ) -> None:
+        self.config = config
+        self.initialize_plotting(density)
+
+    def initialize_plotting(self,
+                            density: dict[float, list[float]]) -> None:
+        """initilize data and plot for the changes over time"""
+        radii: np.ndarray = np.array(list(density.keys()))
+        densities = list(density.values())
+        frame_wise: dict[int, list[float]] = \
+            {i: [] for i in range(1, len(densities[1]), 1)}
+
+        for frame in range(1, len(densities[1]), 1):
+            for i in range(0, len(radii)):
+                try:
+                    frame_wise[frame].append(densities[i][frame])
+                except IndexError:
+                    print("HERE", frame, i)
+                    frame_wise[frame].append(0)
+        for k in range(1, len(densities[1]), 1):
+            plt.plot(radii, frame_wise[k])
 
 
 if __name__ == "__main__":

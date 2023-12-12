@@ -57,11 +57,12 @@ class FitRdf2dTo5PL2S:
                  fit_config: "FitConfigur" = FitConfigur()
                  ) -> None:
         self.config = fit_config
-        self._initiate(rdf_2d)
+        self._initiate(rdf_2d, log)
         self.write_msg(log)
 
     def _initiate(self,
-                  rdf_2d: dict[float, float]
+                  rdf_2d: dict[float, float],
+                  log: logger.logging.Logger
                   ) -> None:
         """set the data and do the fit"""
         radii: np.ndarray
@@ -89,6 +90,7 @@ class FitRdf2dTo5PL2S:
                                        initial_guesses)
         self.fitted_rdf = dict(zip(radii_interpolated, fitted_data))
         self._comput_and_set_turn_points()
+        FitStatistics(rdf_2d=rdf_2d, fitted_rdf=self.fitted_rdf, log=log)
 
     def _comput_and_set_turn_points(self) -> None:
         """find the set the turns points on the fitted rdf"""
@@ -202,6 +204,100 @@ class FitRdf2dTo5PL2S:
         return response_infinite + \
             (self.config.response_zero - response_infinite) /\
             (1+(x_data/c_init_guess)**b_init_guess) ** g_modified_guess
+
+    def write_msg(self,
+                  log: logger.logging.Logger  # To log
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKGREEN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
+class FitStatistics:
+    """calculate the fit statistics"""
+
+    info_msg: str = 'Messege from FitStatistics:\n'
+    rdf_2d: dict[float, float]
+    fitted_rdf: dict[float, float]
+
+    wsse: float
+
+    def __init__(self,
+                 rdf_2d: dict[float, float],
+                 fitted_rdf: dict[float, float],
+                 log: logger.logging.Logger
+                 ) -> None:
+        self.rdf_2d = rdf_2d
+        self.fitted_rdf = fitted_rdf
+        self.calculate_statistics()
+        self.write_msg(log)
+
+    def calculate_statistics(self) -> None:
+        """Calculate the fit statistics."""
+        # Implementation for calculating wSSE, degrees of freedom, etc.
+        radii = np.array(list(self.rdf_2d.keys()))
+        actual_rdf_values = np.array(list(self.rdf_2d.values()))
+
+        fitted_radii = np.array(list(self.fitted_rdf.keys()))
+        fitted_values = np.array(list(self.fitted_rdf.values()))
+
+        predicted_rdf_values = \
+            self._get_corrsponded_radii_in_fitted(radii,
+                                                  fitted_radii,
+                                                  fitted_values)
+        variances: np.ndarray
+        residuals: np.ndarray
+        residuals, variances = self._calculate_residuals_variances(
+            actual_rdf_values, predicted_rdf_values)
+
+        self.wsse = self._calculate_wsse(variances, residuals)
+        self.info_msg += f'\tThe wSSE is `{self.wsse:.3f}`\n'
+
+    @staticmethod
+    def _calculate_wsse(variances: np.ndarray,
+                        residuals: np.ndarray
+                        ) -> float:
+        """Calculate the weighted sum of squared errors."""
+        # Filter out zero variance points
+        nonzero_variance_mask = variances != 0
+        filtered_variances = variances[nonzero_variance_mask]
+        filtered_residuals = residuals[nonzero_variance_mask]
+        weights = 1 / filtered_variances
+        return np.sum(weights * filtered_residuals**2)
+
+    def _calculate_degrees_of_freedom(self):
+        """Calculate the degrees of freedom."""
+        # Implementation
+
+    def _calculate_fit_probability(self):
+        """Calculate the fit probability."""
+        # Implementation
+
+    @staticmethod
+    def _get_corrsponded_radii_in_fitted(radii: np.ndarray,
+                                         fitted_radii: np.ndarray,
+                                         fitted_values: np.ndarray
+                                         ) -> np.ndarray:
+        """calculate the corrsponding radii in fitted data"""
+        fitted_data_interpolator = interp1d(fitted_radii,
+                                            fitted_values,
+                                            kind='linear',
+                                            fill_value="extrapolate")
+        return fitted_data_interpolator(radii)
+
+    @staticmethod
+    def _calculate_residuals_variances(actual_rdf_values: np.ndarray,
+                                       predicted_rdf_values: np.ndarray
+                                       ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Calculate the variances of the residuals.
+        """
+        # Calculate the residuals
+        residuals: np.ndarray = actual_rdf_values - predicted_rdf_values
+        # Calculate the variances of the residuals
+        variances: np.ndarray = np.abs(residuals - np.mean(residuals))**2
+        return residuals, variances
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

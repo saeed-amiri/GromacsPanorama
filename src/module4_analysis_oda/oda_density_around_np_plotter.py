@@ -202,7 +202,7 @@ class SurfactantDensityPlotter:
                        contact_data=self.contact_data,
                        config=SmoothedRdf2dHeatMapConfig(),
                        log=log)
-        DensityTimePlotter(density=self.density, log=log)
+        # DensityTimePlotter(density=self.density, log=log)
         self.plot_density_graph(self.graph_configs.graph_config)
         self.plot_2d_rdf(self.graph_configs.rdf_config)
         self.plot_fitted_or_smoothed_rdf(self.fitted_rdf,

@@ -137,7 +137,7 @@ class FittedRdf2dGraphConfig(BaseGraphConfig):
         'legend': 'density',
         'color': 'k',
         'marker': 'o',
-        'linestyle': ':',
+        'linestyle': '-',
         'markersize': 4,
         '2nd_marksize': 1
     })
@@ -267,9 +267,11 @@ class SurfactantDensityPlotter:
                   markersize=config.graph_style['2nd_marksize'],
                   zorder=1)
         if style == 'fitted':
-            ax_i = self._add_vline(ax_i, self.first_turn, legend='1st')
-            ax_i = self._add_vline(ax_i, self.midpoint)
-            ax_i = self._add_vline(ax_i, self.second_turn, legend='2nd')
+            ax_i = self._add_vline(
+                ax_i, self.first_turn, legend='1st', lstyle=':', color='g')
+            ax_i = self._add_vline(ax_i, self.midpoint, lstyle='--', color='b')
+            ax_i = self._add_vline(
+                ax_i, self.second_turn, legend='2nd', lstyle=':', color='r')
         plot_tools.save_close_fig(
             fig_i, ax_i, config.graph_suffix, loc='lower right')
         self.info_msg += \
@@ -278,7 +280,9 @@ class SurfactantDensityPlotter:
     @staticmethod
     def _add_vline(ax_i: plt.axes,
                    x_loc: float,
-                   legend: str = 'c'
+                   legend: str = 'c',
+                   lstyle: str = '--',
+                   color: str = 'k'
                    ) -> plt.axes:
         """add vline to the axes"""
 
@@ -286,7 +290,8 @@ class SurfactantDensityPlotter:
         ax_i.vlines(x=x_loc,
                     ymin=ylims[0],
                     ymax=ylims[1],
-                    ls='--',
+                    ls=lstyle,
+                    color=color,
                     label=f'{legend}={x_loc:.1f}')
         ax_i.set_ylim(ylims)
         return ax_i

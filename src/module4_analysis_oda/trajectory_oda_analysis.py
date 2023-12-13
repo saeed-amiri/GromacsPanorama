@@ -9,9 +9,13 @@ import sys
 from module4_analysis_oda.rdf import RdfCalculationConfig, RdfClculation
 from module4_analysis_oda.oda_density_around_np import \
     OdaInputFilesConfig, ParameterConfig, SurfactantDensityAroundNanoparticle
-from module4_analysis_oda.surfactant_density_plotter import \
+from module4_analysis_oda.oda_density_around_np_plotter import \
     DensityHeatMapConfig, DensityGraphConfig, Rdf2dGraphConfig, \
     SurfactantDensityPlotter
+from module4_analysis_oda.oda_density_contrast import \
+    InputFilesConfig, SurfactantsLocalizedDensityContrast
+from module4_analysis_oda.oda_density_contrast_plotter import \
+    GraphConfing, SurfactantContrastDensityPlotter
 from common import logger
 from common.com_file_parser import GetCom
 
@@ -38,6 +42,10 @@ class OdaAnalysis:
         oda_density = SurfactantDensityAroundNanoparticle(
             parsed_com.split_arr_dict['AMINO_ODN'], log, param_config=params)
         SurfactantDensityPlotter(oda_density, log)
+        # contrast = SurfactantsLocalizedDensityContrast(
+        #     parsed_com.split_arr_dict['AMINO_ODN'], log)
+        # SurfactantContrastDensityPlotter(contrast.number_density, log)
+        
 
 
 if __name__ == '__main__':

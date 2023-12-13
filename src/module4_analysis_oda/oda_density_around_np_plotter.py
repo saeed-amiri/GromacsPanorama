@@ -45,7 +45,7 @@ class DensityHeatMapConfig(BaseHeatMapConfig):
     cbar_label: str = 'Average Density'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'np_radius'],
-        'color': ['r', 'b'],
+        'color': ['k', 'b'],
         'linestyle': ['--', ':']})
 
 
@@ -58,7 +58,7 @@ class Rdf2dHeatMapConfig(BaseHeatMapConfig):
     cbar_label: str = 'g(r)'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'np_radius'],
-        'color': ['r', 'b'],
+        'color': ['k', 'b'],
         'linestyle': ['--', ':']})
 
 
@@ -71,8 +71,8 @@ class FittedsRdf2dHeatMapConfig(BaseHeatMapConfig):
     cbar_label: str = r'$g_{fitted}(r)$'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'turn_points'],
-        'color': ['r', 'b'],
-        'linestyle': ['--', ':']})
+        'color': ['k', 'b', 'g', 'r'],
+        'linestyle': ['-', '--', ':', ':']})
 
 
 @dataclass
@@ -84,7 +84,7 @@ class SmoothedRdf2dHeatMapConfig(BaseHeatMapConfig):
     cbar_label: str = r'$g_{smoothed}(r)$'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'np_radius'],
-        'color': ['r', 'b'],
+        'color': ['k', 'b'],
         'linestyle': ['--', ':']})
 
 
@@ -214,7 +214,11 @@ class SurfactantDensityPlotter:
         HeatmapPlotter(ref_density=self.fitted_rdf,
                        contact_data=self.contact_data,
                        config=FittedsRdf2dHeatMapConfig(),
-                       log=log)
+                       log=log,
+                       fitted_turn_points={
+                        'midpoint': self.midpoint,
+                        '1st': self.first_turn,
+                        '2nd': self.second_turn})
         HeatmapPlotter(ref_density=self.smoothed_rdf,
                        contact_data=self.contact_data,
                        config=SmoothedRdf2dHeatMapConfig(),
@@ -344,7 +348,8 @@ class HeatmapPlotter:
                                       "FittedsRdf2dHeatMapConfig",
                                       "SmoothedRdf2dHeatMapConfig"],
                  log: logger.logging.Logger,
-                 fitted_turn_points: typing.Union[None, list[float]] = None
+                 fitted_turn_points:
+                 typing.Union[None, dict[str, float]] = None
                  ) -> None:
         self.ref_density = ref_density
         self.config = config
@@ -427,8 +432,14 @@ class HeatmapPlotter:
                 np_radius,
                 color=self.config.circles_configs['color'][1],
                 line_style=self.config.circles_configs['linestyle'][1])
-        if 'turns_points' in self.config.circles_configs['list']:
-            pass
+        if 'turn_points' in self.config.circles_configs['list']:
+            if self.turns_points is not None:
+                for i, point_i in enumerate(list(self.turns_points.values())):
+                    ax_i = self._add_heatmap_circle(
+                    ax_i,
+                    point_i,
+                    color=self.config.circles_configs['color'][i+1],
+                    line_style=self.config.circles_configs['linestyle'][i+1])
 
         return ax_i, contact_radius, np_radius
 

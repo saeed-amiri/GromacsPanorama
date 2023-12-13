@@ -43,7 +43,7 @@ class XvgBaseConfig:
 class XvgPlotterConfig(XvgBaseConfig):
     """set the parameters"""
     f_names_labels: list[str] = field(
-        default_factory=lambda: {'298.xvg': '298 K', '315.xvg': '315 K'})
+        default_factory=lambda: {'298.xvg': '298 K'})
     x_column_labels: dict[str, str] = \
         field(default_factory=lambda: {'Time_ps': 'time [ns]'})
     y_columns_labels: dict[str, str] = \
@@ -107,13 +107,15 @@ class PlotXvg:
         fig_i, ax_i = plot_tools.mk_canvas(xrange, height_ratio=(5**0.5-1)*1.8)
         fout: str = (f'{self.configs.f_names[0].split(".")[0]}-'
                      f'{self.configs.out_suffix}')
+        fname: str = self.configs.f_names[0].split('.', maxsplit=1)[0] + '.xvg'
         for i, col in enumerate(df_i.iloc[:, 1:]):
             ax_i.plot(df_i[self.configs.x_column],
                       df_i[col],
-                      label=self.configs.y_columns_labels[col],
+                      label=self.configs.f_names_labels[fname],
                       color=self.configs.line_colors[i])
         ax_i.set_xlabel(self.configs.x_axis_label)
         ax_i.set_ylabel(self.configs.y_axis_label)
+        ax_i.set_title(self.configs.title)
         ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
         plot_tools.save_close_fig(fig_i, ax_i, fname=fout)
         self.info_msg += (f'\tThe fig for {self.configs.f_names} is saved '

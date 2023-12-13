@@ -203,19 +203,19 @@ class SurfactantDensityPlotter:
     def _initialize_plotting(self,
                              log: logger.logging.Logger
                              ) -> None:
-        HeatmapPlotter(ave_density=self.ave_density,
+        HeatmapPlotter(ref_density=self.ave_density,
                        contact_data=self.contact_data,
                        config=DensityHeatMapConfig(),
                        log=log)
-        HeatmapPlotter(ave_density=self.rdf_2d,
+        HeatmapPlotter(ref_density=self.rdf_2d,
                        contact_data=self.contact_data,
                        config=Rdf2dHeatMapConfig(),
                        log=log)
-        HeatmapPlotter(ave_density=self.fitted_rdf,
+        HeatmapPlotter(ref_density=self.fitted_rdf,
                        contact_data=self.contact_data,
                        config=FittedsRdf2dHeatMapConfig(),
                        log=log)
-        HeatmapPlotter(ave_density=self.smoothed_rdf,
+        HeatmapPlotter(ref_density=self.smoothed_rdf,
                        contact_data=self.contact_data,
                        config=SmoothedRdf2dHeatMapConfig(),
                        log=log)
@@ -337,17 +337,19 @@ class HeatmapPlotter:
     info_msg: str = "Messages from HeatmapPlotter:\n"
 
     def __init__(self,
-                 ave_density: dict[float, float],
+                 ref_density: dict[float, float],
                  contact_data: pd.DataFrame,
                  config: typing.Union["DensityHeatMapConfig",
                                       "Rdf2dHeatMapConfig",
                                       "FittedsRdf2dHeatMapConfig",
                                       "SmoothedRdf2dHeatMapConfig"],
-                 log: logger.logging.Logger
+                 log: logger.logging.Logger,
+                 fitted_turn_points: typing.Union[None, list[float]] = None
                  ) -> None:
-        self.ave_density = ave_density
+        self.ref_density = ref_density
         self.config = config
         self.contact_data = contact_data
+        self.turns_points = fitted_turn_points
         self.plot_density_heatmap()
         self._write_msg(log)
 
@@ -364,8 +366,8 @@ class HeatmapPlotter:
 
     def create_density_grid(self) -> tuple[np.ndarray, ...]:
         """Create a grid in polar coordinates with interpolated densities."""
-        radii = np.array(list(self.ave_density.keys()))
-        densities = np.array(list(self.ave_density.values()))
+        radii = np.array(list(self.ref_density.keys()))
+        densities = np.array(list(self.ref_density.values()))
         # Create a grid in polar coordinates
         radial_distances, theta = \
             np.meshgrid(radii, np.linspace(0, 2 * np.pi, len(radii)))
@@ -425,6 +427,8 @@ class HeatmapPlotter:
                 np_radius,
                 color=self.config.circles_configs['color'][1],
                 line_style=self.config.circles_configs['linestyle'][1])
+        if 'turns_points' in self.config.circles_configs['list']:
+            pass
 
         return ax_i, contact_radius, np_radius
 

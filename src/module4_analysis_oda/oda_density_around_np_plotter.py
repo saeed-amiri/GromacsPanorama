@@ -44,9 +44,9 @@ class DensityHeatMapConfig(BaseHeatMapConfig):
     heatmap_suffix: str = 'heatmap.png'
     cbar_label: str = 'Average Density'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
-        'cr_list': ['contact_radius', 'np.radius'],
-        'cr_color': ['r', 'b'],
-        'cr_ls': ['--', ':']})
+        'list': ['contact_radius', 'np_radius'],
+        'color': ['r', 'b'],
+        'linestyle': ['--', ':']})
 
 
 @dataclass
@@ -57,9 +57,9 @@ class Rdf2dHeatMapConfig(BaseHeatMapConfig):
     heatmap_suffix: str = 'rdf2dheatmap.png'
     cbar_label: str = 'g(r)'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
-        'cr_list': ['contact_radius', 'np.radius'],
-        'cr_color': ['r', 'b'],
-        'cr_ls': ['--', ':']})
+        'list': ['contact_radius', 'np_radius'],
+        'color': ['r', 'b'],
+        'linestyle': ['--', ':']})
 
 
 @dataclass
@@ -70,9 +70,9 @@ class FittedsRdf2dHeatMapConfig(BaseHeatMapConfig):
     heatmap_suffix: str = 'fittedRdf2dheatmap.png'
     cbar_label: str = r'$g_{fitted}(r)$'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
-        'cr_list': ['contact_radius', 'turn_points'],
-        'cr_color': ['r', 'b'],
-        'cr_ls': ['--', ':']})
+        'list': ['contact_radius', 'turn_points'],
+        'color': ['r', 'b'],
+        'linestyle': ['--', ':']})
 
 
 @dataclass
@@ -83,9 +83,9 @@ class SmoothedRdf2dHeatMapConfig(BaseHeatMapConfig):
     heatmap_suffix: str = 'smoothedRdf2dheatmap.png'
     cbar_label: str = r'$g_{smoothed}(r)$'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
-        'cr_list': ['contact_radius', 'np.radius'],
-        'cr_color': ['r', 'b'],
-        'cr_ls': ['--', ':']})
+        'list': ['contact_radius', 'np_radius'],
+        'color': ['r', 'b'],
+        'linestyle': ['--', ':']})
 
 
 @dataclass
@@ -406,13 +406,26 @@ class HeatmapPlotter:
                       ax_i: plt.axes
                       ) -> tuple[plt.axes, float, float]:
         """attach circle denoting the np"""
-        contact_radius: float = self._get_avg_contact_raduis()
         np_radius: float = stinfo.np_info['radius']
+        contact_radius: float = self._get_avg_contact_raduis()
         self.info_msg += (
             f'\tThe radius of the nanoparticle was set to `{np_radius:.3f}`\n'
             f'\tThe average contact radius is {contact_radius:.3f}\n')
-        ax_i = self._add_heatmap_circle(ax_i, contact_radius)
-        ax_i = self._add_heatmap_circle(ax_i, np_radius, color='blue')
+
+        if 'contact_radius' in self.config.circles_configs['list']:
+            ax_i = self._add_heatmap_circle(
+                ax_i,
+                contact_radius,
+                color=self.config.circles_configs['color'][0],
+                line_style=self.config.circles_configs['linestyle'][0]
+                )
+        if 'np_radius' in self.config.circles_configs['list']:
+            ax_i = self._add_heatmap_circle(
+                ax_i,
+                np_radius,
+                color=self.config.circles_configs['color'][1],
+                line_style=self.config.circles_configs['linestyle'][1])
+
         return ax_i, contact_radius, np_radius
 
     def _add_radius_arrows(self,
@@ -429,11 +442,13 @@ class HeatmapPlotter:
                                     rf'$r_{{c, avg}}$={contact_radius:.2f}'),
                                   location=(1, 1),
                                   color='red')
-        self._add_polar_arrow(ax_i, length=np_radius, theta=0, color='blue')
-        ax_i = self._add_radii_label(ax_i,
-                                     label=rf'$a$={np_radius:.2f}',
-                                     location=(1, 0.95),
-                                     color='blue')
+        if 'np_radius' in self.config.circles_configs['list']:
+            self._add_polar_arrow(
+                ax_i, length=np_radius, theta=0, color='blue')
+            ax_i = self._add_radii_label(ax_i,
+                                         label=rf'$a$={np_radius:.2f}',
+                                         location=(1, 0.95),
+                                         color='blue')
         return ax_i
 
     @staticmethod

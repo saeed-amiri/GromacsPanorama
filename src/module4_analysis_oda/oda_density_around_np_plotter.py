@@ -31,6 +31,7 @@ class BaseHeatMapConfig:
     """base configuration for the heatmap plots"""
     cbar_label: str
     heatmap_suffix: str
+    circles_configs: dict[str, list[str]]
     show_grid: bool = False
     heatmap_color: str = 'Greys'
 
@@ -42,6 +43,10 @@ class DensityHeatMapConfig(BaseHeatMapConfig):
     """
     heatmap_suffix: str = 'heatmap.png'
     cbar_label: str = 'Average Density'
+    circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
+        'cr_list': ['contact_radius', 'np.radius'],
+        'cr_color': ['r', 'b'],
+        'cr_ls': ['--', ':']})
 
 
 @dataclass
@@ -51,6 +56,10 @@ class Rdf2dHeatMapConfig(BaseHeatMapConfig):
     """
     heatmap_suffix: str = 'rdf2dheatmap.png'
     cbar_label: str = 'g(r)'
+    circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
+        'cr_list': ['contact_radius', 'np.radius'],
+        'cr_color': ['r', 'b'],
+        'cr_ls': ['--', ':']})
 
 
 @dataclass
@@ -60,6 +69,10 @@ class FittedsRdf2dHeatMapConfig(BaseHeatMapConfig):
     """
     heatmap_suffix: str = 'fittedRdf2dheatmap.png'
     cbar_label: str = r'$g_{fitted}(r)$'
+    circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
+        'cr_list': ['contact_radius', 'turn_points'],
+        'cr_color': ['r', 'b'],
+        'cr_ls': ['--', ':']})
 
 
 @dataclass
@@ -69,6 +82,10 @@ class SmoothedRdf2dHeatMapConfig(BaseHeatMapConfig):
     """
     heatmap_suffix: str = 'smoothedRdf2dheatmap.png'
     cbar_label: str = r'$g_{smoothed}(r)$'
+    circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
+        'cr_list': ['contact_radius', 'np.radius'],
+        'cr_color': ['r', 'b'],
+        'cr_ls': ['--', ':']})
 
 
 @dataclass

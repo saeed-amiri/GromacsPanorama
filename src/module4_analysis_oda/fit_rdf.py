@@ -32,7 +32,7 @@ from common.colors_text import TextColor as bcolors
 @dataclass
 class FitConfigur:
     """parameters and sets for the fitting class"""
-    maxfev: int = 3000
+    maxfev: int = 5000
     response_zero: float = 0.0
     response_infinite: float = 1.0
 

@@ -47,7 +47,7 @@ class SurfactantDensityAroundNanoparticle:
     rdf_2d: dict[float, float]  # rdf (g((r)) in 2d
     fitted_rdf: dict[float, float]  # fitted rdf
     smoothed_rdf: dict[float, float]  # smoothed rdf
-    time_dependent_rdf: dict[int, np.ndarray]
+    time_dependent_rdf: dict[int, dict[float, float]]
     time_dependent_ave_density: dict[int, dict[float, float]]
     midpoint: float  # midpoint of the fit
     first_turn: float
@@ -174,17 +174,20 @@ class SurfactantDensityAroundNanoparticle:
                                                       dict[float, float]]]:
         """calculate avedensity and rdf as function of time"""
         step: int = self.param_config.time_dependent_step
-        time_dependent_rdf: dict[int, np.ndarray] = {}
+        time_dependent_rdf: dict[int, dict[float, float]] = {}
         time_dependent_ave_density: dict[int, dict[float, float]] = {}
         for i in range(0, amino_arr.shape[0], step):
             amino_arr_i = amino_arr[:i].copy()
             density_per_region, num_oda_in_raius = \
                 self.initialize_calculation(amino_arr_i, update_msg=False)
             rdf_i = self._comput_2d_rdf(density_per_region, num_oda_in_raius)
-            time_dependent_rdf[i] = \
-                fit_rdf.FitRdf2dTo5PL2S(rdf_i, log).fitted_rdf
-            time_dependent_ave_density[i] = \
-                self._comput_avg_density(density_per_region)
+            try:
+                time_dependent_rdf[i] = \
+                    fit_rdf.FitRdf2dTo5PL2S(rdf_i, log).fitted_rdf
+                time_dependent_ave_density[i] = \
+                    self._comput_avg_density(density_per_region)
+            except RuntimeError:
+                pass
         return time_dependent_rdf, time_dependent_ave_density
 
     @staticmethod

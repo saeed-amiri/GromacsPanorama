@@ -40,7 +40,6 @@ class SurfactantDensityAroundNanoparticle:
     contact_data: pd.DataFrame  # The contact data (from module3)
     box: np.ndarray  # Size of the box at each frame (from gromacs)
     np_com: np.ndarray  # COM of the NP at each frame (from gromacs)
-    amino_arr: np.ndarray  # Com of the oda_amino head (from module1)
     interface_z: np.ndarray  # Z location of the interface (from module3)
     density_per_region: dict[float, list[float]]  # Density per area
     avg_density_per_region: dict[float, float]
@@ -58,13 +57,14 @@ class SurfactantDensityAroundNanoparticle:
                  param_config: "ParameterConfig" = ParameterConfig()
                  ) -> None:
         # The two last rows of amino_arr are indicies from main trr file
-        self.amino_arr = amino_arr[:-2]
+        amino_arr = amino_arr[:-2]
         self.input_config = input_config
         self.param_config = param_config
-        self._initiate(log)
+        self._initiate(amino_arr, log)
         self.write_msg(log)
 
     def _initiate(self,
+                  amino_arr: np.ndarray,
                   log: logger.logging.Logger,
                   ) -> None:
         """Initiate the calculation by checking necessary files."""
@@ -74,9 +74,10 @@ class SurfactantDensityAroundNanoparticle:
         np_com_df: pd.DataFrame = self.load_np_com_data(log)
         box_df: pd.DataFrame = self.load_box_data(log)
         self.initialize_data_arrays(np_com_df, box_df, log)
-        self.density_per_region = self.initialize_calculation(log)
+        self.density_per_region = self.initialize_calculation(amino_arr, log)
 
     def initialize_calculation(self,
+                               amino_arr: np.ndarray,
                                log: logger.logging.Logger
                                ) -> dict[float, list[float]]:
         """getting the density number from the parsed data"""
@@ -88,7 +89,7 @@ class SurfactantDensityAroundNanoparticle:
             {region: [] for region in regions}
         num_oda: list[int] = []
         num_oda_in_raius: list[int] = []
-        for i, frame_i in enumerate(self.amino_arr):
+        for i, frame_i in enumerate(amino_arr):
             arr_i: np.ndarray = \
                 self._get_surfactant_at_interface(frame_i, z_threshold[i])
             distance: np.ndarray = self.compute_pbc_distance(i, arr_i)

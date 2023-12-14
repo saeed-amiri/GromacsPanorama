@@ -60,7 +60,7 @@ class SurfactantDensityAroundNanoparticle:
         amino_arr = amino_arr[:-2]
         self.input_config = input_config
         self.param_config = param_config
-        self.density_per_region = self._initiate(amino_arr, log)
+        self._initiate(amino_arr, log)
         self.write_msg(log)
 
     def _initiate(self,
@@ -74,17 +74,21 @@ class SurfactantDensityAroundNanoparticle:
         np_com_df: pd.DataFrame = self.load_np_com_data(log)
         box_df: pd.DataFrame = self.load_box_data(log)
         self.initialize_data_arrays(np_com_df, box_df, log)
-        density_per_region, num_oda_in_raius = \
-            self.initialize_calculation(amino_arr, log)
-        self._comput_and_set_avg_density_as_attribute(density_per_region)
-        self._comput_and_set_2d_rdf(density_per_region, num_oda_in_raius)
+        
+        self.density_per_region, num_oda_in_raius = \
+            self.initialize_calculation(amino_arr)
+        
+        self.avg_density_per_region = \
+            self._comput_avg_density_as_attribute(self.density_per_region)
+        
+        self.rdf_2d = \
+            self._comput_2d_rdf(self.density_per_region, num_oda_in_raius)
+        
         self._fit_and_set_fitted2d_rdf(log)
         self._comput_and_set_moving_average(3)
-        return density_per_region
 
     def initialize_calculation(self,
-                               amino_arr: np.ndarray,
-                               log: logger.logging.Logger
+                               amino_arr: np.ndarray
                                ) -> tuple[dict[float, list[float]],
                                           list[int]]:
         """getting the density number from the parsed data"""
@@ -108,36 +112,38 @@ class SurfactantDensityAroundNanoparticle:
             num_oda_in_raius.append(count_in_radius)
         return density_per_region, num_oda_in_raius
 
-    def _comput_and_set_avg_density_as_attribute(self,
-                                                 density_per_region:
-                                                 dict[float, list[float]]
-                                                 ) -> None:
+    def _comput_avg_density_as_attribute(self,
+                                         density_per_region:
+                                         dict[float, list[float]]
+                                         ) -> dict[float, float]:
         """self explanatory"""
-        self.avg_density_per_region = {}
+        avg_density_per_region: dict[float, float] = {}
         for region, densities in density_per_region.items():
             if densities:
-                self.avg_density_per_region[region] = np.mean(densities)
+                avg_density_per_region[region] = np.mean(densities)
             else:
-                self.avg_density_per_region[region] = 0
+                avg_density_per_region[region] = 0
+        return avg_density_per_region
 
-    def _comput_and_set_2d_rdf(self,
-                               density_per_region: dict[float, list[float]],
-                               num_oda: list[int]
-                               ) -> None:
+    def _comput_2d_rdf(self,
+                       density_per_region: dict[float, list[float]],
+                       num_oda: list[int]
+                       ) -> dict[float, float]:
         """set the 2d rdf (g(r))"""
         max_radius_area: float = \
             max(item for item in density_per_region.keys())
-        self.rdf_2d = {}
+        rdf_2d: dict[float, float] = {}
         for region, densities in density_per_region.items():
             if not densities:
-                self.rdf_2d[region] = 0
+                rdf_2d[region] = 0
                 continue
 
             tmp = []
             for j, item in enumerate(densities):
                 density: float = num_oda[j]/(np.pi * max_radius_area**2)
                 tmp.append(item/density)
-            self.rdf_2d[region] = np.mean(tmp)
+            rdf_2d[region] = np.mean(tmp)
+        return rdf_2d
 
     def _fit_and_set_fitted2d_rdf(self,
                                   log: logger.logging.Logger

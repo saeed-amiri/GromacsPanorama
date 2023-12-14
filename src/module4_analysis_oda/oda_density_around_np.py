@@ -60,7 +60,7 @@ class SurfactantDensityAroundNanoparticle:
         amino_arr = amino_arr[:-2]
         self.input_config = input_config
         self.param_config = param_config
-        self._initiate(amino_arr, log)
+        self.density_per_region = self._initiate(amino_arr, log)
         self.write_msg(log)
 
     def _initiate(self,
@@ -74,12 +74,19 @@ class SurfactantDensityAroundNanoparticle:
         np_com_df: pd.DataFrame = self.load_np_com_data(log)
         box_df: pd.DataFrame = self.load_box_data(log)
         self.initialize_data_arrays(np_com_df, box_df, log)
-        self.density_per_region = self.initialize_calculation(amino_arr, log)
+        density_per_region, num_oda_in_raius = \
+            self.initialize_calculation(amino_arr, log)
+        self._comput_and_set_avg_density_as_attribute(density_per_region)
+        self._comput_and_set_2d_rdf(density_per_region, num_oda_in_raius)
+        self._fit_and_set_fitted2d_rdf(log)
+        self._comput_and_set_moving_average(3)
+        return density_per_region
 
     def initialize_calculation(self,
                                amino_arr: np.ndarray,
                                log: logger.logging.Logger
-                               ) -> dict[float, list[float]]:
+                               ) -> tuple[dict[float, list[float]],
+                                          list[int]]:
         """getting the density number from the parsed data"""
         z_threshold: np.ndarray = self.compute_surfactant_vertical_threshold()
         regions: list[float] = \
@@ -99,11 +106,7 @@ class SurfactantDensityAroundNanoparticle:
                                                  density_per_region)
             num_oda.append(len(arr_i))
             num_oda_in_raius.append(count_in_radius)
-        self._comput_and_set_avg_density_as_attribute(density_per_region)
-        self._comput_and_set_2d_rdf(density_per_region, num_oda_in_raius)
-        self._fit_and_set_fitted2d_rdf(log)
-        self._comput_and_set_moving_average(3)
-        return density_per_region
+        return density_per_region, num_oda_in_raius
 
     def _comput_and_set_avg_density_as_attribute(self,
                                                  density_per_region:

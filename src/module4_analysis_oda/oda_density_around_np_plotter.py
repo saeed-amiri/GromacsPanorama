@@ -172,6 +172,8 @@ class SurfactantDensityPlotter:
     rdf_2d: dict[float, float]
     fitted_rdf: dict[float, float]
     smoothed_rdf: dict[float, float]
+    time_dependent_rdf: dict[int, dict[float, float]]
+    time_dependent_ave_density: dict[int, dict[float, float]]
     contact_data: pd.DataFrame
     midpoint: float
     first_turn: float
@@ -189,6 +191,8 @@ class SurfactantDensityPlotter:
         self.rdf_2d = density_obj.rdf_2d
         self.fitted_rdf = density_obj.fitted_rdf
         self.smoothed_rdf = density_obj.smoothed_rdf
+        self.time_dependent_rdf = density_obj.time_dependent_rdf
+        self.time_dependent_ave = density_obj.time_dependent_ave_density
         self.midpoint = density_obj.midpoint
         self.first_turn = density_obj.first_turn
         self.second_turn = density_obj.second_turn
@@ -234,6 +238,8 @@ class SurfactantDensityPlotter:
                                          'smoothed',
                                          self.graph_configs.smoothed_rdf_config
                                          )
+        TimeDependentPlotter(
+            self.time_dependent_rdf, self.time_dependent_ave, log)
 
     def plot_density_graph(self,
                            config: "DensityGraphConfig") -> None:
@@ -441,10 +447,11 @@ class HeatmapPlotter:
             if self.turns_points is not None:
                 for i, point_i in enumerate(list(self.turns_points.values())):
                     ax_i = self._add_heatmap_circle(
-                    ax_i,
-                    point_i,
-                    color=self.config.circles_configs['color'][i+1],
-                    line_style=self.config.circles_configs['linestyle'][i+1])
+                        ax_i,
+                        point_i,
+                        color=self.config.circles_configs['color'][i+1],
+                        line_style=self.config.circles_configs[
+                            'linestyle'][i+1])
 
         return ax_i, contact_radius, np_radius
 
@@ -580,47 +587,89 @@ class HeatmapPlotter:
 
 
 @dataclass
-class DensityTimeConfig(BaseGraphConfig):
-    """set the parameters for the rdf(t) plots"""
+class TimeDependentPlotterConfig(BaseGraphConfig):
+    """configurations for the time dependents plots"""
     graph_suffix: str = 'rdf_2d_time.png'
+    graph_suffix2: str = 'ave_density_time.png'
     graph_legend: str = 'g(r,t)'
+    graph_legend2: str = 'density(r,t)'
     ylabel: str = 'g(r)'
-    title: str = 'Rdf vs Distance from NP'
-    interval: int = 10
+    ylabel2: str = 'density(r)'
+    title: str = 'Fitted Rdf(t) vs Distance from NP'
+    title2: str = 'Density vs Distance from NP'
 
 
-class DensityTimePlotter:
-    """plot the densities (density, rdf, fitted, ...) over times,
-    in order to see the changes over time"""
+class TimeDependentPlotter:
+    """plot the time dependentes density and rdf"""
 
-    info_msg: str = 'Messege from DensityTimePlotter:\n'
-    config: "DensityTimeConfig"
+    info_msg: str = 'Messege from TimeDependentPlotter:\n'
+    rdf: dict[int, dict[float, float]]
+    ave_density: dict[int, dict[float, float]]
 
     def __init__(self,
-                 density: dict[float, list[float]],
+                 time_dependent_rdf: dict[int, dict[float, float]],
+                 time_dependent_ave_density: dict[int, dict[float, float]],
                  log: logger.logging.Logger,
-                 config: "DensityTimeConfig" = DensityTimeConfig()
+                 config: "TimeDependentPlotterConfig" =
+                 TimeDependentPlotterConfig()
                  ) -> None:
         self.config = config
-        self.initialize_plotting(density)
+        self.rdf = time_dependent_rdf
+        self.ave_density = time_dependent_ave_density
+        self.initiate_plot()
 
-    def initialize_plotting(self,
-                            density: dict[float, list[float]]) -> None:
-        """initilize data and plot for the changes over time"""
-        radii: np.ndarray = np.array(list(density.keys()))
-        densities = list(density.values())
-        frame_wise: dict[int, list[float]] = \
-            {i: [] for i in range(1, len(densities[1]), 1)}
+    def initiate_plot(self) -> None:
+        """initiate plotting rdf and density"""
+        fig_i, ax_i = self._plot_graph(self.rdf, label_prefix='Rdf')
+        self.modify_rdf_plot(fig_i, ax_i)
 
-        for frame in range(1, len(densities[1]), 1):
-            for i in range(0, len(radii)):
-                try:
-                    frame_wise[frame].append(densities[i][frame])
-                except IndexError:
-                    print("HERE", frame, i)
-                    frame_wise[frame].append(0)
-        for k in range(1, len(densities[1]), 1):
-            plt.plot(radii, frame_wise[k])
+    def modify_rdf_plot(self,
+                        fig_i: plt.figure,
+                        ax_i: plt.axes
+                        ) -> None:
+        """modify and save the rdf figure"""
+        ax_i.set_xlabel(self.config.xlabel)
+        ax_i.set_ylabel(self.config.ylabel)
+        ax_i.set_title(self.config.title)
+        plot_tools.save_close_fig(
+            fig_i, ax_i, fname=self.config.graph_suffix, loc='lower right')
+
+    def _plot_graph(self,
+                    density: dict[int, dict[float, float]],
+                    label_prefix: str
+                    ) -> tuple[plt.figure, plt.axes]:
+        """plot over time"""
+        fig_i: plt.figure
+        ax_i: plt.axes
+        steps: list[int] = list(density.keys())
+        steps_nr: int = len(steps)
+        alpha_zero: float = 1/steps_nr
+        radii = np.array(list(density[steps[-1]].keys()))
+        fig_i, ax_i = \
+            plot_tools.mk_canvas(x_range=(np.min(radii), np.max(radii)),
+                                 height_ratio=5**0.5-1)
+        for i, (_, frame) in enumerate(density.items(), start=1):
+            densities = np.array(list(frame.values()))
+            if i == steps_nr:
+                color = 'r'
+                alpha = 1.0
+                label = label_prefix
+            else:
+                color = 'k'
+                alpha = 1.0-i*alpha_zero
+                label = None
+                if i == 1:
+                    label = f'{label_prefix}(t)'
+            ax_i.plot(radii,
+                      densities,
+                      marker=self.config.graph_style['marker'],
+                      linestyle=self.config.graph_style['linestyle'],
+                      color=color,
+                      label=label,
+                      markersize=0,
+                      alpha=alpha)
+        ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
+        return fig_i, ax_i
 
 
 if __name__ == "__main__":

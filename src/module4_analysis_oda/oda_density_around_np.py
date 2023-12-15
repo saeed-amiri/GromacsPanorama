@@ -79,7 +79,7 @@ class SurfactantDensityAroundNanoparticle:
         self.initialize_data_arrays(np_com_df, box_df, log)
 
         self.density_per_region, num_oda_in_raius = \
-            self.initialize_calculation(amino_arr)
+            self.initialize_calculation(amino_arr, log)
 
         self.avg_density_per_region = \
             self._comput_avg_density(self.density_per_region)
@@ -96,11 +96,13 @@ class SurfactantDensityAroundNanoparticle:
 
     def initialize_calculation(self,
                                amino_arr: np.ndarray,
+                               log: logger.logging.Logger,
                                update_msg: bool = True
                                ) -> tuple[dict[float, list[float]],
                                           list[int]]:
         """getting the density number from the parsed data"""
-        z_threshold: np.ndarray = self.compute_surfactant_vertical_threshold()
+        z_threshold: np.ndarray = \
+            self.compute_surfactant_vertical_threshold(log)
         regions: list[float] = self.generate_regions(
             self.param_config.number_of_regions, update_msg=update_msg)
         # Initialize a dictionary to store densities for each region
@@ -169,7 +171,8 @@ class SurfactantDensityAroundNanoparticle:
                                            amino_arr: np.ndarray,
                                            num_oda_in_raius: list[int],
                                            log: logger.logging.Logger
-                                           ) -> tuple[dict[int, np.ndarray],
+                                           ) -> tuple[dict[int,
+                                                      dict[float, float]],
                                                       dict[int,
                                                       dict[float, float]]]:
         """calculate avedensity and rdf as function of time"""
@@ -179,7 +182,7 @@ class SurfactantDensityAroundNanoparticle:
         for i in range(0, amino_arr.shape[0], step):
             amino_arr_i = amino_arr[:i].copy()
             density_per_region, num_oda_in_raius = \
-                self.initialize_calculation(amino_arr_i, update_msg=False)
+                self.initialize_calculation(amino_arr_i, log, update_msg=False)
             rdf_i = self._comput_2d_rdf(density_per_region, num_oda_in_raius)
             try:
                 time_dependent_rdf[i] = \
@@ -278,11 +281,16 @@ class SurfactantDensityAroundNanoparticle:
         dy_pbc = dy_i - (box[1] * np.round(dy_i/box[1]))
         return np.sqrt(dx_pbc*dx_pbc + dy_pbc*dy_pbc)
 
-    def compute_surfactant_vertical_threshold(self) -> np.ndarray:
+    def compute_surfactant_vertical_threshold(self,
+                                              log: logger.logging.Logger
+                                              ) -> np.ndarray:
         """find the vertical threshold for the surfactants, to drop from
         calculation"""
-        return (stinfo.np_info['radius'] +
-                self.np_com[:, 2] + np.std(self.np_com[:, 2])).reshape(-1, 1)
+        contact_angle: np.ndarray = \
+            self.parse_contact_data(self.contact_data, 'contact_angles', log)
+        cos_contact_angle: np.ndarray = np.cos(np.radians(contact_angle)) + 1
+        return (self.interface_z + np.abs(
+                stinfo.np_info['radius'] * cos_contact_angle)).reshape(-1, 1)
 
     def initialize_data_arrays(self,
                                np_com_df: pd.DataFrame,

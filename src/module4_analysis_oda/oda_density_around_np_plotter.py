@@ -654,10 +654,12 @@ class TimeDependentPlotter:
                 color = 'r'
                 alpha = 1.0
                 label = label_prefix
+                lw = 1.0
             else:
                 color = 'k'
                 alpha = 1.0-i*alpha_zero
                 label = None
+                lw = i*alpha_zero
                 if i == 1:
                     label = f'{label_prefix}(t)'
             ax_i.plot(radii,
@@ -667,7 +669,8 @@ class TimeDependentPlotter:
                       color=color,
                       label=label,
                       markersize=0,
-                      alpha=alpha)
+                      alpha=alpha,
+                      lw=lw)
         ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
         return fig_i, ax_i
 

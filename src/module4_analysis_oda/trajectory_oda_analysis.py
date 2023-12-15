@@ -40,11 +40,15 @@ class OdaAnalysis:
             # amino_arr=parsed_com.split_arr_dict['AMINO_ODN'],
             # box_dims=parsed_com.box_dims)
         # RdfClculation(log, rdf_config)
+        residue: str = 'CL'
         params: "ParameterConfig" = \
             ParameterConfig(number_of_regions=50, time_dependent_step= 101)
         oda_density = SurfactantDensityAroundNanoparticle(
-            parsed_com.split_arr_dict['AMINO_ODN'], log, param_config=params)
-        SurfactantDensityPlotter(oda_density, log)
+            parsed_com.split_arr_dict['CLA'],
+            log,
+            param_config=params,
+            residue=residue)
+        SurfactantDensityPlotter(oda_density, log, residue=residue)
         # contrast = SurfactantsLocalizedDensityContrast(
         #     parsed_com.split_arr_dict['AMINO_ODN'], log)
         # SurfactantContrastDensityPlotter(contrast.number_density, log)

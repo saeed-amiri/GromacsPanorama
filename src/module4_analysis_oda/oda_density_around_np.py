@@ -57,18 +57,20 @@ class SurfactantDensityAroundNanoparticle:
                  amino_arr: np.ndarray,  # amino head com of the oda
                  log: logger.logging.Logger,
                  input_config: "OdaInputFilesConfig" = OdaInputFilesConfig(),
-                 param_config: "ParameterConfig" = ParameterConfig()
+                 param_config: "ParameterConfig" = ParameterConfig(),
+                 residue: str = 'ODA'
                  ) -> None:
         # The two last rows of amino_arr are indicies from main trr file
         amino_arr = amino_arr[:-2]
         self.input_config = input_config
         self.param_config = param_config
-        self._initiate(amino_arr, log)
+        self._initiate(amino_arr, log, residue)
         self.write_msg(log)
 
     def _initiate(self,
                   amino_arr: np.ndarray,
                   log: logger.logging.Logger,
+                  residue: str
                   ) -> None:
         """Initiate the calculation by checking necessary files."""
         self.check_input_files(log, self.input_config)
@@ -87,11 +89,12 @@ class SurfactantDensityAroundNanoparticle:
         self.rdf_2d = \
             self._comput_2d_rdf(self.density_per_region, num_oda_in_raius)
 
-        self.time_dependent_rdf, self.time_dependent_ave_density = \
-            self.calculate_time_dependent_densities(
-                amino_arr, num_oda_in_raius, log)
+        if residue == 'ODA':
+            self.time_dependent_rdf, self.time_dependent_ave_density = \
+                self.calculate_time_dependent_densities(
+                    amino_arr, num_oda_in_raius, log)
 
-        self._fit_and_set_fitted2d_rdf(log)
+            self._fit_and_set_fitted2d_rdf(log)
         self._comput_and_set_moving_average(3)
 
     def initialize_calculation(self,

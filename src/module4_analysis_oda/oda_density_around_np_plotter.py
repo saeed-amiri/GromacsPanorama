@@ -167,37 +167,48 @@ class SurfactantDensityPlotter:
     """plot the desinty of the oda around the NP"""
 
     info_msg: str = 'Message from SurfactantDensityPlotter:\n'
+    residue: str  # Name of the residue
+
     density: dict[float, list[float]]
+
     ave_density: dict[float, float]
     rdf_2d: dict[float, float]
     fitted_rdf: dict[float, float]
     smoothed_rdf: dict[float, float]
+
     time_dependent_rdf: dict[int, dict[float, float]]
     time_dependent_ave_density: dict[int, dict[float, float]]
+
     contact_data: pd.DataFrame
+    box: np.ndarray  # Size of the box at each frame (from gromacs)
+
     midpoint: float
     first_turn: float
     second_turn: float
-    box: np.ndarray  # Size of the box at each frame (from gromacs)
 
     def __init__(self,
                  density_obj: "SurfactantDensityAroundNanoparticle",
                  log: logger.logging.Logger,
-                 graphs_config: "GraphsConfigs" = GraphsConfigs()
+                 graphs_config: "GraphsConfigs" = GraphsConfigs(),
+                 residue: str = 'ODA'
                  ) -> None:
+
+        self.contact_data = density_obj.contact_data
+        self.box = density_obj.box
+        self.residue = residue
 
         self.density = density_obj.density_per_region
         self.ave_density = density_obj.avg_density_per_region
         self.rdf_2d = density_obj.rdf_2d
-        self.fitted_rdf = density_obj.fitted_rdf
         self.smoothed_rdf = density_obj.smoothed_rdf
-        self.time_dependent_rdf = density_obj.time_dependent_rdf
-        self.time_dependent_ave = density_obj.time_dependent_ave_density
-        self.midpoint = density_obj.midpoint
-        self.first_turn = density_obj.first_turn
-        self.second_turn = density_obj.second_turn
-        self.contact_data = density_obj.contact_data
-        self.box = density_obj.box
+
+        if residue == 'ODA':
+            self.time_dependent_rdf = density_obj.time_dependent_rdf
+            self.fitted_rdf = density_obj.fitted_rdf
+            self.midpoint = density_obj.midpoint
+            self.first_turn = density_obj.first_turn
+            self.second_turn = density_obj.second_turn
+            self.time_dependent_ave = density_obj.time_dependent_ave_density
 
         self.graph_configs = graphs_config
 
@@ -205,41 +216,47 @@ class SurfactantDensityPlotter:
         self.write_msg(log)
 
     def _initialize_plotting(self,
-                             log: logger.logging.Logger
+                             log: logger.logging.Logger,
+                             residue: str = 'ODA'
                              ) -> None:
         HeatmapPlotter(ref_density=self.ave_density,
                        contact_data=self.contact_data,
                        config=DensityHeatMapConfig(),
-                       log=log)
+                       log=log,
+                       residue=self.residue)
         HeatmapPlotter(ref_density=self.rdf_2d,
                        contact_data=self.contact_data,
                        config=Rdf2dHeatMapConfig(),
-                       log=log)
-        HeatmapPlotter(ref_density=self.fitted_rdf,
-                       contact_data=self.contact_data,
-                       config=FittedsRdf2dHeatMapConfig(),
                        log=log,
-                       fitted_turn_points={
-                        'midpoint': self.midpoint,
-                        '1st': self.first_turn,
-                        '2nd': self.second_turn})
+                       residue=self.residue)
         HeatmapPlotter(ref_density=self.smoothed_rdf,
                        contact_data=self.contact_data,
                        config=SmoothedRdf2dHeatMapConfig(),
-                       log=log)
+                       log=log,
+                       residue=self.residue)
+        if residue == 'ODA' and hasattr(self, 'fitted_rdf'):
+            HeatmapPlotter(ref_density=self.fitted_rdf,
+                           contact_data=self.contact_data,
+                           config=FittedsRdf2dHeatMapConfig(),
+                           log=log,
+                           residue=self.residue,
+                           fitted_turn_points={
+                            'midpoint': self.midpoint,
+                            '1st': self.first_turn,
+                            '2nd': self.second_turn})
+            self.plot_fitted_or_smoothed_rdf(
+                self.fitted_rdf,
+                'fitted',
+                self.graph_configs.fitted_rdf_config)
+            TimeDependentPlotter(
+                self.time_dependent_rdf, self.time_dependent_ave, log)
         # DensityTimePlotter(density=self.density, log=log)
         self.plot_density_graph(self.graph_configs.graph_config)
         self.plot_2d_rdf(self.graph_configs.rdf_config)
-        self.plot_fitted_or_smoothed_rdf(self.fitted_rdf,
-                                         'fitted',
-                                         self.graph_configs.fitted_rdf_config
-                                         )
         self.plot_fitted_or_smoothed_rdf(self.smoothed_rdf,
                                          'smoothed',
                                          self.graph_configs.smoothed_rdf_config
                                          )
-        TimeDependentPlotter(
-            self.time_dependent_rdf, self.time_dependent_ave, log)
 
     def plot_density_graph(self,
                            config: "DensityGraphConfig") -> None:
@@ -278,10 +295,9 @@ class SurfactantDensityPlotter:
             ax_i = self._add_vline(ax_i, self.midpoint, lstyle='--', color='b')
             ax_i = self._add_vline(
                 ax_i, self.second_turn, legend='2nd', lstyle=':', color='r')
-        plot_tools.save_close_fig(
-            fig_i, ax_i, config.graph_suffix, loc='lower right')
-        self.info_msg += \
-            f'\tThe `{style}` graph saved: `{config.graph_suffix}`\n'
+        fout: str = f'{self.residue}_{config.graph_suffix}'
+        plot_tools.save_close_fig(fig_i, ax_i, fout, loc='lower right')
+        self.info_msg += f'\tThe `{style}` graph saved: `{fout}`\n'
 
     @staticmethod
     def _add_vline(ax_i: plt.axes,
@@ -331,8 +347,9 @@ class SurfactantDensityPlotter:
         ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
 
         if not return_ax:
+            fout: str = f'{self.residue}_{config.graph_suffix}'
             plot_tools.save_close_fig(
-                fig_i, ax_i, config.graph_suffix, loc='upper left')
+                fig_i, ax_i, fout, loc='upper left')
             self.info_msg += \
                 f'\tThe density graph saved: `{config.graph_suffix}`\n'
         return fig_i, ax_i
@@ -360,8 +377,10 @@ class HeatmapPlotter:
                                       "SmoothedRdf2dHeatMapConfig"],
                  log: logger.logging.Logger,
                  fitted_turn_points:
-                 typing.Union[None, dict[str, float]] = None
+                 typing.Union[None, dict[str, float]] = None,
+                 residue: str = 'ODA'
                  ) -> None:
+        self.residue = residue
         self.ref_density = ref_density
         self.config = config
         self.contact_data = contact_data
@@ -376,8 +395,8 @@ class HeatmapPlotter:
         plot_params = HeatMapPlottingData(
             fig_i, ax_i, radial_distances, theta, density_grid)
         ax_i = self.plot_heatmap(plot_params)
-        self._save_close_fig(
-            fig_i, ax_i, fout := self.config.heatmap_suffix, legend=False)
+        fout: str = f'{self.residue}_{self.config.heatmap_suffix}'
+        self._save_close_fig(fig_i, ax_i, fout, legend=False)
         self.info_msg += f'\tThe heatmap of the density is saved as {fout}\n'
 
     def create_density_grid(self) -> tuple[np.ndarray, ...]:
@@ -589,8 +608,8 @@ class HeatmapPlotter:
 @dataclass
 class TimeDependentPlotterConfig(BaseGraphConfig):
     """configurations for the time dependents plots"""
-    graph_suffix: str = 'rdf_2d_time.png'
-    graph_suffix2: str = 'ave_density_time.png'
+    graph_suffix: str = 'ODA_rdf_2d_time.png'
+    graph_suffix2: str = 'ODA_ave_density_time.png'
     graph_legend: str = 'g(r,t)'
     graph_legend2: str = 'density(r,t)'
     ylabel: str = 'g(r)'
@@ -654,12 +673,12 @@ class TimeDependentPlotter:
                 color = 'r'
                 alpha = 1.0
                 label = label_prefix
-                lw = 1.0
+                lwidth = 1.0
             else:
                 color = 'k'
                 alpha = 1.0-i*alpha_zero
                 label = None
-                lw = i*alpha_zero
+                lwidth = i*alpha_zero
                 if i == 1:
                     label = f'{label_prefix}(t)'
             ax_i.plot(radii,
@@ -670,7 +689,7 @@ class TimeDependentPlotter:
                       label=label,
                       markersize=0,
                       alpha=alpha,
-                      lw=lw)
+                      lw=lwidth)
         ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
         return fig_i, ax_i
 

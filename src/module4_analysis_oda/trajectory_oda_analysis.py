@@ -18,6 +18,7 @@ from module4_analysis_oda.oda_density_contrast import \
 from module4_analysis_oda.oda_density_contrast_plotter import \
     GraphConfing, SurfactantContrastDensityPlotter
 from module4_analysis_oda.oda_xy_plotter import PlotSurfactantComXY
+from module4_analysis_oda.density_overlay_plotter import OverlayPlotDensities
 
 from common import logger
 from common.com_file_parser import GetCom
@@ -27,8 +28,9 @@ from common.com_file_parser import GetCom
 class ComputationCalculations:
     """To select computions"""
     plain_rdf: bool = False
-    density_rdf: bool = True
+    density_rdf: bool = False
     contrast_density: bool = False
+    overlay_plot: bool = True
 
 
 class OdaAnalysis:
@@ -48,8 +50,9 @@ class OdaAnalysis:
                  ) -> None:
         """call the scripts"""
         self.plain_rdf_calculation(log)
-        self.compute_densities(log)
+        self.compute_plot_densities(log)
         self.compute_contrast_density(log)
+        self.plot_overlay_densities(log)
 
     def plain_rdf_calculation(self,
                               log: logger.logging.Logger
@@ -61,9 +64,9 @@ class OdaAnalysis:
                 box_dims=self.parsed_com.box_dims)
             RdfClculation(log, rdf_config)
 
-    def compute_densities(self,
-                          log: logger.logging.Logger
-                          ) -> None:
+    def compute_plot_densities(self,
+                               log: logger.logging.Logger
+                               ) -> None:
         """compute density and rdf"""
         if self.compute_config.density_rdf:
             for residue in ['AMINO_ODN', 'CLA']:
@@ -88,6 +91,18 @@ class OdaAnalysis:
             SurfactantContrastDensityPlotter(contrast.number_density, log)
             PlotSurfactantComXY(self.parsed_com.split_arr_dict['AMINO_ODN'],
                                 log)
+
+    def plot_overlay_densities(self,
+                               log: logger.logging.Logger
+                               ) -> None:
+        """
+        Plot the overlay densities (density, rdf, ... for ODA and
+        Cl.
+        """
+        if self.compute_config.overlay_plot:
+            OverlayPlotDensities(
+                ['AMINO_ODN_densities.xvg', 'CLA_densities.xvg'], log)
+
 
 
 if __name__ == '__main__':

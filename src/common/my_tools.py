@@ -27,6 +27,7 @@ def check_file_exist(fname: str,  # Name of the file to check
     log.info(msg := f'`{fname}` exist.')
     print(f'{bcolors.OKBLUE}my_tools:\n\t{msg}{bcolors.ENDC}\n')
 
+
 def check_file_extension(fname: str,  # Name of the file to check
                          extension: str,  # Extension of expected file
                          log: logger.logging.Logger
@@ -36,11 +37,12 @@ def check_file_extension(fname: str,  # Name of the file to check
         pass
     else:
         msg = (f'\tThe provided file has the extension: `{fname_exten}` '
-                f'which is not `{extension}`\n'
-                f'\tProvid a file with correct extension\n')
+               f'which is not `{extension}`\n'
+               f'\tProvid a file with correct extension\n')
         log.error(msg)
         raise InvalidFileExtensionError(
             f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
 
 def check_file_reanme(fname: str,  # Name of the file to check
                       log: logger.logging.Logger
@@ -76,53 +78,59 @@ def extract_string(input_string: str) -> list[typing.Any]:
     matches = re.findall(pattern, input_string)
     return matches
 
+
 def clean_string(input_string: str) -> str:
-    # Remove special characters at the beginning and end of the string
+    """Remove special characters at the beginning and end of the string"""
     cleaned_string: str = \
         re.sub(r'^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$', '', input_string)
-    
+
     # Replace special characters in the middle with underscores
     cleaned_string = re.sub(r'[^a-zA-Z0-9]+', '_', cleaned_string)
-    
+
     return cleaned_string
+
 
 def write_xvg(df_i: pd.DataFrame,
               log: logger.logging.Logger,
+              extra_msg: list[str],
               fname: str = 'df.xvg'
               ) -> None:
-        """
-        Write the data into xvg format
-        Raises:
-            ValueError: If the DataFrame has no columns.
-        """
-        if df_i.columns.empty:
-            log.error(msg := "\tThe DataFrame has no columns.\n")
-            raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}\n')
-        if df_i.empty:
-            log.warning(
-                msg := f"The df is empty. `{fname}` will not contain data.")
-            warnings.warn(msg, UserWarning)
+    """
+    Write the data into xvg format
+    Raises:
+        ValueError: If the DataFrame has no columns.
+    """
+    if df_i.columns.empty:
+        log.error(msg := "\tThe DataFrame has no columns.\n")
+        raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}\n')
+    if df_i.empty:
+        log.warning(
+            msg := f"The df is empty. `{fname}` will not contain data.")
+        warnings.warn(msg, UserWarning)
 
-        columns: list[str] = df_i.columns.to_list()
+    columns: list[str] = df_i.columns.to_list()
 
-        header_lines: list[str] = [
-            '# Written by my_tools.write_xvg\n',
-            f'# Current directory: {os.getcwd()}',
-            '@   title "Contact information"',
-            '@   xaxis label "Frame index"',
-            '@   yaxis label "Varies"',
-            '@TYPE xy',
-            '@ view 0.15, 0.15, 0.75, 0.85',
-            '@legend on',
-            '@ legend box on',
-            '@ legend loctype view',
-            '@ legend 0.78, 0.8',
-            '@ legend length 2'
-        ]
-        legend_lines: list[str] = \
-            [f'@ s{i} legend "{col}"' for i, col in enumerate(columns)]
+    comment_lines: list[str] = [
+        '# Written by my_tools.write_xvg\n',
+        f'# Current directory: {os.getcwd()}',
+    ] + extra_msg
 
-        with open(fname, 'w', encoding='utf8') as f_w:
-            for line in header_lines + legend_lines:
-                f_w.write(line + '\n')
-            df_i.to_csv(f_w, sep=' ', index=True, header=None, na_rep='NaN')
+    header_lines: list[str] = [
+        '@   title "Contact information"',
+        '@   xaxis label "Frame index"',
+        '@   yaxis label "Varies"',
+        '@TYPE xy',
+        '@ view 0.15, 0.15, 0.75, 0.85',
+        '@legend on',
+        '@ legend box on',
+        '@ legend loctype view',
+        '@ legend 0.78, 0.8',
+        '@ legend length 2'
+    ]
+    legend_lines: list[str] = \
+        [f'@ s{i} legend "{col}"' for i, col in enumerate(columns)]
+
+    with open(fname, 'w', encoding='utf8') as f_w:
+        f_w.writelines([line + '\n' for line in
+                        comment_lines + header_lines + legend_lines])
+        df_i.to_csv(f_w, sep=' ', index=True, header=None, na_rep='NaN')

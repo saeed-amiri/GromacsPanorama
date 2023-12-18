@@ -88,6 +88,13 @@ class OverlayPlotDensities:
                        log: logger.logging.Logger
                        ) -> None:
         """plots the densities in different styles"""
+        self._plot_save_normalized_plots(log)
+
+    def _plot_save_normalized_plots(self,
+                                    log:logger.logging.Logger
+                                    ) -> None:
+        """plot and save the normalized densities in one grpah"""
+        
 
     def get_xvg_dict(self,
                      log: logger.logging.Logger

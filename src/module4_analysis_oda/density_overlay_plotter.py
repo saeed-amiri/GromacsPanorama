@@ -11,6 +11,7 @@ The data will be read from data files
 from dataclasses import dataclass, field
 
 import numpy as np
+import matplotlib.pylab as plt
 
 from common import logger
 from common import xvg_to_dataframe as xvg
@@ -58,6 +59,8 @@ class OverlayPlotDensities:
     file_names: list[str]
     data_config: "DataConfig"
     plot_config: "PlotConfig"
+    x_data: np.ndarray
+    xvg_df: dict[str, np.ndarray]
 
     def __init__(self,
                  file_names: list[str],
@@ -68,32 +71,44 @@ class OverlayPlotDensities:
         self.file_names = file_names
         self.data_config = data_config
         self.plot_config = plot_config
-        self.initiate_data(log)
+        self.xvg_df, self.x_data = self.initiate_data(log)
+        self.initiate_plots(log)
         self._write_msg(log)
 
     def initiate_data(self,
                       log: logger.logging.Logger
-                      ) -> None:
+                      ) -> tuple[dict[str, np.ndarray], np.ndarray]:
         """initiate reading data files"""
+        x_data: np.ndarray
         xvg_df: dict[str, np.ndarray] = {}
-        xvg_df = self.get_xvg_dict(log)
-        print(xvg_df)
+        xvg_df, x_data = self.get_xvg_dict(log)
+        return xvg_df, x_data
+
+    def initiate_plots(self,
+                       log: logger.logging.Logger
+                       ) -> None:
+        """plots the densities in different styles"""
 
     def get_xvg_dict(self,
                      log: logger.logging.Logger
-                     ) -> dict[str, np.ndarray]:
+                     ) -> tuple[dict[str, np.ndarray], np.ndarray]:
         """return select data from the files"""
+        x_data: np.ndarray
         xvg_df: dict[str, np.ndarray] = {}
-        for f_xvg in self.file_names:
+
+        for i, f_xvg in enumerate(self.file_names):
             fanme: str = f_xvg.split('.')[0]
             df_column: str = self.data_config.xvg_column[
                 self.data_config.selected_columns[0]]
-            xvg_df[fanme] = \
-                xvg.XvgParser(f_xvg, log).xvg_df[df_column].to_numpy()
+            df_i = xvg.XvgParser(f_xvg, log).xvg_df
+            xvg_df[fanme] = df_i[df_column].to_numpy()
+            if i == 0:
+                x_data = \
+                    df_i[self.data_config.xvg_column['regions']].to_numpy()
         self.info_msg += (f'\tThe file names are:\n\t\t`{self.file_names}`\n'
                           '\tThe selected columns are:\n'
                           f'\t\t`{self.data_config.selected_columns}`\n')
-        return xvg_df
+        return xvg_df, x_data
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

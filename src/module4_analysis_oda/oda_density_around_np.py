@@ -9,6 +9,7 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+from scipy.interpolate import interp1d
 
 from common import logger
 from common import my_tools
@@ -45,12 +46,12 @@ class SurfactantDensityAroundNanoparticle:
     np_com: np.ndarray  # COM of the NP at each frame (from gromacs)
     interface_z: np.ndarray  # Z location of the interface (from module3)
     density_per_region: dict[float, list[float]]  # Density per area
-    
+
     avg_density_per_region: dict[float, float]
     rdf_2d: dict[float, float]  # rdf (g((r)) in 2d
     fitted_rdf: dict[float, float]  # fitted rdf
     smoothed_rdf: dict[float, float]  # smoothed rdf
-    
+
     time_dependent_rdf: dict[int, dict[float, float]]
     time_dependent_ave_density: dict[int, dict[float, float]]
     midpoint: float  # midpoint of the fit
@@ -69,6 +70,7 @@ class SurfactantDensityAroundNanoparticle:
         self.input_config = input_config
         self.param_config = param_config
         regions: list[float] = self._initiate(amino_arr, log, residue)
+        self.write_to_xvg(regions, log)
         self.write_msg(log)
 
     def _initiate(self,
@@ -344,6 +346,73 @@ class SurfactantDensityAroundNanoparticle:
     def load_box_data(self, log: logger.logging.Logger) -> pd.DataFrame:
         """Load and return the box dimension data from XVG file."""
         return xvg.XvgParser(self.input_config.box_xvg, log).xvg_df
+
+    def write_to_xvg(self,
+                     regions: list[float],
+                     log: logger.logging.Logger
+                     ) -> None:
+        """write the densities in the xvg file"""
+        xvg_df: pd.DataFrame = self._prepare_arraies_for_xvg(regions, log)
+        my_tools.write_xvg(xvg_df, log, fname=self.param_config.xvg_output)
+
+    def _prepare_arraies_for_xvg(self,
+                                 regions: list[float],
+                                 log: logger.logging.Logger
+                                 ) -> pd.DataFrame:
+        """convert the arraies to one dataframe to write into xvg file"""
+        columns: list[str] = self._get_xvg_columns()
+        if not self._check_denisty(log):
+            return False
+
+        xvg_df: pd.DataFrame = pd.DataFrame(columns=columns)
+        xvg_df['regions'] = regions
+        for col in columns[1:]:
+            try:
+                arr: np.ndarray = self._interpolate_data_to_fix_length(
+                    regions, getattr(self, col))
+                xvg_df[col] = arr
+            except AttributeError:
+                log.error(
+                    msg := f'\tAttribute {col} not found in the object.\n')
+                print(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+                return None
+
+        return xvg_df
+
+    def _get_xvg_columns(self) -> list[str]:
+        """get the list of the columns names for xvg file"""
+        columns: list[str] = ['regions', 'avg_density_per_region', 'rdf_2d']
+        if hasattr(self, 'fitted_rdf'):
+            columns.extend(['fitted_rdf'])
+        if hasattr(self, 'smoothed_rdf'):
+            columns.extend(['smoothed_rdf'])
+        return columns
+
+    def _check_denisty(self,
+                       log: logger.logging.Logger
+                       ) -> bool:
+        """check if there is any data in ave_density"""
+        if not self.avg_density_per_region:
+            log.warning(msg := '\tThere is no average density computed!\n')
+            warnings.warn(msg, UserWarning)
+            return False
+        return True
+
+    @staticmethod
+    def _interpolate_data_to_fix_length(regions: list[float],
+                                        density: dict[float, float]
+                                        ) -> np.ndarray:
+        """interploate data in order to all be in same range"""
+        density_regions: list[float] = list(density.keys())
+        dens_arr: np.ndarray = np.array(list(density.values()))
+        if density_regions == regions:
+            return dens_arr
+        radii_arr: np.ndarray = np.array(density_regions)
+        interpolated_density = interp1d(radii_arr,
+                                        dens_arr,
+                                        kind='linear',
+                                        fill_value="extrapolate")
+        return interpolated_density(regions)
 
     @staticmethod
     def parse_contact_data(contact_data: pd.DataFrame,

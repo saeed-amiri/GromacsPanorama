@@ -31,6 +31,7 @@ class ParameterConfig:
     """set the default parameters for the calculataion"""
     number_of_regions: int = 150
     time_dependent_step: int = 100
+    xvg_output: str = 'densities.xvg'
 
 
 class SurfactantDensityAroundNanoparticle:
@@ -58,7 +59,7 @@ class SurfactantDensityAroundNanoparticle:
                  log: logger.logging.Logger,
                  input_config: "OdaInputFilesConfig" = OdaInputFilesConfig(),
                  param_config: "ParameterConfig" = ParameterConfig(),
-                 residue: str = 'ODA'
+                 residue: str = 'AMINO_ODN'
                  ) -> None:
         # The two last rows of amino_arr are indicies from main trr file
         amino_arr = amino_arr[:-2]
@@ -89,7 +90,7 @@ class SurfactantDensityAroundNanoparticle:
         self.rdf_2d = \
             self._comput_2d_rdf(self.density_per_region, num_oda_in_raius)
 
-        if residue == 'ODA':
+        if residue == 'AMINO_ODN':
             self.time_dependent_rdf, self.time_dependent_ave_density = \
                 self.calculate_time_dependent_densities(
                     amino_arr, num_oda_in_raius, log)

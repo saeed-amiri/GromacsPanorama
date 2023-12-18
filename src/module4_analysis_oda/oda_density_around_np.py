@@ -81,19 +81,19 @@ class SurfactantDensityAroundNanoparticle:
         box_df: pd.DataFrame = self.load_box_data(log)
         self.initialize_data_arrays(np_com_df, box_df, log)
 
-        self.density_per_region, num_oda_in_raius = \
+        self.density_per_region, num_oda_in_radius = \
             self.initialize_calculation(amino_arr, log)
 
         self.avg_density_per_region = \
             self._comput_avg_density(self.density_per_region)
 
         self.rdf_2d = \
-            self._comput_2d_rdf(self.density_per_region, num_oda_in_raius)
+            self._comput_2d_rdf(self.density_per_region, num_oda_in_radius)
 
         if residue == 'AMINO_ODN':
             self.time_dependent_rdf, self.time_dependent_ave_density = \
                 self.calculate_time_dependent_densities(
-                    amino_arr, num_oda_in_raius, log)
+                    amino_arr, num_oda_in_radius, log)
 
             self._fit_and_set_fitted2d_rdf(log)
         self._comput_and_set_moving_average(3)
@@ -113,7 +113,7 @@ class SurfactantDensityAroundNanoparticle:
         density_per_region: dict[float, list[float]] = \
             {region: [] for region in regions}
         num_oda: list[int] = []
-        num_oda_in_raius: list[int] = []
+        num_oda_in_radius: list[int] = []
         for i, frame_i in enumerate(amino_arr):
             arr_i: np.ndarray = \
                 self._get_surfactant_at_interface(frame_i, z_threshold[i])
@@ -123,8 +123,8 @@ class SurfactantDensityAroundNanoparticle:
                                                  distance,
                                                  density_per_region)
             num_oda.append(len(arr_i))
-            num_oda_in_raius.append(count_in_radius)
-        return density_per_region, num_oda_in_raius
+            num_oda_in_radius.append(count_in_radius)
+        return density_per_region, num_oda_in_radius
 
     def _comput_avg_density(self,
                             density_per_region:
@@ -173,7 +173,7 @@ class SurfactantDensityAroundNanoparticle:
 
     def calculate_time_dependent_densities(self,
                                            amino_arr: np.ndarray,
-                                           num_oda_in_raius: list[int],
+                                           num_oda_in_radius: list[int],
                                            log: logger.logging.Logger
                                            ) -> tuple[dict[int,
                                                       dict[float, float]],
@@ -185,9 +185,9 @@ class SurfactantDensityAroundNanoparticle:
         time_dependent_ave_density: dict[int, dict[float, float]] = {}
         for i in range(0, amino_arr.shape[0], step):
             amino_arr_i = amino_arr[:i].copy()
-            density_per_region, num_oda_in_raius = \
+            density_per_region, num_oda_in_radius = \
                 self.initialize_calculation(amino_arr_i, log, update_msg=False)
-            rdf_i = self._comput_2d_rdf(density_per_region, num_oda_in_raius)
+            rdf_i = self._comput_2d_rdf(density_per_region, num_oda_in_radius)
             try:
                 time_dependent_rdf[i] = \
                     fit_rdf.FitRdf2dTo5PL2S(rdf_i, log).fitted_rdf

@@ -10,10 +10,11 @@ The data will be read from data files
 
 from dataclasses import dataclass, field
 
-import pandas as pd
+import numpy as np
 
 from common import logger
 from common import xvg_to_dataframe as xvg
+from common.colors_text import TextColor as bcolors
 
 
 @dataclass
@@ -68,25 +69,39 @@ class OverlayPlotDensities:
         self.data_config = data_config
         self.plot_config = plot_config
         self.initiate_data(log)
+        self._write_msg(log)
 
     def initiate_data(self,
                       log: logger.logging.Logger
                       ) -> None:
         """initiate reading data files"""
-        xvg_df: dict[str, pd.DataFrame] = {}
+        xvg_df: dict[str, np.ndarray] = {}
         xvg_df = self.get_xvg_dict(log)
+        print(xvg_df)
 
     def get_xvg_dict(self,
                      log: logger.logging.Logger
-                     ) -> dict[str, pd.DataFrame]:
+                     ) -> dict[str, np.ndarray]:
         """return select data from the files"""
-        xvg_df: dict[str, pd.DataFrame] = {}
+        xvg_df: dict[str, np.ndarray] = {}
         for f_xvg in self.file_names:
             fanme: str = f_xvg.split('.')[0]
             df_column: str = self.data_config.xvg_column[
                 self.data_config.selected_columns[0]]
-            xvg_df[fanme] = xvg.XvgParser(f_xvg, log).xvg_df[df_column]
+            xvg_df[fanme] = \
+                xvg.XvgParser(f_xvg, log).xvg_df[df_column].to_numpy()
+        self.info_msg += (f'\tThe file names are:\n\t\t`{self.file_names}`\n'
+                          '\tThe selected columns are:\n'
+                          f'\t\t`{self.data_config.selected_columns}`\n')
         return xvg_df
+
+    def _write_msg(self,
+                   log: logger.logging.Logger  # To log
+                   ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == '__main__':

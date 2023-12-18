@@ -105,7 +105,7 @@ class SurfactantDensityAroundNanoparticle:
                                           list[int]]:
         """getting the density number from the parsed data"""
         z_threshold: np.ndarray = \
-            self.compute_surfactant_vertical_threshold(log)
+            self.compute_surfactant_vertical_bounds(log)
         regions: list[float] = self.generate_regions(
             self.param_config.number_of_regions, update_msg=update_msg)
         # Initialize a dictionary to store densities for each region
@@ -260,12 +260,13 @@ class SurfactantDensityAroundNanoparticle:
 
     @staticmethod
     def _get_surfactant_at_interface(frame_i: np.ndarray,
-                                     z_threshold_i: float
+                                     z_threshold_i: np.ndarray
                                      ) -> np.ndarray:
         """return the oda at the interface"""
         frame_reshaped: np.ndarray = frame_i.reshape(-1, 3)
         below_threshold_indices: np.ndarray = \
-            np.where(frame_reshaped[:, 2] < z_threshold_i)
+            np.where((frame_reshaped[:, 2] < z_threshold_i[1]) &
+                     (frame_reshaped[:, 2] > z_threshold_i[0]))
         return frame_reshaped[below_threshold_indices]
 
     def compute_pbc_distance(self,
@@ -284,16 +285,35 @@ class SurfactantDensityAroundNanoparticle:
         dy_pbc = dy_i - (box[1] * np.round(dy_i/box[1]))
         return np.sqrt(dx_pbc*dx_pbc + dy_pbc*dy_pbc)
 
-    def compute_surfactant_vertical_threshold(self,
-                                              log: logger.logging.Logger
-                                              ) -> np.ndarray:
-        """find the vertical threshold for the surfactants, to drop from
-        calculation"""
+    def compute_surfactant_vertical_bounds(self,
+                                           log: logger.logging.Logger
+                                           ) -> np.ndarray:
+        """
+        computes the vertical bounds for surfactants to be excluded
+        from calculations.
+        """
+        average_frames: int = 10
+        self.info_msg += (f'\t`{average_frames}` first frames used for setting'
+                          f' thickness of the interface\n')
         contact_angle: np.ndarray = \
             self.parse_contact_data(self.contact_data, 'contact_angles', log)
-        cos_contact_angle: np.ndarray = np.cos(np.radians(contact_angle)) + 1
-        return (self.interface_z + np.abs(
-                stinfo.np_info['radius'] * cos_contact_angle)).reshape(-1, 1)
+        cos_contact_angles: np.ndarray = np.cos(np.radians(contact_angle)) + 1
+
+        # Calculate the height of the nanoparticle from the interface
+        np_radius = stinfo.np_info['radius']
+        h_np: np.float64 = \
+            np.mean(np.abs(np_radius * cos_contact_angles[:average_frames]))
+        tip_of_np_berg: np.ndarray = 2 * np_radius - h_np
+
+        interface_std: np.float64 = np.std(self.interface_z)
+        upper_bounds: np.ndarray = \
+            self.interface_z + interface_std + tip_of_np_berg
+        lower_bounds: np.ndarray = \
+            self.interface_z - interface_std - tip_of_np_berg
+
+        bounds = np.column_stack((lower_bounds, upper_bounds))
+
+        return bounds
 
     def initialize_data_arrays(self,
                                np_com_df: pd.DataFrame,

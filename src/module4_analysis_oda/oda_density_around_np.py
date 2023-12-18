@@ -353,7 +353,11 @@ class SurfactantDensityAroundNanoparticle:
                      ) -> None:
         """write the densities in the xvg file"""
         xvg_df: pd.DataFrame = self._prepare_arraies_for_xvg(regions, log)
-        my_tools.write_xvg(xvg_df, log, fname=self.param_config.xvg_output)
+        extra_msg: list[str] = []
+        extra_msg.append('# Densities of the system.')
+        extra_msg.append('# Data may have interpolated to have same length.')
+        my_tools.write_xvg(
+            xvg_df, log, extra_msg, fname=self.param_config.xvg_output)
 
     def _prepare_arraies_for_xvg(self,
                                  regions: list[float],

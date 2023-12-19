@@ -118,9 +118,10 @@ class OverlayPlotDensities:
 
     def initiate_plots(self) -> None:
         """plots the densities in different styles"""
-        self._plot_save_normalized_plots()
+        self._plot_save_normalized_plot()
+        self._plot_save_double_yaxis_plot()
 
-    def _plot_save_normalized_plots(self) -> None:
+    def _plot_save_normalized_plot(self) -> None:
         """plot and save the normalized densities in one grpah"""
         x_range: tuple[float, float] = (min(self.x_data), max(self.x_data))
         fig_i, ax_i = plot_tools.mk_canvas(
@@ -143,18 +144,72 @@ class OverlayPlotDensities:
             fig_i, ax_i, fname := 'normalized_rdf.png', loc='lower right')
         self.info_msg += f'\tThe figure is saved as {fname}\n'
 
+    def _plot_save_double_yaxis_plot(self) -> None:
+        """plot the rdf for both oda and cl with seperate axis"""
+        if len(self.xvg_dfs) < 2:
+            raise ValueError(
+                "Insufficient datasets to plot with double y-axis.")
+        x_range = (min(self.x_data), max(self.x_data))
+        fig, ax1 = plot_tools.mk_canvas(
+            x_range, height_ratio=self.plot_config.height_ratio)
+
+        files: list[str] = list(self.xvg_dfs.keys())
+        dataset1, dataset2 = files[0], files[1]
+
+        color1 = self.plot_config.graphs_sets['colors'][0]
+        label1: str = self.file_names[f'{dataset1}.xvg']
+        ax1.plot(self.x_data,
+                 self.xvg_dfs[dataset1],
+                 ls='-',
+                 marker='o',
+                 markersize=4,
+                 color=color1)
+        ax1.set_xlabel('Distance from Nanoparticle [A]')
+        ax1.set_ylabel(rf'$g_{{{label1}}}(r)$', color=color1)
+        ax1.tick_params(axis='y', labelcolor=color1)
+        ax1.grid(True, linestyle='--', color='gray', alpha=0.5)
+
+        # Create a second y-axis
+        ax2 = ax1.twinx()
+        color2: str = self.plot_config.graphs_sets['colors'][1]
+        label2: str = self.file_names[f'{dataset2}.xvg']
+        ax2.plot(self.x_data,
+                 self.xvg_dfs[dataset2],
+                 ls='-',
+                 marker='o',
+                 markersize=4,
+                 color=color2)
+        ax2.set_ylabel(rf'$g_{{{label2}}}(r)$', color=color2)
+        ax2.tick_params(axis='y', labelcolor=color2)
+
+        fig.tight_layout()  # Adjust layout
+
+        if self.plot_config.add_vlines:
+            ax1 = self.add_vlines(ax1)
+
+        fname = 'separate_y_axes_plot.png'
+        plot_tools.save_close_fig(fig, ax1, fname, loc='center right')
+        self.info_msg += \
+            f'\tThe figure with separate y-axes is saved as {fname}\n'
+
     def add_vlines(self,
                    ax_i: plt.axes
                    ) -> plt.axes:
         """add the fitted vlines"""
         ylims: tuple[float, float] = ax_i.get_ylim()
         for i, (turn, x_loc) in enumerate(self.fit_turns._asdict().items()):
+            if turn == 'first_turn':
+                label_i = '1st'
+            elif turn == 'midpoint':
+                label_i = 'c'
+            elif turn == 'second_turn':
+                label_i = '2nd'
             ax_i.vlines(x=x_loc,
                         ymin=ylims[0],
                         ymax=ylims[1],
                         ls=self.plot_config.vlines_sets['linestyles'][i],
                         color=self.plot_config.vlines_sets['colors'][i],
-                        label=f'{turn}={x_loc:.1f}')
+                        label=f'{label_i}={x_loc:.1f}')
         ax_i.set_ylim(ylims)
         return ax_i
 

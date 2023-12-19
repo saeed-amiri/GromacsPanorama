@@ -8,14 +8,21 @@ For average and rdf
 The data will be read from data files
 """
 
+import typing
+from collections import namedtuple
 from dataclasses import dataclass, field
 
 import numpy as np
 import matplotlib.pylab as plt
 
 from common import logger
+from common import plot_tools
 from common import xvg_to_dataframe as xvg
 from common.colors_text import TextColor as bcolors
+
+
+FitTurns: "namedtuple" = \
+    namedtuple('FitTurns', ['first_turn', 'midpoint', 'second_turn'])
 
 
 @dataclass
@@ -42,6 +49,15 @@ class BasePlotConfig:
     """
     Basic configurations on the plots
     """
+    height_ratio: float = (5**0.5-1)*1
+    graphs_sets: dict[str, typing.Any] = field(default_factory=lambda: {
+        'colors': ['k', 'r', 'b', 'g']
+    })
+    vlines_sets: dict[str, typing.Any] = field(default_factory=lambda: {
+        'colors': ['g', 'b', 'r'],
+        'linestyles': (':', '--', ':')
+    })
+    add_vlines: bool = True
 
 
 @dataclass
@@ -56,23 +72,27 @@ class OverlayPlotDensities:
 
     info_msg: str = 'Messege from OverlayPlotDensities:\n'
 
-    file_names: list[str]
+    file_names: dict[str, str]
     data_config: "DataConfig"
     plot_config: "PlotConfig"
+    fit_turns: "FitTurns"
+
     x_data: np.ndarray
-    xvg_df: dict[str, np.ndarray]
+    xvg_dfs: dict[str, np.ndarray]
 
     def __init__(self,
-                 file_names: list[str],
+                 file_names: dict[str, str],  # Filenames and their lables
+                 fit_turns: "FitTurns",  # Fit parameters for vlines
                  log: logger.logging.Logger,
                  data_config: "DataConfig" = DataConfig(),
                  plot_config: "PlotConfig" = PlotConfig()
                  ) -> None:
+        self.fit_turns = fit_turns
         self.file_names = file_names
         self.data_config = data_config
         self.plot_config = plot_config
-        self.xvg_df, self.x_data = self.initiate_data(log)
-        self.initiate_plots(log)
+        self.xvg_dfs, self.x_data = self.initiate_data(log)
+        self.initiate_plots()
         self._write_msg(log)
 
     def initiate_data(self,
@@ -80,42 +100,60 @@ class OverlayPlotDensities:
                       ) -> tuple[dict[str, np.ndarray], np.ndarray]:
         """initiate reading data files"""
         x_data: np.ndarray
-        xvg_df: dict[str, np.ndarray] = {}
-        xvg_df, x_data = self.get_xvg_dict(log)
-        return xvg_df, x_data
+        xvg_dfs: dict[str, np.ndarray] = {}
 
-    def initiate_plots(self,
-                       log: logger.logging.Logger
-                       ) -> None:
-        """plots the densities in different styles"""
-        self._plot_save_normalized_plots(log)
-
-    def _plot_save_normalized_plots(self,
-                                    log:logger.logging.Logger
-                                    ) -> None:
-        """plot and save the normalized densities in one grpah"""
-        
-
-    def get_xvg_dict(self,
-                     log: logger.logging.Logger
-                     ) -> tuple[dict[str, np.ndarray], np.ndarray]:
-        """return select data from the files"""
-        x_data: np.ndarray
-        xvg_df: dict[str, np.ndarray] = {}
-
-        for i, f_xvg in enumerate(self.file_names):
+        for i, f_xvg in enumerate(self.file_names.keys()):
             fanme: str = f_xvg.split('.')[0]
             df_column: str = self.data_config.xvg_column[
                 self.data_config.selected_columns[0]]
             df_i = xvg.XvgParser(f_xvg, log).xvg_df
-            xvg_df[fanme] = df_i[df_column].to_numpy()
+            xvg_dfs[fanme] = df_i[df_column].to_numpy()
             if i == 0:
                 x_data = \
                     df_i[self.data_config.xvg_column['regions']].to_numpy()
         self.info_msg += (f'\tThe file names are:\n\t\t`{self.file_names}`\n'
                           '\tThe selected columns are:\n'
                           f'\t\t`{self.data_config.selected_columns}`\n')
-        return xvg_df, x_data
+        return xvg_dfs, x_data
+
+    def initiate_plots(self) -> None:
+        """plots the densities in different styles"""
+        self._plot_save_normalized_plots()
+
+    def _plot_save_normalized_plots(self) -> None:
+        """plot and save the normalized densities in one grpah"""
+        x_range: tuple[float, float] = (min(self.x_data), max(self.x_data))
+        fig_i, ax_i = plot_tools.mk_canvas(
+            x_range, height_ratio=self.plot_config.height_ratio)
+        for i, (residue, density) in enumerate(self.xvg_dfs.items()):
+            ax_i.plot(self.x_data,
+                      density/max(density),
+                      color=self.plot_config.graphs_sets['colors'][i],
+                      label=self.file_names[f'{residue}.xvg'])
+        ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
+        ax_i.set_xlabel('Distance from Nanoparticle [A]')
+        ax_i.set_ylabel('Density (normalized)')
+        ax_i.set_title('Each denisty normalized to its max')
+        if self.plot_config.add_vlines:
+            ax_i = self.add_vlines(ax_i)
+        plot_tools.save_close_fig(
+            fig_i, ax_i, fname := 'normalized_density.png', loc='lower right')
+        self.info_msg += f'\tThe figure is saved as {fname}\n'
+
+    def add_vlines(self,
+                   ax_i: plt.axes
+                   ) -> plt.axes:
+        """add the fitted vlines"""
+        ylims: tuple[float, float] = ax_i.get_ylim()
+        for i, (turn, x_loc) in enumerate(self.fit_turns._asdict().items()):
+            ax_i.vlines(x=x_loc,
+                        ymin=ylims[0],
+                        ymax=ylims[1],
+                        ls=self.plot_config.vlines_sets['linestyles'][i],
+                        color=self.plot_config.vlines_sets['colors'][i],
+                        label=f'{turn}={x_loc:.1f}')
+        ax_i.set_ylim(ylims)
+        return ax_i
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

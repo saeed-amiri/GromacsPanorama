@@ -202,7 +202,7 @@ class SurfactantDensityPlotter:
         self.rdf_2d = density_obj.rdf_2d
         self.smoothed_rdf = density_obj.smoothed_rdf
 
-        if residue == 'ODA':
+        if residue == 'AMINO_ODN':
             self.time_dependent_rdf = density_obj.time_dependent_rdf
             self.fitted_rdf = density_obj.fitted_rdf
             self.midpoint = density_obj.midpoint
@@ -217,7 +217,7 @@ class SurfactantDensityPlotter:
 
     def _initialize_plotting(self,
                              log: logger.logging.Logger,
-                             residue: str = 'ODA'
+                             residue: str = 'AMINO_ODN'
                              ) -> None:
         HeatmapPlotter(ref_density=self.ave_density,
                        contact_data=self.contact_data,
@@ -234,7 +234,7 @@ class SurfactantDensityPlotter:
                        config=SmoothedRdf2dHeatMapConfig(),
                        log=log,
                        residue=self.residue)
-        if residue == 'ODA' and hasattr(self, 'fitted_rdf'):
+        if residue == 'AMINO_ODN' and hasattr(self, 'fitted_rdf'):
             HeatmapPlotter(ref_density=self.fitted_rdf,
                            contact_data=self.contact_data,
                            config=FittedsRdf2dHeatMapConfig(),

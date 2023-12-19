@@ -40,7 +40,7 @@ class BaseDataConfig:
 class DataConfig(BaseDataConfig):
     """set data config"""
     selected_columns: list[str] = field(default_factory=lambda: [
-        'avg_density'
+        'rdf'
         ])
 
 
@@ -128,16 +128,19 @@ class OverlayPlotDensities:
         for i, (residue, density) in enumerate(self.xvg_dfs.items()):
             ax_i.plot(self.x_data,
                       density/max(density),
+                      ls='-',
+                      marker='o',
+                      markersize=4,
                       color=self.plot_config.graphs_sets['colors'][i],
                       label=self.file_names[f'{residue}.xvg'])
         ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
         ax_i.set_xlabel('Distance from Nanoparticle [A]')
-        ax_i.set_ylabel('Density (normalized)')
-        ax_i.set_title('Each denisty normalized to its max')
+        ax_i.set_ylabel('g(r) (normalized)')
+        ax_i.set_title('Each rdf normalized to its max')
         if self.plot_config.add_vlines:
             ax_i = self.add_vlines(ax_i)
         plot_tools.save_close_fig(
-            fig_i, ax_i, fname := 'normalized_density.png', loc='lower right')
+            fig_i, ax_i, fname := 'normalized_rdf.png', loc='lower right')
         self.info_msg += f'\tThe figure is saved as {fname}\n'
 
     def add_vlines(self,

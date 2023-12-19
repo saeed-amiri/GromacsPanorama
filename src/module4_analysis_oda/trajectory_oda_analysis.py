@@ -6,6 +6,7 @@ This script uses the out put of the module3_aqua_analysis/contact.info
 
 import sys
 from dataclasses import dataclass
+from collections import namedtuple
 
 from module4_analysis_oda.rdf import RdfCalculationConfig, RdfClculation
 from module4_analysis_oda.oda_density_around_np import \
@@ -24,12 +25,16 @@ from common import logger
 from common.com_file_parser import GetCom
 
 
+FitTurns: "namedtuple" = \
+    namedtuple('FitTurns', ['first_turn', 'midpoint', 'second_turn'])
+
+
 @dataclass
 class ComputationCalculations:
     """To select computions"""
     plain_rdf: bool = False
-    density_rdf: bool = False
     contrast_density: bool = False
+    density_rdf: bool = True
     overlay_plot: bool = True
 
 
@@ -80,6 +85,11 @@ class OdaAnalysis:
                     param_config=params,
                     residue=residue)
                 SurfactantDensityPlotter(oda_density, log, residue=residue)
+                if residue == 'AMINO_ODN':
+                    self.fit_turns = \
+                        FitTurns(first_turn=oda_density.first_turn,
+                                      midpoint=oda_density.midpoint,
+                                      second_turn=oda_density.second_turn)
 
     def compute_contrast_density(self,
                                  log: logger.logging.Logger
@@ -101,7 +111,9 @@ class OdaAnalysis:
         """
         if self.compute_config.overlay_plot:
             OverlayPlotDensities(
-                ['AMINO_ODN_densities.xvg', 'CLA_densities.xvg'], log)
+                {'AMINO_ODN_densities.xvg': 'ODA', 'CLA_densities.xvg': 'Cl'},
+                self.fit_turns,
+                log)
 
 
 

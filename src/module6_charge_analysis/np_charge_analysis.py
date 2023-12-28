@@ -5,7 +5,6 @@ Analysis the charge of the nanoparticle
 """
 
 import typing
-from collections import namedtuple
 
 import numpy as np
 import pandas as pd
@@ -19,11 +18,17 @@ if typing.TYPE_CHECKING:
     from module6_charge_analysis.charge_analysis_interface_np import \
         ComputeConfigurations
 
-DataArrays = namedtuple('DataArrays', ['contact_radius',
-                                       'np_com',
-                                       'rdf',
-                                       'cdf',
-                                       'box'])
+
+UNIT_NM_TO_ANGSTROM: float = 10.0  # Conversion factor from nanom to angstroms
+
+
+class DataArrays(typing.NamedTuple):
+    """Set the arrays from input files"""
+    contact_radius: np.ndarray
+    np_com: np.ndarray
+    rdf: np.ndarray
+    cdf: np.ndarray
+    box: np.ndarray
 
 
 class NpChargeAnalysis:
@@ -48,7 +53,7 @@ class NpChargeAnalysis:
 class ParseDataFiles:
     """rad and parse files here"""
 
-    info_msg: str = 'Messegs from ParseDataFiles:\n'
+    # pylint: disable=too-few-public-methods
 
     input_config: "ComputeConfigurations"
     data_arrays: "DataArrays"
@@ -64,49 +69,42 @@ class ParseDataFiles:
                       log: logger.logging.Logger
                       ) -> "DataArrays":
         """parsing data files"""
-        contact_data: pd.DataFrame = self.load_contact_data(log)
+        contact_data: pd.DataFrame = \
+            self._load_xvg_data(self.input_config.f_contact, log)
         contact_radius: np.ndarray = \
-            self.parse_contact_data(contact_data, 'contact_radius', log)
+            self._parse_contact_data(contact_data, 'contact_radius', log)
 
-        np_com_df: pd.DataFrame = self.load_np_com_data(log)
-        np_com: np.ndarray = self.parse_gmx_xvg(np_com_df)
+        np_com_df: pd.DataFrame = \
+            self._load_xvg_data(self.input_config.f_coord, log)
+        np_com: np.ndarray = self._parse_gmx_coordinates(np_com_df)
 
-        rdf_df: pd.DataFrame = self.load_rdf_data(log)
-        rdf: pd.DataFrame = self.parse_rdf_cdf_xvg(rdf_df)
+        rdf_df: pd.DataFrame = \
+            self._load_xvg_data(self.input_config.f_rdf, log, x_type=float)
+        rdf: pd.DataFrame = self._parse_gmx_rdf_cdf(rdf_df)
 
-        cdf_df: pd.DataFrame = self.load_cdf_data(log)
-        cdf: pd.DataFrame = self.parse_rdf_cdf_xvg(cdf_df)
+        cdf_df: pd.DataFrame = \
+            self._load_xvg_data(self.input_config.f_cdf, log, x_type=float)
+        cdf: pd.DataFrame = self._parse_gmx_rdf_cdf(cdf_df)
 
-        box_df: pd.DataFrame = self.load_box_data(log)
-        box: np.ndarray = self.parse_gmx_xvg(box_df)
+        box_df: pd.DataFrame = \
+            self._load_xvg_data(self.input_config.f_box, log)
+        box: np.ndarray = self._parse_gmx_coordinates(box_df)
 
         return DataArrays(contact_radius, np_com, rdf, cdf, box)
 
-    def load_contact_data(self, log: logger.logging.Logger) -> pd.DataFrame:
+    def _load_xvg_data(self,
+                       fname: str,
+                       log: logger.logging.Logger,
+                       x_type: type = int
+                       ) -> pd.DataFrame:
         """Load and return the contact data from XVG file."""
-        return xvg.XvgParser(self.input_config.f_contact, log).xvg_df
-
-    def load_np_com_data(self, log: logger.logging.Logger) -> pd.DataFrame:
-        """Load and return the NP center of mass data from XVG file."""
-        return xvg.XvgParser(self.input_config.f_coord, log).xvg_df
-
-    def load_box_data(self, log: logger.logging.Logger) -> pd.DataFrame:
-        """Load and return the box dimension data from XVG file."""
-        return xvg.XvgParser(self.input_config.f_box, log).xvg_df
-
-    def load_rdf_data(self, log: logger.logging.Logger) -> pd.DataFrame:
-        """Load and return the box dimension data from XVG file."""
-        return xvg.XvgParser(self.input_config.f_rdf, log, x_type=float).xvg_df
-
-    def load_cdf_data(self, log: logger.logging.Logger) -> pd.DataFrame:
-        """Load and return the box dimension data from XVG file."""
-        return xvg.XvgParser(self.input_config.f_cdf, log, x_type=float).xvg_df
+        return xvg.XvgParser(fname, log, x_type).xvg_df
 
     @staticmethod
-    def parse_contact_data(contact_data: pd.DataFrame,
-                           column_name: str,
-                           log: logger.logging.Logger
-                           ) -> np.ndarray:
+    def _parse_contact_data(contact_data: pd.DataFrame,
+                            column_name: str,
+                            log: logger.logging.Logger
+                            ) -> np.ndarray:
         """return the selected column of the contact data as an array"""
         if column_name not in contact_data.columns.to_list():
             log.error(msg := f'The column {column_name} does not '
@@ -115,18 +113,16 @@ class ParseDataFiles:
         return contact_data[column_name].to_numpy().reshape(-1, 1)
 
     @staticmethod
-    def parse_gmx_xvg(np_com_df: pd.DataFrame
-                      ) -> np.ndarray:
+    def _parse_gmx_coordinates(np_com_df: pd.DataFrame
+                               ) -> np.ndarray:
         """return the nanoparticle center of mass as an array"""
-        unit_nm_to_angestrom: float = 10
-        return np_com_df.iloc[:, 1:4].to_numpy() * unit_nm_to_angestrom
+        return np_com_df.iloc[:, 1:4].to_numpy() * UNIT_NM_TO_ANGSTROM
 
     @staticmethod
-    def parse_rdf_cdf_xvg(df_i: pd.DataFrame
-                          ) -> np.ndarray:
+    def _parse_gmx_rdf_cdf(df_i: pd.DataFrame
+                           ) -> np.ndarray:
         """parse the rdf and cdf by converting nm to angestrom"""
-        unit_nm_to_angestrom: float = 10
-        df_i.iloc[:, 0] *= unit_nm_to_angestrom
+        df_i.iloc[:, 0] *= UNIT_NM_TO_ANGSTROM
         return df_i.to_numpy()
 
 

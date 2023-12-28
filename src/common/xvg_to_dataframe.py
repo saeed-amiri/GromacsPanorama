@@ -22,14 +22,15 @@ class XvgParser:
 
     def __init__(self,
                  fname: str,  # Name of the xvg file
-                 log: logger.logging.Logger
+                 log: logger.logging.Logger,
+                 x_type: type = int
                  ) -> None:
         self.nr_frames: int  # Number of the frames
         self.columns_names: list[str] = []
         my_tools.check_file_exist(fname, log)
         my_tools.check_file_extension(fname, 'xvg', log)
         self.fname: str = fname  # Name of the input file
-        self.xvg_df = self.get_xvg(log)
+        self.xvg_df = self.get_xvg(log, x_type)
         self.nr_frames = len(self.xvg_df.index)
         self.info_msg += (f'\tThe input file: `{self.fname}`\n'
                           f'\tThe file is: `{os.path.abspath(self.fname)}`\n'
@@ -41,7 +42,8 @@ class XvgParser:
         self.write_log_msg(log)
 
     def get_xvg(self,
-                log: logger.logging.Logger
+                log: logger.logging.Logger,
+                x_type: type
                 ) -> pd.DataFrame:
         """parse xvg file"""
         data_list: list[list[str]] = []
@@ -64,11 +66,12 @@ class XvgParser:
                                'after data\n')
                         log.error(msg)
                         sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
-        return self.make_df(data_list, log)
+        return self.make_df(data_list, log, x_type)
 
     def make_df(self,
                 data_list: list[list[str]],
-                log: logger.logging.Logger
+                log: logger.logging.Logger,
+                x_type: type
                 ) -> pd.DataFrame:
         """make the dataframe from datalist"""
         columns_names: list[str] = []
@@ -86,7 +89,7 @@ class XvgParser:
             [my_tools.clean_string(item) for item in columns_names]
         xvg_df = pd.DataFrame(data=data_list, columns=self.columns_names)
         xvg_df = xvg_df.astype(float)
-        xvg_df.iloc[:, 0] = xvg_df.iloc[:, 0].astype(int)
+        xvg_df.iloc[:, 0] = xvg_df.iloc[:, 0].astype(x_type)
         return xvg_df
 
     @staticmethod

@@ -26,8 +26,11 @@ Date: 27 Dec 2023
 import sys
 from dataclasses import dataclass
 
+import pandas as pd
+
 from common import logger
 from common import xvg_to_dataframe as xvg
+from common.com_file_parser import GetCom
 from common.colors_text import TextColor as bcolors
 
 
@@ -58,6 +61,25 @@ class ComputeCharges:
                  config: "ComputeConfigurations" = ComputeConfigurations()
                  ) -> None:
         self.config = config
+        self.parsed_com = GetCom(fname)
+        self.write_msg(log)
+        self.initiate_np_charge_analysis(log)
+
+    def initiate_np_charge_analysis(self,
+                                    log: logger.logging.Logger
+                                    ) -> None:
+        """
+        Analysing the charge of the nanoparticle during simulations
+        """
+        cla_arr: pd.DataFrame = self.parsed_com.split_arr_dict['CLA']
+
+    def write_msg(self,
+                  log: logger.logging.Logger  # To log
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == "__main__":

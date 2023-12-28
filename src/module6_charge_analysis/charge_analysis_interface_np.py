@@ -42,6 +42,7 @@ class FileConfigurations:
     f_cdf: str = 'cla_cdf.xvg'
     f_contact: str = 'contact.xvg'
     f_coord: str = 'coord.xvg'
+    f_box: str = 'box.xvg'
 
 
 @dataclass

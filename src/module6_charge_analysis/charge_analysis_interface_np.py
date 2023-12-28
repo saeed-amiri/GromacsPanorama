@@ -23,9 +23,26 @@ Saeed Amiri
 Date: 27 Dec 2023
 """
 
+import sys
+from dataclasses import dataclass
+
 from common import logger
 from common import xvg_to_dataframe as xvg
 from common.colors_text import TextColor as bcolors
+
+
+@dataclass
+class FileConfigurations:
+    """names of the input files"""
+    f_rdf: str = 'cla_rdf.xvg'
+    f_cdf: str = 'cla_cdf.xvg'
+    f_contact: str = 'contact.xvg'
+    f_coord: str = 'coord.xvg'
+
+
+@dataclass
+class ComputeConfigurations(FileConfigurations):
+    """configure input for the calculations"""
 
 
 class ComputeCharges:
@@ -35,9 +52,21 @@ class ComputeCharges:
 
     info_msg: str = "Messeges from ComputeCharges:\n"
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self,
+                 fname: str,  # Name of the com file
+                 log: logger.logging.Logger,
+                 config: "ComputeConfigurations" = ComputeConfigurations()
+                 ) -> None:
+        self.config = config
 
 
 if __name__ == "__main__":
-    pass
+    LOG = logger.setup_logger('charge_analysis.log')
+    try:
+        ComputeCharges(fname=sys.argv[1], log=LOG)
+    except IndexError:
+        LOG.error("No command line argument provided for the filename.")
+        sys.exit(1)
+    else:
+        LOG.error("Failed to initialize charge analysis")
+        sys.exit(1)

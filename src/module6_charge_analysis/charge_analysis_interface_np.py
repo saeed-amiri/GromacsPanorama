@@ -21,6 +21,9 @@ analysis of charges on nanoparticles or interfaces.
 
 Saeed Amiri
 Date: 27 Dec 2023
+
+The RDF from gmx is not that much clear to me how it calculate the ref
+COM
 """
 
 import sys

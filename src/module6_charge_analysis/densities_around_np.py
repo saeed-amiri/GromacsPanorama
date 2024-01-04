@@ -35,6 +35,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from common import logger
+from common.colors_text import TextColor as bcolors
 from module6_charge_analysis import data_file_parser
 
 if typing.TYPE_CHECKING:
@@ -43,7 +44,7 @@ if typing.TYPE_CHECKING:
 
 @dataclass
 class InputFileConfigs:
-    """set the name of the inputs files"""
+    """Input file configurations"""
     f_contact: str = 'contact.xvg'
     f_coord: str = 'coord.xvg'
     f_box: str = 'box.xvg'
@@ -51,20 +52,28 @@ class InputFileConfigs:
 
 @dataclass
 class ParameterConfigs:
-    """set the default parameters for the calculataion"""
+    """default parameters for the calculataion"""
     number_of_regions: int = 150
     time_dependent_step: int = 100
     xvg_output: str = 'densities.xvg'
 
 
+class Densities(typing.NamedTuple):
+    """densities data structure"""
+    density_per_region: dict[float, list[float]] = {}
+    avg_density_per_region: dict[float, float] = {}
+    rdf: dict[float, float] = {}
+
+
 class ResidueDensityAroundNanoparticle:
-    """self explanatory"""
+    """Calculate densities, rdf, and cdf around a nanoparticle."""
 
     info_msg: str = 'Messsges from ResidueDensityAroundNanoparticle:\n'
     input_config: "InputFileConfigs"
     param_config: "ParameterConfigs"
     res_name: str
     res_arr: np.ndarray
+    densities: "Densities"
 
     def __init__(self,
                  res_arr: np.ndarray,
@@ -77,18 +86,30 @@ class ResidueDensityAroundNanoparticle:
         self.param_config = param_config
         self.res_name = res_name
         self.res_arr = res_arr[:-2]
-        self._initiate(log, res_name)
+        self.densities = self._initiate(log, res_name)
+        self.write_msg(log)
 
     def _initiate(self,
                   log: logger.logging.Logger,
                   res_name: str
-                  ) -> None:
+                  ) -> "Densities":
         """initiate computaitons from here"""
+        density_per_region: dict[float, list[float]]
+        avg_density_per_region: dict[float, float]
+        num_res_in_radius: list[int]
+        rdf: dict[float, float]
+
         parsed_data: "DataArrays" = data_file_parser.ParseDataFiles(
             input_config=self.input_config, log=log).data_arrays
         regions: list[float] = self.generate_regions(
             self.param_config.number_of_regions, parsed_data, update_msg=True)
-        self.initiate_calculation(parsed_data, regions)
+        density_per_region, num_res_in_radius = \
+            self.initiate_calculation(parsed_data, regions)
+        avg_density_per_region = self.compute_avg_density(density_per_region)
+        rdf = self.compute_rdf(density_per_region, num_res_in_radius)
+
+        self.info_msg += f'\tDensities for residue `{res_name}` are computed\n'
+        return Densities(density_per_region, avg_density_per_region, rdf)
 
     def generate_regions(self,
                          nr_of_regions: int,
@@ -127,6 +148,38 @@ class ResidueDensityAroundNanoparticle:
                                                  density_per_region)
             num_res_in_radius.append(count_in_radius)
         return density_per_region, num_res_in_radius
+
+    @staticmethod
+    def compute_avg_density(density_per_region: dict[float, list[float]]
+                            ) -> dict[float, float]:
+        """self explanatory"""
+        avg_density_per_region: dict[float, float] = {}
+        for region, densities in density_per_region.items():
+            if densities:
+                avg_density_per_region[region] = np.mean(densities)
+            else:
+                avg_density_per_region[region] = 0
+        return avg_density_per_region
+
+    def compute_rdf(self,
+                    density_per_region: dict[float, list[float]],
+                    num_oda: list[int]
+                    ) -> dict[float, float]:
+        """set the 2d rdf (g(r))"""
+        max_radius_area: float = \
+            max(item for item in density_per_region.keys())
+        rdf: dict[float, float] = {}
+        for region, densities in density_per_region.items():
+            if not densities:
+                rdf[region] = 0
+                continue
+
+            tmp = []
+            for j, item in enumerate(densities):
+                density: float = num_oda[j]/(np.pi * max_radius_area**2)
+                tmp.append(item/density)
+            rdf[region] = np.mean(tmp)
+        return rdf
 
     def _compute_pbc_distance(self,
                               arr: np.ndarray,
@@ -169,6 +222,14 @@ class ResidueDensityAroundNanoparticle:
             density_per_region[r_outer].append(density)
             count_in_radius += count
         return density_per_region, count_in_radius
+
+    def write_msg(self,
+                  log: logger.logging.Logger  # To log
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKGREEN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == '__main__':

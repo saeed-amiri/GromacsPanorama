@@ -64,6 +64,7 @@ class ResidueDensityAroundNanoparticle:
     input_config: "InputFileConfigs"
     param_config: "ParameterConfigs"
     res_name: str
+    res_arr: np.ndarray
 
     def __init__(self,
                  res_arr: np.ndarray,
@@ -75,10 +76,10 @@ class ResidueDensityAroundNanoparticle:
         self.input_config = input_config
         self.param_config = param_config
         self.res_name = res_name
-        self._initiate(res_arr, log, res_name)
+        self.res_arr = res_arr[:-2]
+        self._initiate(log, res_name)
 
     def _initiate(self,
-                  res_arr: np.ndarray,
                   log: logger.logging.Logger,
                   res_name: str
                   ) -> None:
@@ -87,6 +88,7 @@ class ResidueDensityAroundNanoparticle:
             input_config=self.input_config, log=log).data_arrays
         regions: list[float] = self.generate_regions(
             self.param_config.number_of_regions, parsed_data, update_msg=True)
+        self.initiate_calculation(parsed_data, regions)
 
     def generate_regions(self,
                          nr_of_regions: int,
@@ -102,6 +104,71 @@ class ResidueDensityAroundNanoparticle:
                 f'\tThe bin size is: `{max_box_len/nr_of_regions:.3f}`\n'
             )
         return np.linspace(0, max_box_len, nr_of_regions).tolist()
+
+    def initiate_calculation(self,
+                             parsed_data: "DataArrays",
+                             regions: list[float],
+                             ) -> tuple[dict[float, list[float]],
+                                        list[int]]:
+        """initiate computaion by getting denisty"""
+        # Initialize a dictionary to store densities for each region
+        density_per_region: dict[float, list[float]] = \
+            {region: [] for region in regions}
+        num_res_in_radius: list[int] = []
+        for i, frame_i in enumerate(self.res_arr):
+            arr_i: np.ndarray = frame_i.reshape(-1, 3)
+            np_com_i = parsed_data.np_com[i]
+            box_i = parsed_data.box[i]
+            distance: np.ndarray = \
+                self._compute_pbc_distance(arr_i, np_com_i, box_i)
+            density_per_region, count_in_radius = \
+                self._compute_density_per_region(regions,
+                                                 distance,
+                                                 density_per_region)
+            num_res_in_radius.append(count_in_radius)
+        return density_per_region, num_res_in_radius
+
+    def _compute_pbc_distance(self,
+                              arr: np.ndarray,
+                              np_com: np.ndarray,
+                              box: np.ndarray
+                              ) -> np.ndarray:
+        """claculating the distance between the np and the surfactants
+        at each frame and return an array
+        Only considering 2d distance, in the XY plane
+        """
+        dx_i = arr[:, 0] - np_com[0]
+        dx_pbc = dx_i - (box[0] * np.round(dx_i/box[0]))
+        dy_i = arr[:, 1] - np_com[1]
+        dy_pbc = dy_i - (box[1] * np.round(dy_i/box[1]))
+        dz_i = arr[:, 2] - np_com[2]
+        dz_pbc = dz_i - (box[2] * np.round(dz_i/box[2]))
+        return np.sqrt(dx_pbc*dx_pbc + dy_pbc*dy_pbc + dz_pbc*dz_pbc)
+
+    @staticmethod
+    def _compute_density_per_region(regions: list[float],
+                                    distance: np.ndarray,
+                                    density_per_region:
+                                    dict[float, list[float]]
+                                    ) -> tuple[dict[float, list[float]], int]:
+        """self explanatory"""
+        # Here, the code increments the count in the appropriate bin
+        # by 2. The increment by 2 is necessary because each pair
+        # contributes to two interactions: one for each atom in the
+        # pair being considered as the reference atom. In simpler
+        # terms, for each pair of atoms, both atoms contribute to the
+        # density at this distance, so the count for this bin is
+        # increased by 2 to account for both contributions.
+        count_in_radius = 2
+        for ith in range(len(regions) - 1):
+            r_inner = regions[ith]
+            r_outer = regions[ith + 1]
+            count = np.sum((distance >= r_inner) & (distance < r_outer))
+            volume = 4 * np.pi * (r_outer**3 - r_inner**3) / 3
+            density = count / volume
+            density_per_region[r_outer].append(density)
+            count_in_radius += count
+        return density_per_region, count_in_radius
 
 
 if __name__ == '__main__':

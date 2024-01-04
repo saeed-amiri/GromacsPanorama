@@ -47,9 +47,10 @@ class ParameterConfigs:
 
 class Densities(typing.NamedTuple):
     """densities data structure"""
-    density_per_region: dict[float, list[float]] = {}
-    avg_density_per_region: dict[float, float] = {}
+    res_name: str
     rdf: dict[float, float] = {}
+    avg_density_per_region: dict[float, float] = {}
+    density_per_region: dict[float, list[float]] = {}
 
 
 class ResidueDensityAroundNanoparticle:
@@ -96,7 +97,8 @@ class ResidueDensityAroundNanoparticle:
         rdf = self.compute_rdf(density_per_region, num_res_in_radius)
 
         self.info_msg += f'\tDensities for residue `{res_name}` are computed\n'
-        return Densities(density_per_region, avg_density_per_region, rdf)
+        return Densities(
+            res_name, density_per_region, avg_density_per_region, rdf)
 
     def generate_regions(self,
                          nr_of_regions: int,

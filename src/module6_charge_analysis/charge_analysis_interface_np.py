@@ -78,8 +78,8 @@ class ComputeCharges:
         """
         cla_arr: np.ndarray = self.parsed_com.split_arr_dict['CLA']
         np_charge_analysis.NpChargeAnalysis(cla_arr, self.config, log)
-        densities_around_np.ResidueDensityAroundNanoparticle(
-            cla_arr, log, 'CLA')
+        densities = densities_around_np.ResidueDensityAroundNanoparticle(
+            cla_arr, log, 'CLA').densities
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

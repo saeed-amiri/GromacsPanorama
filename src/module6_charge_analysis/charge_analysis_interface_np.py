@@ -36,7 +36,8 @@ from common import logger
 from common.com_file_parser import GetCom
 from common.colors_text import TextColor as bcolors
 
-from module6_charge_analysis import np_charge_analysis, densities_around_np
+from module6_charge_analysis import np_charge_analysis, \
+    densities_around_np, densities_around_np_plotter
 
 if typing.TYPE_CHECKING:
     from module6_charge_analysis.densities_around_np import Densities
@@ -67,24 +68,28 @@ class ComputeCharges:
     def __init__(self,
                  fname: str,  # Name of the com file
                  log: logger.logging.Logger,
-                 config: "ComputeConfigurations" = ComputeConfigurations()
+                 config: "ComputeConfigurations" = ComputeConfigurations(),
+                 compute_rdf: bool = False
                  ) -> None:
         self.config = config
         self.parsed_com = GetCom(fname)
         self.write_msg(log)
-        self.initiate_np_charge_analysis(log)
+        self.initiate_np_charge_analysis(log, compute_rdf)
 
     def initiate_np_charge_analysis(self,
-                                    log: logger.logging.Logger
+                                    log: logger.logging.Logger,
+                                    compute_rdf: bool = False
                                     ) -> None:
         """
         Analysing the charge of the nanoparticle during simulations
         """
         cla_arr: np.ndarray = self.parsed_com.split_arr_dict['CLA']
+        if compute_rdf:
+            densities: "Densities" = \
+                densities_around_np.ResidueDensityAroundNanoparticle(
+                    cla_arr, log, 'CLA').densities
+            densities_around_np_plotter.ResidueDensityPlotter(densities, log)
         np_charge_analysis.NpChargeAnalysis(cla_arr, self.config, log)
-        densities: "Densities" = \
-            densities_around_np.ResidueDensityAroundNanoparticle(
-                cla_arr, log, 'CLA').densities
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

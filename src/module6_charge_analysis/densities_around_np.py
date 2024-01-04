@@ -1,30 +1,17 @@
 """
 densities_around_np.py
 
-This module is designed to calculate various properties such as
-densities, radial distribution functions (rdf), and cumulative
-distribution functions (cdf) for ions or other residues in the vicinity
-of a nanoparticle. Unlike the 'oda_density_around_np.py' script in
-module4, which focuses on two-dimensional analyses,
-'densities_around_np.py' extends these computations to three dimensions.
-This enhancement allows for a more comprehensive and spatially detailed
-understanding of the distribution and interactions of ions or residues
-around nanoparticles in a 3D space.
+Module to calculate densities, radial distribution functions (rdf),
+and cumulative distribution functions (cdf) around nanoparticles in 3D.
 
 Functions:
-    - calculate_density: Computes the density distribution of ions or
-        residues around the nanoparticle in 3D.
+    - calculate_density: Computes the density distribution in 3D.
+    - compute_rdf: Calculates the radial distribution function.
+    - compute_cdf: Determines the cumulative distribution function.
 
-    - compute_rdf: Calculates the radial distribution function, providing
-    insights into the spatial distribution and local ordering of particles.
+This script enables exploration of structural and dynamic properties
+involving nanoparticles in a 3D space.
 
-    - compute_cdf: Determines the cumulative distribution function,
-    offering a cumulative perspective of particle distribution up to a
-    certain radius.
-
-This script facilitates a deeper exploration of the structural and
-dynamic properties of systems involving nanoparticles and their
-surrounding environment in three-dimensional space.
 Jan 3, 2023
 Saeed
 """
@@ -155,10 +142,10 @@ class ResidueDensityAroundNanoparticle:
         """self explanatory"""
         avg_density_per_region: dict[float, float] = {}
         for region, densities in density_per_region.items():
-            if densities:
-                avg_density_per_region[region] = np.mean(densities)
-            else:
+            if not densities:
                 avg_density_per_region[region] = 0
+            else:
+                avg_density_per_region[region] = np.mean(densities)
         return avg_density_per_region
 
     def compute_rdf(self,
@@ -176,7 +163,8 @@ class ResidueDensityAroundNanoparticle:
 
             tmp = []
             for j, item in enumerate(densities):
-                density: float = num_oda[j]/(np.pi * max_radius_area**2)
+                density: float = \
+                    num_oda[j]/(4 * np.pi * max_radius_area**3 / 3)
                 tmp.append(item/density)
             rdf[region] = np.mean(tmp)
         return rdf
@@ -188,7 +176,6 @@ class ResidueDensityAroundNanoparticle:
                               ) -> np.ndarray:
         """claculating the distance between the np and the surfactants
         at each frame and return an array
-        Only considering 2d distance, in the XY plane
         """
         dx_i = arr[:, 0] - np_com[0]
         dx_pbc = dx_i - (box[0] * np.round(dx_i/box[0]))
@@ -196,7 +183,7 @@ class ResidueDensityAroundNanoparticle:
         dy_pbc = dy_i - (box[1] * np.round(dy_i/box[1]))
         dz_i = arr[:, 2] - np_com[2]
         dz_pbc = dz_i - (box[2] * np.round(dz_i/box[2]))
-        return np.sqrt(dx_pbc*dx_pbc + dy_pbc*dy_pbc + dz_pbc*dz_pbc)
+        return np.sqrt(dx_pbc**2 + dy_pbc**2 + dz_pbc**2)
 
     @staticmethod
     def _compute_density_per_region(regions: list[float],

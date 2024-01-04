@@ -26,6 +26,7 @@ The RDF from gmx is not that much clear to me how it calculate the ref
 COM
 """
 
+import typing
 import sys
 from dataclasses import dataclass
 
@@ -36,6 +37,9 @@ from common.com_file_parser import GetCom
 from common.colors_text import TextColor as bcolors
 
 from module6_charge_analysis import np_charge_analysis, densities_around_np
+
+if typing.TYPE_CHECKING:
+    from module6_charge_analysis.densities_around_np import Densities
 
 
 @dataclass
@@ -78,8 +82,9 @@ class ComputeCharges:
         """
         cla_arr: np.ndarray = self.parsed_com.split_arr_dict['CLA']
         np_charge_analysis.NpChargeAnalysis(cla_arr, self.config, log)
-        densities = densities_around_np.ResidueDensityAroundNanoparticle(
-            cla_arr, log, 'CLA').densities
+        densities: "Densities" = \
+            densities_around_np.ResidueDensityAroundNanoparticle(
+                cla_arr, log, 'CLA').densities
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

@@ -8,8 +8,12 @@ import typing
 
 import numpy as np
 import pandas as pd
+from scipy.signal import find_peaks
+
+import matplotlib.pylab as plt
 
 from common import logger
+from common import static_info as stinfo
 from common import xvg_to_dataframe as xvg
 from common.colors_text import TextColor as bcolors
 
@@ -48,6 +52,39 @@ class NpChargeAnalysis:
         self.data_arrays = ParseDataFiles(input_config, log).data_arrays
         self.input_config = input_config
         self.cla_arr = cla_arr
+        self.initiate_computation(log)
+
+    def initiate_computation(self,
+                             log: logger.logging.Logger
+                             ) -> None:
+        """Start calulation"""
+        box_half: np.float64 = self.get_box_max_half(self.data_arrays.box)
+        self.analys_rdf(self.data_arrays.rdf, box_half)
+
+    def get_box_max_half(self,
+                         box: np.ndarray
+                         ) -> np.float64:
+        """find the maximums of the box size"""
+        return np.max(box) / 2.0
+
+    def analys_rdf(self,
+                   rdf: np.ndarray,
+                   box_half: np.float64  # Max of the box in all axis, half
+                   ) -> None:
+        """analysing rdf to find extremums"""
+        np_radius: float = stinfo.np_info['radius']
+        filtered_indices = np.where(rdf[:, 0] < box_half)[0]
+        filtered_rdf = rdf[filtered_indices]
+        dr = np.diff(filtered_rdf[:, 0])
+        grad_rdf = np.diff(filtered_rdf[:, 1]) / dr
+
+        # Identify peaks and valleys
+        peaks, _ = find_peaks(filtered_rdf[:, 1])
+        valleys, _ = find_peaks(-filtered_rdf[:, 1])
+
+        # Get the exact r values for peaks and valleys
+        peak_positions = filtered_rdf[:, 0][peaks]
+        valley_positions = filtered_rdf[:, 0][valleys]
 
 
 class ParseDataFiles:

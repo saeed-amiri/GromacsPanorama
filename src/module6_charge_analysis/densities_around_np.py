@@ -157,6 +157,7 @@ class ResidueDensityAroundNanoparticle:
         """set the 2d rdf (g(r))"""
         max_radius_area: float = \
             max(item for item in density_per_region.keys())
+        total_valume: float = 4/3 * np.pi * max_radius_area**3
         rdf: dict[float, float] = {}
         for region, densities in density_per_region.items():
             if not densities:
@@ -165,8 +166,7 @@ class ResidueDensityAroundNanoparticle:
 
             tmp = []
             for j, item in enumerate(densities):
-                density: float = \
-                    num_oda[j]/(4 * np.pi * max_radius_area**3 / 3)
+                density: float = num_oda[j] / total_valume
                 tmp.append(item/density)
             rdf[region] = np.mean(tmp)
         return rdf

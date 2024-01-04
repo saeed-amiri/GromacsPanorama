@@ -89,6 +89,9 @@ class ComputeCharges:
                 densities_around_np.ResidueDensityAroundNanoparticle(
                     cla_arr, log, 'CLA').densities
             densities_around_np_plotter.ResidueDensityPlotter(densities, log)
+            self.info_msg += '\tThe rdf will be computed from com_pickle\n'
+        
+        self.info_msg += '\tThe rdf from GROMACS will be used\n'
         np_charge_analysis.NpChargeAnalysis(cla_arr, self.config, log)
 
     def write_msg(self,

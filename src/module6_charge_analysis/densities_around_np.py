@@ -48,9 +48,9 @@ class ParameterConfigs:
 class Densities(typing.NamedTuple):
     """densities data structure"""
     res_name: str
-    rdf: dict[float, float] = {}
-    avg_density_per_region: dict[float, float] = {}
     density_per_region: dict[float, list[float]] = {}
+    avg_density_per_region: dict[float, float] = {}
+    rdf: dict[float, float] = {}
 
 
 class ResidueDensityAroundNanoparticle:

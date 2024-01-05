@@ -209,9 +209,9 @@ class ResidueDensityAroundNanoparticle:
 
             tmp = []
             for j, item in enumerate(densities):
-                density: float = \
-                    (num_oda[j] * (num_oda[j] - 1)/2) / total_valume
-                tmp.append(item * density)
+                normalization_factor: float = \
+                    (num_oda[j] * (num_oda[j] - 1) / 2) / total_valume
+                tmp.append(item * normalization_factor)
             rdf[region] = np.mean(tmp)
         return rdf
 

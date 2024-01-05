@@ -154,10 +154,53 @@ class ResidueDensityAroundNanoparticle:
                     density_per_region: dict[float, list[float]],
                     num_oda: list[int]
                     ) -> dict[float, float]:
-        """set the 2d rdf (g(r))"""
+        """set the 3d rdf (g(r))
+        The use of dr (div_r) in the normalization factor for the
+        radial distribution function (RDF) calculation is important
+        for a couple of reasons:
+         Volume of Shells: In the RDF calculation, we are essentially
+         counting the number of particle pairs within spherical shells
+         of thickness dr at different radii. The volume of each shell
+         is given by the formula for the volume of a spherical shell,
+         which depends on dr. Specifically, the volume of a shell
+         between radii r and r + dr is:
+         4/3pi((r+dr)3-r3)4/3pi((r+dr)3-r3).
+
+        Normalization Purpose: The normalization factor is used to
+        convert the raw pair counts in each shell into a density.
+        The RDF is a measure of density relative to an ideal gas at
+        the same number density, so we need to account for how many
+        pairs we would expect to find in each shell if the particles
+        randomly distributed.
+        This expected number depends on the volume of each shell (which
+        includes dr) and the overall number density of particles.
+
+        In the provided code, the normalization factor is calculated
+        as follows:
+
+        normalization_factor is initially set to:
+         (N*(N-1)/2)*(4pidr^3)(N*(N-1)/2)*(4πdr^3).
+        This accounts for the total number of unique pairs of particles
+        (since each pair is counted twice in the double loop) and a
+        volume scaling factor.
+        rdf /= shell_volumes * number_density * normalization_factor:
+        This line adjusts the RDF by dividing by the volume of each
+        shell, the number density of particles, and the previously
+        mentioned normalization factor. The term shell_volumes is the
+        array of volumes of the individual shells, which is computed
+        as:
+         4/3pi((radii+dr)3-radii^3).
+
+        By including dr in this way, we ensure that the RDF reflects
+        the true spatial distribution of particles, normalized correctly
+        for the volume in which they are counted. This normalization is
+        crucial for comparing the RDF to theoretical models or RDFs
+        from different systems.
+        """
         max_radius_area: float = \
             max(item for item in density_per_region.keys())
-        total_valume: float = 4/3 * np.pi * max_radius_area**3
+        div_r: float = max_radius_area / len(density_per_region)
+        total_valume: float = 4/3 * np.pi * div_r**3
         rdf: dict[float, float] = {}
         for region, densities in density_per_region.items():
             if not densities:
@@ -166,8 +209,9 @@ class ResidueDensityAroundNanoparticle:
 
             tmp = []
             for j, item in enumerate(densities):
-                density: float = num_oda[j] / total_valume
-                tmp.append(item/density)
+                density: float = \
+                    (num_oda[j] * (num_oda[j] - 1)/2) / total_valume
+                tmp.append(item * density)
             rdf[region] = np.mean(tmp)
         return rdf
 

@@ -17,6 +17,7 @@ from common import static_info as stinfo
 from common import xvg_to_dataframe as xvg
 from common.colors_text import TextColor as bcolors
 
+from module6_charge_analysis import gmx_rdf_cdf_plotter
 
 if typing.TYPE_CHECKING:
     from module6_charge_analysis.charge_analysis_interface_np import \
@@ -52,8 +53,16 @@ class NpChargeAnalysis:
         self.data_arrays = ParseDataFiles(input_config, log).data_arrays
         self.input_config = input_config
         self.cla_arr = cla_arr
+        self.inital_plots(log)
         self.initiate_computation(log)
 
+    def inital_plots(self,
+                     log: logger.logging.Logger
+                     ) -> None:
+        """plot the main rdf and cdf from gromacs"""
+        rdf_df: pd.DataFrame = xvg.XvgParser(self.input_config.f_rdf).xvg_df
+        gmx_rdf_cdf_plotter.PlotGmxRdfCdf(df_in=rdf_df, df_type='rdf', log=log)
+    
     def initiate_computation(self,
                              log: logger.logging.Logger
                              ) -> None:

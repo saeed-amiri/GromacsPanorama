@@ -136,7 +136,7 @@ class GetResidues:
              if k in res_name}
         if self.check_similar_items(all_res_dict):
             msg: str = (f'{self.__class__.__name__}:\n'
-                        '\tError: There is a douplicate index in the '
+                        '\tError: There is a duplicate index in the '
                         'residues. Most modifying the code!\n')
             log.error(msg)
             sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')

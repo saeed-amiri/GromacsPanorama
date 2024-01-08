@@ -41,14 +41,15 @@ doc string by: ChatGpt
 Saeed
 """
 
+import typing
 from dataclasses import dataclass, field
 
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 from common import logger
 from common import plot_tools
-from common import xvg_to_dataframe as xvg
 from common.colors_text import TextColor as bcolors
 
 
@@ -65,25 +66,36 @@ class BaseGraphConfigs:
         'color': 'k',
         'marker': 'o',
         'linestyle': '-',
-        'markersize': 5,
+        'markersize': 0,
         '2nd_marksize': 1
     })
     graph_2nd_legend: str = 'g(r)'
+    height_ratio: float = 5**0.5-1
 
 
 @dataclass
-class RdfGrpahConfigs(BaseGraphConfigs):
+class RdfGraphConfigs(BaseGraphConfigs):
     """configuration for rdf plotting"""
-    graph_suffix: str = 'gmx_rdf.png'
+    graph_suffix: str = 'gmx.png'
     graph_legend: str = 'rdf'
-    title: str = 'Rdf vs Distanec'
+    title: str = 'Rdf vs Distance (from outmost atoms of NP)'
     ylabel: str = 'g(r)'
+
+
+@dataclass
+class CdfGraphConfigs(BaseGraphConfigs):
+    """configuration for rdf plotting"""
+    graph_suffix: str = 'gmx.png'
+    graph_legend: str = 'cdf'
+    title: str = 'Cdf vs Distanec'
+    ylabel: str = 'xdf'
 
 
 @dataclass
 class AllGraphConfigs:
     """all the configurations for the plots"""
-    rdf_configs: "RdfGrpahConfigs" = RdfGrpahConfigs()
+    rdf_configs: "RdfGraphConfigs" = RdfGraphConfigs()
+    cdf_configs: "CdfGraphConfigs" = CdfGraphConfigs()
 
 
 class PlotGmxRdfCdf:
@@ -109,6 +121,50 @@ class PlotGmxRdfCdf:
                   log: logger.logging.Logger
                   ) -> None:
         """Plot the graphs here"""
+        if self.df_type == 'rdf':
+            self._plot_rdf(self.df_in, self.configs.rdf_configs)
+
+    def _plot_rdf(self,
+                  df_in: pd.DataFrame,
+                  configs: "RdfGraphConfigs"
+                  ) -> None:
+        """plot rdf figure"""
+        if '_nm' in list(df_in.columns)[0]:
+            df_in.iloc[:, 0] *= 10
+        self._plot_graphes(df_in, configs)
+
+    def _plot_graphes(self,
+                      df_in: pd.DataFrame,
+                      configs: typing.Union["RdfGraphConfigs",
+                                            "CdfGraphConfigs"],
+                      return_ax: bool = False
+                      ) -> tuple[plt.figure, plt.axes]:
+        """plot graphs"""
+        radii = np.array(df_in.iloc[:, 0])
+        dens_values = np.array(df_in.iloc[:, 1])
+        ax_i: plt.axes
+        fig_i: plt.figure
+        fig_i, ax_i = plot_tools.mk_canvas((np.min(radii), np.max(radii)),
+                                           height_ratio=configs.height_ratio)
+        ax_i.plot(radii,
+                  dens_values,
+                  marker=configs.graph_style['marker'],
+                  linestyle=configs.graph_style['linestyle'],
+                  color=configs.graph_style['color'],
+                  label=configs.graph_legend,
+                  markersize=configs.graph_style['markersize'])
+        ax_i.set_xlabel(configs.xlabel)
+        ax_i.set_ylabel(configs.ylabel)
+        ax_i.set_title(configs.title)
+        # Set grid for primary axis
+        ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
+
+        if not return_ax:
+            fout: str = f'{self.df_type}_{configs.graph_suffix}'
+            plot_tools.save_close_fig(
+                fig_i, ax_i, fout, loc='upper left')
+            self.info_msg += f'\tThe density graph saved: `{fout}`\n'
+        return fig_i, ax_i
 
 
 if __name__ == "__main__":

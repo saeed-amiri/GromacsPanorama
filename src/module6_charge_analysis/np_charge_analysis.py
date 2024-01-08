@@ -60,7 +60,8 @@ class NpChargeAnalysis:
                      log: logger.logging.Logger
                      ) -> None:
         """plot the main rdf and cdf from gromacs"""
-        rdf_df: pd.DataFrame = xvg.XvgParser(self.input_config.f_rdf).xvg_df
+        rdf_df: pd.DataFrame = \
+            xvg.XvgParser(self.input_config.f_rdf, log, x_type=float).xvg_df
         gmx_rdf_cdf_plotter.PlotGmxRdfCdf(df_in=rdf_df, df_type='rdf', log=log)
     
     def initiate_computation(self,

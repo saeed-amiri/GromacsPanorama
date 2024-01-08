@@ -46,8 +46,8 @@ if typing.TYPE_CHECKING:
 @dataclass
 class FileConfigurations:
     """names of the input files"""
-    f_rdf: str = 'cla_rdf.xvg'
-    f_cdf: str = 'cla_cdf.xvg'
+    f_rdf: str = 'gmx_rdf_cla.xvg'
+    f_cdf: str = 'gmx_cdf_cla.xvg'
     f_contact: str = 'contact.xvg'
     f_coord: str = 'coord.xvg'
     f_box: str = 'box.xvg'

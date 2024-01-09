@@ -331,14 +331,16 @@ class CalculateCom:
         """get the COM for each time step"""
         i_com: list[np.ndarray] = []  # Arrays contains center of masses
         total_mass: float = 0  # Total mass of each residue in the NP
-        for i in np_res_ind:
-            com: np.ndarray  # Center of mass of the residue i
-            tmp_mass: float  # Mass of the residue
-            com, tmp_mass = self.get_np_com_tstep(i, all_atoms, u_traj)
-            total_mass += tmp_mass
-            i_com.append(com)
-            step_com = np.vstack(i_com)
-        return np.sum(step_com, axis=0) / total_mass
+        if np_res_ind:
+            for i in np_res_ind:
+                com: np.ndarray  # Center of mass of the residue i
+                tmp_mass: float  # Mass of the residue
+                com, tmp_mass = self.get_np_com_tstep(i, all_atoms, u_traj)
+                total_mass += tmp_mass
+                i_com.append(com)
+                step_com = np.vstack(i_com)
+            return np.sum(step_com, axis=0) / total_mass
+        return np.array([0.0, 0.0, 0.0])
 
     def get_chunk_lists(self,
                         data: np.ndarray  # Range of the time steps
@@ -365,9 +367,12 @@ class CalculateCom:
         return list of the integer of the residues in the NP
         """
         np_res_ind: list[int] = []  # All the index in the NP
-        for item in stinfo.np_info['np_residues']:
-            np_res_ind.extend(
-                self.get_residues.trr_info.residues_indx[item])
+        try:
+            for item in stinfo.np_info['np_residues']:
+                np_res_ind.extend(
+                    self.get_residues.trr_info.residues_indx[item])
+        except KeyError:
+            pass
         return np_res_ind
 
     def get_solution_residues(self,

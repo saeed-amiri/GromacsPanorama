@@ -142,13 +142,19 @@ class GetResidues:
             sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
 
         nr_residues = int(sum(len(lst) for lst in all_res_dict.values()))
-        max_res = int(max(max(lst) for lst in all_res_dict.values()))
-        min_res = int(min(min(lst) for lst in all_res_dict.values()))
         self.info_msg += \
             (f'\tThe number of the read residues for {res_name} is:\n'
-             f'\t\t`{nr_residues}`\n'
-             f'\t\tThe max & min of indices are: `{max_res}` and'
-             f' `{min_res}`\n')
+             f'\t\t`{nr_residues}`\n')
+        # Exception for supporting absent of the nanoparticle
+        try:
+            max_res = int(max(max(lst) for lst in all_res_dict.values()))
+            min_res = int(min(min(lst) for lst in all_res_dict.values()))
+            self.info_msg += (f'\t\tThe max & min of indices are: `{max_res}` '
+                              f'and `{min_res}`\n')
+        except ValueError:
+            max_res = 0.0
+            min_res = 0.0
+
         return all_res_dict, nr_residues, max_res, min_res
 
     @staticmethod

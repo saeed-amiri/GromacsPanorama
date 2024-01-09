@@ -130,21 +130,25 @@ class GetResidues:
         dropping the NP residues
         """
         self.info_msg += '\tGetting the residues:\n'
+
         all_res_dict: dict[str, list[int]] = {}  # All the residues in solution
         all_res_dict = \
             {k: val for k, val in self.trr_info.residues_indx.items()
              if k in res_name}
+
         if self.check_similar_items(all_res_dict):
-            msg: str = (f'{self.__class__.__name__}:\n'
-                        '\tError: There is a duplicate index in the '
-                        'residues. Most modifying the code!\n')
-            log.error(msg)
-            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+            err_msg: str = (f'{self.__class__.__name__}:\n'
+                            '\tError: There is a duplicate index in the '
+                            'residues. Most modifying the code!\n')
+            log.error(err_msg)
+            sys.exit(f'{bcolors.FAIL}{err_msg}{bcolors.ENDC}')
 
         nr_residues = int(sum(len(lst) for lst in all_res_dict.values()))
+
         self.info_msg += \
             (f'\tThe number of the read residues for {res_name} is:\n'
              f'\t\t`{nr_residues}`\n')
+
         # Exception for supporting absent of the nanoparticle
         try:
             max_res = int(max(max(lst) for lst in all_res_dict.values()))
@@ -154,6 +158,7 @@ class GetResidues:
         except ValueError:
             max_res = 0
             min_res = 0
+            self.info_msg += '\tThere is no nanoparticle in the system\n'
 
         return all_res_dict, nr_residues, max_res, min_res
 

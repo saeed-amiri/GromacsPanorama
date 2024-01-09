@@ -156,11 +156,13 @@ class SmoothedRdf2dGraphConfig(BaseGraphConfig):
 @dataclass
 class GraphsConfigs:
     """all the graphs configurations"""
-    graph_config:  "DensityGraphConfig" = DensityGraphConfig()
-    rdf_config: "Rdf2dGraphConfig" = Rdf2dGraphConfig()
-    fitted_rdf_config: "FittedRdf2dGraphConfig" = FittedRdf2dGraphConfig()
+    graph_config:  "DensityGraphConfig" = \
+        field(default_factory=DensityGraphConfig)
+    rdf_config: "Rdf2dGraphConfig" = field(default_factory=Rdf2dGraphConfig)
+    fitted_rdf_config: "FittedRdf2dGraphConfig" = \
+        field(default_factory=FittedRdf2dGraphConfig)
     smoothed_rdf_config: "SmoothedRdf2dGraphConfig" = \
-        SmoothedRdf2dGraphConfig()
+        field(default_factory=SmoothedRdf2dGraphConfig)
 
 
 class SurfactantDensityPlotter:

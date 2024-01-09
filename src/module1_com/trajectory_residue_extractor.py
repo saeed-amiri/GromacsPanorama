@@ -152,8 +152,8 @@ class GetResidues:
             self.info_msg += (f'\t\tThe max & min of indices are: `{max_res}` '
                               f'and `{min_res}`\n')
         except ValueError:
-            max_res = 0.0
-            min_res = 0.0
+            max_res = 0
+            min_res = 0
 
         return all_res_dict, nr_residues, max_res, min_res
 

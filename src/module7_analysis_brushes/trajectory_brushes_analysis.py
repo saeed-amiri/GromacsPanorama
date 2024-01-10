@@ -34,21 +34,26 @@ Saeed
 import sys
 from dataclasses import dataclass
 
+import numpy as np
+import pandas as pd
+
 from common import logger
 from common.com_file_parser import GetCom
+from common import xvg_to_dataframe as xvg
 from common.colors_text import TextColor as bcolors
 
 
 @dataclass
 class InputConfigus:
     """set the input files names"""
-    box_xvg: str = 'box_xvg'
+    f_box: str = 'box.xvg'
 
 
 @dataclass
 class ComputationConfigs:
     """to set the computation parameters and selections"""
     file_configs: "InputConfigus" = InputConfigus()
+    unit_nm_to_angestrom: float = 10
 
 
 class BrushesAnalysis:
@@ -57,6 +62,7 @@ class BrushesAnalysis:
     info_msg: str = 'Messages from BrushesAnalysis:\n'
     compute_configs: "ComputationConfigs"
     parsed_com: "GetCom"
+    box: np.ndarray
 
     def __init__(self,
                  fname: str,  # Name of the com_pickle file
@@ -65,6 +71,31 @@ class BrushesAnalysis:
                  ) -> None:
         self.parsed_com = GetCom(fname)
         self.compute_configs = compute_configs
+        self.initiate(log)
+
+    def initiate(self,
+                 log: logger.logging.Logger
+                 ) -> None:
+        """initiate computations"""
+        box: pd.DataFrame = self._load_xvg_data(
+            self.compute_configs.file_configs.f_box, log)
+        self.box = self._parse_gmx_coordinates(
+            box, self.compute_configs.unit_nm_to_angestrom)
+
+    def _load_xvg_data(self,
+                       fname: str,
+                       log: logger.logging.Logger,
+                       x_type: type = int
+                       ) -> pd.DataFrame:
+        """Load and return the contact data from XVG file."""
+        return xvg.XvgParser(fname, log, x_type).xvg_df
+
+    @staticmethod
+    def _parse_gmx_coordinates(df_in: pd.DataFrame,
+                               nm_angestrom: float
+                               ) -> np.ndarray:
+        """return the nanoparticle center of mass as an array"""
+        return df_in.iloc[:, 1:4].to_numpy() * nm_angestrom
 
 
 if __name__ == '__main__':

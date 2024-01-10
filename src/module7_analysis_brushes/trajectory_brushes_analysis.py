@@ -30,3 +30,42 @@ Input Data:
 Jan 10 2023
 Saeed
 """
+
+import sys
+from dataclasses import dataclass
+
+from common import logger
+from common.com_file_parser import GetCom
+from common.colors_text import TextColor as bcolors
+
+
+@dataclass
+class InputConfigus:
+    """set the input files names"""
+    box_xvg: str = 'box_xvg'
+
+
+@dataclass
+class ComputationConfigs:
+    """to set the computation parameters and selections"""
+    file_configs: "InputConfigus" = InputConfigus()
+
+
+class BrushesAnalysis:
+    """analysing brushes systems"""
+
+    info_msg: str = 'Messages from BrushesAnalysis:\n'
+    compute_configs: "ComputationConfigs"
+    parsed_com: "GetCom"
+
+    def __init__(self,
+                 fname: str,  # Name of the com_pickle file
+                 log: logger.logging.Logger,
+                 compute_configs: "ComputationConfigs" = ComputationConfigs()
+                 ) -> None:
+        self.parsed_com = GetCom(fname)
+        self.compute_configs = compute_configs
+
+
+if __name__ == '__main__':
+    BrushesAnalysis(sys.argv[1], log=logger.setup_logger('brushes.log'))

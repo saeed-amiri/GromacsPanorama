@@ -14,6 +14,7 @@ import multiprocessing
 from collections import namedtuple
 
 import numpy as np
+import pandas as pd
 
 from common import logger
 from common import cpuconfig
@@ -72,6 +73,7 @@ class GetSurface:
             self._get_surface_topology(water_arr[:-2], x_mesh, y_mesh, log)
         self.surface_waters: dict[int, np.ndarray] = \
             self.get_xyz_arr(water_arr[:-2], surface_indices)
+        df_locz: pd.DataFrame = self.get_interface_z()
 
     def get_interface_z_threshold(self,
                                   box_dims: dict[str, float]
@@ -169,6 +171,15 @@ class GetSurface:
             surface_waters[i_frame] = i_arr
             del i_arr
         return surface_waters
+
+    def get_interface_z(self) -> pd.DataFrame:
+        """Creates a dataframe of the z component of the interface."""
+        loc_z = {}
+        for i_frame, water_arr in self.surface_waters.items():
+            loc_z[i_frame] = np.mean(water_arr[:, 2])
+        loc_z_df = pd.DataFrame(
+            list(loc_z.items()), columns=['i_frame', 'interface_z'])
+        return loc_z_df
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

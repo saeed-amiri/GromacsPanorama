@@ -37,6 +37,8 @@ from common.com_file_parser import GetCom
 from common import xvg_to_dataframe as xvg
 from common.colors_text import TextColor as bcolors
 
+from module7_analysis_brushes.get_surface import GetSurface
+
 
 @dataclass
 class InputConfig:
@@ -58,6 +60,7 @@ class BrushAnalysis:
     compute_configs: "ComputationConfig"
     parsed_com: "GetCom"
     box: np.ndarray
+    surface_waters: dict[int, np.ndarray]
 
     def __init__(self,
                  fname: str,  # Name of the com_pickle file
@@ -91,6 +94,9 @@ class BrushAnalysis:
                       log: logger.logging.Logger
                       ) -> None:
         """analysis the interface by finding the water surface"""
+        self.surface_waters = GetSurface(self.parsed_com.split_arr_dict['SOL'],
+                                         self.parsed_com.box_dims,
+                                         log).surface_waters
 
     def _load_xvg_data(self,
                        fname: str,

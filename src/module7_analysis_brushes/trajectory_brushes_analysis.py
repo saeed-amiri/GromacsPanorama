@@ -1,35 +1,30 @@
 """
 Brush Analysis Module
 
-This module is designed for analyzing surfactant-rich systems,
-specifically focusing on the behavior of octadecylamines (ODA) at the
-interface of water and decane layers in the absence of nanoparticles.
+This module is designed for analyzing the behavior of octadecylamines
+(ODA) at the interface of water and decane layers in surfactant-rich
+systems without nanoparticles.
 
 Key Analysis Features:
-    1. Surface Morphology: Examines the structural characteristics of
-        the interface.
-    2. ODA Distribution: Quantifies the number of ODA molecules at the
-        interface and within the water phase.
-    3. Order Parameters: Calculates the order parameters of ODA at the
-        interface to assess alignment and organization.
+    1. Surface Morphology: Examines the interface's structural
+        characteristics.
+    2. ODA Distribution: Quantifies ODA molecules at the interface and
+        in the water phase.
+    3. Order Parameters: Calculates ODA order parameters at the
+        interface for organization assessment.
 
 Additional Analysis (if applicable):
-    - Micelle Analysis: Investigates the formation and characteristics
-        of ODA micelles in the water phase.
+    - Micelle Analysis: Investigates ODA micelle formation in the
+        water phase.
 
 Input Data:
-    - com_pickle: A serialized file representing the center of mass
-     for all residues in the system. It is structured as an array with
-     the following format:
-     | time | NP_x | NP_y | NP_z | res1_x | res1_y | res1_z | ...
-     | resN_x | resN_y | resN_z | odn1_x | odn1_y | odn1_z | ...
-     | odnN_z |
+    - com_pickle: Serialized file representing the center of mass for
+        all system residues.
 
-    This data is loaded using the GetCom class from the
-  common.com_file_parser module.
-Jan 10 2023
-Saeed
+Authors: Saeed
+Date: Jan 10, 2023
 """
+
 
 import sys
 from dataclasses import dataclass
@@ -44,43 +39,58 @@ from common.colors_text import TextColor as bcolors
 
 
 @dataclass
-class InputConfigus:
+class InputConfig:
     """set the input files names"""
     f_box: str = 'box.xvg'
 
 
 @dataclass
-class ComputationConfigs:
+class ComputationConfig:
     """to set the computation parameters and selections"""
-    file_configs: "InputConfigus" = InputConfigus()
+    file_configs: "InputConfig" = InputConfig()
     unit_nm_to_angestrom: float = 10
 
 
-class BrushesAnalysis:
+class BrushAnalysis:
     """analysing brushes systems"""
 
-    info_msg: str = 'Messages from BrushesAnalysis:\n'
-    compute_configs: "ComputationConfigs"
+    info_msg: str = 'Messages from BrushAnalysis:\n'
+    compute_configs: "ComputationConfig"
     parsed_com: "GetCom"
     box: np.ndarray
 
     def __init__(self,
                  fname: str,  # Name of the com_pickle file
                  log: logger.logging.Logger,
-                 compute_configs: "ComputationConfigs" = ComputationConfigs()
+                 compute_configs: "ComputationConfig" = ComputationConfig()
                  ) -> None:
         self.parsed_com = GetCom(fname)
+        self.info_msg += f'\tReading com file: `{fname}`\n'
         self.compute_configs = compute_configs
         self.initiate(log)
+        self.write_msg(log)
 
     def initiate(self,
                  log: logger.logging.Logger
                  ) -> None:
         """initiate computations"""
-        box: pd.DataFrame = self._load_xvg_data(
-            self.compute_configs.file_configs.f_box, log)
+        self.set_box(log)
+        self.get_interface(log)
+
+    def set_box(self,
+                log: logger.logging.Logger
+                ) -> None:
+        """set the box info as an attribute"""
+        box_df: pd.DataFrame = self._load_xvg_data(
+            fname := self.compute_configs.file_configs.f_box, log)
         self.box = self._parse_gmx_coordinates(
-            box, self.compute_configs.unit_nm_to_angestrom)
+            box_df, self.compute_configs.unit_nm_to_angestrom)
+        self.info_msg += f'\tReading box file: `{fname}`\n'
+
+    def get_interface(self,
+                      log: logger.logging.Logger
+                      ) -> None:
+        """analysis the interface by finding the water surface"""
 
     def _load_xvg_data(self,
                        fname: str,
@@ -92,11 +102,26 @@ class BrushesAnalysis:
 
     @staticmethod
     def _parse_gmx_coordinates(df_in: pd.DataFrame,
-                               nm_angestrom: float
+                               conversion_factor: float
                                ) -> np.ndarray:
         """return the nanoparticle center of mass as an array"""
-        return df_in.iloc[:, 1:4].to_numpy() * nm_angestrom
+        return df_in.iloc[:, 1:4].to_numpy() * conversion_factor
+
+    def write_msg(self,
+                  log: logger.logging.Logger  # To log
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
+def main():
+    """main to call the main class"""
+    log = logger.setup_logger('brushes.log')
+    com_filename = sys.argv[1] if len(sys.argv) > 1 else "com_pickle"
+    BrushAnalysis(com_filename, log)
 
 
 if __name__ == '__main__':
-    BrushesAnalysis(sys.argv[1], log=logger.setup_logger('brushes.log'))
+    main()

@@ -31,9 +31,11 @@ import multiprocessing
 from dataclasses import dataclass
 
 import numpy as np
+import pandas as pd
 
 from common import logger
 from common import cpuconfig
+from common import file_writer
 from common.colors_text import TextColor as bcolors
 
 
@@ -63,7 +65,7 @@ class AnalysisSurfactant:
 
     compute_config: "ComputationConfig"
     interface_z: np.ndarray
-    order_parameter: np.ndarray
+    order_parameters: np.ndarray
 
     def __init__(self,
                  oda_arr: np.ndarray,  # COM of the oda residues
@@ -77,21 +79,27 @@ class AnalysisSurfactant:
 
         self.compute_config = compute_config
         self.interface_z = interface_z
-        self.initiate(oda_arr[:-2], amino_arr[:-2], log)
+        self.order_parameters = \
+            self.initiate(oda_arr[:-2], amino_arr[:-2], log)
         self._write_msg(log)
 
     def initiate(self,
                  oda_arr: np.ndarray,  # COM of the oda residues
                  amino_arr: np.ndarray,  # COM of the amino group on oda
                  log: logger.logging.Logger
-                 ) -> None:
+                 ) -> np.ndarray:
         """initialization of the calculations"""
         interface_oda_ind: dict[int, np.ndarray]
         interface_oda_nr: dict[int, int]
+        order_parameter: np.ndarray
         interface_oda_ind, interface_oda_nr = \
             self.get_interface_oda_inidcies(amino_arr, log)
-        self.compute_interface_oda_order_parameter(
+        order_parameter = self.compute_interface_oda_order_parameter(
             amino_arr, oda_arr, interface_oda_ind, log)
+        data_df: pd.DataFrame = self.make_df(interface_oda_nr, order_parameter)
+        file_writer.write_xvg(data_df, log, fname := 'order_parameter.xvg')
+        self.info_msg += f'\tThe dataframe saved to `{fname}`\n'
+        return order_parameter
 
     def get_interface_oda_inidcies(self,
                                    amino_arr: np.ndarray,
@@ -161,9 +169,9 @@ class AnalysisSurfactant:
                                               interface_oda_ind: dict[
                                                int, np.ndarray],
                                               log: logger.logging.Logger
-                                              ) -> None:
+                                              ) -> np.ndarray:
         """compute the order parameter for the oda at interface"""
-        self.order_parameter = ComputeOrderParameter(
+        order_parameter = ComputeOrderParameter(
             head_arr=amino_arr,
             tail_arr=oda_arr,
             indicies=interface_oda_ind,
@@ -171,8 +179,20 @@ class AnalysisSurfactant:
             log=log
             ).order_parameters
         self.info_msg += (
-            f'\tMean order parameter: `{np.mean(self.order_parameter):.3f}`\n'
-            f'\tStd order parameter: `{np.std(self.order_parameter):.3f}\n')
+            f'\tMean of order parameter: `{np.mean(order_parameter):.3f}`\n'
+            f'\tStd of order parameter: `{np.std(order_parameter):.3f}\n')
+        return order_parameter
+
+    def make_df(self,
+                interface_oda_nr: dict[int, int],
+                order_parameter: np.ndarray
+                ) -> pd.DataFrame:
+        """prepare dataframe to write the data to xvg file"""
+        columns: list[str] = ['nr_interface_oda', 'order_parameter']
+        df_i: pd.DataFrame = pd.DataFrame(columns=columns)
+        df_i['nr_interface_oda'] = interface_oda_nr.values()
+        df_i['order_parameter'] = order_parameter.tolist()
+        return df_i
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

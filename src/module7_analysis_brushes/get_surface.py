@@ -41,15 +41,25 @@ class PlotConfig:
     indices: typing.Optional[list[int]] = None
 
 
+@dataclass
+class ParamConfig:
+    """sett the constant parameters"""
+    oil_top_ratio: float = 2/3  # Where form top for sure should be oil
+    mesh_nr: float = 100.  # Number of meshes in each directions
+    z_threshold: float = 120.
+
+
+@dataclass
+class ComputationConfig(PlotConfig, ParamConfig):
+    """set all the configs"""
+
+
 class GetSurface:
     """find the surface of the water"""
 
     info_msg: str = 'Message from GetSurface:\n'  # Meesage in methods to log
 
-    oil_top_ratio: float = 2/3  # Where form top for sure should be oil
-    mesh_nr: float = 100.  # Number of meshes in each directions
-
-    plot_config: "PlotConfig"
+    compute_config: "ComputationConfig"
     z_threshold: float
     mesh_size: float
     surface_waters: dict[int, np.ndarray]  # Water at the surface, include np
@@ -58,9 +68,9 @@ class GetSurface:
                  water_arr: np.ndarray,
                  box_dims: dict[str, float],
                  log: logger.logging.Logger,
-                 plot_config: "PlotConfig" = PlotConfig()
+                 compute_config: "ComputationConfig" = ComputationConfig()
                  ) -> None:
-        self.plot_config = plot_config
+        self.compute_config = compute_config
         self.get_water_surface(water_arr, box_dims, log)
         self.plot_water_surfaces(box_dims)
         self._write_msg(log)
@@ -85,8 +95,8 @@ class GetSurface:
                    index=2,
                    log=log,
                    output_config=output_config)
-        # self.z_threshold = self.get_interface_z_threshold(box_dims)
-        self.z_threshold = 120
+        # self.compute_config.z_threshold = \
+        # self.get_interface_z_threshold(box_dims)
         x_mesh, y_mesh, self.mesh_size = self._get_xy_grid(box_dims)
         surface_indices: dict[int, list[np.int64]] = \
             self._get_surface_topology(water_arr[:-2], x_mesh, y_mesh, log)
@@ -99,9 +109,11 @@ class GetSurface:
                                   box_dims: dict[str, float]
                                   ) -> float:
         """find the threshold of water highest point"""
-        z_threshold: float = box_dims['z_hi'] * self.oil_top_ratio
+        z_threshold: float = \
+            box_dims['z_hi'] * self.compute_config.oil_top_ratio
         self.info_msg += \
-            (f'\tThe oil top ratio was set to `{self.oil_top_ratio:.3f}`\n'
+            ('\tThe oil top ratio was set to '
+             f'`{self.compute_config.oil_top_ratio:.3f}`\n'
              f'\tThe z threshold is set to `{z_threshold:.3f}`\n')
         return z_threshold
 
@@ -110,8 +122,9 @@ class GetSurface:
                      ) -> tuple[np.ndarray, np.ndarray, float]:
         """return the mesh grid for the box"""
         mesh_size: float = \
-            (box_dims['x_hi']-box_dims['x_lo'])/self.mesh_nr
-        self.info_msg += f'\tThe number of meshes is `{self.mesh_nr**2}`\n'
+            (box_dims['x_hi']-box_dims['x_lo'])/self.compute_config.mesh_nr
+        self.info_msg += \
+            f'\tThe number of meshes is `{self.compute_config.mesh_nr**2}`\n'
         x_mesh: np.ndarray  # Mesh grid in x and y
         y_mesh: np.ndarray  # Mesh grid in x and y
         x_mesh, y_mesh = np.meshgrid(
@@ -130,10 +143,15 @@ class GetSurface:
         """get max water in each time frame"""
         cpu_info = cpuconfig.ConfigCpuNr(log)
         n_cores: int = min(cpu_info.cores_nr, water_arr.shape[0])
+
         results: list[list[np.int64]]
         max_indices: dict[int, list[np.int64]] = {}
-        mesh_info: "MeshInfo" = \
-            MeshInfo(x_mesh, y_mesh, self.mesh_size, self.z_threshold)
+
+        mesh_info: "MeshInfo" = MeshInfo(x_mesh,
+                                         y_mesh,
+                                         self.mesh_size,
+                                         self.compute_config.z_threshold)
+
         with multiprocessing.Pool(processes=n_cores) as pool:
             results = pool.starmap(
                 self._process_single_frame,
@@ -196,7 +214,7 @@ class GetSurface:
 
     def get_interface_z(self) -> pd.DataFrame:
         """Creates a dataframe of the z component of the interface."""
-        loc_z = {}
+        loc_z: dict[int, np.float64] = {}
         for i_frame, water_arr in self.surface_waters.items():
             loc_z[i_frame] = np.mean(water_arr[:, 2])
         loc_z_df = pd.DataFrame(
@@ -253,12 +271,12 @@ class GetSurface:
                             ) -> None:
         """plot water surface in random selected frames"""
         selected_frames: dict[int, np.ndarray] = \
-            self.get_selected_frames(self.plot_config.indices,
-                                     self.plot_config.nr_fout)
+            self.get_selected_frames(self.compute_config.indices,
+                                     self.compute_config.nr_fout)
 
         self.plot_surface(selected_frames,
                           box_dims,
-                          fout_suffix=self.plot_config.fout_suffix)
+                          fout_suffix=self.compute_config.fout_suffix)
 
     def get_selected_frames(self,
                             indices: typing.Optional[list[int]],

@@ -26,6 +26,7 @@ The method involves:
         organization.
 """
 
+import sys
 import multiprocessing
 from dataclasses import dataclass
 
@@ -62,6 +63,7 @@ class AnalysisSurfactant:
 
     compute_config: "ComputationConfig"
     interface_z: np.ndarray
+    order_parameter: np.ndarray
 
     def __init__(self,
                  oda_arr: np.ndarray,  # COM of the oda residues
@@ -161,12 +163,16 @@ class AnalysisSurfactant:
                                               log: logger.logging.Logger
                                               ) -> None:
         """compute the order parameter for the oda at interface"""
-        ComputeOrderParameter(head_arr=amino_arr,
-                              tail_arr=oda_arr,
-                              indicies=interface_oda_ind,
-                              compute_config=self.compute_config.orderp_config,
-                              log=log
-                              )
+        self.order_parameter = ComputeOrderParameter(
+            head_arr=amino_arr,
+            tail_arr=oda_arr,
+            indicies=interface_oda_ind,
+            compute_config=self.compute_config.orderp_config,
+            log=log
+            ).order_parameters
+        self.info_msg += (
+            f'\tMean order parameter: `{np.mean(self.order_parameter):.3f}`\n'
+            f'\tStd order parameter: `{np.std(self.order_parameter):.3f}\n')
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log
@@ -185,8 +191,11 @@ class ComputeOrderParameter:
         4- Indicies of the selected Oda at each frame
         3- The director axis (optional, default: z)
     """
+    # pylint: disable=too-few-public-methods
 
     config: "OrderParameterConfig"
+    order_parameters: np.ndarray
+    director_ax: np.ndarray
 
     def __init__(self,
                  head_arr: np.ndarray,
@@ -198,15 +207,89 @@ class ComputeOrderParameter:
         # pylint: disable=too-many-arguments
 
         self.config = compute_config
-        self._initiate(head_arr, tail_arr, indicies, log)
+        self.order_parameters = \
+            self._initiate(head_arr, tail_arr, indicies, log)
 
     def _initiate(self,
                   head_arr: np.ndarray,
                   tail_arr: np.ndarray,
                   indicies: dict[int, np.ndarray],
                   log: logger.logging.Logger
-                  ) -> None:
+                  ) -> np.ndarray:
         """finding the order parameters here"""
+
+        if len(head_arr) != len(tail_arr):
+            log.error(
+                msg := '\n\tThere is problem in length of tails and heads\n')
+            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
+        cpu_info = cpuconfig.ConfigCpuNr(log)
+        n_cores: int = min(cpu_info.cores_nr, len(head_arr))
+
+        if self.config.director_ax == 'z':
+            self.director_ax = np.array([0, 0, 1])
+        with multiprocessing.Pool(processes=n_cores) as pool:
+            results = pool.starmap(
+                self._process_single_frame, [
+                    (head, tail, indicies, i_frame, log) for
+                    i_frame, (head, tail) in enumerate(zip(head_arr, tail_arr))
+                    ])
+        return np.array(results)
+
+    def _process_single_frame(self,
+                              head: np.ndarray,
+                              tail: np.ndarray,
+                              indicies: dict[int, np.ndarray],
+                              i_frame: int,
+                              log: logger.logging.Logger
+                              ) -> np.float64:
+        """compute order [arameter or each frame
+        The indices of interface oda are used to calculate it
+        """
+        # pylint: disable=too-many-arguments
+
+        interface_indices: np.ndarray = indicies[i_frame]
+        try:
+            interface_head: np.ndarray = head.reshape(-1, 3)[interface_indices]
+            interface_tail: np.ndarray = tail.reshape(-1, 3)[interface_indices]
+        except ValueError:
+            log.error(msg := '\tThere is a problem in reshaping arrays!\n')
+            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
+        if interface_head.shape[1] != 3:
+            log.error(msg := "\tWrong nr of elements after reshape head\n")
+            raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
+        if interface_tail.shape[1] != 3:
+            log.error(msg := "\tWrong nr of elements after reshape tail\n")
+            raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
+        head_tail_vec: np.ndarray = interface_head - interface_tail
+        try:
+            normalized_vectors: np.ndarray = head_tail_vec / np.linalg.norm(
+                head_tail_vec, axis=1)[:, np.newaxis]
+        except ZeroDivisionError:
+            log.error(msg := "\tThere is problem in getting normalized vec\n")
+            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
+        if normalized_vectors.ndim != 2 or normalized_vectors.shape[1] != 3:
+            log.error(msg := ("\tNormalized_vectors must be a 2D array with "
+                              "shape (-1, 3)\n"))
+            raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
+        if self.director_ax.ndim != 1 or len(self.director_ax) != 3:
+            log.error(msg := ("\t`self.director_ax` must be a 1D array with "
+                              "3 elements\n"))
+            raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
+        cos_theta = np.dot(normalized_vectors, self.director_ax)
+        if not np.all((-1 <= cos_theta) & (cos_theta <= 1)):
+            log.error(msg := ("\tComputed cos_theta values fall outside "
+                              "the expected range of -1 to 1\n"))
+            raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
+        order_params: np.ndarray = 0.5 * (3 * cos_theta**2 - 1)
+        return np.mean(order_params)
 
 
 if __name__ == "__main__":

@@ -44,8 +44,15 @@ class ParamConfig:
 
 
 @dataclass
+class OrderParameterConfig:
+    """parametrs and other configuration for computing order parmaeter"""
+    director_ax: str = 'z'
+
+
+@dataclass
 class ComputationConfig(ParamConfig):
     """set all the configurations"""
+    orderp_config: "OrderParameterConfig" = OrderParameterConfig()
 
 
 class AnalysisSurfactant:
@@ -81,6 +88,8 @@ class AnalysisSurfactant:
         interface_oda_nr: dict[int, int]
         interface_oda_ind, interface_oda_nr = \
             self.get_interface_oda_inidcies(amino_arr, log)
+        self.compute_interface_oda_order_parameter(
+            amino_arr, oda_arr, interface_oda_ind, log)
 
     def get_interface_oda_inidcies(self,
                                    amino_arr: np.ndarray,
@@ -144,6 +153,21 @@ class AnalysisSurfactant:
                           )
         return inface_bounds
 
+    def compute_interface_oda_order_parameter(self,
+                                              amino_arr: np.ndarray,
+                                              oda_arr: np.ndarray,
+                                              interface_oda_ind: dict[
+                                               int, np.ndarray],
+                                              log: logger.logging.Logger
+                                              ) -> None:
+        """compute the order parameter for the oda at interface"""
+        ComputeOrderParameter(head_arr=amino_arr,
+                              tail_arr=oda_arr,
+                              indicies=interface_oda_ind,
+                              compute_config=self.compute_config.orderp_config,
+                              log=log
+                              )
+
     def _write_msg(self,
                    log: logger.logging.Logger  # To log
                    ) -> None:
@@ -151,6 +175,29 @@ class AnalysisSurfactant:
         print(f'{bcolors.OKCYAN}{AnalysisSurfactant.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
+
+
+class ComputeOrderParameter:
+    """compute the order parameter from inputs
+    inputs:
+        1- Head information (coordinates, in com_pickle format)
+        2- Tail information (coordinates, in com_pickle format)
+        4- Indicies of the selected Oda at each frame
+        3- The director axis (optional, default: z)
+    """
+
+    config: "ComputationConfig"
+
+    def __init__(self,
+                 head_arr: np.ndarray,
+                 tail_arr: np.ndarray,
+                 indicies: dict[int, np.ndarray],
+                 compute_config: "ComputationConfig",
+                 log: logger.logging.Logger
+                 ) -> None:
+        # pylint: disable=too-many-arguments
+
+        self.config = compute_config
 
 
 if __name__ == "__main__":

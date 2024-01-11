@@ -9,10 +9,8 @@ analyze the water molecules' positions and determines which ones are
 at the highest z-coordinate within each mesh cell.
 """
 
-import os
 import typing
 import random
-import warnings
 import multiprocessing
 from dataclasses import dataclass
 from collections import namedtuple
@@ -25,6 +23,7 @@ from matplotlib.ticker import MaxNLocator
 from common import logger
 from common import cpuconfig
 from common import plot_tools
+from common import file_writer
 from common.colors_text import TextColor as bcolors
 from module3_analysis_aqua.com_plotter import ComPlotter, OutputConfig
 
@@ -102,7 +101,8 @@ class GetSurface:
         self.surface_waters: dict[int, np.ndarray] = \
             self.get_xyz_arr(water_arr[:-2], surface_indices)
         locz_df: pd.DataFrame = self.get_interface_z()
-        self._write_xvg(locz_df, log, 'contact.xvg')
+        file_writer.write_xvg(locz_df, log, fname := 'contact.xvg')
+        self.info_msg += (f'\tThe dataframe saved to `{fname}`\n')
         return locz_df['interface_z'].to_numpy
 
     def get_interface_z_threshold(self,
@@ -220,51 +220,6 @@ class GetSurface:
         loc_z_df = pd.DataFrame(
             list(loc_z.items()), columns=['i_frame', 'interface_z'])
         return loc_z_df
-
-    def _write_xvg(self,
-                   df_i: pd.DataFrame,
-                   log: logger.logging.Logger,
-                   fname: str = 'df.xvg'
-                   ) -> None:
-        """
-        Write the data into xvg format
-        Raises:
-            ValueError: If the DataFrame has no columns.
-        """
-        if df_i.columns.empty:
-            log.error(msg := "\tThe DataFrame has no columns.\n")
-            raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}\n')
-        if df_i.empty:
-            log.warning(
-                msg := f"The df is empty. `{fname}` will not contain data.")
-            warnings.warn(msg, UserWarning)
-
-        columns: list[str] = df_i.columns.to_list()
-
-        header_lines: list[str] = [
-            f'# Written by {self.__module__}',
-            f"# Current directory: {os.getcwd()}",
-            '@   title "Contact information"',
-            '@   xaxis label "Frame index"',
-            '@   yaxis label "Varies"',
-            '@TYPE xy',
-            '@ view 0.15, 0.15, 0.75, 0.85',
-            '@legend on',
-            '@ legend box on',
-            '@ legend loctype view',
-            '@ legend 0.78, 0.8',
-            '@ legend length 2'
-        ]
-        legend_lines: list[str] = \
-            [f'@ s{i} legend "{col}"' for i, col in enumerate(df_i.columns)]
-
-        with open(fname, 'w', encoding='utf8') as f_w:
-            for line in header_lines + legend_lines:
-                f_w.write(line + '\n')
-            df_i.to_csv(f_w, sep=' ', index=True, header=None, na_rep='NaN')
-
-        self.info_msg += (f'\tThe dataframe saved to `{fname}` '
-                          f'with columns:\n\t`{columns}`\n')
 
     def plot_water_surfaces(self,
                             box_dims: dict[str, float]

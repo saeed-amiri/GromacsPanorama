@@ -38,6 +38,7 @@ from common import xvg_to_dataframe as xvg
 from common.colors_text import TextColor as bcolors
 
 from module7_analysis_brushes.get_surface import GetSurface
+from module7_analysis_brushes.analysis_oda import AnalysisSurfactant
 
 
 @dataclass
@@ -66,7 +67,7 @@ class BrushAnalysis:
     compute_configs: "ComputationConfig"
     parsed_com: "GetCom"
     box: np.ndarray
-    surface_locz: pd.DataFrame
+    surface_locz: np.ndarray
 
     def __init__(self,
                  fname: str,  # Name of the com_pickle file
@@ -85,6 +86,7 @@ class BrushAnalysis:
         """initiate computations"""
         self.set_box(log)
         self.get_interface(log)
+        self.analysis_surfactants(log)
 
     def set_box(self,
                 log: logger.logging.Logger
@@ -102,13 +104,25 @@ class BrushAnalysis:
             self.surface_locz = \
                 GetSurface(self.parsed_com.split_arr_dict['SOL'],
                            self.parsed_com.box_dims,
-                           log).locz_df
+                           log).locz_arr
         else:
             self.surface_locz = self._load_xvg_data(
-                self.compute_configs.f_surface_locz, log)
+                self.compute_configs.f_surface_locz,
+                log)['interface_z'].to_numpy()
             log.warning(
                 msg := '\tThe interface location is reading from file!\n')
             print(f'{bcolors.CAUTION}{msg}{bcolors.ENDC}')
+
+    def analysis_surfactants(self,
+                             log: logger.logging.Logger
+                             ) -> None:
+        """Finding the number of the oda at the interface, in the water
+        phase, also the order parameters and so on"""
+        AnalysisSurfactant(
+            oda_arr=self.parsed_com.split_arr_dict['ODN'],
+            amino_arr=self.parsed_com.split_arr_dict['AMINO_ODN'],
+            interface_z=self.surface_locz,
+            log=log)
 
     def _load_xvg_data(self,
                        fname: str,

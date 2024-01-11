@@ -50,7 +50,7 @@ class InputConfig:
 @dataclass
 class ParameterConfig:
     """constant values and other parameters"""
-    unit_nm_to_angestrom: float = 10
+    unit_nm_to_angstrom: float = 10
 
 
 @dataclass
@@ -66,7 +66,7 @@ class BrushAnalysis:
     compute_configs: "ComputationConfig"
     parsed_com: "GetCom"
     box: np.ndarray
-    surface_waters: pd.DataFrame
+    surface_locz: pd.DataFrame
 
     def __init__(self,
                  fname: str,  # Name of the com_pickle file
@@ -90,10 +90,8 @@ class BrushAnalysis:
                 log: logger.logging.Logger
                 ) -> None:
         """set the box info as an attribute"""
-        box_df: pd.DataFrame = self._load_xvg_data(
-            fname := self.compute_configs.f_box, log)
-        self.box = self._parse_gmx_coordinates(
-            box_df, self.compute_configs.unit_nm_to_angestrom)
+        self.box = self._load_xvg_data(
+            fname := self.compute_configs.f_box, log, conversion=True)
         self.info_msg += f'\tReading box file: `{fname}`\n'
 
     def get_interface(self,
@@ -106,30 +104,29 @@ class BrushAnalysis:
                            self.parsed_com.box_dims,
                            log).locz_df
         else:
-            try:
-                self.surface_locz = self._load_xvg_data(
-                    fname := self.compute_configs.f_surface_locz, log)
-                log.warning(
-                    msg := '\tThe interface location is reading from file!\n')
-                print(f'{bcolors.CAUTION}{msg}{bcolors.ENDC}')
-            except (ValueError, FileExistsError, FileNotFoundError):
-                log.error(msg := f'\tThe `{fname}` does not exist!\n')
-                sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+            self.surface_locz = self._load_xvg_data(
+                self.compute_configs.f_surface_locz, log)
+            log.warning(
+                msg := '\tThe interface location is reading from file!\n')
+            print(f'{bcolors.CAUTION}{msg}{bcolors.ENDC}')
 
     def _load_xvg_data(self,
                        fname: str,
                        log: logger.logging.Logger,
+                       conversion: bool = False,
                        x_type: type = int
                        ) -> pd.DataFrame:
-        """Load and return the contact data from XVG file."""
-        return xvg.XvgParser(fname, log, x_type).xvg_df
-
-    @staticmethod
-    def _parse_gmx_coordinates(df_in: pd.DataFrame,
-                               conversion_factor: float
-                               ) -> np.ndarray:
-        """return the nanoparticle center of mass as an array"""
-        return df_in.iloc[:, 1:4].to_numpy() * conversion_factor
+        """Load and return the data from an XVG file."""
+        try:
+            data_df = xvg.XvgParser(fname, log, x_type).xvg_df
+            if conversion:
+                return data_df.iloc[:, 1:4].to_numpy() * \
+                    self.compute_configs.unit_nm_to_angstrom
+            return data_df
+        except (ValueError, FileExistsError, FileNotFoundError) as err:
+            log.error(f'Error loading {fname}: {err}')
+            sys.exit(
+                f'{bcolors.FAIL}Error loading {fname}: {err}{bcolors.ENDC}')
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

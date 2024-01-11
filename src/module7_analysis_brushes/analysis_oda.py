@@ -26,16 +26,20 @@ The method involves:
         organization.
 """
 
+import multiprocessing
 from dataclasses import dataclass
 
 import numpy as np
 
 from common import logger
+from common import cpuconfig
 
 
 @dataclass
 class ParamConfig:
     """constants values and other parameters"""
+    interface_thickness: float = 10  # in Angstrom, to serch for the ODA
+    interface_avg_nr_frames: int = 100  # Nr of frames to get interface avg
 
 
 @dataclass
@@ -48,6 +52,9 @@ class AnalysisSurfactant:
 
     info_msg: str = 'Message from AnalysisSurfactant:\n'
 
+    compute_config: "ComputationConfig"
+    interface_z: np.ndarray
+
     def __init__(self,
                  oda_arr: np.ndarray,  # COM of the oda residues
                  amino_arr: np.ndarray,  # COM of the amino group on oda
@@ -55,7 +62,76 @@ class AnalysisSurfactant:
                  log: logger.logging.Logger,
                  compute_config: "ComputationConfig" = ComputationConfig()
                  ) -> None:
-        pass
+
+        # pylint: disable=too-many-arguments
+
+        self.compute_config = compute_config
+        self.interface_z = interface_z
+        self.initiate(oda_arr[:-2], amino_arr[:-2], log)
+
+    def initiate(self,
+                 oda_arr: np.ndarray,  # COM of the oda residues
+                 amino_arr: np.ndarray,  # COM of the amino group on oda
+                 log: logger.logging.Logger
+                 ) -> None:
+        """initialization of the calculations"""
+        self.get_interface_oda_inicies(amino_arr, log)
+
+    def get_interface_oda_inicies(self,
+                                  amino_arr: np.ndarray,
+                                  log: logger.logging.Logger
+                                  ) -> tuple[dict[int, np.ndarray],
+                                             dict[int, int]]:
+        """find the indicies of the oda at interface at each frame
+        using the amino com since they are more charctristic in the oda
+        return the indices of the oda at the interface and number of
+        them at each frame
+        """
+        cpu_info = cpuconfig.ConfigCpuNr(log)
+        n_cores: int = min(cpu_info.cores_nr, amino_arr.shape[0])
+
+        interface_oda_ind: dict[int, np.ndarray] = {}
+        interface_oda_nr: dict[int, int] = {}
+        interface_bounds: tuple[np.float64, np.float64] = \
+            self._get_interface_bounds()
+
+        with multiprocessing.Pool(processes=n_cores) as pool:
+            results = pool.starmap(
+                self._process_single_frame, [
+                    (interface_bounds, i_frame, frame) for i_frame, frame
+                    in enumerate(amino_arr)])
+        for i_frame, result in enumerate(results):
+            interface_oda_ind[i_frame] = result
+            interface_oda_nr[i_frame] = len(result)
+        return interface_oda_ind, interface_oda_nr
+
+    def _process_single_frame(self,
+                              interface_bounds: tuple[np.float64, np.float64],
+                              i_frame: int,  # Index of the frame
+                              frame: np.ndarray  # One frame of the amino com
+                              ) -> np.ndarray:
+        """process a single frame and find the index of the interfaces
+        oda
+        i_frame is useful for debugging
+        """
+        # pylint: disable=unused-argument
+
+        xyz_i: np.ndarray = frame.reshape(-1, 3)
+        ind_in_interface: np.ndarray = \
+            np.where((xyz_i[:, 2] > interface_bounds[0]) &
+                     (xyz_i[:, 2] < interface_bounds[1]))[0]
+        return ind_in_interface
+
+    def _get_interface_bounds(self) -> tuple[np.float64, np.float64]:
+        """compute the upper and lower of the interface"""
+        inface_std: np.float64 = np.std(self.interface_z)
+        inface_ave: np.float64 = np.mean(
+            self.interface_z[:self.compute_config.interface_avg_nr_frames])
+        inface_bounds: tuple[np.float64, np.float64] = (
+            inface_ave - inface_std - self.compute_config.interface_thickness,
+            inface_ave + inface_std + self.compute_config.interface_thickness,
+        )
+        return inface_bounds
 
 
 if __name__ == "__main__":

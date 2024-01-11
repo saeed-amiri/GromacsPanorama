@@ -33,6 +33,7 @@ import numpy as np
 
 from common import logger
 from common import cpuconfig
+from common.colors_text import TextColor as bcolors
 
 
 @dataclass
@@ -48,7 +49,7 @@ class ComputationConfig(ParamConfig):
 
 
 class AnalysisSurfactant:
-    """computation!"""
+    """ Class to analyze ODA molecules in surfactant-rich systems. """
 
     info_msg: str = 'Message from AnalysisSurfactant:\n'
 
@@ -68,6 +69,7 @@ class AnalysisSurfactant:
         self.compute_config = compute_config
         self.interface_z = interface_z
         self.initiate(oda_arr[:-2], amino_arr[:-2], log)
+        self._write_msg(log)
 
     def initiate(self,
                  oda_arr: np.ndarray,  # COM of the oda residues
@@ -75,13 +77,16 @@ class AnalysisSurfactant:
                  log: logger.logging.Logger
                  ) -> None:
         """initialization of the calculations"""
-        self.get_interface_oda_inidcies(amino_arr, log)
+        interface_oda_ind: dict[int, np.ndarray]
+        interface_oda_nr: dict[int, int]
+        interface_oda_ind, interface_oda_nr = \
+            self.get_interface_oda_inidcies(amino_arr, log)
 
     def get_interface_oda_inidcies(self,
-                                  amino_arr: np.ndarray,
-                                  log: logger.logging.Logger
-                                  ) -> tuple[dict[int, np.ndarray],
-                                             dict[int, int]]:
+                                   amino_arr: np.ndarray,
+                                   log: logger.logging.Logger
+                                   ) -> tuple[dict[int, np.ndarray],
+                                              dict[int, int]]:
         """find the indicies of the oda at interface at each frame
         using the amino com since they are more charctristic in the oda
         return the indices of the oda at the interface and number of
@@ -131,7 +136,21 @@ class AnalysisSurfactant:
             inface_ave - inface_std - self.compute_config.interface_thickness,
             inface_ave + inface_std + self.compute_config.interface_thickness,
         )
+        self.info_msg += ('\tThe average interface from first '
+                          f'`{self.compute_config.interface_avg_nr_frames}` '
+                          f'frames is `{inface_ave:.3f}\n'
+                          f'\tThe bound set to `({inface_bounds[0]:.3f}, '
+                          f'{inface_bounds[1]:.3f})`\n'
+                          )
         return inface_bounds
+
+    def _write_msg(self,
+                   log: logger.logging.Logger  # To log
+                   ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{AnalysisSurfactant.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == "__main__":

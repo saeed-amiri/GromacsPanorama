@@ -186,18 +186,27 @@ class ComputeOrderParameter:
         3- The director axis (optional, default: z)
     """
 
-    config: "ComputationConfig"
+    config: "OrderParameterConfig"
 
     def __init__(self,
                  head_arr: np.ndarray,
                  tail_arr: np.ndarray,
                  indicies: dict[int, np.ndarray],
-                 compute_config: "ComputationConfig",
+                 compute_config: "OrderParameterConfig",
                  log: logger.logging.Logger
                  ) -> None:
         # pylint: disable=too-many-arguments
 
         self.config = compute_config
+        self._initiate(head_arr, tail_arr, indicies, log)
+
+    def _initiate(self,
+                  head_arr: np.ndarray,
+                  tail_arr: np.ndarray,
+                  indicies: dict[int, np.ndarray],
+                  log: logger.logging.Logger
+                  ) -> None:
+        """finding the order parameters here"""
 
 
 if __name__ == "__main__":

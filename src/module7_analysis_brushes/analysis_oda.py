@@ -75,9 +75,9 @@ class AnalysisSurfactant:
                  log: logger.logging.Logger
                  ) -> None:
         """initialization of the calculations"""
-        self.get_interface_oda_inicies(amino_arr, log)
+        self.get_interface_oda_inidcies(amino_arr, log)
 
-    def get_interface_oda_inicies(self,
+    def get_interface_oda_inidcies(self,
                                   amino_arr: np.ndarray,
                                   log: logger.logging.Logger
                                   ) -> tuple[dict[int, np.ndarray],

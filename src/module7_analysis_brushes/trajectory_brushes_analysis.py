@@ -44,13 +44,19 @@ from module7_analysis_brushes.get_surface import GetSurface
 class InputConfig:
     """set the input files names"""
     f_box: str = 'box.xvg'
+    f_surface_locz: str = 'contact.xvg'
 
 
 @dataclass
-class ComputationConfig:
-    """to set the computation parameters and selections"""
-    file_configs: "InputConfig" = InputConfig()
+class ParameterConfig:
+    """constant values and other parameters"""
     unit_nm_to_angestrom: float = 10
+
+
+@dataclass
+class ComputationConfig(InputConfig, ParameterConfig):
+    """to set the computation parameters and selections"""
+    compute_surface: bool = False
 
 
 class BrushAnalysis:
@@ -60,7 +66,7 @@ class BrushAnalysis:
     compute_configs: "ComputationConfig"
     parsed_com: "GetCom"
     box: np.ndarray
-    surface_waters: dict[int, np.ndarray]
+    surface_waters: pd.DataFrame
 
     def __init__(self,
                  fname: str,  # Name of the com_pickle file
@@ -85,7 +91,7 @@ class BrushAnalysis:
                 ) -> None:
         """set the box info as an attribute"""
         box_df: pd.DataFrame = self._load_xvg_data(
-            fname := self.compute_configs.file_configs.f_box, log)
+            fname := self.compute_configs.f_box, log)
         self.box = self._parse_gmx_coordinates(
             box_df, self.compute_configs.unit_nm_to_angestrom)
         self.info_msg += f'\tReading box file: `{fname}`\n'
@@ -94,9 +100,21 @@ class BrushAnalysis:
                       log: logger.logging.Logger
                       ) -> None:
         """analysis the interface by finding the water surface"""
-        self.surface_waters = GetSurface(self.parsed_com.split_arr_dict['SOL'],
-                                         self.parsed_com.box_dims,
-                                         log).surface_waters
+        if self.compute_configs.compute_surface:
+            self.surface_locz = \
+                GetSurface(self.parsed_com.split_arr_dict['SOL'],
+                           self.parsed_com.box_dims,
+                           log).locz_df
+        else:
+            try:
+                self.surface_locz = self._load_xvg_data(
+                    fname := self.compute_configs.f_surface_locz, log)
+                log.warning(
+                    msg := '\tThe interface location is reading from file!\n')
+                print(f'{bcolors.CAUTION}{msg}{bcolors.ENDC}')
+            except (ValueError, FileExistsError, FileNotFoundError):
+                log.error(msg := f'\tThe `{fname}` does not exist!\n')
+                sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
 
     def _load_xvg_data(self,
                        fname: str,

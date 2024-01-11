@@ -10,21 +10,35 @@ at the highest z-coordinate within each mesh cell.
 """
 
 import os
+import typing
+import random
 import warnings
 import multiprocessing
+from dataclasses import dataclass
 from collections import namedtuple
 
 import numpy as np
 import pandas as pd
+import matplotlib.pylab as plt
+from matplotlib.ticker import MaxNLocator
 
 from common import logger
 from common import cpuconfig
+from common import plot_tools
 from common.colors_text import TextColor as bcolors
 from module3_analysis_aqua.com_plotter import ComPlotter, OutputConfig
 
 
 MeshInfo: tuple = \
     namedtuple('MeshInfo', ['x_mesh', 'y_mesh', 'mesh_size', 'z_threshold'])
+
+
+@dataclass
+class PlotConfig:
+    """set the output configurations"""
+    fout_suffix: str = 'surface.png'
+    nr_fout: int = 100  # Numbers pics in case the list is empty
+    indices: typing.Optional[list[int]] = None
 
 
 class GetSurface:
@@ -34,17 +48,21 @@ class GetSurface:
 
     oil_top_ratio: float = 2/3  # Where form top for sure should be oil
     mesh_nr: float = 100.  # Number of meshes in each directions
+
+    plot_config: "PlotConfig"
     z_threshold: float
     mesh_size: float
-
     surface_waters: dict[int, np.ndarray]  # Water at the surface, include np
 
     def __init__(self,
                  water_arr: np.ndarray,
                  box_dims: dict[str, float],
-                 log: logger.logging.Logger
+                 log: logger.logging.Logger,
+                 plot_config: "PlotConfig" = PlotConfig()
                  ) -> None:
+        self.plot_config = plot_config
         self.get_water_surface(water_arr, box_dims, log)
+        self.plot_water_surfaces(box_dims)
         self._write_msg(log)
 
     def get_water_surface(self,
@@ -137,7 +155,7 @@ class GetSurface:
         # pylint: disable=unused-argument
 
         max_z_indices: list[np.int64] = []
-        min_z_threshold: float = 100
+        min_z_threshold: float = mesh_info.z_threshold / 2
         xyz_i = frame.reshape(-1, 3)
         for (i, j), _ in np.ndenumerate(mesh_info.x_mesh):
             # Define the boundaries of the current mesh element
@@ -229,6 +247,57 @@ class GetSurface:
 
         self.info_msg += (f'\tThe dataframe saved to `{fname}` '
                           f'with columns:\n\t`{columns}`\n')
+
+    def plot_water_surfaces(self,
+                            box_dims: dict[str, float]
+                            ) -> None:
+        """plot water surface in random selected frames"""
+        selected_frames: dict[int, np.ndarray] = \
+            self.get_selected_frames(self.plot_config.indices,
+                                     self.plot_config.nr_fout)
+
+        self.plot_surface(selected_frames,
+                          box_dims,
+                          fout_suffix=self.plot_config.fout_suffix)
+
+    def get_selected_frames(self,
+                            indices: typing.Optional[list[int]],
+                            nr_fout: int
+                            ) -> dict[int, np.ndarray]:
+        """return the numbers of the wanted frames data"""
+        if indices is None:
+            indices = random.sample(list(self.surface_waters.keys()), nr_fout)
+        self.info_msg += f'\tThe selected indices are:\n\t\t{indices}\n'
+        return {key: self.surface_waters[key] for key in indices}
+
+    def plot_surface(self,
+                     selected_frames: dict[int, np.ndarray],
+                     box_dims: dict[str, float],
+                     fout_suffix: str
+                     ) -> None:
+        """plot the surface"""
+        self.info_msg += f'\tThe suffix of the files is: `{fout_suffix}`\n'
+        for frame, value in selected_frames.items():
+            fig_i, ax_i = \
+                plot_tools.mk_canvas((0, 200), height_ratio=5**0.5-1)
+            scatter = ax_i.scatter(value[:, 0], value[:, 1], c=value[:, 2],
+                                   s=15, label=f'frame: {frame}')
+            # 'left', 'bottom', 'width', 'height'
+            cbar_ax = fig_i.add_axes([.80, 0.15, 0.25, 0.7])
+            cbar = fig_i.colorbar(scatter, cax=cbar_ax)
+            desired_num_ticks = 5
+            cbar.ax.yaxis.set_major_locator(MaxNLocator(desired_num_ticks))
+
+            cbar.set_label('Z-Coordinate [A]', rotation=90)
+            ax_i.set_xlabel('X_Coordinate [A]')
+            ax_i.set_ylabel('Y_Coordinate [A]')
+
+            ax_i.set_xlim(box_dims['x_lo'] - 7, box_dims['x_hi'] + 7)
+            ax_i.set_ylim(box_dims['y_lo'] - 7, box_dims['y_hi'] + 7)
+            plt.gca().set_aspect('equal')
+            plot_tools.save_close_fig(
+                fig_i, ax_i, fname=f'{frame}_{fout_suffix}', legend=False)
+
     def _write_msg(self,
                    log: logger.logging.Logger  # To log
                    ) -> None:

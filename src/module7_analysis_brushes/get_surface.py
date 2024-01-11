@@ -61,7 +61,7 @@ class GetSurface:
 
     compute_config: "ComputationConfig"
     surface_waters: dict[int, np.ndarray]  # Water at the surface, include np
-    df_locz: pd.DataFrame  # Average location of the surface (z component)
+    locz_arr: np.ndarray  # Average location of the surface (z component)
 
     def __init__(self,
                  water_arr: np.ndarray,
@@ -70,7 +70,7 @@ class GetSurface:
                  compute_config: "ComputationConfig" = ComputationConfig()
                  ) -> None:
         self.compute_config = compute_config
-        self.locz_df = self.get_water_surface(water_arr, box_dims, log)
+        self.locz_arr = self.get_water_surface(water_arr, box_dims, log)
         self.plot_water_surfaces(box_dims)
         self._write_msg(log)
 
@@ -78,7 +78,7 @@ class GetSurface:
                           water_arr: np.ndarray,
                           box_dims: dict[str, float],
                           log: logger.logging.Logger
-                          ) -> pd.DataFrame:
+                          ) -> np.ndarray:
         """
         mesh the box and find resides with highest z value in them
         """
@@ -103,7 +103,7 @@ class GetSurface:
             self.get_xyz_arr(water_arr[:-2], surface_indices)
         locz_df: pd.DataFrame = self.get_interface_z()
         self._write_xvg(locz_df, log, 'contact.xvg')
-        return locz_df
+        return locz_df['interface_z'].to_numpy
 
     def get_interface_z_threshold(self,
                                   box_dims: dict[str, float]

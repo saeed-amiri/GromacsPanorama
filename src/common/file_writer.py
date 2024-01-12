@@ -12,7 +12,8 @@ from common.colors_text import TextColor as bcolors
 
 def write_xvg(df_i: pd.DataFrame,
               log: logger.logging.Logger,
-              fname: str = 'df.xvg'
+              fname: str = 'df.xvg',
+              extra_comments: str = ''
               ) -> None:
     """
     Write the data into xvg format
@@ -32,6 +33,7 @@ def write_xvg(df_i: pd.DataFrame,
     header_lines: list[str] = [
         f'# Written by {write_xvg.__module__}',
         f"# Current directory: {os.getcwd()}",
+        f"# {extra_comments}\n"
         '@   title "Contact information"',
         '@   xaxis label "Frame index"',
         '@   yaxis label "Varies"',

@@ -28,13 +28,14 @@ The method involves:
 
 import sys
 import multiprocessing
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
 
 from common import logger
 from common import cpuconfig
+from common import plot_tools
 from common import file_writer
 from common.colors_text import TextColor as bcolors
 
@@ -53,9 +54,29 @@ class OrderParameterConfig:
 
 
 @dataclass
+class PlotConfig:
+    """parameters for plot"""
+    out_suffix: str = 'order_param.png'
+    height_ratio: float = 5**0.5-1
+    graph_legend: str = 'S'
+    title: str = 'Order Parameter'
+    ylabel: str = 'S(t)'
+    xlabel: str = 'frame index'
+    graph_style: dict = field(default_factory=lambda: {
+        'legend': 'S',
+        'color': 'k',
+        'marker': 'o',
+        'linestyle': '-',
+        'markersize': 0,
+        '2nd_marksize': 1
+    })
+
+
+@dataclass
 class ComputationConfig(ParamConfig):
     """set all the configurations"""
     orderp_config: "OrderParameterConfig" = OrderParameterConfig()
+    plot_config: "PlotConfig" = PlotConfig()
 
 
 class AnalysisSurfactant:
@@ -177,7 +198,7 @@ class AnalysisSurfactant:
                                               log: logger.logging.Logger
                                               ) -> np.ndarray:
         """compute the order parameter for the oda at interface"""
-        order_parameter = ComputeOrderParameter(
+        order_parameters = ComputeOrderParameter(
             head_arr=amino_arr,
             tail_arr=oda_arr,
             indicies=interface_oda_ind,
@@ -185,9 +206,13 @@ class AnalysisSurfactant:
             log=log
             ).order_parameters
         self.info_msg += (
-            f'\tMean of order parameter: `{np.mean(order_parameter):.3f}`\n'
-            f'\tStd of order parameter: `{np.std(order_parameter):.3f}\n')
-        return order_parameter
+            f'\tMean of order parameter: `{np.mean(order_parameters):.3f}`\n'
+            f'\tStd of order parameter: `{np.std(order_parameters):.3f}\n')
+        PlotOrderParameter(
+            order_parameters, self.compute_config.plot_config)
+        self.info_msg += \
+            f'\tPlot saved as `{self.compute_config.plot_config.out_suffix}`\n'
+        return order_parameters
 
     def make_df(self,
                 interface_oda_nr: dict[int, int],
@@ -321,6 +346,45 @@ class ComputeOrderParameter:
 
         order_params: np.ndarray = 0.5 * (3 * cos_theta**2 - 1)
         return np.mean(order_params)
+
+
+class PlotOrderParameter:
+    """plot the computed order parameters and save it"""
+    # pylint: disable=too-few-public-methods
+
+    info_msg: str = 'Message from PlotOrderParameter:\n'
+
+    config: "PlotConfig"
+    fname: str  # Out put file name (.png)
+
+    def __init__(self,
+                 order_parameters: np.ndarray,
+                 config: "PlotConfig",
+                 ) -> None:
+        self.config = config
+
+        self._initiate_plot(order_parameters)
+
+    def _initiate_plot(self,
+                       order_parameters: np.ndarray
+                       ) -> None:
+        """plot the graph"""
+        x_range: tuple[float, float] = (0, len(order_parameters))
+
+        fig_i, ax_i = plot_tools.mk_canvas(
+            x_range=x_range, height_ratio=self.config.height_ratio)
+
+        ax_i.plot(order_parameters,
+                  c=self.config.graph_style['color'],
+                  label=self.config.graph_style['legend'])
+
+        ax_i.set_title(
+            self.config.title + f', avg={np.mean(order_parameters):.3f}')
+        ax_i.set_xlabel(self.config.xlabel)
+        ax_i.set_ylabel(self.config.ylabel)
+        ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
+
+        plot_tools.save_close_fig(fig_i, ax_i, fname=self.config.out_suffix)
 
 
 if __name__ == "__main__":

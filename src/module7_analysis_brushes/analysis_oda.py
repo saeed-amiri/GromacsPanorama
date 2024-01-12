@@ -97,7 +97,13 @@ class AnalysisSurfactant:
         order_parameter = self.compute_interface_oda_order_parameter(
             amino_arr, oda_arr, interface_oda_ind, log)
         data_df: pd.DataFrame = self.make_df(interface_oda_nr, order_parameter)
-        file_writer.write_xvg(data_df, log, fname := 'order_parameter.xvg')
+        file_writer.write_xvg(
+            data_df,
+            log,
+            fname := 'order_parameter.xvg',
+            extra_comments=('The director axis is: '
+                            f'{self.compute_config.orderp_config.director_ax}'
+                            ))
         self.info_msg += f'\tThe dataframe saved to `{fname}`\n'
         return order_parameter
 
@@ -246,8 +252,13 @@ class ComputeOrderParameter:
         cpu_info = cpuconfig.ConfigCpuNr(log)
         n_cores: int = min(cpu_info.cores_nr, len(head_arr))
 
-        if self.config.director_ax == 'z':
+        if (axis := self.config.director_ax) == 'z':
             self.director_ax = np.array([0, 0, 1])
+        elif axis == 'y':
+            self.director_ax = np.array([0, 1, 0])
+        else:
+            self.director_ax = np.array([1, 0, 0])
+
         with multiprocessing.Pool(processes=n_cores) as pool:
             results = pool.starmap(
                 self._process_single_frame, [

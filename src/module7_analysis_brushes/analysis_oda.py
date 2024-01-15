@@ -145,7 +145,7 @@ class AnalysisSurfactant:
         interface_oda_ind: dict[int, np.ndarray] = {}
         interface_oda_nr: dict[int, int] = {}
         interface_bounds: tuple[np.float64, np.float64] = \
-            self._get_interface_bounds()
+            self._get_interface_bounds(log)
 
         with multiprocessing.Pool(processes=n_cores) as pool:
             results = pool.starmap(
@@ -174,8 +174,17 @@ class AnalysisSurfactant:
                      (xyz_i[:, 2] < interface_bounds[1]))[0]
         return ind_in_interface
 
-    def _get_interface_bounds(self) -> tuple[np.float64, np.float64]:
+    def _get_interface_bounds(self,
+                              log: logger.logging.Logger
+                              ) -> tuple[np.float64, np.float64]:
         """compute the upper and lower of the interface"""
+
+        # Ensure that interface_z is a NumPy array
+        if not isinstance(self.interface_z, np.ndarray):
+            log.error(msg := "\tExpected `interface_z` to be a `np.ndarray`, "
+                             f"but got `{type(self.interface_z)}`\n")
+            raise TypeError(f"{bcolors.FAIL}{msg}{bcolors.ENDC}")
+
         inface_std: np.float64 = np.std(self.interface_z)
         inface_ave: np.float64 = np.mean(
             self.interface_z[:self.compute_config.interface_avg_nr_frames])

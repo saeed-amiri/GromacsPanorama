@@ -57,7 +57,7 @@ class ParameterConfig:
 @dataclass
 class ComputationConfig(InputConfig, ParameterConfig):
     """to set the computation parameters and selections"""
-    compute_surface: bool = False
+    compute_surface: bool = True
 
 
 class BrushAnalysis:

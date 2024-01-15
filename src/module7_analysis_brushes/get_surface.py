@@ -103,7 +103,7 @@ class GetSurface:
         locz_df: pd.DataFrame = self.get_interface_z()
         file_writer.write_xvg(locz_df, log, fname := 'contact.xvg')
         self.info_msg += (f'\tThe dataframe saved to `{fname}`\n')
-        return locz_df['interface_z'].to_numpy
+        return locz_df['interface_z'].to_numpy()
 
     def get_interface_z_threshold(self,
                                   box_dims: dict[str, float]

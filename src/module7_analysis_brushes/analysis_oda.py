@@ -75,8 +75,9 @@ class PlotConfig:
 @dataclass
 class ComputationConfig(ParamConfig):
     """set all the configurations"""
-    orderp_config: "OrderParameterConfig" = OrderParameterConfig()
-    plot_config: "PlotConfig" = PlotConfig()
+    orderp_config: "OrderParameterConfig" = \
+        field(default_factory=OrderParameterConfig)
+    plot_config: "PlotConfig" = field(default_factory=PlotConfig)
 
 
 class AnalysisSurfactant:

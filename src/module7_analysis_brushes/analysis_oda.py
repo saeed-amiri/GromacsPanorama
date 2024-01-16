@@ -119,6 +119,8 @@ class AnalysisSurfactant:
         order_parameter = self.compute_interface_oda_order_parameter(
             amino_arr, oda_arr, interface_oda_ind, log)
         data_df: pd.DataFrame = self.make_df(interface_oda_nr, order_parameter)
+        self.info_msg += ('\tThe average number of Oda at interface is '
+                          f'{np.mean(list(interface_oda_nr.values())):.3f}\n')
         file_writer.write_xvg(
             data_df,
             log,

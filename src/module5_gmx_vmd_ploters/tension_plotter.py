@@ -45,6 +45,7 @@ class BaseConfig:
     """
     Basic configurations and setup for the plots.
     """
+    # pylint: disable=too-many-instance-attributes
     graph_suffix: str = 'tension.png'
 
     labels: dict[str, str] = field(default_factory=lambda: {
@@ -68,7 +69,10 @@ class BaseConfig:
         field(default_factory=lambda: ['black', 'red', 'blue', 'green'])
 
     height_ratio: float = (5 ** 0.5 - 1) * 2
+
     y_unit: str = r'[mN/nm$^2$]'
+
+    log_x_axis: bool = False
 
 
 @dataclass
@@ -98,11 +102,13 @@ class LogGraph(BaseConfig):
     """
     Parameters for the semilog plots.
     """
+    graph_suffix: str = 'log_xscale.png'
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'Computed Tension',
-        'ylabel': r'log($\gamma$)',
-        'xlabel': 'Nr. Oda'
+        'ylabel': r'$\gamma$',
+        'xlabel': 'log(Nr. Oda)'
     })
+    log_x_axis: bool = True
 
 
 @dataclass
@@ -183,6 +189,7 @@ class PlotTension:
                        ) -> None:
         """plots the graphes"""
         nr_files: int = len(tension_dict)
+
         for key, tension in tension_dict.items():
             self.plot_simple_graph(key, tension, self.configs.raw_config)
             converted_tension: pd.DataFrame = self.convert_tension(tension)
@@ -190,20 +197,31 @@ class PlotTension:
                                    converted_tension,
                                    self.configs.simple_config,
                                    col_name='converted_tension')
+            self.plot_simple_graph(key,
+                                   converted_tension,
+                                   self.configs.log_config,
+                                   col_name='converted_tension')
+        if nr_files > 1:
+            pass
 
     def plot_simple_graph(self,
                           key: str,
                           tension: pd.DataFrame,
-                          configs: typing.Union[SimpleGraph, RawGraph],
-                          col_name: str = 'tension'
-                          ) -> None:
+                          configs: typing.Union[
+                            SimpleGraph, RawGraph, LogGraph],
+                          col_name: str = 'tension',
+                          return_ax: bool = False
+                          ) -> typing.Union[tuple[plt.figure, plt.axis], None]:
         """plot the raw data for later conviniance"""
+        # pylint: disable=too-many-arguments
         x_range: tuple[float, float] = (min(tension['nr.Oda']),
                                         max(tension['nr.Oda']))
         fig_i: plt.figure
         ax_i: plt.axes
         fig_i, ax_i = \
             plot_tools.mk_canvas(x_range, height_ratio=configs.height_ratio)
+        if configs.log_x_axis:
+            ax_i.set_xscale('log')
         ax_i.plot(tension['nr.Oda'],
                   tension[col_name],
                   c=configs.graph_styles['color'],
@@ -217,11 +235,16 @@ class PlotTension:
         ax_i.set_title(f'{configs.labels["title"]} ({key})')
         ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
 
+        if return_ax:
+            return fig_i, ax_i
+
         plot_tools.save_close_fig(
             fig_i, ax_i, fname := f'{key}_{configs.graph_suffix}')
 
         self.info_msg += \
             f'\tThe raw tension plot for `{key}` is saved as `{fname}`\n'
+
+        return None
 
     def convert_tension(self,
                         tension: pd.DataFrame

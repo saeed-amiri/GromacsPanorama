@@ -32,8 +32,12 @@ import typing
 from dataclasses import dataclass, field
 
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from common import logger
+from common import plot_tools
+from common import my_tools
+from common.colors_text import TextColor as bcolors
 
 
 @dataclass
@@ -96,9 +100,11 @@ class ErrorBarGraph(BaseConfig):
 @dataclass
 class FileConfigs:
     """
-    Set the name of the input files for plot
+    Set the name of the input files for plot with labels say what are
+    those
     """
-    fnams: list[str] = field(default_factory=lambda: ['tension.log'])
+    fnames: dict[str, str] = field(default_factory=lambda: {
+        'with_np': 'tension.log'})
 
 
 @dataclass
@@ -124,12 +130,26 @@ class PlotTension:
                  configs: "AllConfig" = AllConfig()
                  ) -> None:
         self.configs = configs
-        self._initiate_data(log)
+        tension_dict: dict[str, pd.DataFrame] = self._initiate_data(log)
 
     def _initiate_data(self,
                        log: logger.logging.Logger
                        ) -> pd.DataFrame:
         """read files and return the data in dataframes format"""
+        tension_dict: dict[str, pd.DataFrame] = {}
+        for key, fname in self.configs.fnames.items():
+            my_tools.check_file_exist(fname, log)
+            tension_dict[key] = self.read_file(fname)
+        return tension_dict
+
+    def read_file(self,
+                  fname: str
+                  ) -> pd.DataFrame:
+        """read data file and return as a dataframe"""
+        columns: list[str] = ['Name', 'nr.Oda', 'tension', 'errorbar']
+        df_in: pd.DataFrame = \
+            pd.read_csv(fname, delim_whitespace=True, names=columns)
+        return df_in
 
 
 if __name__ == '__main__':

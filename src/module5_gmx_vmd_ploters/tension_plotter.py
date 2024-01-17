@@ -45,7 +45,7 @@ class BaseConfig:
     """
     Basic configurations and setup for the plots.
     """
-    graph_suffix: str = 'tension.plot'
+    graph_suffix: str = 'tension.png'
 
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'Computed Tension',
@@ -57,8 +57,8 @@ class BaseConfig:
         'legend': r'$\gamma$',
         'color': 'black',
         'marker': 'o',
-        'linestyle': '-',
-        'markersize': 6,
+        'linestyle': '--',
+        'markersize': 5,
         'second_markersize': 4
     })
 
@@ -131,6 +131,7 @@ class PlotTension:
                  ) -> None:
         self.configs = configs
         tension_dict: dict[str, pd.DataFrame] = self._initiate_data(log)
+        self.initiate_plots(tension_dict)
 
     def _initiate_data(self,
                        log: logger.logging.Logger
@@ -150,6 +151,41 @@ class PlotTension:
         df_in: pd.DataFrame = \
             pd.read_csv(fname, delim_whitespace=True, names=columns)
         return df_in
+
+    def initiate_plots(self,
+                       tension_dict: dict[str, pd.DataFrame]
+                       ) -> None:
+        """plots the graphes"""
+        nr_files: int = len(tension_dict)
+        for key, tension in tension_dict.items():
+            self.plot_raw_data(key, tension)
+
+    def plot_raw_data(self,
+                      key: str,
+                      tension: pd.DataFrame
+                      ) -> None:
+        """plot the raw data for later conviniance"""
+        configs: "SimpleGraph" = self.configs.simple_config
+        x_range: tuple[float, float] = (min(tension['nr.Oda']),
+                                        max(tension['nr.Oda']))
+        fig_i: plt.figure
+        ax_i: plt.axes
+        fig_i, ax_i = \
+            plot_tools.mk_canvas(x_range, height_ratio=configs.height_ratio)
+        ax_i.plot(tension['nr.Oda'],
+                  tension['tension'],
+                  c=configs.graph_styles['color'],
+                  ls=configs.graph_styles['linestyle'],
+                  ms=configs.graph_styles['markersize'],
+                  marker=configs.graph_styles['marker'],
+                  label=configs.graph_styles['legend'])
+
+        ax_i.set_xlabel(configs.labels['xlabel'])
+        ax_i.set_ylabel(configs.labels['ylabel'])
+        ax_i.set_title(f'{configs.labels["title"]} ({key})')
+        ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
+        plot_tools.save_close_fig(
+            fig_i, ax_i, fname=f'raw_{configs.graph_suffix}')
 
 
 if __name__ == '__main__':

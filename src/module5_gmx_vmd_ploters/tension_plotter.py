@@ -112,6 +112,21 @@ class LogGraph(BaseConfig):
 
 
 @dataclass
+class DoubleDataLog(LogGraph):
+    """plot both data"""
+    graph_suffix: str = 'log_xscale_both.png'
+    graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
+        'legend': r'$\gamma$',
+        'legend_b': r'$\gamma_{np}$',
+        'color': 'black',
+        'marker': 'o',
+        'linestyle': '--',
+        'markersize': 5,
+        'second_markersize': 4
+    })
+
+
+@dataclass
 class ErrorBarGraph(BaseConfig):
     """
     Parameters for plots with error bars.
@@ -147,6 +162,7 @@ class AllConfig(FileConfig, ParameterConfig):
     raw_config: RawGraph = field(default_factory=RawGraph)
     log_config: LogGraph = field(default_factory=LogGraph)
     errbar_config: ErrorBarGraph = field(default_factory=ErrorBarGraph)
+    double_config: DoubleDataLog = field(default_factory=DoubleDataLog)
 
 
 class PlotTension:
@@ -190,10 +206,11 @@ class PlotTension:
                        ) -> None:
         """plots the graphes"""
         nr_files: int = len(tension_dict)
-
+        converted_dict: dict[str, pd.DataFrame] = {}
         for key, tension in tension_dict.items():
             self.plot_simple_graph(key, tension, self.configs.raw_config)
             converted_tension: pd.DataFrame = self.convert_tension(tension)
+            converted_dict[key] = converted_tension
             self.plot_simple_graph(key,
                                    converted_tension,
                                    self.configs.simple_config,
@@ -203,15 +220,39 @@ class PlotTension:
                                    self.configs.log_config,
                                    col_name='converted_tension')
         if nr_files > 1:
-            pass
+            self.plot_all_tensions_log(converted_dict)
+
+    def plot_all_tensions_log(self,
+                              converted_dict: dict[str, pd.DataFrame]
+                              ) -> None:
+        """plot all the input in a same graph"""
+        returned_fig = self.plot_simple_graph('np_np',
+                                              converted_dict['no_np'],
+                                              self.configs.double_config,
+                                              col_name='converted_tension',
+                                              return_ax=True,
+                                              add_key_to_title=False)
+        if returned_fig:
+            fig_i, ax_i = returned_fig
+
+            ax_i.plot(converted_dict['with_np']['nr.Oda'],
+                      converted_dict['with_np']['converted_tension'],
+                      c=self.configs.double_config.colors[1],
+                      ls=self.configs.double_config.graph_styles['linestyle'],
+                      ms=self.configs.double_config.graph_styles['markersize'],
+                      marker=self.configs.double_config.graph_styles['marker'],
+                      label=self.configs.double_config.graph_styles['legend_b']
+                      )
+            plot_tools.save_close_fig(fig_i, ax_i, fname='double.png')
 
     def plot_simple_graph(self,
                           key: str,
                           tension: pd.DataFrame,
                           configs: typing.Union[
-                            SimpleGraph, RawGraph, LogGraph],
+                            SimpleGraph, RawGraph, LogGraph, DoubleDataLog],
                           col_name: str = 'tension',
-                          return_ax: bool = False
+                          return_ax: bool = False,
+                          add_key_to_title: bool = True
                           ) -> typing.Union[tuple[plt.figure, plt.axis], None]:
         """plot the raw data for later conviniance"""
         # pylint: disable=too-many-arguments
@@ -233,7 +274,10 @@ class PlotTension:
 
         ax_i.set_xlabel(configs.labels['xlabel'])
         ax_i.set_ylabel(f'{configs.labels["ylabel"]} {configs.y_unit}')
-        ax_i.set_title(f'{configs.labels["title"]} ({key})')
+        if add_key_to_title:
+            ax_i.set_title(f'{configs.labels["title"]} ({key})')
+        else:
+            ax_i.set_title(f'{configs.labels["title"]}')
         ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
 
         if return_ax:

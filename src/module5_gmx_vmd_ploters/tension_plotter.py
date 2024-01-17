@@ -31,6 +31,10 @@ Saeed
 import typing
 from dataclasses import dataclass, field
 
+import pandas as pd
+
+from common import logger
+
 
 @dataclass
 class BaseConfig:
@@ -90,10 +94,43 @@ class ErrorBarGraph(BaseConfig):
 
 
 @dataclass
-class AllConfig:
+class FileConfigs:
+    """
+    Set the name of the input files for plot
+    """
+    fnams: list[str] = field(default_factory=lambda: ['tension.log'])
+
+
+@dataclass
+class AllConfig(FileConfigs):
     """
     Consolidates all configurations for different graph types.
     """
-    simple_config: SimpleGraph = field(default_factory=SimpleGraph())
-    log_config: LogGraph = field(default_factory=LogGraph())
-    errbar_config: ErrorBarGraph = field(default_factory=ErrorBarGraph())
+    simple_config: SimpleGraph = field(default_factory=SimpleGraph)
+    log_config: LogGraph = field(default_factory=LogGraph)
+    errbar_config: ErrorBarGraph = field(default_factory=ErrorBarGraph)
+
+
+class PlotTension:
+    """
+    Plot all the graphes
+    """
+
+    info_msg: str = 'Message from PlotTension:\n'
+    configs: "AllConfig"
+
+    def __init__(self,
+                 log: logger.logging.Logger,
+                 configs: "AllConfig" = AllConfig()
+                 ) -> None:
+        self.configs = configs
+        self._initiate_data(log)
+
+    def _initiate_data(self,
+                       log: logger.logging.Logger
+                       ) -> pd.DataFrame:
+        """read files and return the data in dataframes format"""
+
+
+if __name__ == '__main__':
+    PlotTension(log=logger.setup_logger('plot_tension.log'))

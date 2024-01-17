@@ -49,7 +49,7 @@ class BaseConfig:
 
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'Computed Tension',
-        'ylabel': r'$\gamma$',
+        'ylabel': r'$\Delta\gamma$',
         'xlabel': 'Nr. Oda'
     })
 
@@ -67,7 +67,8 @@ class BaseConfig:
     colors: list[str] = \
         field(default_factory=lambda: ['black', 'red', 'blue', 'green'])
 
-    height_ratio: float = 5 ** 0.5 - 1
+    height_ratio: float = (5 ** 0.5 - 1) * 2
+    y_unit: str = r'[mN/nm$^2$]'
 
 
 @dataclass
@@ -75,6 +76,21 @@ class SimpleGraph(BaseConfig):
     """
     Parameters for simple data plots.
     """
+    graph_suffix: str = 'converted_tension.png'
+
+
+@dataclass
+class RawGraph(BaseConfig):
+    """
+    Parameters for simple data plots.
+    """
+    graph_suffix: str = 'raw_tension.png'
+    labels: dict[str, str] = field(default_factory=lambda: {
+        'title': 'Computed Tension',
+        'ylabel': r'$\gamma$',
+        'xlabel': 'Nr. Oda'
+    })
+    y_unit: str = '[bar/nm]'
 
 
 @dataclass
@@ -98,21 +114,30 @@ class ErrorBarGraph(BaseConfig):
 
 
 @dataclass
-class FileConfigs:
+class FileConfig:
     """
     Set the name of the input files for plot with labels say what are
     those
     """
     fnames: dict[str, str] = field(default_factory=lambda: {
-        'with_np': 'tension.log'})
+        'no_np': 'tension.log'})
 
 
 @dataclass
-class AllConfig(FileConfigs):
+class ParameterConfig:
+    """
+    Parameters for the plots and conversions
+    """
+    tension_conversion: float = 20  # Convert bar/nm to mN/nm^2
+
+
+@dataclass
+class AllConfig(FileConfig, ParameterConfig):
     """
     Consolidates all configurations for different graph types.
     """
     simple_config: SimpleGraph = field(default_factory=SimpleGraph)
+    raw_config: RawGraph = field(default_factory=RawGraph)
     log_config: LogGraph = field(default_factory=LogGraph)
     errbar_config: ErrorBarGraph = field(default_factory=ErrorBarGraph)
 
@@ -159,14 +184,20 @@ class PlotTension:
         """plots the graphes"""
         nr_files: int = len(tension_dict)
         for key, tension in tension_dict.items():
-            self.plot_raw_data(key, tension)
+            self.plot_simple_graph(key, tension, self.configs.raw_config)
+            converted_tension: pd.DataFrame = self.convert_tension(tension)
+            self.plot_simple_graph(key,
+                                   converted_tension,
+                                   self.configs.simple_config,
+                                   col_name='converted_tension')
 
-    def plot_raw_data(self,
-                      key: str,
-                      tension: pd.DataFrame
-                      ) -> None:
+    def plot_simple_graph(self,
+                          key: str,
+                          tension: pd.DataFrame,
+                          configs: typing.Union[SimpleGraph, RawGraph],
+                          col_name: str = 'tension'
+                          ) -> None:
         """plot the raw data for later conviniance"""
-        configs: "SimpleGraph" = self.configs.simple_config
         x_range: tuple[float, float] = (min(tension['nr.Oda']),
                                         max(tension['nr.Oda']))
         fig_i: plt.figure
@@ -174,7 +205,7 @@ class PlotTension:
         fig_i, ax_i = \
             plot_tools.mk_canvas(x_range, height_ratio=configs.height_ratio)
         ax_i.plot(tension['nr.Oda'],
-                  tension['tension'],
+                  tension[col_name],
                   c=configs.graph_styles['color'],
                   ls=configs.graph_styles['linestyle'],
                   ms=configs.graph_styles['markersize'],
@@ -182,13 +213,24 @@ class PlotTension:
                   label=configs.graph_styles['legend'])
 
         ax_i.set_xlabel(configs.labels['xlabel'])
-        ax_i.set_ylabel(f'{configs.labels["ylabel"]} [bar/nm]')
+        ax_i.set_ylabel(f'{configs.labels["ylabel"]} {configs.y_unit}')
         ax_i.set_title(f'{configs.labels["title"]} ({key})')
         ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
+
         plot_tools.save_close_fig(
-            fig_i, ax_i, fname := f'raw_{configs.graph_suffix}')
+            fig_i, ax_i, fname := f'{key}_{configs.graph_suffix}')
+
         self.info_msg += \
             f'\tThe raw tension plot for `{key}` is saved as `{fname}`\n'
+
+    def convert_tension(self,
+                        tension: pd.DataFrame
+                        ) -> pd.DataFrame:
+        """convert the tension and subtract the amount at zero"""
+        tension['converted_tension'] = \
+            tension['tension'] - tension['tension'][0]
+        tension['converted_tension'] /= self.configs.tension_conversion
+        return tension
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

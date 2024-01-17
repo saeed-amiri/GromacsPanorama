@@ -132,6 +132,7 @@ class PlotTension:
         self.configs = configs
         tension_dict: dict[str, pd.DataFrame] = self._initiate_data(log)
         self.initiate_plots(tension_dict)
+        self.write_msg(log)
 
     def _initiate_data(self,
                        log: logger.logging.Logger
@@ -181,11 +182,21 @@ class PlotTension:
                   label=configs.graph_styles['legend'])
 
         ax_i.set_xlabel(configs.labels['xlabel'])
-        ax_i.set_ylabel(configs.labels['ylabel'])
+        ax_i.set_ylabel(f'{configs.labels["ylabel"]} [bar/nm]')
         ax_i.set_title(f'{configs.labels["title"]} ({key})')
         ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
         plot_tools.save_close_fig(
-            fig_i, ax_i, fname=f'raw_{configs.graph_suffix}')
+            fig_i, ax_i, fname := f'raw_{configs.graph_suffix}')
+        self.info_msg += \
+            f'\tThe raw tension plot for `{key}` is saved as `{fname}`\n'
+
+    def write_msg(self,
+                  log: logger.logging.Logger  # To log
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{PlotTension.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == '__main__':

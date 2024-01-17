@@ -126,7 +126,8 @@ class FileConfig:
     those
     """
     fnames: dict[str, str] = field(default_factory=lambda: {
-        'no_np': 'tension.log'})
+        'no_np': 'tension.log',
+        'with_np': 'tension_with_np.log'})
 
 
 @dataclass

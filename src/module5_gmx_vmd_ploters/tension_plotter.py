@@ -121,7 +121,7 @@ class DoubleDataLog(LogGraph):
         'linestyle': '--',
         'markersize': 5,
     })
-    label_b:str = r'$\gamma_{np}$'
+    label_b: str = r'$\gamma_{np}$'
 
 
 @dataclass
@@ -206,17 +206,17 @@ class PlotTension:
         nr_files: int = len(tension_dict)
         converted_dict: dict[str, pd.DataFrame] = {}
         for key, tension in tension_dict.items():
-            self.plot_simple_graph(key, tension, self.configs.raw_config)
+            self.plot_graph(key, tension, self.configs.raw_config)
             converted_tension: pd.DataFrame = self.convert_tension(tension)
             converted_dict[key] = converted_tension
-            self.plot_simple_graph(key,
-                                   converted_tension,
-                                   self.configs.simple_config,
-                                   col_name='converted_tension')
-            self.plot_simple_graph(key,
-                                   converted_tension,
-                                   self.configs.log_config,
-                                   col_name='converted_tension')
+            self.plot_graph(key,
+                            converted_tension,
+                            self.configs.simple_config,
+                            col_name='converted_tension')
+            self.plot_graph(key,
+                            converted_tension,
+                            self.configs.log_config,
+                            col_name='converted_tension')
         if nr_files > 1:
             self.plot_all_tensions_log(converted_dict)
 
@@ -224,12 +224,12 @@ class PlotTension:
                               converted_dict: dict[str, pd.DataFrame]
                               ) -> None:
         """plot all the input in a same graph"""
-        returned_fig = self.plot_simple_graph('np_np',
-                                              converted_dict['no_np'],
-                                              self.configs.double_config,
-                                              col_name='converted_tension',
-                                              return_ax=True,
-                                              add_key_to_title=False)
+        returned_fig = self.plot_graph('np_np',
+                                       converted_dict['no_np'],
+                                       self.configs.double_config,
+                                       col_name='converted_tension',
+                                       return_ax=True,
+                                       add_key_to_title=False)
         if returned_fig:
             fig_i, ax_i = returned_fig
 
@@ -245,15 +245,15 @@ class PlotTension:
         self.info_msg += \
             f'\tThe raw tension plot for both data is saved as `{fname}`\n'
 
-    def plot_simple_graph(self,
-                          key: str,
-                          tension: pd.DataFrame,
-                          configs: typing.Union[
-                            SimpleGraph, RawGraph, LogGraph, DoubleDataLog],
-                          col_name: str = 'tension',
-                          return_ax: bool = False,
-                          add_key_to_title: bool = True
-                          ) -> typing.Union[tuple[plt.figure, plt.axis], None]:
+    def plot_graph(self,
+                   key: str,
+                   tension: pd.DataFrame,
+                   configs: typing.Union[
+                     SimpleGraph, RawGraph, LogGraph, DoubleDataLog],
+                   col_name: str = 'tension',
+                   return_ax: bool = False,
+                   add_key_to_title: bool = True
+                   ) -> typing.Union[tuple[plt.figure, plt.axis], None]:
         """plot the raw data for later conviniance"""
         # pylint: disable=too-many-arguments
         x_range: tuple[float, float] = (min(tension['nr.Oda']),

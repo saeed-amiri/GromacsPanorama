@@ -55,7 +55,7 @@ class BaseConfig:
     })
 
     line_styles: list[str] = \
-        field(default_factory=lambda: ['-', ':', '--'])
+        field(default_factory=lambda: ['-', ':', '--', '-.'])
     colors: list[str] = \
         field(default_factory=lambda: ['black', 'red', 'blue', 'green'])
 
@@ -87,3 +87,13 @@ class ErrorBarGraph(BaseConfig):
     Parameters for plots with error bars.
     """
     plot_errorbars: bool = True
+
+
+@dataclass
+class AllConfig:
+    """
+    Consolidates all configurations for different graph types.
+    """
+    simple_config: SimpleGraph = field(default_factory=SimpleGraph())
+    log_config: LogGraph = field(default_factory=LogGraph())
+    errbar_config: ErrorBarGraph = field(default_factory=ErrorBarGraph())

@@ -55,12 +55,11 @@ class BaseConfig:
     })
 
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
-        'legend': r'$\gamma$',
+        'label': r'$\gamma$',
         'color': 'black',
         'marker': 'o',
         'linestyle': '--',
         'markersize': 5,
-        'second_markersize': 4
     })
 
     line_styles: list[str] = \
@@ -116,14 +115,13 @@ class DoubleDataLog(LogGraph):
     """plot both data"""
     graph_suffix: str = 'log_xscale_both.png'
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
-        'legend': r'$\gamma$',
-        'legend_b': r'$\gamma_{np}$',
+        'label': r'$\gamma$',
         'color': 'black',
         'marker': 'o',
         'linestyle': '--',
         'markersize': 5,
-        'second_markersize': 4
     })
+    label_b:str = r'$\gamma_{np}$'
 
 
 @dataclass
@@ -241,9 +239,11 @@ class PlotTension:
                       ls=self.configs.double_config.graph_styles['linestyle'],
                       ms=self.configs.double_config.graph_styles['markersize'],
                       marker=self.configs.double_config.graph_styles['marker'],
-                      label=self.configs.double_config.graph_styles['legend_b']
+                      label=self.configs.double_config.label_b
                       )
-            plot_tools.save_close_fig(fig_i, ax_i, fname='double.png')
+            plot_tools.save_close_fig(fig_i, ax_i, fname := 'double.png')
+        self.info_msg += \
+            f'\tThe raw tension plot for both data is saved as `{fname}`\n'
 
     def plot_simple_graph(self,
                           key: str,
@@ -264,13 +264,7 @@ class PlotTension:
             plot_tools.mk_canvas(x_range, height_ratio=configs.height_ratio)
         if configs.log_x_axis:
             ax_i.set_xscale('log')
-        ax_i.plot(tension['nr.Oda'],
-                  tension[col_name],
-                  c=configs.graph_styles['color'],
-                  ls=configs.graph_styles['linestyle'],
-                  ms=configs.graph_styles['markersize'],
-                  marker=configs.graph_styles['marker'],
-                  label=configs.graph_styles['legend'])
+        ax_i.plot(tension['nr.Oda'], tension[col_name], **configs.graph_styles)
 
         ax_i.set_xlabel(configs.labels['xlabel'])
         ax_i.set_ylabel(f'{configs.labels["ylabel"]} {configs.y_unit}')

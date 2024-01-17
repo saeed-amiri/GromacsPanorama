@@ -148,7 +148,7 @@ class ParameterConfig:
     """
     Parameters for the plots and conversions
     """
-    tension_conversion: float = 20  # Convert bar/nm to mN/nm^2
+    tension_conversion: float = 20.0  # Convert bar/nm to mN/nm^2
 
 
 @dataclass

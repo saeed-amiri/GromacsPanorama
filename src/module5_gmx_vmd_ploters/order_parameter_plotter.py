@@ -29,6 +29,7 @@ Saeed
 import typing
 from dataclasses import dataclass, field
 
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -114,7 +115,17 @@ class BarPlotConfig(BaseConfig):
     Parameters for the number of oda at the interface
     """
     graph_suffix: str = 'bar_oda_nr.png'
-    log_x_axis: bool = True
+    log_x_axis: bool = False
+    xcol_name: str = 'nominal_per_area'
+    bar_label: bool = False
+    legend_loc: str = 'upper left'
+    bar_width: float = 0.35
+    height_ratio: float = (5 ** 0.5 - 1) * 1.5
+
+    def __post_init__(self) -> None:
+        self.labels['title'] = 'Nr. Oda at the interface'
+        self.labels['xlabel'] = ''
+        self.labels['ylabel'] = 'Nr. Oda'
 
 
 @dataclass
@@ -188,12 +199,15 @@ class PlotOrderParameter:
                        ) -> None:
         """Create the plots based on the provided data."""
         nr_files: int = len(order_param_dict)
+
         for key, data in order_param_dict.items():
             # Plot simple graph
             self._plot_graph(key, data, self.configs.simple_config)
             # Plot with error bars if 'std' column is present
             if 'std' in data.columns:
                 self._plot_graph(key, data, self.configs.errbar_config)
+            self.plot_bar_graph(key, data, self.configs.bar_config)
+
         if nr_files > 1:
             # To plot the multi data graphes
             pass
@@ -246,6 +260,75 @@ class PlotOrderParameter:
         order_parameter['actual_per_area'] = \
             order_parameter['actual_oda'] / area
         return order_parameter
+
+    def plot_bar_graph(self,
+                       key: str,
+                       data: pd.DataFrame,
+                       config: BarPlotConfig
+                       ) -> None:
+        """Plot a bar graph for nominal and actual Oda numbers."""
+        # Set the positions of the bars on the x-axis
+        x_data = np.arange(len(data))
+        x_range: tuple[float, float] = (min(x_data), max(x_data))
+
+        fig_i: plt.figure
+        ax_i: plt.axes
+
+        fig_i, ax_i = \
+            plot_tools.mk_canvas(x_range, height_ratio=config.height_ratio)
+
+        if config.log_x_axis:
+            ax_i.set_xscale('log')
+
+        bars1 = ax_i.bar(x_data - config.bar_width/2,
+                         data['nominal_oda'],
+                         config.bar_width,
+                         label='Nominal Oda',
+                         zorder=3)
+        bars2 = ax_i.bar(x_data + config.bar_width/2,
+                         data['actual_oda'],
+                         config.bar_width,
+                         label='Actual Oda',
+                         zorder=3)
+
+        ax_i.set_xlabel(config.labels['xlabel'])
+        ax_i.set_ylabel(config.labels['ylabel'])
+        ax_i.set_title(config.labels['title'])
+
+        ax_i.set_xticks(x_data)
+        ax_i.set_xticklabels(['']*len(data))
+
+        ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
+
+        # Optional: Add value labels on top of bars
+        if config.bar_label:
+            self.add_value_labels(ax_i, bars1)
+            self.add_value_labels(ax_i, bars2)
+
+        plot_tools.save_close_fig(fig_i,
+                                  ax_i,
+                                  fname := config.graph_suffix,
+                                  loc=config.legend_loc)
+        self.info_msg += f'\tThe plot for `{key}` is saved as `{fname}`\n'
+
+    @staticmethod
+    def add_value_labels(ax_i: plt.axes,
+                         bars,
+                         rotation: float = 90.0
+                         ) -> None:
+        """
+        Attach a text label above each bar displaying its height, with
+        an option to rotate the label."""
+        for bar_i in bars:
+            height = bar_i.get_height()
+            ax_i.annotate(f'{height:.1f}',
+                          xy=(bar_i.get_x() + bar_i.get_width() / 2, height),
+                          xytext=(0, 3),  # 3 points vertical offset
+                          textcoords="offset points",
+                          ha='center',
+                          va='bottom',
+                          rotation=rotation,
+                          fontsize=10)
 
     def write_msg(self,
                   log: logger.logging.Logger

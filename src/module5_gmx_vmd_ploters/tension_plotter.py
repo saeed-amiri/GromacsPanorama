@@ -105,7 +105,7 @@ class LogGraph(BaseConfig):
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'Computed Tension',
         'ylabel': r'$\gamma$',
-        'xlabel': 'log(Nr. Oda)'
+        'xlabel': r'log [1/$nm^2$]'
     })
     log_x_axis: bool = True
 
@@ -149,6 +149,7 @@ class ParameterConfig:
     Parameters for the plots and conversions
     """
     tension_conversion: float = 20.0  # Convert bar/nm to mN/nm^2
+    box_dimension: tuple[float, float] = (21.7, 21.7)  # xy in nm
 
 
 @dataclass
@@ -212,11 +213,13 @@ class PlotTension:
             self.plot_graph(key,
                             converted_tension,
                             self.configs.simple_config,
-                            col_name='converted_tension')
+                            ycol_name='converted_tension',
+                            xcol_name='nr.Oda')
             self.plot_graph(key,
                             converted_tension,
                             self.configs.log_config,
-                            col_name='converted_tension')
+                            ycol_name='converted_tension',
+                            xcol_name='oda_per_area')
         if nr_files > 1:
             self.plot_all_tensions_log(converted_dict)
 
@@ -227,13 +230,14 @@ class PlotTension:
         returned_fig = self.plot_graph('np_np',
                                        converted_dict['no_np'],
                                        self.configs.double_config,
-                                       col_name='converted_tension',
+                                       ycol_name='converted_tension',
+                                       xcol_name='oda_per_area',
                                        return_ax=True,
                                        add_key_to_title=False)
         if returned_fig:
             fig_i, ax_i = returned_fig
 
-            ax_i.plot(converted_dict['with_np']['nr.Oda'],
+            ax_i.plot(converted_dict['with_np']['oda_per_area'],
                       converted_dict['with_np']['converted_tension'],
                       c=self.configs.double_config.colors[1],
                       ls=self.configs.double_config.graph_styles['linestyle'],
@@ -250,29 +254,35 @@ class PlotTension:
                    tension: pd.DataFrame,
                    configs: typing.Union[
                      SimpleGraph, RawGraph, LogGraph, DoubleDataLog],
-                   col_name: str = 'tension',
+                   ycol_name: str = 'tension',
+                   xcol_name: str = 'nr.Oda',
                    return_ax: bool = False,
                    add_key_to_title: bool = True
                    ) -> typing.Union[tuple[plt.figure, plt.axis], None]:
         """plot the raw data for later conviniance"""
         # pylint: disable=too-many-arguments
-        x_range: tuple[float, float] = (min(tension['nr.Oda']),
-                                        max(tension['nr.Oda']))
+        x_range: tuple[float, float] = (min(tension[xcol_name]),
+                                        max(tension[xcol_name]))
         fig_i: plt.figure
         ax_i: plt.axes
+
         fig_i, ax_i = \
             plot_tools.mk_canvas(x_range, height_ratio=configs.height_ratio)
+
         if configs.log_x_axis:
             ax_i.set_xscale('log')
-        ax_i.plot(tension['nr.Oda'], tension[col_name], **configs.graph_styles)
+
+        ax_i.plot(
+            tension[xcol_name], tension[ycol_name], **configs.graph_styles)
 
         ax_i.set_xlabel(configs.labels['xlabel'])
         ax_i.set_ylabel(f'{configs.labels["ylabel"]} {configs.y_unit}')
+
         if add_key_to_title:
             ax_i.set_title(f'{configs.labels["title"]} ({key})')
         else:
             ax_i.set_title(f'{configs.labels["title"]}')
-        ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
+        ax_i.grid(True, which='both', linestyle='--', color='gray', alpha=0.5)
 
         if return_ax:
             return fig_i, ax_i
@@ -292,6 +302,8 @@ class PlotTension:
         tension['converted_tension'] = \
             tension['tension'] - tension['tension'][0]
         tension['converted_tension'] /= self.configs.tension_conversion
+        tension['oda_per_area'] = tension['nr.Oda'] / \
+            (self.configs.box_dimension[0] * self.configs.box_dimension[1])
         return tension
 
     def write_msg(self,

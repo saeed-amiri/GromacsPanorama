@@ -43,6 +43,8 @@ class BaseConfig:
     """
     # pylint: disable=too-many-instance-attributes
     graph_suffix: str = 'order_parameter.png'
+    ycol_name: str = 'order_parameter'
+    xcol_name: str = 'nominal_oda'
 
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'Computed order parameter',
@@ -69,8 +71,8 @@ class BaseConfig:
 
     log_x_axis: bool = False
     with_error: bool = False
-    xcol_name: str = 'nominal_oda'
-    ycol_name: str = 'order_parameter'
+
+    legend_loc: str = 'lower right'
 
 
 @dataclass
@@ -89,6 +91,11 @@ class ErrorBarGraph(BaseConfig):
     xcol_name: str = 'nominal_per_area'
     log_x_axis: bool = True
     with_error: bool = True
+
+    def __post_init__(self) -> None:
+        self.graph_styles['ecolor'] = 'red'
+        self.graph_styles['linestyle'] = self.line_styles[1]
+        self.labels['xlabel'] = r'log(Nr. Oda) [1/nm$^2$]'
 
 
 @dataclass
@@ -211,7 +218,7 @@ class PlotOrderParameter:
             ax_i.errorbar(data[config.xcol_name],
                           data[config.ycol_name],
                           yerr=data['std'],
-                          fmt='o')
+                          **config.graph_styles)
         else:
             ax_i.plot(data[config.xcol_name],
                       data[config.ycol_name],
@@ -222,8 +229,10 @@ class PlotOrderParameter:
         ax_i.set_title(f'{config.labels["title"]} ({key})')
         ax_i.grid(True, which='both', linestyle='--', color='gray', alpha=0.5)
 
-        plot_tools.save_close_fig(
-            fig_i, ax_i, fname := f'{key}_{config.graph_suffix}')
+        plot_tools.save_close_fig(fig_i,
+                                  ax_i,
+                                  fname := f'{key}_{config.graph_suffix}',
+                                  loc=config.legend_loc)
         self.info_msg += f'\tThe plot for `{key}` is saved as `{fname}`\n'
 
     def _convert_nr_to_ratio(self,

@@ -25,4 +25,122 @@ Notes:
         groups.
     - Ensure that the input data files are in the correct format as
         expected by the script.
+Opt. by ChatGPt
+Saeed
+19 Jan 2024
 """
+
+import typing
+from dataclasses import dataclass, field
+
+
+@dataclass
+class BaseConfig:
+    """
+    Basic configurations and setup for the plots.
+    """
+    # pylint: disable=too-many-instance-attributes
+    graph_suffix: str = 'gmx.png'
+    ycol_name: str = 'density'
+    xcol_name: str = 'time'
+
+    labels: dict[str, str] = field(default_factory=lambda: {
+        'title': 'Computed density',
+        'ylabel': 'g(r)',
+        'xlabel': 'time'
+    })
+
+    graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
+        'label': 'density',
+        'color': 'black',
+        'marker': 'o',
+        'linestyle': '--',
+        'markersize': 5,
+    })
+
+    line_styles: list[str] = \
+        field(default_factory=lambda: ['-', ':', '--', '-.'])
+    colors: list[str] = \
+        field(default_factory=lambda: ['black', 'red', 'blue', 'green'])
+
+    height_ratio: float = (5 ** 0.5 - 1) * 2
+
+    y_unit: str = ''
+
+    legend_loc: str = 'lower right'
+
+
+@dataclass
+class RdfComConfig(BaseConfig):
+    """
+    Set parameters for the plotting rdf from com of nanoparticle
+    """
+    def __post_init__(self) -> None:
+        self.graph_suffix: str = 'rdf_com_gmx.png'
+        self.ycol_name: str = 'g(r)'
+        self.xcol_name: str = 'time [ns]'
+        self.labels['title'] = 'Rdf from COM of NP'
+
+
+@dataclass
+class RdfOutConfig(BaseConfig):
+    """
+    Set parameters for the plotting rdf from outermost of nanoparticle
+    """
+    def __post_init__(self) -> None:
+        self.graph_suffix: str = 'rdf_out_gmx.png'
+        self.ycol_name: str = 'g(r)'
+        self.xcol_name: str = 'time [ns]'
+        self.labels['title'] = 'Rdf from COM of NP'
+
+
+@dataclass
+class CdfComConfig(BaseConfig):
+    """
+    Set parameters for the plotting cdf from com of nanoparticle
+    """
+    def __post_init__(self) -> None:
+        self.graph_suffix: str = 'cdf_com_gmx.png'
+        self.ycol_name: str = 'cdf'
+        self.xcol_name: str = 'time [ns]'
+        self.labels['title'] = 'Cdf from COM of NP'
+
+
+@dataclass
+class CdfOutConfig(BaseConfig):
+    """
+    Set parameters for the plotting cdf from outermost of nanoparticle
+    """
+    def __post_init__(self) -> None:
+        self.graph_suffix: str = 'cdf_out_gmx.png'
+        self.ycol_name: str = 'cdf'
+        self.xcol_name: str = 'time [ns]'
+        self.labels['title'] = 'Cdf from OUT of NP'
+
+
+@dataclass
+class FileInConfig:
+    """
+    Set the names of the input files files
+    """
+    fnames: dict[str, dict[str, str]] = field(default_factory=lambda: {
+            'com': {'rdf': 'gmx_cdf_cla_com.xvg', 'cdf': 'gmx_rdf_cla_com.xvg'}
+        })
+
+
+@dataclass
+class ParameterCofig:
+    """
+    Set the constant and other parameters for the plots
+    """
+
+
+@dataclass
+class AllConfig(FileInConfig, ParameterCofig):
+    """
+    Consolidates all configurations for different graph types.
+    """
+    rdf_com_config: RdfComConfig = field(default_factory=RdfComConfig)
+    cdf_com_config: CdfComConfig = field(default_factory=CdfComConfig)
+    rdf_out_config: RdfOutConfig = field(default_factory=RdfOutConfig)
+    cdf_out_config: CdfOutConfig = field(default_factory=CdfOutConfig)

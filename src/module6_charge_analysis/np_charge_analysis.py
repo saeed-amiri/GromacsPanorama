@@ -20,7 +20,7 @@ from common.colors_text import TextColor as bcolors
 from module6_charge_analysis import gmx_rdf_cdf_plotter
 
 if typing.TYPE_CHECKING:
-    from module6_charge_analysis.charge_analysis_interface_np import \
+    from module6_charge_analysis.charge_analysis import \
         ComputeConfigurations
 
 

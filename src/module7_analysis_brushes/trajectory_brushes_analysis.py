@@ -51,7 +51,7 @@ class InputConfig:
 @dataclass
 class ParameterConfig:
     """constant values and other parameters"""
-    unit_nm_to_angstrom: float = 10
+    unit_nm_to_angstrom: float = 10.0
 
 
 @dataclass

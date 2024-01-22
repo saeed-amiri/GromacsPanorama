@@ -125,12 +125,38 @@ class CdfOutConfig(BaseConfig):
 
 
 @dataclass
+class DoubleConfig(BaseConfig):
+    """
+    Set parameters for the plotting cdf from outermost of nanoparticle
+    """
+    ax2_styles: dict[str, typing.Any] = field(default_factory=lambda: {
+        'label': 'number',
+        'color': 'red',
+        'marker': 'o',
+        'linestyle': '--',
+        'markersize': 0,
+    })
+    ax2_ylabel: str = 'number'
+
+    def __post_init__(self) -> None:
+        self.graph_suffix: str = 'rcdf_gmx.png'
+        self.ycol_name: str = 'CLA'
+        self.xcol_name: str = 'r_nm'
+        self.labels['title'] = 'Rdf and Cdf from '
+        self.graph_styles['label'] = ''
+        self.height_ratio = (5 ** 0.5 - 1) * 1.5
+
+
+@dataclass
 class FileInConfig:
     """
     Set the names of the input files files
     """
     fnames: dict[str, dict[str, str]] = field(default_factory=lambda: {
-            'com': {'rdf': 'gmx_rdf_cla_com.xvg', 'cdf': 'gmx_cdf_cla_com.xvg'}
+            'com': {'rdf': 'gmx_rdf_cla_com.xvg',
+                    'cdf': 'gmx_cdf_cla_com.xvg'},
+            'out': {'rdf': 'rdf_unwraped.xvg',
+                    'cdf': 'cdf_unwraped.xvg'}
         })
 
 
@@ -150,6 +176,7 @@ class AllConfig(FileInConfig, ParameterCofig):
     cdf_com_config: CdfComConfig = field(default_factory=CdfComConfig)
     rdf_out_config: RdfOutConfig = field(default_factory=RdfOutConfig)
     cdf_out_config: CdfOutConfig = field(default_factory=CdfOutConfig)
+    double_configs: DoubleConfig = field(default_factory=DoubleConfig)
 
 
 class PlotRdfCdf:
@@ -194,6 +221,8 @@ class PlotRdfCdf:
                     config = getattr(self.configs, f'cdf_{calc_type}_config')
                 self._plot_graph(calc_type, data_type, df_i, config)
 
+            self.plot_rdf_cdf_combined(calc_type, data)
+
     def _plot_graph(self,
                     calc_type: str,
                     data_type: str,
@@ -223,6 +252,51 @@ class PlotRdfCdf:
                                             f'{config.graph_suffix}'))
         self.info_msg += \
             f'\tThe plot for `{calc_type}_{data_type}` is saved as `{fname}`\n'
+
+    def plot_rdf_cdf_combined(self,
+                              calc_type: str,
+                              data: dict[str, pd.DataFrame],
+                              ) -> None:
+        """Plot RDF and CDF on the same plot with different y-axes."""
+        configs: "DoubleConfig" = self.configs.double_configs
+        rdf_data: pd.DataFrame = data['rdf']
+        cdf_data: pd.DataFrame = data['cdf']
+        x_range: tuple[float, float] = \
+            (min(rdf_data['r_nm']), max(rdf_data['r_nm']))
+
+        fig_i: plt.figure
+        ax_i: plt.axes
+        fig_i, ax_i = \
+            plot_tools.mk_canvas(x_range,
+                                 height_ratio=configs.height_ratio,
+                                 num_xticks=7)
+
+        # Plot RDF
+        ax_i.plot(rdf_data[configs.xcol_name],
+                  rdf_data[configs.ycol_name],
+                  **configs.graph_styles)
+
+        ax_i.set_xlabel(configs.labels['xlabel'])
+        ax_i.set_ylabel(configs.labels['ylabel'], color='k')
+        ax_i.tick_params(axis='y', labelcolor='k')
+
+        # Create a second y-axis for CDF
+        ax2 = ax_i.twinx()
+        ax2.plot(cdf_data[configs.xcol_name],
+                 cdf_data[configs.ycol_name],
+                 **configs.ax2_styles)
+        ax2.set_ylabel('number', color='r')
+        ax2.tick_params(axis='y', labelcolor='r')
+
+        plt.title(f"RDF and CDF for `{calc_type}` Plot")
+        ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
+
+        plot_tools.save_close_fig(fig_i,
+                                  ax_i,
+                                  fname := f'rdf_cdf_{calc_type}.png',
+                                  legend=False)
+        self.info_msg += \
+            f'\tThe plot for `{calc_type}_double` is saved as `{fname}`\n'
 
     def write_msg(self,
                   log: logger.logging.Logger

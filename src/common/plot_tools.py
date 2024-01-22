@@ -126,13 +126,19 @@ def save_close_fig(fig: plt.figure,  # The figure to save,
         loc (str, optional): Location of the legend. Default is
         'upper right'.
     """
-    if not legend:
-        for ax_i in np.ravel(axs):
-            legend = ax_i.legend(loc=loc, bbox_to_anchor=(1.0, 1.0))
-        legend.set_bbox_to_anchor((1.0, 1.0))
-    else:
-        for ax_j in np.ravel(axs):
-            legend = ax_j.legend(loc=loc)
+    
+    handles, labels = axs.get_legend_handles_labels()
+
+    if handles:
+        axs.legend(handles, labels, loc=loc)
+        if not legend:
+            for ax_i in np.ravel(axs):
+                legend = ax_i.legend(loc=loc, bbox_to_anchor=(1.0, 1.0))
+            legend.set_bbox_to_anchor((1.0, 1.0))
+        else:
+            for ax_j in np.ravel(axs):
+                legend = ax_j.legend(loc=loc)
+
     fig.savefig(fname,
                 dpi=300,
                 pad_inches=0.1,

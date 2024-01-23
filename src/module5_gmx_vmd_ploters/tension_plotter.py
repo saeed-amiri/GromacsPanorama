@@ -55,8 +55,16 @@ class BaseConfig:
     })
 
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
-        'label': r'$\gamma$',
+        'label': r'$\gamma$ [tot. Oda]',
         'color': 'black',
+        'marker': 'o',
+        'linestyle': '--',
+        'markersize': 5,
+    })
+
+    graph_styles2: dict[str, typing.Any] = field(default_factory=lambda: {
+        'label': r'$\gamma$ [surf. Oda]',
+        'color': 'r',
         'marker': 'o',
         'linestyle': '--',
         'markersize': 5,
@@ -139,8 +147,8 @@ class FileConfig:
     those
     """
     fnames: dict[str, str] = field(default_factory=lambda: {
-        'no_np': 'tension.log',
-        'with_np': 'tension_with_np.log'})
+        'no_np': 'tension',
+        'with_np': 'tension_with_np'})
 
 
 @dataclass
@@ -195,7 +203,8 @@ class PlotTension:
                   fname: str
                   ) -> pd.DataFrame:
         """read data file and return as a dataframe"""
-        columns: list[str] = ['Name', 'nr.Oda', 'tension', 'errorbar']
+        columns: list[str] = \
+            ['Name', 'nr.Oda', 'surf.Oda', 'tension', 'errorbar']
         df_in: pd.DataFrame = \
             pd.read_csv(fname, delim_whitespace=True, names=columns)
         return df_in
@@ -257,7 +266,8 @@ class PlotTension:
                    ycol_name: str = 'tension',
                    xcol_name: str = 'nr.Oda',
                    return_ax: bool = False,
-                   add_key_to_title: bool = True
+                   add_key_to_title: bool = True,
+                   xcol_name2: typing.Union[str, None] = None
                    ) -> typing.Union[tuple[plt.figure, plt.axis], None]:
         """plot the raw data for later conviniance"""
         # pylint: disable=too-many-arguments
@@ -274,6 +284,11 @@ class PlotTension:
 
         ax_i.plot(
             tension[xcol_name], tension[ycol_name], **configs.graph_styles)
+
+        if xcol_name2 is not None:
+            ax_i.plot(tension[xcol_name2],
+                      tension[ycol_name],
+                      **configs.graph_styles2)
 
         ax_i.set_xlabel(configs.labels['xlabel'])
         ax_i.set_ylabel(f'{configs.labels["ylabel"]} {configs.y_unit}')
@@ -303,6 +318,8 @@ class PlotTension:
             tension['tension'] - tension['tension'][0]
         tension['converted_tension'] /= self.configs.tension_conversion
         tension['oda_per_area'] = tension['nr.Oda'] / \
+            (self.configs.box_dimension[0] * self.configs.box_dimension[1])
+        tension['surf_oda_per_area'] = tension['surf.Oda'] / \
             (self.configs.box_dimension[0] * self.configs.box_dimension[1])
         return tension
 

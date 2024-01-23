@@ -2,9 +2,6 @@
 """
 Trajectory Analysis with Multiproccesing module
 
-This script calculates the center of mass (COM) of residues in a mol-
-ecular dynamics (MD) trajectory.
-
 The script consists of two main classes:
     1. GetResidues: Responsible for reading and processing the trajec-
        tory file, setting indices for residues based on their types,
@@ -18,11 +15,6 @@ The main steps in the script are as follows:
     2. Preprocess the data to obtain residues in the solution and the
        nanoparticle (NP).
     3. Set indices for each residue based on its type.
-    4. Utilize MPI to parallelize the computation and distribute the
-       data among processes.
-    5. Calculate the center of mass for each frame in the trajectory
-       for different types of residues.
-    6. Gather the results and combine them into a final array.
 """
 
 import sys

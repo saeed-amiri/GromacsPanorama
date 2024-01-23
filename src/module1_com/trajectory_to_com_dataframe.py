@@ -1,6 +1,13 @@
 #! /home/saeed/.conda/envs/analysing/bin/python
 """
 Using multiprocessing to get the COM of the residues!
+This script calculates the center of mass (COM) of residues in a mol-
+ecular dynamics (MD) trajectory.
+    1. Utilize MPI to parallelize the computation and distribute the
+       data among processes.
+    2. Calculate the center of mass for each frame in the trajectory
+       for different types of residues.
+    3. Gather the results and combine them into a final array.
 """
 
 import sys

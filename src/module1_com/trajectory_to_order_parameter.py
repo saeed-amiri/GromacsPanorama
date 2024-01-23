@@ -124,6 +124,13 @@ class ComputeOrderParameter:
         np_res_ind: list[int] = self.get_np_residues()
         sol_residues: dict[str, list[int]] = \
             self.get_solution_residues(stinfo.np_info['solution_residues'])
+        residues_index_dict: dict[int, int] = \
+            self.mk_residues_dict(sol_residues)
+        u_traj = self.get_residues.trr_info.u_traj
+        com_arr: np.ndarray = \
+            self.mk_allocation(self.n_frames,
+                               self.get_residues.nr_sol_res)
+        odn_nr: int = self.get_residues.top.mols_num['ODN']
 
     def get_chunk_lists(self,
                         data: np.ndarray  # Range of the time steps
@@ -170,6 +177,73 @@ class ComputeOrderParameter:
             if k in res_group:
                 sol_dict[k] = val
         return sol_dict
+
+    @staticmethod
+    def mk_residues_dict(sol_residues: dict[str, list[int]]
+                         ) -> dict[int, int]:
+        """
+        Make a dict for indexing all the residues. Not always residues
+        indexed from zero and/or are numberd sequently.
+
+        Args:
+            sol_residues of index for each residue in the solution
+        Return:
+            new indexing for each residues
+            Since in the recived method of this return, the result could
+            be None, the type is Union
+            Key: The residue index in the main data (traj from MDAnalysis)
+            Value: The new orderd indices
+        Notes:
+            Since we already have 4 elements before the these resideus,
+            numbering will start from 4
+        """
+        all_residues: list[int] = \
+            [item for sublist in sol_residues.values() for item in sublist]
+        sorted_residues: list[int] = sorted(all_residues)
+        residues_index_dict: dict[int, int] = {}
+        if residues_index_dict is not None:
+            for i, res in enumerate(sorted_residues):
+                residues_index_dict[res] = i * 3 + 4
+        return residues_index_dict
+
+    @staticmethod
+    def mk_allocation(n_frames: int,  # Number of frames
+                      nr_residues: int  # Numbers of residues' indices
+                      ) -> np.ndarray:
+        """
+        Allocate arrays for saving all the info.
+
+        Parameters:
+        - sol_residues: Residues in solution.
+
+        Returns:
+        - Initialized array.
+            Columns are as follow:
+            each atom has xyz, the center of mass also has xyx, and one
+            for labeling the name of the residues, for example SOL will
+            be 1
+
+        The indexing method is updated, now every index getting a defiend
+        index which is started from 4. See: mk_residues_dict
+        number of row will be:
+        number of frames + 2
+        The extra rows are for the type of the residue at -1 and the
+        orginal ids of the residues in the traj file
+
+        number of the columns:
+        n_residues: number of the residues in solution, without residues
+        in NP
+        n_ODA: number oda residues
+        NP_com: Center of mass of the nanoparticle
+        than:
+        timeframe + NP_com + nr_residues:  xyz
+             1    +   3    +  nr_residues * 3
+
+        """
+
+        rows: int = n_frames + 2  # Number of rows, 2 for name and index of res
+        columns: int = 1 + 3 + nr_residues * 3
+        return np.zeros((rows, columns))
 
     def _initiate_cpu(self,
                       log: logger.logging.Logger

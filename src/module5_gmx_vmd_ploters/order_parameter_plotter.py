@@ -135,7 +135,7 @@ class FileConfig:
     those
     """
     fnames: dict[str, str] = field(default_factory=lambda: {
-        'no_np': 'order_parameter.log'
+        'no_np': 'order_parameter'
         })
 
 

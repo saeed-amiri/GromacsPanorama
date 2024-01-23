@@ -41,7 +41,15 @@ Saeed
 23Jan2024
 """
 
-from dataclasses import dataclass, field
+import sys
+from datetime import datetime
+from dataclasses import dataclass
+
+from module1_com.trajectory_residue_extractor import GetResidues
+
+from common import logger
+from common.cpuconfig import ConfigCpuNr
+from common.colors_text import TextColor as bcolors
 
 
 @dataclass
@@ -57,3 +65,54 @@ class ParameterConfigur:
 @dataclass
 class AllConfigur(FileConfigur, ParameterConfigur):
     """set all the configurations"""
+
+
+class ComputeOrderParameter:
+    """compute order parameters for each residue"""
+
+    info_msg: str = 'Message from ComputeOrderParameter:\n'
+
+    get_residues: GetResidues  # Type of the info
+
+    def __init__(self,
+                 fname: str,  # Name of the trajectory file
+                 log: logger.logging.Logger
+                 ) -> None:
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        print(current_time)
+        self._initiate_data(fname, log)
+        self._initiate_cpu(log)
+        self._write_msg(log)
+
+    def _initiate_data(self,
+                       fname: str,  # Name of the trajectory files
+                       log: logger.logging.Logger
+                       ) -> None:
+        """
+        This function Call GetResidues class and get the data from it.
+        """
+        self.get_residues = GetResidues(fname, log)
+        self.n_frames = self.get_residues.trr_info.num_dict['n_frames']
+
+    def _initiate_cpu(self,
+                      log: logger.logging.Logger
+                      ) -> None:
+        """
+        Return the number of core for run based on the data and the machine
+        """
+        cpu_info = ConfigCpuNr(log)
+        self.n_cores: int = min(cpu_info.cores_nr, self.n_frames)
+        self.info_msg += f'\tThe numbers of using cores: {self.n_cores}\n'
+
+    def _write_msg(self,
+                   log: logger.logging.Logger  # To log
+                   ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{ComputeOrderParameter.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
+if __name__ == '__main__':
+    ComputeOrderParameter(sys.argv[1],
+                          log=logger.setup_logger("all_order_parameter.log"))

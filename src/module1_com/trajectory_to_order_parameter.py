@@ -121,7 +121,7 @@ class ComputeOrderParameter:
             - chunk_tsteps: list[np.ndarray]]
         """
         data: np.ndarray = np.arange(self.n_frames)
-        chunk_tsteps: list[np.ndarray] = self.get_chunk_lists(data)
+        chunk_tsteps: list[np.ndarray] = self.get_chunk_lists(data)[:1]
         np_res_ind: list[int] = self.get_np_residues()
         sol_residues: dict[str, list[int]] = \
             self.get_solution_residues(stinfo.np_info['solution_residues'])
@@ -158,6 +158,34 @@ class ComputeOrderParameter:
             atoms_position: np.ndarray = frame.positions
             for k, val in sol_residues.items():
                 print(f'\ttimestep {ind}  -> getting residues: {k}')
+                if k == 'ODN':
+                    for item in val:
+                        print(
+                            self.get_odn_order_paramtere(atoms_position, item))
+
+    def get_odn_order_paramtere(self,
+                                all_atoms: np.ndarray,  # All the atoms pos
+                                ind: int  # Index of the residue
+                                ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Calculating the order parameter of the ODN
+
+        Here, only atoms in NH2 and and first C on the chain (oppoiste
+        side of the amino group) are used
+        i_atoms:
+            <Atom 523033: NH2 of type N of resname ODN, resid 176274
+             and segid SYSTEM>,
+             and segid SYSTEM>
+        """
+        i_residue = \
+            self.get_residues.trr_info.u_traj.select_atoms(f'resnum {ind}')
+        n_atoms = i_residue.select_atoms('name NH2')
+        c_atoms = i_residue.select_atoms('name CT3')
+        n_indices = n_atoms.indices
+        c_indices = n_atoms.indices
+        n_positions = all_atoms[n_indices]
+        c_positions = all_atoms[c_indices]
+        return n_positions, c_positions
 
     def get_chunk_lists(self,
                         data: np.ndarray  # Range of the time steps

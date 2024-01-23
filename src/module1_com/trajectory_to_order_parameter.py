@@ -45,9 +45,11 @@ import sys
 from datetime import datetime
 from dataclasses import dataclass
 
+import numpy as np
 from module1_com.trajectory_residue_extractor import GetResidues
 
 from common import logger
+from common import static_info as stinfo
 from common.cpuconfig import ConfigCpuNr
 from common.colors_text import TextColor as bcolors
 
@@ -82,6 +84,7 @@ class ComputeOrderParameter:
         print(current_time)
         self._initiate_data(fname, log)
         self._initiate_cpu(log)
+        self._initiate_calc(log)
         self._write_msg(log)
 
     def _initiate_data(self,
@@ -93,6 +96,80 @@ class ComputeOrderParameter:
         """
         self.get_residues = GetResidues(fname, log)
         self.n_frames = self.get_residues.trr_info.num_dict['n_frames']
+
+    def _initiate_calc(self,
+                       log: logger.logging.Logger
+                       ) -> None:
+        """
+        First divide the list, than brodcast between processes.
+        Get the lists the list contains timesteps.
+        The number of sublist is equal to number of cores, than each
+        sublist will be send to one core.
+        The total trajectory will br brodcast to all the processors
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        Notes:
+            - The `n_frames` should be equal or bigger than n_process,
+              otherwise it will reduced to n_frames
+            - u_traj: <class 'MDAnalysis.coordinates.TRR.TRRReader'>
+            - chunk_tsteps: list[np.ndarray]]
+        """
+        data: np.ndarray = np.arange(self.n_frames)
+        chunk_tsteps: list[np.ndarray] = self.get_chunk_lists(data)
+        np_res_ind: list[int] = self.get_np_residues()
+        sol_residues: dict[str, list[int]] = \
+            self.get_solution_residues(stinfo.np_info['solution_residues'])
+
+    def get_chunk_lists(self,
+                        data: np.ndarray  # Range of the time steps
+                        ) -> list[np.ndarray]:
+        """prepare chunk_tstep based on the numbers of frames"""
+        # determine the size of each sub-task
+        ave, res = divmod(data.size, self.n_cores)
+        counts: list[int]  # Length of each array in the list
+        counts = [ave + 1 if p < res else ave for p in range(self.n_cores)]
+
+        # determine the starting and ending indices of each sub-task
+        starts: list[int]  # Start of each list of ranges
+        ends: list[int]  # Ends of each list of ranges
+        starts = [sum(counts[: p]) for p in range(self.n_cores)]
+        ends = [sum(counts[: p+1]) for p in range(self.n_cores)]
+
+        # converts data into a list of arrays
+        chunk_tstep = [data[starts[p]: ends[p]].astype(np.int32)
+                       for p in range(self.n_cores)]
+        return chunk_tstep
+
+    def get_np_residues(self) -> list[int]:
+        """
+        return list of the integer of the residues in the NP
+        """
+        np_res_ind: list[int] = []  # All the index in the NP
+        try:
+            for item in stinfo.np_info['np_residues']:
+                np_res_ind.extend(
+                    self.get_residues.trr_info.residues_indx[item])
+        except KeyError:
+            pass
+        return np_res_ind
+
+    def get_solution_residues(self,
+                              res_group: list[str]
+                              ) -> dict[str, list[int]]:
+        """
+        Return the dict of the residues in the solution with
+        dropping the NP residues
+        """
+        sol_dict: dict[str, list[int]] = {}  # All the residues in solution
+        for k, val in self.get_residues.trr_info.residues_indx.items():
+            if k in res_group:
+                sol_dict[k] = val
+        return sol_dict
 
     def _initiate_cpu(self,
                       log: logger.logging.Logger

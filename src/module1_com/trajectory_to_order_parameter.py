@@ -42,6 +42,7 @@ Saeed
 """
 
 import sys
+import multiprocessing
 from datetime import datetime
 from dataclasses import dataclass
 
@@ -131,6 +132,32 @@ class ComputeOrderParameter:
             self.mk_allocation(self.n_frames,
                                self.get_residues.nr_sol_res)
         odn_nr: int = self.get_residues.top.mols_num['ODN']
+        _, com_col = np.shape(com_arr)
+        args = \
+            [(chunk, u_traj, np_res_ind, com_col, sol_residues,
+              residues_index_dict) for chunk in chunk_tsteps]
+        with multiprocessing.Pool(processes=self.n_cores) as pool:
+            results = pool.starmap(self.process_trj, args)
+        # Merge the results
+        recvdata: np.ndarray = np.vstack(results)
+
+    def process_trj(self,
+                    tsteps: np.ndarray,  # Frames' indices
+                    u_traj,  # Trajectory
+                    np_res_ind: list[int],  # NP residue id
+                    com_col: int,  # Number of the columns
+                    sol_residues: dict[str, list[int]],
+                    residues_index_dict: dict[int, int]
+                    ) -> np.ndarray:
+        """Get atoms in the timestep"""
+        chunk_size: int = len(tsteps)
+        my_data: np.ndarray = np.empty((chunk_size, com_col))
+        for row, i in enumerate(tsteps):
+            ind = int(i)
+            frame = u_traj.trajectory[ind]
+            atoms_position: np.ndarray = frame.positions
+            for k, val in sol_residues.items():
+                print(f'\ttimestep {ind}  -> getting residues: {k}')
 
     def get_chunk_lists(self,
                         data: np.ndarray  # Range of the time steps

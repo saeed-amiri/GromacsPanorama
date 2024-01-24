@@ -205,6 +205,7 @@ class ComputeOrderParameter:
                 print(f'\ttimestep {ind}  -> getting residues: {k}')
                 for item in val:
                     element = residues_index_dict[item]
+                    single_flag: bool = False  # If the residue is one atom
                     if k in ('D10', 'ODN'):
                         if k == 'D10':
                             config = self.configs.decane_config
@@ -217,11 +218,15 @@ class ComputeOrderParameter:
                         head_pos, tail_pos = self.get_water_terminal_atoms(
                             atoms_position, item, self.configs.sol_config)
                     else:
-                        head_pos = tail_pos = np.zeros((3,))
-                    order_parameters = \
-                        self.compute_order_parameter(head_pos,
-                                                     tail_pos,
-                                                     log)
+                        single_flag = True
+                        # head_pos = tail_pos = np.zeros((3,))
+                    if not single_flag:
+                        order_parameters = \
+                            self.compute_order_parameter(head_pos,
+                                                         tail_pos,
+                                                         log)
+                    else:
+                        order_parameters = np.zeros((3,))
                     my_data[row][element:element+3] = order_parameters
             my_data[row, 0] = ind
             my_data[row, 1:4] = np.zeros((3,))

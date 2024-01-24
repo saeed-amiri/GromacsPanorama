@@ -171,7 +171,21 @@ class ComputeOrderParameter:
               residues_index_dict, log) for chunk in chunk_tsteps]
         with multiprocessing.Pool(processes=self.n_cores) as pool:
             results = pool.starmap(self.process_trj, args)
-        # Merge the results
+        self.finalize_calc(results,
+                           order_parameters_arr,
+                           residues_index_dict,
+                           sol_residues,
+                           log)
+
+    def finalize_calc(self,
+                      results,
+                      order_parameters_arr: np.ndarray,
+                      residues_index_dict: dict[int, int],
+                      sol_residues: dict[str, list[int]],
+                      log: logger.logging.Logger
+                      ) -> None:
+        """ Merge the results"""
+        # pylint: disable=too-many-arguments
         recvdata: np.ndarray = np.vstack(results)
         tmp_arr: np.ndarray = self.set_residue_ind(
             order_parameters_arr, recvdata, residues_index_dict)
@@ -239,7 +253,7 @@ class ComputeOrderParameter:
                             atoms_position, item, self.configs.sol_config)
                     else:
                         single_flag = True
-                        # head_pos = tail_pos = np.zeros((3,))
+
                     if not single_flag:
                         order_parameters = \
                             self.compute_order_parameter(head_pos,
@@ -247,9 +261,11 @@ class ComputeOrderParameter:
                                                          log)
                     else:
                         order_parameters = np.zeros((3,))
+
                     my_data[row][element:element+3] = order_parameters
-            my_data[row, 0] = ind
-            my_data[row, 1:4] = np.zeros((3,))
+
+            my_data[row, 0] = ind  # Set time (frame index)
+            my_data[row, 1:4] = np.zeros((3,))  # For nanoparticle (in case!)
 
         return my_data
 

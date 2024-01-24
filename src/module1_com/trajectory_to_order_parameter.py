@@ -66,9 +66,9 @@ class FileConfig:
 @dataclass
 class OrderParameterConfig:
     """set the parameters for the computations"""
-    director_z: np.ndarray = np.array([0, 0, 1])
-    director_y: np.ndarray = np.array([0, 1, 0])
-    director_x: np.ndarray = np.array([1, 0, 0])
+    director_z: np.ndarray = field(default_factory=lambda: np.array([0, 0, 1]))
+    director_y: np.ndarray = field(default_factory=lambda: np.array([0, 1, 0]))
+    director_x: np.ndarray = field(default_factory=lambda: np.array([1, 0, 0]))
 
 
 @dataclass

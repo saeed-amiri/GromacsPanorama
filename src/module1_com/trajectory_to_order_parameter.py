@@ -60,6 +60,7 @@ from common.colors_text import TextColor as bcolors
 @dataclass
 class FileConfig:
     """to set input files"""
+    pickle_fout: str = 'order_parameter_pickle'
 
 
 @dataclass
@@ -182,7 +183,7 @@ class ComputeOrderParameter:
         print(current_time)
 
     def pickle_arr(self,
-                   com_arr: np.ndarray,  # Array of the center of mass
+                   order_parameters_arr: np.ndarray,  # Array of pickle
                    log: logger.logging.Logger  # Name of the log file
                    ) -> None:
         """
@@ -190,9 +191,11 @@ class ComputeOrderParameter:
         data into a file
         """
         fname: str  # Name of the file to pickle to
-        fname = my_tools.check_file_reanme(stinfo.files['com_pickle'], log)
+        fname = my_tools.check_file_reanme(
+            fout := self.configs.pickle_fout, log)
+        self.info_msg += f'\tThe pickle out file is saved as `{fout}`\n'
         with open(fname, 'wb') as f_arr:
-            pickle.dump(com_arr, f_arr)
+            pickle.dump(order_parameters_arr, f_arr)
 
     def process_trj(self,
                     tsteps: np.ndarray,  # Frames' indices

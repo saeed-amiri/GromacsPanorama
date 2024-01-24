@@ -181,6 +181,7 @@ class ComputeOrderParameter:
 
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         print(current_time)
+        self.info_msg += f'\n\tEnd at: {current_time}\n'
 
     def pickle_arr(self,
                    order_parameters_arr: np.ndarray,  # Array of pickle

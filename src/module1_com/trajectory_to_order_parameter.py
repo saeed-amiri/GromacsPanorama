@@ -166,6 +166,7 @@ class ComputeOrderParameter:
             order_parameters_arr, recvdata, residues_index_dict)
         order_parameters_arr = \
             self.set_residue_type(tmp_arr, sol_residues).copy()
+        print(order_parameters_arr)
 
     def process_trj(self,
                     tsteps: np.ndarray,  # Frames' indices
@@ -224,22 +225,31 @@ class ComputeOrderParameter:
         """compute the order parameter for given atoms"""
         head_tail_vec: np.ndarray = head_pos - tail_pos
         try:
-            normalized_vectors: np.ndarray = head_tail_vec / np.linalg.norm(
-                head_tail_vec, axis=1)[:, np.newaxis]
-        except ZeroDivisionError:
-            log.error(msg := "\tThere is problem in getting normalized vec\n")
-            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
-        cos_theta_z = np.dot(normalized_vectors, self.configs.director_z)
-        order_param_z: float = 0.5 * (3 * cos_theta_z**2 - 1)
+            # Normalizing vectors
+            norms = np.linalg.norm(head_tail_vec, axis=1)
+            if np.any(norms == 0):
+                log.error(
+                    msg := "Zero length vector encountered in normalization.")
+                raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
 
-        cos_theta_y = np.dot(normalized_vectors, self.configs.director_z)
-        order_param_y: float = 0.5 * (3 * cos_theta_y**2 - 1)
+            normalized_vectors = head_tail_vec / norms[:, np.newaxis]
+            # Calculating dot products for x, y, z directions
+            cos_theta = {
+                'z': np.dot(normalized_vectors, self.configs.director_z),
+                'y': np.dot(normalized_vectors, self.configs.director_y),
+                'x': np.dot(normalized_vectors, self.configs.director_x)
+            }
 
-        cos_theta_x = np.dot(normalized_vectors, self.configs.director_x)
-        order_param_x: float = 0.5 * (3 * cos_theta_x**2 - 1)
+            # Calculating order parameters for x, y, z directions
+            order_params = np.array([
+                0.5 * (3 * cos_theta_value**2 - 1) for cos_theta_value
+                in cos_theta.values()])
+            return order_params.flatten()
 
-        return np.array(
-            [order_param_z, order_param_y, order_param_x]).flatten()
+        except ValueError as err:
+            log.error(
+                f"\tThere is a problem in getting normalized vector: {err}")
+            sys.exit(f'{bcolors.FAIL}{err}{bcolors.ENDC}')
 
     def get_terminal_atoms(self,
                            all_atoms: np.ndarray,  # All the atoms pos

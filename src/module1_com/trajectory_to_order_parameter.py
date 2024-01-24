@@ -64,7 +64,9 @@ class FileConfig:
 @dataclass
 class OrderParameterConfig:
     """set the parameters for the computations"""
-    director_ax: np.ndarray = np.array([0, 0, 1])
+    director_z: np.ndarray = np.array([0, 0, 1])
+    director_y: np.ndarray = np.array([0, 1, 0])
+    director_x: np.ndarray = np.array([1, 0, 0])
 
 
 @dataclass
@@ -149,18 +151,21 @@ class ComputeOrderParameter:
         residues_index_dict: dict[int, int] = \
             self.mk_residues_dict(sol_residues)
         u_traj = self.get_residues.trr_info.u_traj
-        com_arr: np.ndarray = \
+        order_parameters_arr: np.ndarray = \
             self.mk_allocation(self.n_frames,
                                self.get_residues.nr_sol_res)
-        odn_nr: int = self.get_residues.top.mols_num['ODN']
-        _, com_col = np.shape(com_arr)
+        _, com_col = np.shape(order_parameters_arr)
         args = \
-            [(chunk, u_traj, np_res_ind, com_col, sol_residues,
+            [(chunk[:1], u_traj, np_res_ind, com_col, sol_residues,
               residues_index_dict, log) for chunk in chunk_tsteps]
         with multiprocessing.Pool(processes=self.n_cores) as pool:
             results = pool.starmap(self.process_trj, args)
         # Merge the results
         recvdata: np.ndarray = np.vstack(results)
+        tmp_arr: np.ndarray = self.set_residue_ind(
+            order_parameters_arr, recvdata, residues_index_dict)
+        order_parameters_arr = \
+            self.set_residue_type(tmp_arr, sol_residues).copy()
 
     def process_trj(self,
                     tsteps: np.ndarray,  # Frames' indices
@@ -189,22 +194,33 @@ class ComputeOrderParameter:
             atoms_position: np.ndarray = frame.positions
             for k, val in sol_residues.items():
                 print(f'\ttimestep {ind}  -> getting residues: {k}')
-                if k in ('D10', 'ODN'):
-                    if k == 'D10':
-                        config = self.configs.decane_config
-                    elif k == 'ODN':
-                        config = self.configs.odn_config
-                    for item in val:
+                for item in val:
+                    element = residues_index_dict[item]
+                    if k in ('D10', 'ODN'):
+                        if k == 'D10':
+                            config = self.configs.decane_config
+                        elif k == 'ODN':
+                            config = self.configs.odn_config
                         head_pos, tail_pos = \
                             self.get_terminal_atoms(
                                 atoms_position, item, config)
-                        self.compute_order_parameter(head_pos, tail_pos, log)
+                        order_parameters = \
+                            self.compute_order_parameter(head_pos,
+                                                         tail_pos,
+                                                         log)
+                        my_data[row][element:element+3] = order_parameters
+                    else:
+                        my_data[row][element:element+3] = np.zeros((3,))
+            my_data[row, 0] = ind
+            my_data[row, 1:4] = np.zeros((3,))
+
+        return my_data
 
     def compute_order_parameter(self,
                                 head_pos: np.ndarray,
                                 tail_pos: np.ndarray,
                                 log: logger.logging.Logger
-                                ) -> float:
+                                ) -> np.ndarray:
         """compute the order parameter for given atoms"""
         head_tail_vec: np.ndarray = head_pos - tail_pos
         try:
@@ -213,9 +229,17 @@ class ComputeOrderParameter:
         except ZeroDivisionError:
             log.error(msg := "\tThere is problem in getting normalized vec\n")
             sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
-        cos_theta = np.dot(normalized_vectors, self.configs.director_ax)
-        order_param: float = 0.5 * (3 * cos_theta**2 - 1)
-        return order_param
+        cos_theta_z = np.dot(normalized_vectors, self.configs.director_z)
+        order_param_z: float = 0.5 * (3 * cos_theta_z**2 - 1)
+
+        cos_theta_y = np.dot(normalized_vectors, self.configs.director_z)
+        order_param_y: float = 0.5 * (3 * cos_theta_y**2 - 1)
+
+        cos_theta_x = np.dot(normalized_vectors, self.configs.director_x)
+        order_param_x: float = 0.5 * (3 * cos_theta_x**2 - 1)
+
+        return np.array(
+            [order_param_z, order_param_y, order_param_x]).flatten()
 
     def get_terminal_atoms(self,
                            all_atoms: np.ndarray,  # All the atoms pos
@@ -287,6 +311,57 @@ class ComputeOrderParameter:
             if k in res_group:
                 sol_dict[k] = val
         return sol_dict
+
+    def set_residue_type(self,
+                         order_parameter_arr: np.ndarray,  # set type
+                         sol_residues: dict[str, list[int]]
+                         ) -> np.ndarray:
+        """
+        I need to assign types to all residues and place them in the
+        final row of the array.
+        Args:
+            order_parameter_arr: Filled array with information about res
+                    and real index
+            sol_residues: key: Name of the residue
+                          Value: Residues belongs to the Key
+        Return:
+            Updated order_parameter_arr with type of each residue in
+                the row belowthem.
+        """
+        reverse_mapping = {}
+        for key, value_list in sol_residues.items():
+            for num in value_list:
+                reverse_mapping[num] = key
+        for ind in range(order_parameter_arr.shape[1]):
+            try:
+                res_ind = int(order_parameter_arr[-2, ind])
+                res_name = reverse_mapping.get(res_ind)
+                order_parameter_arr[-1, ind] = stinfo.reidues_id[res_name]
+            except KeyError:
+                pass
+        return order_parameter_arr
+
+    @staticmethod
+    def set_residue_ind(order_parameter_arr: np.ndarray,  # The final array
+                        recvdata: np.ndarray,  # Info about time frames
+                        residues_index_dict: dict[int, int]
+                        ) -> np.ndarray:
+        """
+        Set the original residues' indices to the order_parameter_arr[-2]
+        Set the type of residues' indices to the order_parameter_arr[-1]
+        """
+        # Copy data to the final array
+        for row in recvdata:
+            tstep = int(row[0])
+            order_parameter_arr[tstep] = row.copy()
+
+        # setting the index of NP and ODA Amino heads
+        order_parameter_arr[-2, 1:4] = [-1, -1, -1]
+        for res_ind, col_in_arr in residues_index_dict.items():
+            ind = int(res_ind)
+            order_parameter_arr[-2][col_in_arr:col_in_arr+3] = \
+                np.array([ind, ind, ind]).copy()
+        return order_parameter_arr
 
     @staticmethod
     def mk_residues_dict(sol_residues: dict[str, list[int]]

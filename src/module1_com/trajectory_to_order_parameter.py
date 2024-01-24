@@ -47,10 +47,11 @@ import multiprocessing
 from datetime import datetime
 from dataclasses import dataclass, field
 
+import pickle
 import numpy as np
 from module1_com.trajectory_residue_extractor import GetResidues
 
-from common import logger
+from common import logger, my_tools
 from common import static_info as stinfo
 from common.cpuconfig import ConfigCpuNr
 from common.colors_text import TextColor as bcolors
@@ -153,7 +154,7 @@ class ComputeOrderParameter:
             - chunk_tsteps: list[np.ndarray]]
         """
         data: np.ndarray = np.arange(self.n_frames)
-        chunk_tsteps: list[np.ndarray] = self.get_chunk_lists(data)[:1]
+        chunk_tsteps: list[np.ndarray] = self.get_chunk_lists(data)
         # np_res_ind: list[int] = self.get_np_residues()
         sol_residues: dict[str, list[int]] = \
             self.get_solution_residues(stinfo.np_info['solution_residues'])
@@ -175,7 +176,23 @@ class ComputeOrderParameter:
             order_parameters_arr, recvdata, residues_index_dict)
         order_parameters_arr = \
             self.set_residue_type(tmp_arr, sol_residues).copy()
-        print(order_parameters_arr)
+        self.pickle_arr(order_parameters_arr, log)
+
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        print(current_time)
+
+    def pickle_arr(self,
+                   com_arr: np.ndarray,  # Array of the center of mass
+                   log: logger.logging.Logger  # Name of the log file
+                   ) -> None:
+        """
+        check the if the previus similar file exsitance the pickle
+        data into a file
+        """
+        fname: str  # Name of the file to pickle to
+        fname = my_tools.check_file_reanme(stinfo.files['com_pickle'], log)
+        with open(fname, 'wb') as f_arr:
+            pickle.dump(com_arr, f_arr)
 
     def process_trj(self,
                     tsteps: np.ndarray,  # Frames' indices

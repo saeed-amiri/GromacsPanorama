@@ -234,13 +234,13 @@ class ComputeOrderParameter:
         """
         i_residue = \
             self.get_residues.trr_info.u_traj.select_atoms(f'resnum {ind}')
-        n_atoms = \
+        tail_atom = \
             i_residue.select_atoms(f'name {config.tail}')
-        c_atoms = \
+        head_atom = \
             i_residue.select_atoms(f'name {config.head}')
-        n_positions: np.ndarray = all_atoms[n_atoms.indices]
-        c_positions: np.ndarray = all_atoms[c_atoms.indices]
-        return n_positions, c_positions
+        tail_positions: np.ndarray = all_atoms[tail_atom.indices]
+        head_positions: np.ndarray = all_atoms[head_atom.indices]
+        return tail_positions, head_positions
 
     def get_chunk_lists(self,
                         data: np.ndarray  # Range of the time steps

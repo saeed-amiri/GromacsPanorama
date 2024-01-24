@@ -151,7 +151,6 @@ class CalculateCom:
 
         self.pickle_arr(com_arr, log)
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        print(current_time)
         self.info_msg += f'\n\tEnd at: {current_time}\n'
 
     def pickle_arr(self,

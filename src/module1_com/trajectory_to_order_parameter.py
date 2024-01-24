@@ -42,9 +42,10 @@ Saeed
 """
 
 import sys
+import typing
 import multiprocessing
 from datetime import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 from module1_com.trajectory_residue_extractor import GetResidues
@@ -56,18 +57,35 @@ from common.colors_text import TextColor as bcolors
 
 
 @dataclass
-class FileConfigur:
+class FileConfig:
     """to set input files"""
 
 
 @dataclass
-class ParameterConfigur:
+class OrderParameterConfig:
     """set the parameters for the computations"""
+    director_ax: np.ndarray = np.array([0, 0, 1])
 
 
 @dataclass
-class AllConfigur(FileConfigur, ParameterConfigur):
+class OdnConfig:
+    """parameters and parameters of ODA (in the system is named ODN)"""
+    head: str = 'CT3'  # Name of the head C atom
+    tail: str = 'NH2'  # Name of the tail N atom
+
+
+@dataclass
+class DecaneConfig:
+    """parameters and parameters of ODA (in the system is named ODN)"""
+    head: str = 'C1'  # Name of the head C atom
+    tail: str = 'C9'  # Name of the tail C atom
+
+
+@dataclass
+class AllConfigs(FileConfig, OrderParameterConfig):
     """set all the configurations"""
+    odn_config: OdnConfig = field(default_factory=OdnConfig)
+    decane_config: DecaneConfig = field(default_factory=DecaneConfig)
 
 
 class ComputeOrderParameter:
@@ -75,14 +93,17 @@ class ComputeOrderParameter:
 
     info_msg: str = 'Message from ComputeOrderParameter:\n'
 
-    get_residues: GetResidues  # Type of the info
+    configs: AllConfigs
+    get_residues: GetResidues  # Info from the trajectory file
 
     def __init__(self,
                  fname: str,  # Name of the trajectory file
-                 log: logger.logging.Logger
+                 log: logger.logging.Logger,
+                 configs: AllConfigs = AllConfigs()
                  ) -> None:
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         print(current_time)
+        self.configs = configs
         self._initiate_data(fname, log)
         self._initiate_cpu(log)
         self._initiate_calc(log)
@@ -135,7 +156,7 @@ class ComputeOrderParameter:
         _, com_col = np.shape(com_arr)
         args = \
             [(chunk, u_traj, np_res_ind, com_col, sol_residues,
-              residues_index_dict) for chunk in chunk_tsteps]
+              residues_index_dict, log) for chunk in chunk_tsteps]
         with multiprocessing.Pool(processes=self.n_cores) as pool:
             results = pool.starmap(self.process_trj, args)
         # Merge the results
@@ -147,9 +168,19 @@ class ComputeOrderParameter:
                     np_res_ind: list[int],  # NP residue id
                     com_col: int,  # Number of the columns
                     sol_residues: dict[str, list[int]],
-                    residues_index_dict: dict[int, int]
+                    residues_index_dict: dict[int, int],
+                    log: logger.logging.Logger
                     ) -> np.ndarray:
         """Get atoms in the timestep"""
+        # pylint: disable=too-many-arguments
+        # pylint: disable=too-many-locals
+
+        # head_pos, tail_pos are two np.ndarray to define the director
+        # and mostly makes sense for the ODA atoms
+        # and for ODA head_pos is C, since it suposed to be in higher
+        # position then the tail which is N of the amino group
+
+        config: typing.Union[OdnConfig, DecaneConfig]
         chunk_size: int = len(tsteps)
         my_data: np.ndarray = np.empty((chunk_size, com_col))
         for row, i in enumerate(tsteps):
@@ -158,15 +189,39 @@ class ComputeOrderParameter:
             atoms_position: np.ndarray = frame.positions
             for k, val in sol_residues.items():
                 print(f'\ttimestep {ind}  -> getting residues: {k}')
-                if k == 'ODN':
+                if k in ('D10', 'ODN'):
+                    if k == 'D10':
+                        config = self.configs.decane_config
+                    elif k == 'ODN':
+                        config = self.configs.odn_config
                     for item in val:
-                        print(
-                            self.get_odn_order_paramtere(atoms_position, item))
+                        head_pos, tail_pos = \
+                            self.get_terminal_atoms(
+                                atoms_position, item, config)
+                        self.compute_order_parameter(head_pos, tail_pos, log)
 
-    def get_odn_order_paramtere(self,
-                                all_atoms: np.ndarray,  # All the atoms pos
-                                ind: int  # Index of the residue
-                                ) -> tuple[np.ndarray, np.ndarray]:
+    def compute_order_parameter(self,
+                                head_pos: np.ndarray,
+                                tail_pos: np.ndarray,
+                                log: logger.logging.Logger
+                                ) -> float:
+        """compute the order parameter for given atoms"""
+        head_tail_vec: np.ndarray = head_pos - tail_pos
+        try:
+            normalized_vectors: np.ndarray = head_tail_vec / np.linalg.norm(
+                head_tail_vec, axis=1)[:, np.newaxis]
+        except ZeroDivisionError:
+            log.error(msg := "\tThere is problem in getting normalized vec\n")
+            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+        cos_theta = np.dot(normalized_vectors, self.configs.director_ax)
+        order_param: float = 0.5 * (3 * cos_theta**2 - 1)
+        return order_param
+
+    def get_terminal_atoms(self,
+                           all_atoms: np.ndarray,  # All the atoms pos
+                           ind: int,  # Index of the residue,
+                           config: typing.Union[OdnConfig, DecaneConfig]
+                           ) -> tuple[np.ndarray, np.ndarray]:
         """
         Calculating the order parameter of the ODN
 
@@ -179,12 +234,12 @@ class ComputeOrderParameter:
         """
         i_residue = \
             self.get_residues.trr_info.u_traj.select_atoms(f'resnum {ind}')
-        n_atoms = i_residue.select_atoms('name NH2')
-        c_atoms = i_residue.select_atoms('name CT3')
-        n_indices = n_atoms.indices
-        c_indices = n_atoms.indices
-        n_positions = all_atoms[n_indices]
-        c_positions = all_atoms[c_indices]
+        n_atoms = \
+            i_residue.select_atoms(f'name {config.tail}')
+        c_atoms = \
+            i_residue.select_atoms(f'name {config.head}')
+        n_positions: np.ndarray = all_atoms[n_atoms.indices]
+        c_positions: np.ndarray = all_atoms[c_atoms.indices]
         return n_positions, c_positions
 
     def get_chunk_lists(self,

@@ -78,9 +78,17 @@ class OdnConfig:
 
 @dataclass
 class DecaneConfig:
-    """parameters and parameters of ODA (in the system is named ODN)"""
+    """parameters and parameters of Decane"""
     head: str = 'C1'  # Name of the head C atom
     tail: str = 'C9'  # Name of the tail C atom
+
+
+@dataclass
+class WaterConfig:
+    """parameters and parameters of Water (SOL in the system)"""
+    head: str = 'OH2'  # Name of the head C atom
+    tail_1: str = 'H1'  # Name of the tail C atom
+    tail_2: str = 'H2'  # Name of the tail C atom
 
 
 @dataclass
@@ -88,6 +96,7 @@ class AllConfigs(FileConfig, OrderParameterConfig):
     """set all the configurations"""
     odn_config: OdnConfig = field(default_factory=OdnConfig)
     decane_config: DecaneConfig = field(default_factory=DecaneConfig)
+    sol_config: WaterConfig = field(default_factory=WaterConfig)
 
 
 class ComputeOrderParameter:
@@ -145,7 +154,7 @@ class ComputeOrderParameter:
         """
         data: np.ndarray = np.arange(self.n_frames)
         chunk_tsteps: list[np.ndarray] = self.get_chunk_lists(data)[:1]
-        np_res_ind: list[int] = self.get_np_residues()
+        # np_res_ind: list[int] = self.get_np_residues()
         sol_residues: dict[str, list[int]] = \
             self.get_solution_residues(stinfo.np_info['solution_residues'])
         residues_index_dict: dict[int, int] = \
@@ -156,7 +165,7 @@ class ComputeOrderParameter:
                                self.get_residues.nr_sol_res)
         _, com_col = np.shape(order_parameters_arr)
         args = \
-            [(chunk[:1], u_traj, np_res_ind, com_col, sol_residues,
+            [(chunk[:1], u_traj, com_col, sol_residues,
               residues_index_dict, log) for chunk in chunk_tsteps]
         with multiprocessing.Pool(processes=self.n_cores) as pool:
             results = pool.starmap(self.process_trj, args)
@@ -171,7 +180,6 @@ class ComputeOrderParameter:
     def process_trj(self,
                     tsteps: np.ndarray,  # Frames' indices
                     u_traj,  # Trajectory
-                    np_res_ind: list[int],  # NP residue id
                     com_col: int,  # Number of the columns
                     sol_residues: dict[str, list[int]],
                     residues_index_dict: dict[int, int],
@@ -205,13 +213,16 @@ class ComputeOrderParameter:
                         head_pos, tail_pos = \
                             self.get_terminal_atoms(
                                 atoms_position, item, config)
-                        order_parameters = \
-                            self.compute_order_parameter(head_pos,
-                                                         tail_pos,
-                                                         log)
-                        my_data[row][element:element+3] = order_parameters
+                    elif k == 'SOL':
+                        head_pos, tail_pos = self.get_water_terminal_atoms(
+                            atoms_position, item, self.configs.sol_config)
                     else:
-                        my_data[row][element:element+3] = np.zeros((3,))
+                        head_pos = tail_pos = np.zeros((3,))
+                    order_parameters = \
+                        self.compute_order_parameter(head_pos,
+                                                     tail_pos,
+                                                     log)
+                    my_data[row][element:element+3] = order_parameters
             my_data[row, 0] = ind
             my_data[row, 1:4] = np.zeros((3,))
 
@@ -274,6 +285,53 @@ class ComputeOrderParameter:
             i_residue.select_atoms(f'name {config.head}')
         tail_positions: np.ndarray = all_atoms[tail_atom.indices]
         head_positions: np.ndarray = all_atoms[head_atom.indices]
+        return tail_positions, head_positions
+
+    def get_water_terminal_atoms(self,
+                                 all_atoms: np.ndarray,
+                                 ind: int,
+                                 config: WaterConfig
+                                 ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Retrieve terminal atoms for a specified water molecule.
+
+        This method considers water molecules as fixed residues,
+        i.e., the H-O bonds and H-O-H angles are constant. It
+        identifies the oxygen atom as the 'head' and calculates the
+        'tail' as the center of mass of the two hydrogen atoms.
+        The terms 'head' and 'tail' are used for consistency, although
+        they are less conventional for symmetric molecules like water.
+
+        The 'head' is the position of the oxygen atom, and the 'tail'
+        is computed as the average position of the two hydrogen atoms,
+        representing the center of mass.
+
+        Args:
+            all_atoms (np.ndarray): Array containing positions of all
+            atoms in the system.
+            ind (int): Index of the specific water molecule.
+            config (WaterConfig): Configuration parameters for water
+                molecules, including atom names for the 'head' (oxygen)
+                and 'tails' (hydrogens).
+
+        Returns:
+            np.ndarray: A tuple containing two numpy arrays. The first
+                array represents the position of the 'head' (oxygen
+                atom), and the second array is the calculated position
+                of the 'tail' (center of mass of hydrogens).
+        """
+        i_residue = \
+            self.get_residues.trr_info.u_traj.select_atoms(f'resnum {ind}')
+        head_atom = \
+            i_residue.select_atoms(f'name {config.head}')
+        tail_atom_1 = \
+            i_residue.select_atoms(f'name {config.tail_1}')
+        tail_atom_2 = \
+            i_residue.select_atoms(f'name {config.tail_2}')
+        head_positions: np.ndarray = all_atoms[head_atom.indices]
+        tail_positions_1: np.ndarray = all_atoms[tail_atom_1.indices]
+        tail_positions_2: np.ndarray = all_atoms[tail_atom_2.indices]
+        tail_positions = (tail_positions_1 + tail_positions_2) / 2
         return tail_positions, head_positions
 
     def get_chunk_lists(self,

@@ -167,7 +167,7 @@ class ComputeOrderParameter:
                                self.get_residues.nr_sol_res)
         _, com_col = np.shape(order_parameters_arr)
         args = \
-            [(chunk[:1], u_traj, com_col, sol_residues,
+            [(chunk, u_traj, com_col, sol_residues,
               residues_index_dict, log) for chunk in chunk_tsteps]
         with multiprocessing.Pool(processes=self.n_cores) as pool:
             results = pool.starmap(self.process_trj, args)

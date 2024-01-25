@@ -70,23 +70,25 @@ class GetOorderParameter:
 
     info_msg: str = 'Message from GetOorderParameter:\n'
     configs: AllConfig
+    split_arr_dict: dict[str, np.ndarray]  # Array of each residue
 
     def __init__(self,
                  log: logger.logging.Logger,
                  configs: AllConfig = AllConfig()
                  ) -> None:
         self.configs = configs
-        self._initiate_data(log)
+        self.split_arr_dict = self._initiate_data(log)
+        self.nr_dict: dict[str, int] = self.get_numbers(self.split_arr_dict)
 
     def _initiate_data(self,
                        log: logger.logging.Logger
-                       ) -> None:
+                       ) -> dict[str, np.ndarray]:
         """load the main data"""
         my_tools.check_file_exist(self.configs.op_pickle, log)
         orderp_arr: np.ndarray = self.load_pickle(self.configs.op_pickle)
         split_arr_dict: dict[str, np.ndarray] = \
             self.split_data(orderp_arr[:, 4:])
-        print(split_arr_dict)
+        return split_arr_dict
 
     def split_data(self,
                    data: np.ndarray  # Loaded data without first 4 columns
@@ -141,6 +143,26 @@ class GetOorderParameter:
         """
         return next((key for key, value in dictionary.items() if
                      value == target_value), None)
+
+    @staticmethod
+    def get_numbers(data: dict[str, np.ndarray]  # Splitted np.arrays
+                    ) -> dict[str, int]:
+        """
+        Get the number of time frames and the number of residues for
+        each type.
+
+        Args:
+            data (dict[str, np.ndarray]): The split data dictionary.
+
+        Returns:
+            dict[str, int]: A dictionary containing the number of time
+            frames and the number of residues for each type.
+        """
+        nr_dict: dict[str, int] = {}
+        nr_dict['nr_frames'] = np.shape(data['SOL'])[0] - 2
+        for item, arr in data.items():
+            nr_dict[item] = np.shape(arr)[1] // 3
+        return nr_dict
 
     @staticmethod
     def load_pickle(fname: str) -> np.ndarray:

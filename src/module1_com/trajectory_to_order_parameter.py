@@ -513,7 +513,7 @@ class ComputeOrderParameter:
         Returns:
         - Initialized array.
             Columns are as follow:
-            each atom has xyz, the center of mass also has xyx, and one
+            each atom has xyz, the order parameter tensor, and one
             for labeling the name of the residues, for example SOL will
             be 1
 
@@ -527,7 +527,7 @@ class ComputeOrderParameter:
         number of the columns:
         n_residues: number of the residues in solution, without residues
         in NP
-        NP_com: Center of mass of the nanoparticle
+        NP_com: order parameters for of the nanoparticle
         than:
         timeframe + NP_com + nr_residues:  xyz
              1    +   3    +  nr_residues * 3

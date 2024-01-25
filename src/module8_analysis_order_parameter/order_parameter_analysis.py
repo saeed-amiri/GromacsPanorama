@@ -51,3 +51,59 @@ Opt. ChatGPT
 Author: Saeed
 Date: 25 January 2024
 """
+
+from dataclasses import dataclass
+
+from common import logger
+from common.com_file_parser import GetCom
+from common.colors_text import TextColor as bcolors
+from module8_analysis_order_parameter.order_parameter_pickle_parser import \
+    GetOorderParameter
+
+
+@dataclass
+class FileConfig:
+    """set the names of the input files"""
+    com_fname: str = 'com_pickle'
+    orderp_fname: str = 'order_parameter.pickle'
+
+
+@dataclass
+class AllConfig(FileConfig):
+    """set all the configurations"""
+
+
+class AnalysisOrderParameter:
+    """analysing the order parmeter by looking at their values spatially
+    and ...
+    """
+
+    info_msg: str = 'Message from AnalysisOrderParameter:\n'
+    configs: AllConfig
+
+    def __init__(self,
+                 log: logger.logging.Logger,
+                 configs: AllConfig = AllConfig()
+                 ) -> None:
+        self.configs = configs
+        self.initiate_data(log)
+        self.write_msg(log)
+
+    def initiate_data(self,
+                      log: logger.logging.Logger
+                      ) -> None:
+        """initiate getting and setting data"""
+        com_data = GetCom(fname=self.configs.com_fname)
+        orderp_data = GetOorderParameter(log=log)
+
+    def write_msg(self,
+                  log: logger.logging.Logger  # To log
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{AnalysisOrderParameter.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
+if __name__ == '__main__':
+    pass

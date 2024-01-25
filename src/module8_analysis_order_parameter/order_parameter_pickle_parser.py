@@ -40,3 +40,47 @@ Alignment with com_pickle:
     alignment facilitates the integration and comparative analysis of
     order parameters with spatial data.
 """
+
+from dataclasses import dataclass
+
+from common import logger
+from common.colors_text import TextColor as bcolors
+
+
+@dataclass
+class FileConfig:
+    """set the file names"""
+    com_pickle: str = 'com_pickle'
+    op_pickle: str = 'order_parameter.pickle'
+
+
+@dataclass
+class AllConfig(FileConfig):
+    """set all the configuratiions"""
+
+
+class GetOorderParameter:
+    """
+    Processing and splitting the data based on the residues type
+    """
+
+    info_msg: str = 'Message from GetOorderParameter:\n'
+    configs: AllConfig
+
+    def __init__(self,
+                 log: logger.logging.Logger,
+                 configs: AllConfig = AllConfig()
+                 ) -> None:
+        self.configs = configs
+
+    def _write_msg(self,
+                   log: logger.logging.Logger  # To log
+                   ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{GetOorderParameter.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
+if __name__ == '__main__':
+    GetOorderParameter(log=logger.setup_logger('order_parameter_prase.log'))

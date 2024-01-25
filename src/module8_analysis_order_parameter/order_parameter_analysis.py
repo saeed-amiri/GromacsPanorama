@@ -80,21 +80,33 @@ class AnalysisOrderParameter:
 
     info_msg: str = 'Message from AnalysisOrderParameter:\n'
     configs: AllConfig
+    com_data: GetCom
+    orderp_data: GetOorderParameter
 
     def __init__(self,
                  log: logger.logging.Logger,
                  configs: AllConfig = AllConfig()
                  ) -> None:
         self.configs = configs
-        self.initiate_data(log)
+        self.com_data, self.orderp_data = self.initiate_data(log)
+        self.initiate_computation(log)
         self.write_msg(log)
 
     def initiate_data(self,
                       log: logger.logging.Logger
-                      ) -> None:
+                      ) -> tuple[GetCom, GetOorderParameter]:
         """initiate getting and setting data"""
         com_data = GetCom(fname=self.configs.com_fname)
         orderp_data = GetOorderParameter(log=log)
+        return com_data, orderp_data
+
+    def initiate_computation(self,
+                             log: logger.logging.Logger
+                             ) -> None:
+        """doing the calculation:
+        finding the residues at intersted coordinates and using their
+        index to get the order parameter tensor
+        """
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

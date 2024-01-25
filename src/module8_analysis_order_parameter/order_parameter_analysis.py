@@ -52,7 +52,7 @@ Author: Saeed
 Date: 25 January 2024
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from common import logger
 from common.com_file_parser import GetCom
@@ -65,12 +65,22 @@ from module8_analysis_order_parameter.order_parameter_pickle_parser import \
 class FileConfig:
     """set the names of the input files"""
     com_fname: str = 'com_pickle'
-    orderp_fname: str = 'order_parameter.pickle'
+    orderp_fname: str = 'order_parameter_pickle'
+
+
+@dataclass
+class OPDistributionConfig:
+    """parameters for the computing OP (order parameter) distribution
+    of along one axis"""
+    axis: str = 'z'
+    nr_bins: int = 50
 
 
 @dataclass
 class AllConfig(FileConfig):
     """set all the configurations"""
+    ditribution_config: OPDistributionConfig = \
+        field(default_factory=OPDistributionConfig)
 
 
 class AnalysisOrderParameter:
@@ -103,9 +113,22 @@ class AnalysisOrderParameter:
     def initiate_computation(self,
                              log: logger.logging.Logger
                              ) -> None:
-        """doing the calculation:
-        finding the residues at intersted coordinates and using their
-        index to get the order parameter tensor
+        """doing the calculations:
+        finding the residues at  an intersted coordinates and using their
+        index to get the order parameter tensors
+        """
+        self.compute_order_parameter_distribution()
+
+    def compute_order_parameter_distribution(self) -> None:
+        """
+        Segment the Simulation Box: Divide the simulation box along
+            the chosen axis into small segments or bins. The number of
+            bins depends on the level of granularity needs and the size
+            of the simulation box.
+
+        Calculate the Order Parameter for Each Bin: For each segment
+            or bin, calculate the average order parameter of the
+            particles within that bin.
         """
 
     def write_msg(self,

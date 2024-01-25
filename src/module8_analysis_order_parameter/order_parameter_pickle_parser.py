@@ -79,6 +79,7 @@ class GetOorderParameter:
         self.configs = configs
         self.split_arr_dict = self._initiate_data(log)
         self.nr_dict: dict[str, int] = self.get_numbers(self.split_arr_dict)
+        self._write_msg(log)
 
     def _initiate_data(self,
                        log: logger.logging.Logger

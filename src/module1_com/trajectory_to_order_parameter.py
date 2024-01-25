@@ -464,7 +464,7 @@ class ComputeOrderParameter:
             tstep = int(row[0])
             order_parameter_arr[tstep] = row.copy()
 
-        # setting the index of NP and ODA Amino heads
+        # setting the index of NP
         order_parameter_arr[-2, 1:4] = [-1, -1, -1]
         for res_ind, col_in_arr in residues_index_dict.items():
             ind = int(res_ind)

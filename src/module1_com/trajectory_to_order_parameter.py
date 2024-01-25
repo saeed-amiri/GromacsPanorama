@@ -527,7 +527,6 @@ class ComputeOrderParameter:
         number of the columns:
         n_residues: number of the residues in solution, without residues
         in NP
-        n_ODA: number oda residues
         NP_com: Center of mass of the nanoparticle
         than:
         timeframe + NP_com + nr_residues:  xyz

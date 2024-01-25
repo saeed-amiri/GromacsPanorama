@@ -39,6 +39,35 @@ efficiency and the thoroughness of the analysis.
 Opt. by ChatGpt4
 Saeed
 23Jan2024
+----------------------------------------------------------------------
+Optimizing The script for computing order parameters from trajectory
+files: Atom indices in the simulations are unique and constant across
+all frames. Leveraging this, we can optimize the computations by:
+
+Single-Time Index Retrieval:
+    Rather than repeatedly finding atom indices for each of the
+    approximately 1000 frames, we'll locate these indices just once at
+    the start and store them in an array. This change is expected to
+    reduce computational overhead substantially.
+
+Handling Non-Sequential Residue Indices:
+    Since residue indices may not follow a sequential order, our array
+    will be structured to account for this. The first column will list
+    the indices of each residue. The second column will assign an
+    integer label to each residue, following our current labeling
+    methodology.
+
+Head and Tail Atom Indices:
+    Additional columns in this array will be designated for the
+    indices of head and tail atoms of each residue. Notably, for water
+    molecules, where both hydrogen atoms determine a terminal atom, an
+    extra column will be included to store this information.
+
+Pre-Initialization and Validation:
+    To facilitate data validation and integrity checks, we will
+    pre-initialize the columns for head and tail atom indices to -1.
+    This step will aid in subsequent sanity checks and ensure the
+    correctness of our computations.
 """
 
 import sys
@@ -169,6 +198,7 @@ class ComputeOrderParameter:
         args = \
             [(chunk, u_traj, com_col, sol_residues,
               residues_index_dict, log) for chunk in chunk_tsteps]
+        self.get_terminal_inidices_arr()
         with multiprocessing.Pool(processes=self.n_cores) as pool:
             results = pool.starmap(self.process_trj, args)
         self.finalize_calc(results,
@@ -176,6 +206,9 @@ class ComputeOrderParameter:
                            residues_index_dict,
                            sol_residues,
                            log)
+
+    def get_terminal_inidices_arr(self) -> None:
+        """find the indicies of the terminal atoms of each residues"""
 
     def finalize_calc(self,
                       results,

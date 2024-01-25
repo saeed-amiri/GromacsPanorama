@@ -41,17 +41,21 @@ Alignment with com_pickle:
     order parameters with spatial data.
 """
 
+import typing
 from dataclasses import dataclass
 
-from common import logger
+import pickle
+import numpy as np
+
+from common import logger, my_tools
+from common import static_info as stinfo
 from common.colors_text import TextColor as bcolors
 
 
 @dataclass
 class FileConfig:
     """set the file names"""
-    com_pickle: str = 'com_pickle'
-    op_pickle: str = 'order_parameter.pickle'
+    op_pickle: str = 'order_parameter_pickle'
 
 
 @dataclass
@@ -72,6 +76,78 @@ class GetOorderParameter:
                  configs: AllConfig = AllConfig()
                  ) -> None:
         self.configs = configs
+        self._initiate_data(log)
+
+    def _initiate_data(self,
+                       log: logger.logging.Logger
+                       ) -> None:
+        """load the main data"""
+        my_tools.check_file_exist(self.configs.op_pickle, log)
+        orderp_arr: np.ndarray = self.load_pickle(self.configs.op_pickle)
+        split_arr_dict: dict[str, np.ndarray] = \
+            self.split_data(orderp_arr[:, 4:])
+        print(split_arr_dict)
+
+    def split_data(self,
+                   data: np.ndarray  # Loaded data without first 4 columns
+                   ) -> dict[str, np.ndarray]:
+        """
+        Split data based on the type of the residues.
+
+        Args:
+            data (np.ndarray): The data to be split, excluding the
+            first 4 columns.
+
+        Returns:
+            dict[str, np.ndarray]: A dictionary of residue names and
+            their associated arrays.
+        """
+        # Get the last row of the array
+        last_row: np.ndarray = data[-1]
+        last_row_indices: np.ndarray = last_row.astype(int)
+        unique_indices: np.ndarray = np.unique(last_row_indices)
+
+        # Create an empty dictionary to store the split arrays
+        result_dict: dict[int, list] = {index: [] for index in unique_indices}
+        # Iterate through each column and split based on the indices
+        for col_idx, column in enumerate(data.T):
+            result_dict[last_row_indices[col_idx]].append(column)
+
+        # Convert the dictionary values back to numpy arrays
+        result: list[np.ndarray] = \
+            [np.array(arr_list).T for arr_list in result_dict.values()]
+
+        array_dict: dict[str, np.ndarray] = {}
+        # !!! Very risky kinda way to do the follwing:
+        for i, arr in enumerate(result, start=1):
+            residue_name = self.find_key_by_value(stinfo.reidues_id, i)
+            array_dict[residue_name] = arr
+        return array_dict
+
+    @staticmethod
+    def find_key_by_value(dictionary: dict[typing.Any, typing.Any],
+                          target_value: typing.Any
+                          ) -> typing.Any:
+        """
+        Find the key in the dictionary based on the target value.
+
+        Args:
+            dictionary (dict): The dictionary to search.
+            target_value: The value to search for.
+
+        Returns:
+            str or None: The key associated with the target value, or
+            None if not found.
+        """
+        return next((key for key, value in dictionary.items() if
+                     value == target_value), None)
+
+    @staticmethod
+    def load_pickle(fname: str) -> np.ndarray:
+        """loading the input file"""
+        with open(fname, 'rb') as f_rb:
+            orderp_arr = pickle.load(f_rb)
+        return orderp_arr
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

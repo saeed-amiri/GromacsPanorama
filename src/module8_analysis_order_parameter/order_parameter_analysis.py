@@ -59,6 +59,8 @@ from common.com_file_parser import GetCom
 from common.colors_text import TextColor as bcolors
 from module8_analysis_order_parameter.order_parameter_pickle_parser import \
     GetOorderParameter
+from module8_analysis_order_parameter.order_parameter_distribution import \
+    ComputeOPDistribution
 
 
 @dataclass
@@ -117,9 +119,11 @@ class AnalysisOrderParameter:
         finding the residues at  an intersted coordinates and using their
         index to get the order parameter tensors
         """
-        self.compute_order_parameter_distribution()
+        self.compute_order_parameter_distribution(log)
 
-    def compute_order_parameter_distribution(self) -> None:
+    def compute_order_parameter_distribution(self,
+                                             log: logger.logging.Logger
+                                             ) -> None:
         """
         Segment the Simulation Box: Divide the simulation box along
             the chosen axis into small segments or bins. The number of
@@ -130,6 +134,7 @@ class AnalysisOrderParameter:
             or bin, calculate the average order parameter of the
             particles within that bin.
         """
+        ComputeOPDistribution(self.com_data, self.orderp_data, log)
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log
@@ -141,4 +146,4 @@ class AnalysisOrderParameter:
 
 
 if __name__ == '__main__':
-    pass
+    AnalysisOrderParameter(log=logger.setup_logger("orderp_analysis.log"))

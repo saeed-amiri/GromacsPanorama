@@ -35,8 +35,9 @@ import typing
 from dataclasses import dataclass, field
 
 import numpy as np
+import pandas as pd
 
-from common import logger
+from common import logger, xvg_to_dataframe
 from common.colors_text import TextColor as bcolors
 
 if typing.TYPE_CHECKING:
@@ -53,6 +54,9 @@ class FileConfig:
 @dataclass
 class ParameterConfig:
     """set the prameters for the computations"""
+    bin_from_file: bool = True
+    bin_file_name: str = 'sol_density_trr.xvg'
+    bin_file_column: str = 'Coordinate_nm'
     axis: str = 'z'
     residues_for_box_limit_check: list[str] = \
         field(default_factory=lambda: ['SOL', 'D10', 'CLA'])
@@ -69,6 +73,7 @@ class ComputeOPDistribution:
 
     info_msg: str = 'Message from ComputeOPDistribution:\n'
     configs: AllConfigs
+    ax_ind: int  # Integer to set the dirction (change via configs)
 
     def __init__(self,
                  com_arr: "GetCom",
@@ -87,21 +92,57 @@ class ComputeOPDistribution:
                        ) -> None:
         """find the residues in the bin and calculate the average OP
         for each residue in each bin for all the frames"""
-        self.get_bins(com_arr.split_arr_dict)
+        bins: np.ndarray = self.get_bins(com_arr.split_arr_dict, log)
 
     def get_bins(self,
-                 split_arr_dict: dict[str, np.ndarray]
-                 ) -> None:
-        """find the low and high of the box
-        SOL, D10 and CLA must be checked
+                 split_arr_dict: dict[str, np.ndarray],
+                 log: logger.logging.Logger
+                 ) -> np.ndarray:
         """
+        If read bins from a density file from gromacs, just read the
+        file and return the bins as an array, otherwise find the low
+        and high of the box SOL, D10 and CLA must be checked.
+        """
+        # pylint: disable='broad-exception-caught'
+        if self.configs.bin_from_file:
+            try:
+                return self._bins_from_xvg(log)
+            except FileNotFoundError:
+                self.info_msg += (
+                    '\tWarning: There is error in reading bins from the file\n'
+                    '\t\tFalling back to compute the bins from com_pickle\n')
+            except Exception as err:
+                self.info_msg += \
+                    f'\tProblem: `{err}` in getting bins from file\n'
+        return self._compute_bins(split_arr_dict)
+
+    def _compute_bins(self,
+                      split_arr_dict: dict[str, np.ndarray]
+                      ) -> np.ndarray:
+        """compute the bins from the com_pickle"""
         ax_lo: float  # Box lims in the asked direction
         ax_hi: float  # Box lims in the asked direction
-        ax_ind: int = self._get_ax_index()
-        ax_lo, ax_hi = self._get_box_lims(ax_ind, split_arr_dict)
+        self.ax_ind: int = self._get_ax_index()
+        ax_lo, ax_hi = self._get_box_lims(split_arr_dict)
+        return np.linspace(ax_lo, ax_hi, self.configs.nr_bins + 1)
+
+    def _bins_from_xvg(self,
+                       log: logger.logging.Logger
+                       ) -> np.ndarray:
+        """read the density xvg file and return the bins
+        since the gromacs default output are in nanometer here I
+        convert them to Angastrom.
+        """
+        self.info_msg += \
+            f'\tReading `{self.configs.bin_file_name}` to get bins\n'
+        xvg_df: pd.DataFrame = \
+            xvg_to_dataframe.XvgParser(fname=self.configs.bin_file_name,
+                                       log=log,
+                                       x_type=float,
+                                       if_exit=False).xvg_df
+        return xvg_df[self.configs.bin_file_column].to_numpy()*10
 
     def _get_box_lims(self,
-                      ax_ind: int,  # Index of the direction
                       split_arr_dict: dict[str, np.ndarray]
                       ) -> tuple[float, float]:
         """
@@ -115,7 +156,7 @@ class ComputeOPDistribution:
             # Concatenate all frames for a given residue type
             all_frames = np.concatenate(split_arr_dict[res][:-2])
             # Reshape and extract the axis of interest
-            all_ax_values = all_frames.reshape(-1, 3)[:, ax_ind]
+            all_ax_values = all_frames.reshape(-1, 3)[:, self.ax_ind]
 
             # Find the min and max along the axis
             ax_lo = np.min((ax_lo, all_ax_values.min()))

@@ -16,16 +16,21 @@ class InvalidFileExtensionError(Exception):
 
 
 def check_file_exist(fname: str,  # Name of the file to check
-                     log: logger.logging.Logger  # log the error
+                     log: logger.logging.Logger,  # log the error,
+                     if_exit: bool = True
                      ) -> None:
     """check if the file exist, other wise exit"""
     if not os.path.exists(fname):
         log.error(f'Error! `{fname}` dose not exist.')
-        sys.exit(f'{bcolors.FAIL}{__name__}: '
-                 f'(Error! `{fname}` dose not '
-                 f'exist \n{bcolors.ENDC}')
-    log.info(msg := f'`{fname}` exist.')
-    print(f'{bcolors.OKBLUE}my_tools:\n\t{msg}{bcolors.ENDC}\n')
+        if if_exit:
+            sys.exit(f'{bcolors.FAIL}{__name__}: '
+                     f'(Error! `{fname}` dose not '
+                     f'exist \n{bcolors.ENDC}')
+        else:
+            log.warning('\tThere was a problem in reading the file; return\n')
+    else:
+        log.info(msg := f'`{fname}` exist.')
+        print(f'{bcolors.OKBLUE}my_tools:\n\t{msg}{bcolors.ENDC}\n')
 
 
 def check_file_extension(fname: str,  # Name of the file to check

@@ -23,11 +23,12 @@ class XvgParser:
     def __init__(self,
                  fname: str,  # Name of the xvg file
                  log: logger.logging.Logger,
-                 x_type: type = int
+                 x_type: type = int,
+                 if_exit: bool = True
                  ) -> None:
         self.nr_frames: int  # Number of the frames
         self.columns_names: list[str] = []
-        my_tools.check_file_exist(fname, log)
+        my_tools.check_file_exist(fname, log, if_exit)
         my_tools.check_file_extension(fname, 'xvg', log)
         self.fname: str = fname  # Name of the input file
         self.xvg_df = self.get_xvg(log, x_type)

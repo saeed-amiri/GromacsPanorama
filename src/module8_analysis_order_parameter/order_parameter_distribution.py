@@ -31,12 +31,18 @@ Saeed
 26 Jan 2024
 """
 
+import typing
 from dataclasses import dataclass
 
 import numpy as np
 
 from common import logger
 from common.colors_text import TextColor as bcolors
+
+if typing.TYPE_CHECKING:
+    from common.com_file_parser import GetCom
+    from module8_analysis_order_parameter.order_parameter_pickle_parser \
+        import GetOorderParameter
 
 
 @dataclass
@@ -60,14 +66,25 @@ class ComputeOPDistribution:
     """compute the order parameters distribution through on axis"""
 
     info_msg: str = 'Message from ComputeOPDistribution:\n'
+    configs: AllConfigs
 
     def __init__(self,
-                 com_arr: np.ndarray,
-                 orderp_arr: np.ndarray,
+                 com_arr: "GetCom",
+                 orderp_arr: "GetOorderParameter",
                  log: logger.logging.Logger,
                  configs: AllConfigs = AllConfigs()
                  ) -> None:
+        self.configs = configs
+        self._initiate_calc(com_arr, orderp_arr, log)
         self._write_msg(log)
+
+    def _initiate_calc(self,
+                       com_arr: "GetCom",
+                       orderp_arr: "GetOorderParameter",
+                       log: logger.logging.Logger
+                       ) -> None:
+        """find the residues in the bin and calculate the average OP
+        for each residue in each bin for all the frames"""
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

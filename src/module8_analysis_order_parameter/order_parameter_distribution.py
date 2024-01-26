@@ -32,7 +32,7 @@ Saeed
 """
 
 import typing
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
@@ -54,6 +54,8 @@ class FileConfig:
 class ParameterConfig:
     """set the prameters for the computations"""
     axis: str = 'z'
+    residues_for_box_limit_check: list[str] = \
+        field(default_factory=lambda: ['SOL', 'D10', 'CLA'])
     nr_bins: int = 50
 
 
@@ -85,6 +87,51 @@ class ComputeOPDistribution:
                        ) -> None:
         """find the residues in the bin and calculate the average OP
         for each residue in each bin for all the frames"""
+        self.get_bins(com_arr.split_arr_dict)
+
+    def get_bins(self,
+                 split_arr_dict: dict[str, np.ndarray]
+                 ) -> None:
+        """find the low and high of the box
+        SOL, D10 and CLA must be checked
+        """
+        ax_lo: float  # Box lims in the asked direction
+        ax_hi: float  # Box lims in the asked direction
+        ax_ind: int = self._get_ax_index()
+        ax_lo, ax_hi = self._get_box_lims(ax_ind, split_arr_dict)
+
+    def _get_box_lims(self,
+                      ax_ind: int,  # Index of the direction
+                      split_arr_dict: dict[str, np.ndarray]
+                      ) -> tuple[float, float]:
+        """
+        Find box limits in the asked direction using vectorized
+        operations.
+        """
+        ax_lo: float = np.inf
+        ax_hi: float = -np.inf
+
+        for res in self.configs.residues_for_box_limit_check:
+            # Concatenate all frames for a given residue type
+            all_frames = np.concatenate(split_arr_dict[res][:-2])
+            # Reshape and extract the axis of interest
+            all_ax_values = all_frames.reshape(-1, 3)[:, ax_ind]
+
+            # Find the min and max along the axis
+            ax_lo = np.min((ax_lo, all_ax_values.min()))
+            ax_hi = np.max((ax_hi, all_ax_values.max()))
+        self.info_msg += ('\tThe min and of max of the box in the direction '
+                          f'of `{self.configs.axis}` are {ax_lo:.3f} and '
+                          f'`{ax_hi:.3f}`\n')
+        return ax_lo, ax_hi
+
+    def _get_ax_index(self) -> int:
+        """set the index of the computation direction"""
+        if (axis := self.configs.axis) == 'z':
+            return 2
+        if axis == 'y':
+            return 1
+        return 0
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

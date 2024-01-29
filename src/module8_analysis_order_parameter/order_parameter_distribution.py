@@ -36,6 +36,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
+import matplotlib.pylab as plt
 
 from common import logger, xvg_to_dataframe
 from common.colors_text import TextColor as bcolors
@@ -60,6 +61,8 @@ class ParameterConfig:
     axis: str = 'z'
     residues_for_box_limit_check: list[str] = \
         field(default_factory=lambda: ['SOL', 'D10', 'CLA'])
+    residues_for_compute_order_parameter: list[str] = \
+        field(default_factory=lambda: ['SOL', 'D10', 'ODN'])
     nr_bins: int = 50
 
 
@@ -93,9 +96,11 @@ class ComputeOPDistribution:
         """find the residues in the bin and calculate the average OP
         for each residue in each bin for all the frames"""
         bins: np.ndarray = self.get_bins(com_arr.split_arr_dict, log)
+        self.compute_orderp_mean(
+            bins, com_arr.split_arr_dict, orderp_arr.split_arr_dict)
 
     def get_bins(self,
-                 split_arr_dict: dict[str, np.ndarray],
+                 com_split_arr_dict: dict[str, np.ndarray],
                  log: logger.logging.Logger
                  ) -> np.ndarray:
         """
@@ -104,6 +109,7 @@ class ComputeOPDistribution:
         and high of the box SOL, D10 and CLA must be checked.
         """
         # pylint: disable='broad-exception-caught'
+        self.ax_ind: int = self._get_ax_index()
         if self.configs.bin_from_file:
             try:
                 return self._bins_from_xvg(log)
@@ -114,16 +120,59 @@ class ComputeOPDistribution:
             except Exception as err:
                 self.info_msg += \
                     f'\tProblem: `{err}` in getting bins from file\n'
-        return self._compute_bins(split_arr_dict)
+        return self._compute_bins(com_split_arr_dict)
+
+    def compute_orderp_mean(self,
+                            bins: np.ndarray,
+                            com_split_arr: dict[str, np.ndarray],
+                            op_split_arr: dict[str, np.ndarray]
+                            ) -> None:
+        """get indices of each residues in bins for all the frames"""
+        com: np.ndarray
+        orderp: np.ndarray
+        frames_sol: dict[int, list[float]] = \
+            {ind: [] for ind in range(len(bins)-1)}
+        frames_d10: dict[int, list[float]] = \
+            {ind: [] for ind in range(len(bins)-1)}
+        frames_odn: dict[int, list[float]] = \
+            {ind: [] for ind in range(len(bins)-1)}
+
+        for res in self.configs.residues_for_compute_order_parameter:
+            for com, orderp in zip(com_split_arr[res][:-2],
+                                   op_split_arr[res][:-2]):
+                reshaped_com = com.reshape(-1, 3)
+                reshaped_oprderp = orderp.reshape(-1, 3)
+                axis_positions = reshaped_com[:, self.ax_ind]
+                axis_orderp = reshaped_oprderp[:, self.ax_ind]
+                for bin_i in range(len(bins) - 1):
+                    indices = np.where((axis_positions >= bins[bin_i]) &
+                                       (axis_positions < bins[bin_i+1]))[0]
+                    if indices.size > 0:
+                        mean_orderp = np.mean(axis_orderp[indices])
+                        if res == 'SOL':
+                            frames_sol[bin_i].append(mean_orderp)
+                        elif res == 'D10':
+                            frames_d10[bin_i].append(mean_orderp)
+                        elif res == 'ODN':
+                            frames_odn[bin_i].append(mean_orderp)
+                    else:
+                        mean_orderp = 0  # Handle empty bin
+
+        print('frames_sol', [np.mean(item) for item in frames_sol.values()])
+        print('frames_d10', [np.mean(item) for item in frames_d10.values()])
+        print('frames_odn', [np.mean(item) for item in frames_odn.values()])
+        plt.plot([np.mean(item) for item in frames_sol.values()])
+        plt.plot([np.mean(item) for item in frames_d10.values()])
+        plt.plot([np.mean(item) for item in frames_odn.values()])
+        plt.show()
 
     def _compute_bins(self,
-                      split_arr_dict: dict[str, np.ndarray]
+                      com_split_arr_dict: dict[str, np.ndarray]
                       ) -> np.ndarray:
         """compute the bins from the com_pickle"""
         ax_lo: float  # Box lims in the asked direction
         ax_hi: float  # Box lims in the asked direction
-        self.ax_ind: int = self._get_ax_index()
-        ax_lo, ax_hi = self._get_box_lims(split_arr_dict)
+        ax_lo, ax_hi = self._get_box_lims(com_split_arr_dict)
         return np.linspace(ax_lo, ax_hi, self.configs.nr_bins + 1)
 
     def _bins_from_xvg(self,

@@ -112,8 +112,8 @@ class LogGraph(BaseConfig):
     graph_suffix: str = 'log_xscale.png'
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'Computed Tension',
-        'ylabel': r'$\gamma$',
-        'xlabel': r'log(Nr. Oda) [1/$nm^2$]'
+        'ylabel': r'$\Delta\gamma$',
+        'xlabel': r'Nr. Oda [1/$nm^2$]'
     })
     log_x_axis: bool = True
 
@@ -123,13 +123,13 @@ class DoubleDataLog(LogGraph):
     """plot both data"""
     graph_suffix: str = 'log_xscale_both.png'
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
-        'label': r'$\gamma$',
+        'label': r'$\Delta\gamma$ (nominal)',
         'color': 'black',
         'marker': 'o',
         'linestyle': '--',
         'markersize': 5,
     })
-    label_b: str = r'$\gamma_{np}$'
+    label_b: str = r'$\Delta\gamma_{np}$'
 
 
 @dataclass
@@ -231,6 +231,26 @@ class PlotTension:
                             xcol_name='oda_per_area')
         if nr_files > 1:
             self.plot_all_tensions_log(converted_dict)
+        self._surf_actula_log(converted_dict)
+
+    def _surf_actula_log(self,
+                         converted_dict: dict[str, pd.DataFrame]
+                              ) -> None:
+        """plot all the input in a same graph"""
+        returned_fig = self.plot_graph('np_np',
+                                       converted_dict['no_np'],
+                                       self.configs.double_config,
+                                       ycol_name='converted_tension',
+                                       xcol_name='oda_per_area',
+                                       return_ax=True,
+                                       add_key_to_title=False)
+        fig_i, ax_i = returned_fig
+        ax_i.plot(converted_dict['no_np']['surf_oda_per_area'],
+                  converted_dict['no_np']['converted_tension'],
+                  c='#ff7f0e', marker='o', linestyle= '--', markersize=5,
+                  label=r'$\Delta\gamma$ (actual)')
+        plot_tools.save_close_fig(
+            fig_i, ax_i, fname := 'actual.png', loc='lower left')
 
     def plot_all_tensions_log(self,
                               converted_dict: dict[str, pd.DataFrame]

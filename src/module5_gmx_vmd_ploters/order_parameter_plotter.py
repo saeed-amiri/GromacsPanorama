@@ -89,14 +89,14 @@ class ErrorBarGraph(BaseConfig):
     Parameters for simple data with error bar
     """
     graph_suffix: str = 'order_parameter_err.png'
-    xcol_name: str = 'nominal_per_area'
+    xcol_name: str = 'actual_per_area'
     log_x_axis: bool = True
     with_error: bool = True
 
     def __post_init__(self) -> None:
         self.graph_styles['ecolor'] = 'red'
         self.graph_styles['linestyle'] = self.line_styles[1]
-        self.labels['xlabel'] = r'log(Nr. Oda) [1/nm$^2$]'
+        self.labels['xlabel'] = r'Nr. Oda [1/nm$^2$]'
 
 
 @dataclass

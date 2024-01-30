@@ -35,6 +35,8 @@ Saeed
 import typing
 from dataclasses import dataclass, field
 
+import pandas as pd
+
 from common import logger, plot_tools, xvg_to_dataframe
 from common.colors_text import TextColor as bcolors
 
@@ -81,16 +83,14 @@ class FileConfig:
     # shellfile: files which are the viewpoint are the shell of the np
     com_file: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
-            'com_0': {'fname': 'com0.xv', 'ycol': '0'},
-            'com_1': {'fname': 'com2.xv', 'ycol': '1'},
-            'com_2': {'fname': 'com2.xv', 'ycol': '2'}
+            'com_0': {'fname': 'rdf_shell_cla.xvg', 'ycol': 'CLA'},
+            'com_1': {'fname': 'rdf_shell_N.xvg', 'ycol': 'amino_n'}
             })
 
     shell_file: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
-            'shell_0': {'fname': 'shell0.xv', 'ycol': '0'},
-            'shell_1': {'fname': 'shell2.xv', 'ycol': '1'},
-            'shell_2': {'fname': 'shell2.xv', 'ycol': '2'}
+            'shell_0': {'fname': 'rdf_shell_cla.xvg', 'ycol': 'CLA'},
+            'shell_1': {'fname': 'rdf_shell_N.xvg', 'ycol': 'amino_n'}
             })
 
 
@@ -99,27 +99,39 @@ class AllConfig(FileConfig):
     plot_configs: BaseGraphConfig = field(default_factory=BaseGraphConfig)
 
 
-class PlotMultiRdf:
+class MultiRdfPlotter:
     """Plot multi rdf graphs on canvas"""
 
-    info_msg: str = 'Message from PlotMultiRdf:\n'
-    congfigs: AllConfig
+    info_msg: str = 'Message from MultiRdfPlotter:\n'
+    configs: AllConfig
 
     def __init__(self,
                  log: logger.logging.Logger,
                  congfigs: AllConfig = AllConfig()
                  ) -> None:
-        self.congfigs = congfigs
+        self.configs = congfigs
+        rdf_data = self.initiate_data(log)
         self.write_msg(log)
+
+    def initiate_data(self,
+                      log: logger.logging.Logger
+                      ) -> dict[str, pd.DataFrame]:
+        """reading data and return them"""
+        rdf_data: dict[str, pd.DataFrame] = {}
+        for file_config in [self.configs.com_file, self.configs.shell_file]:
+            for key, config in file_config.items():
+                rdf_data[key] = \
+                    xvg_to_dataframe.XvgParser(config['fname'], log).xvg_df
+        return rdf_data
 
     def write_msg(self,
                   log: logger.logging.Logger
                   ) -> None:
         """Write and log messages."""
-        print(f'{bcolors.OKCYAN}{PlotMultiRdf.__name__}:\n'
+        print(f'{bcolors.OKCYAN}{MultiRdfPlotter.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
 
 
 if __name__ == '__main__':
-    PlotMultiRdf(log=logger.setup_logger('multi_rdf_plot.log'))
+    MultiRdfPlotter(log=logger.setup_logger('multi_rdf_plot.log'))

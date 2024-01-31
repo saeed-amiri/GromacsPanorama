@@ -36,6 +36,7 @@ import typing
 from dataclasses import dataclass, field
 
 import pandas as pd
+import matplotlib.pylab as plt
 
 from common import logger, plot_tools, xvg_to_dataframe
 from common.colors_text import TextColor as bcolors
@@ -47,7 +48,7 @@ class BaseGraphConfig:
 
     # pylint: disable=too-many-instance-attributes
     graph_suffix: str = 'gmx.png'
-    ycol_name: str = 'density'
+    y_col_name: str = 'density'
     xcol_name: str = 'r_nm'
 
     labels: dict[str, str] = field(default_factory=lambda: {
@@ -57,17 +58,30 @@ class BaseGraphConfig:
     })
 
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
-        'label': 'density',
-        'color': 'black',
         'marker': 'o',
-        'linestyle': '-',
         'markersize': 0,
     })
 
-    line_styles: list[str] = \
-        field(default_factory=lambda: ['-', ':', '--', '-.'])
-    colors: list[str] = \
-        field(default_factory=lambda: ['black', 'red', 'blue', 'green'])
+    legends: dict[str, str] = \
+        field(default_factory=lambda: {
+            'CLA': 'Cl',
+            'amino_n': 'N (APTES)',
+            'oxygen': 'O (Water)',
+            'oda_n': 'N (ODA)'})
+
+    line_styles: dict[str, str] = \
+        field(default_factory=lambda: {
+            'CLA': '-',
+            'amino_n': '--',
+            'oxygen': ':',
+            'oda_n': '-.'})
+
+    colors: dict[str, str] = \
+        field(default_factory=lambda: {
+            'CLA': 'green',
+            'amino_n': 'blue',
+            'oxygen': 'red',
+            'oda_n': 'green'})
 
     height_ratio: float = (5 ** 0.5 - 1) * 1.5
 
@@ -81,19 +95,21 @@ class FileConfig:
     """setups for the input files names and their columns name"""
     # comfile: files which are the viewpoint are the com of the np
     # shellfile: files which are the viewpoint are the shell of the np
-    com_file: dict[str, dict[str, typing.Any]] = field(
+    viewpoint: list[str] = field(default_factory=lambda: ['com', 'shell'])
+    com_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
-            'com_0': {'fname': 'rdf_shell_cla.xvg', 'ycol': 'CLA'},
-            'com_1': {'fname': 'rdf_shell_N.xvg', 'ycol': 'amino_n'}
+            'com_0': {'fname': 'rdf_shell_cla.xvg', 'y_col': 'CLA'},
+            'com_1': {'fname': 'rdf_shell_N.xvg', 'y_col': 'amino_n'}
             })
 
-    shell_file: dict[str, dict[str, typing.Any]] = field(
+    shell_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
-            'shell_0': {'fname': 'rdf_shell_cla.xvg', 'ycol': 'CLA'},
-            'shell_1': {'fname': 'rdf_shell_N.xvg', 'ycol': 'amino_n'}
+            'shell_0': {'fname': 'rdf_shell_cla.xvg', 'y_col': 'CLA'},
+            'shell_1': {'fname': 'rdf_shell_N.xvg', 'y_col': 'amino_n'}
             })
 
 
+@dataclass
 class AllConfig(FileConfig):
     """Set the all the configs"""
     plot_configs: BaseGraphConfig = field(default_factory=BaseGraphConfig)
@@ -104,13 +120,15 @@ class MultiRdfPlotter:
 
     info_msg: str = 'Message from MultiRdfPlotter:\n'
     configs: AllConfig
+    rdf_dict: dict[str, pd.DataFrame]
 
     def __init__(self,
                  log: logger.logging.Logger,
-                 congfigs: AllConfig = AllConfig()
+                 configs: AllConfig = AllConfig()
                  ) -> None:
-        self.configs = congfigs
-        rdf_data = self.initiate_data(log)
+        self.configs = configs
+        rdf_dict = self.initiate_data(log)
+        self.initiate_plots(rdf_dict)
         self.write_msg(log)
 
     def initiate_data(self,
@@ -118,11 +136,57 @@ class MultiRdfPlotter:
                       ) -> dict[str, pd.DataFrame]:
         """reading data and return them"""
         rdf_data: dict[str, pd.DataFrame] = {}
-        for file_config in [self.configs.com_file, self.configs.shell_file]:
+        for file_config in [self.configs.com_files, self.configs.shell_files]:
             for key, config in file_config.items():
-                rdf_data[key] = \
-                    xvg_to_dataframe.XvgParser(config['fname'], log).xvg_df
+                rdf_data[key] = xvg_to_dataframe.XvgParser(
+                    config['fname'], log, x_type=float).xvg_df
         return rdf_data
+
+    def initiate_plots(self,
+                       rdf_dict: dict[str, pd.DataFrame]
+                       ) -> None:
+        """initiate plots"""
+        for viewpoint in self.configs.viewpoint:
+            sources = getattr(self.configs, f'{viewpoint}_files')
+            self.plot_overlay_rdf(rdf_dict, sources, viewpoint)
+
+    def plot_overlay_rdf(self,
+                         rdf_dict: dict[str, pd.DataFrame],
+                         sources: dict[str, dict[str, str]],
+                         viewpoint: str
+                         ) -> None:
+        """
+        Multiple RDFs will be plotted on the same axes, one on top of
+        the other
+        """
+        first_key: str = next(iter(rdf_dict))
+        x_range: tuple[float, float] = (list(rdf_dict[first_key]['r_nm'])[0],
+                                        list(rdf_dict[first_key]['r_nm'])[-1])
+        ax_i: plt.axes
+        fig_i: plt.figure
+        fig_i, ax_i = plot_tools.mk_canvas(
+            x_range, height_ratio=self.configs.plot_configs.height_ratio)
+        for i, s_i in enumerate(sources):
+            ax_i = self._plot_layer(ax_i, rdf_dict[s_i], viewpoint, s_i)
+        plt.legend()
+        plt.show()
+
+    def _plot_layer(self,
+                    ax_i: plt.axis,
+                    rdf_df: pd.DataFrame,
+                    viewpoint: str,
+                    s_i: str
+                    ) -> plt.axes:
+        """plot on dataset"""
+        y_column: str = \
+            getattr(self.configs, f'{viewpoint}_files')[s_i]['y_col']
+        ax_i.plot(rdf_df['r_nm'],
+                  rdf_df[y_column],
+                  c=self.configs.plot_configs.colors[y_column],
+                  ls=self.configs.plot_configs.line_styles[y_column],
+                  label=self.configs.plot_configs.legends[y_column],
+                  **self.configs.plot_configs.graph_styles)
+        return ax_i
 
     def write_msg(self,
                   log: logger.logging.Logger

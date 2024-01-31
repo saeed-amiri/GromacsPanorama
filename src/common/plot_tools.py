@@ -111,8 +111,9 @@ def save_close_fig(fig: plt.figure,  # The figure to save,
                    axs: plt.axes,  # Axes to plot
                    fname: str,  # Name of the output for the fig
                    loc: str = 'upper right',  # Location of the legend
-                   transparent=False,
-                   legend=True
+                   transparent: bool = False,
+                   legend: bool = True,
+                   if_close: bool = True
                    ) -> None:
     """
     Save the figure and close it.
@@ -146,7 +147,8 @@ def save_close_fig(fig: plt.figure,  # The figure to save,
                 bbox_inches='tight',
                 transparent=transparent
                 )
-    plt.close(fig)
+    if if_close:
+        plt.close(fig)
 
 def set_x2ticks(ax_main: plt.axes,  # The axes to wrok with
                 add_xtwin: bool = True

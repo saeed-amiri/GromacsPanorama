@@ -156,7 +156,8 @@ class MultiRdfPlotter:
         """initiate plots"""
         for viewpoint in self.configs.viewpoint:
             sources = getattr(self.configs, f'{viewpoint}_files')
-            self.plot_overlay_rdf(rdf_dict, sources, viewpoint)
+            # self.plot_overlay_rdf(rdf_dict, sources, viewpoint)
+            self.plot_multirows_rdf(rdf_dict, sources, viewpoint)
 
     def plot_overlay_rdf(self,
                          rdf_dict: dict[str, pd.DataFrame],
@@ -188,6 +189,20 @@ class MultiRdfPlotter:
         self._plot_save_window_overlay(ax_i, x_range)
         fout = f'window_{fout}'
         self._save_plot(fig_i, ax_i, fout, viewpoint, close_fig=True)
+
+    def plot_multirows_rdf(self,
+                           rdf_dict: dict[str, pd.DataFrame],
+                           sources: dict[str, dict[str, str]],
+                           viewpoint: str
+                           ) -> None:
+        """
+        Multiple RDFs will be plotted on the same x axis and different
+        y axis
+        """
+        nr_row: int = len(sources)
+        first_key: str = next(iter(rdf_dict))
+        x_range: tuple[float, float] = (rdf_dict[first_key]['r_nm'].iat[0],
+                                        rdf_dict[first_key]['r_nm'].iat[-1])
 
     def _setup_plot_labels(self,
                            ax_i: plt.axes

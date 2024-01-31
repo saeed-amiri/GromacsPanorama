@@ -168,8 +168,8 @@ class MultiRdfPlotter:
         the other
         """
         first_key: str = next(iter(rdf_dict))
-        x_range: tuple[float, float] = (list(rdf_dict[first_key]['r_nm'])[0],
-                                        list(rdf_dict[first_key]['r_nm'])[-1])
+        x_range: tuple[float, float] = (rdf_dict[first_key]['r_nm'].iat[0],
+                                        rdf_dict[first_key]['r_nm'].iat[-1])
         ax_i: plt.axes
         fig_i: plt.figure
         fig_i, ax_i = plot_tools.mk_canvas(
@@ -177,22 +177,39 @@ class MultiRdfPlotter:
             height_ratio=self.configs.plot_configs.height_ratio,
             num_xticks=7)
         for s_i in sources:
-            ax_i = self._plot_layer(ax_i, rdf_dict[s_i], viewpoint, s_i)
+            rdf_df: pd.DataFrame = rdf_dict.get(s_i)
+            if rdf_df is not None:
+                ax_i = self._plot_layer(ax_i, rdf_df, viewpoint, s_i)
+        self._setup_plot_labels(ax_i)
+        fout: str = \
+            f'{viewpoint}_overlay_{self.configs.plot_configs.graph_suffix}'
+        self._save_plot(fig_i, ax_i, fout, viewpoint, close_fig=False)
 
+        self._plot_save_window_overlay(ax_i, x_range)
+        fout = f'window_{fout}'
+        self._save_plot(fig_i, ax_i, fout, viewpoint, close_fig=True)
+
+    def _setup_plot_labels(self,
+                           ax_i: plt.axes
+                           ) -> plt.axes:
+        """set labels"""
         ax_i.set_title(self.configs.plot_configs.labels['title'])
         ax_i.set_xlabel(self.configs.plot_configs.labels['xlabel'])
         ax_i.set_ylabel(self.configs.plot_configs.labels['ylabel'])
         ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
-        fout: str = \
-            f'{viewpoint}_overlay_{self.configs.plot_configs.graph_suffix}'
-        self.info_msg += f'\tThe figure for `{viewpoint}` saved as `{fout}`\n'
-        plot_tools.save_close_fig(fig_i, ax_i, fname=fout, if_close=False)
+        return ax_i
 
-        self._plot_save_window_overlay(ax_i, x_range)
-        fout = f'window_{fout}'
-        self.info_msg += \
-            f'\tThe figure for `{viewpoint}` in window saved as `{fout}`\n'
-        plot_tools.save_close_fig(fig_i, ax_i, fname=fout, if_close=True)
+    def _save_plot(self,
+                   fig_i: plt.figure,
+                   ax_i: plt.axes,
+                   fout: str,
+                   viewpoint: str,
+                   close_fig: bool = True) -> None:
+        """ Save the plot with a given fout and optionally close it """
+        # pylint: disable=too-many-arguments
+        self.info_msg += f'\tThe figure for `{viewpoint}` saved as `{fout}`\n'
+        plot_tools.save_close_fig(
+            fig_i, ax_i, fname=fout, if_close=close_fig)
 
     def _plot_save_window_overlay(self,
                                   ax_i: plt.axes,

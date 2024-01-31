@@ -53,7 +53,7 @@ class BaseGraphConfig:
     xcol_name: str = 'r_nm'
 
     labels: dict[str, str] = field(default_factory=lambda: {
-        'title': 'Computed density',
+        'title': 'From shell',
         'ylabel': 'g(r)',
         'xlabel': 'r [nm]'
     })
@@ -179,6 +179,9 @@ class MultiRdfPlotter:
         for s_i in sources:
             ax_i = self._plot_layer(ax_i, rdf_dict[s_i], viewpoint, s_i)
 
+        ax_i.set_title(self.configs.plot_configs.labels['title'])
+        ax_i.set_xlabel(self.configs.plot_configs.labels['xlabel'])
+        ax_i.set_ylabel(self.configs.plot_configs.labels['ylabel'])
         ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
         fout: str = \
             f'{viewpoint}_overlay_{self.configs.plot_configs.graph_suffix}'

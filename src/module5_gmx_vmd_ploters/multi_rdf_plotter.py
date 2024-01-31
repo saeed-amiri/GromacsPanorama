@@ -67,22 +67,22 @@ class BaseGraphConfig:
         field(default_factory=lambda: {
             'CLA': 'Cl',
             'amino_n': 'N (APTES)',
-            'oxygen': 'O (Water)',
-            'oda_n': 'N (ODA)'})
+            'SOL': 'O (Water)',
+            'ODN': 'N (ODA)'})
 
     line_styles: dict[str, str] = \
         field(default_factory=lambda: {
             'CLA': '-',
             'amino_n': '--',
-            'oxygen': ':',
-            'oda_n': '-.'})
+            'SOL': ':',
+            'ODN': '-.'})
 
     colors: dict[str, str] = \
         field(default_factory=lambda: {
             'CLA': 'green',
             'amino_n': 'blue',
-            'oxygen': 'red',
-            'oda_n': 'green'})
+            'SOL': 'red',
+            'ODN': 'green'})
 
     height_ratio: float = (5 ** 0.5 - 1) * 1.5
 
@@ -99,21 +99,24 @@ class FileConfig:
     viewpoint: list[str] = field(default_factory=lambda: ['com', 'shell'])
     com_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
-            'com_0': {'fname': 'rdf_shell_cla.xvg', 'y_col': 'CLA'},
-            'com_1': {'fname': 'rdf_shell_N.xvg', 'y_col': 'amino_n'}
+            'com_0': {'fname': 'gmx_rdf_cla_com.xvg', 'y_col': 'CLA'}
             })
 
     shell_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
             'shell_0': {'fname': 'rdf_shell_cla.xvg', 'y_col': 'CLA'},
-            'shell_1': {'fname': 'rdf_shell_N.xvg', 'y_col': 'amino_n'}
+            'shell_1': {'fname': 'rdf_shell_N.xvg', 'y_col': 'amino_n'},
+            # 'shell_2': {'fname': 'rdf_shell_sol.xvg', 'y_col': 'SOL'},
+            # 'shell_3': {'fname': 'rdf_shell_odn.xvg', 'y_col': 'ODN'}
             })
 
 
 @dataclass
 class OverlayConfig(BaseGraphConfig):
     """set the parameters for the overlay plots"""
-    second_window: float = 1.5  # Max on the x-axis to set the window
+    # Max on the x-axis to set the window
+    second_window: dict[str, float] = field(
+        default_factory=lambda: {'com': 4.2, 'shell': 1.5})
     nr_xtick_in_window = int = 4
 
 
@@ -156,7 +159,7 @@ class MultiRdfPlotter:
         """initiate plots"""
         for viewpoint in self.configs.viewpoint:
             sources = getattr(self.configs, f'{viewpoint}_files')
-            # self.plot_overlay_rdf(rdf_dict, sources, viewpoint)
+            self.plot_overlay_rdf(rdf_dict, sources, viewpoint)
             self.plot_multirows_rdf(rdf_dict, sources, viewpoint)
 
     def plot_overlay_rdf(self,
@@ -186,7 +189,7 @@ class MultiRdfPlotter:
             f'{viewpoint}_overlay_{self.configs.plot_configs.graph_suffix}'
         self._save_plot(fig_i, ax_i, fout, viewpoint, close_fig=False)
 
-        self._plot_save_window_overlay(ax_i, x_range)
+        self._plot_save_window_overlay(ax_i, x_range, viewpoint)
         fout = f'window_{fout}'
         self._save_plot(fig_i, ax_i, fout, viewpoint, close_fig=True)
 
@@ -199,6 +202,8 @@ class MultiRdfPlotter:
         Multiple RDFs will be plotted on the same x axis and different
         y axis
         """
+        # pylint: disable=unused-argument
+        # pylint: disable=unused-variable
         nr_row: int = len(sources)
         first_key: str = next(iter(rdf_dict))
         x_range: tuple[float, float] = (rdf_dict[first_key]['r_nm'].iat[0],
@@ -229,9 +234,14 @@ class MultiRdfPlotter:
     def _plot_save_window_overlay(self,
                                   ax_i: plt.axes,
                                   x_range: tuple[float, float],
+                                  viewpoint: str
                                   ) -> plt.axes:
         """plot the graph in the window"""
-        x_range = (x_range[0], self.configs.plot_configs.second_window)
+        x_end: typing.Union[float, None] = \
+            self.configs.plot_configs.second_window.get(viewpoint)
+        if x_end is None:
+            x_end = x_range[1]
+        x_range = (x_range[0], x_end)
         xticks: list[float] = \
             np.linspace(x_range[0],
                         x_range[1],

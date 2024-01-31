@@ -53,9 +53,13 @@ class BaseGraphConfig:
     xcol_name: str = 'r_nm'
 
     labels: dict[str, str] = field(default_factory=lambda: {
-        'title': 'From shell',
         'ylabel': 'g(r)',
         'xlabel': 'r [nm]'
+    })
+
+    titles: dict[str, typing.Any] = field(default_factory=lambda: {
+        'com': 'From COM',
+        'shell': 'From Shell'
     })
 
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
@@ -184,7 +188,7 @@ class MultiRdfPlotter:
             rdf_df: pd.DataFrame = rdf_dict.get(s_i)
             if rdf_df is not None:
                 ax_i = self._plot_layer(ax_i, rdf_df, viewpoint, s_i)
-        self._setup_plot_labels(ax_i)
+        self._setup_plot_labels(ax_i, viewpoint)
         fout: str = \
             f'{viewpoint}_overlay_{self.configs.plot_configs.graph_suffix}'
         self._save_plot(fig_i, ax_i, fout, viewpoint, close_fig=False)
@@ -210,10 +214,11 @@ class MultiRdfPlotter:
                                         rdf_dict[first_key]['r_nm'].iat[-1])
 
     def _setup_plot_labels(self,
-                           ax_i: plt.axes
+                           ax_i: plt.axes,
+                           viewpoint: str
                            ) -> plt.axes:
         """set labels"""
-        ax_i.set_title(self.configs.plot_configs.labels['title'])
+        ax_i.set_title(self.configs.plot_configs.titles.get(viewpoint))
         ax_i.set_xlabel(self.configs.plot_configs.labels['xlabel'])
         ax_i.set_ylabel(self.configs.plot_configs.labels['ylabel'])
         ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)

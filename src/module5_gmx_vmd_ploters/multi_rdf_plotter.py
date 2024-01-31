@@ -35,6 +35,7 @@ Saeed
 import typing
 from dataclasses import dataclass, field
 
+import numpy as np
 import pandas as pd
 import matplotlib.pylab as plt
 
@@ -110,9 +111,16 @@ class FileConfig:
 
 
 @dataclass
+class OverlayConfig(BaseGraphConfig):
+    """set the parameters for the overlay plots"""
+    second_window: float = 1.5  # Max on the x-axis to set the window
+    nr_xtick_in_window = int = 4
+
+
+@dataclass
 class AllConfig(FileConfig):
     """Set the all the configs"""
-    plot_configs: BaseGraphConfig = field(default_factory=BaseGraphConfig)
+    plot_configs: OverlayConfig = field(default_factory=OverlayConfig)
 
 
 class MultiRdfPlotter:
@@ -175,7 +183,27 @@ class MultiRdfPlotter:
         fout: str = \
             f'{viewpoint}_overlay_{self.configs.plot_configs.graph_suffix}'
         self.info_msg += f'\tThe figure for `{viewpoint}` saved as `{fout}`\n'
-        plot_tools.save_close_fig(fig_i, ax_i, fname=fout)
+        plot_tools.save_close_fig(fig_i, ax_i, fname=fout, if_close=False)
+
+        self._plot_save_window_overlay(ax_i, x_range)
+        fout = f'window_{fout}'
+        self.info_msg += \
+            f'\tThe figure for `{viewpoint}` in window saved as `{fout}`\n'
+        plot_tools.save_close_fig(fig_i, ax_i, fname=fout, if_close=True)
+
+    def _plot_save_window_overlay(self,
+                                  ax_i: plt.axes,
+                                  x_range: tuple[float, float],
+                                  ) -> plt.axes:
+        """plot the graph in the window"""
+        x_range = (x_range[0], self.configs.plot_configs.second_window)
+        xticks: list[float] = \
+            np.linspace(x_range[0],
+                        x_range[1],
+                        self.configs.plot_configs.nr_xtick_in_window).tolist()
+        ax_i.set_xticks(xticks)
+        ax_i.set_xlim(x_range)
+        return ax_i
 
     def _plot_layer(self,
                     ax_i: plt.axis,

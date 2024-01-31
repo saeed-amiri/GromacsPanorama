@@ -165,11 +165,17 @@ class MultiRdfPlotter:
         ax_i: plt.axes
         fig_i: plt.figure
         fig_i, ax_i = plot_tools.mk_canvas(
-            x_range, height_ratio=self.configs.plot_configs.height_ratio)
-        for i, s_i in enumerate(sources):
+            x_range,
+            height_ratio=self.configs.plot_configs.height_ratio,
+            num_xticks=7)
+        for s_i in sources:
             ax_i = self._plot_layer(ax_i, rdf_dict[s_i], viewpoint, s_i)
-        plt.legend()
-        plt.show()
+
+        ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
+        fout: str = \
+            f'{viewpoint}_overlay_{self.configs.plot_configs.graph_suffix}'
+        self.info_msg += f'\tThe figure for `{viewpoint}` saved as `{fout}`\n'
+        plot_tools.save_close_fig(fig_i, ax_i, fname=fout)
 
     def _plot_layer(self,
                     ax_i: plt.axis,

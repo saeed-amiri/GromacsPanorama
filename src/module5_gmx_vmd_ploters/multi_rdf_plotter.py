@@ -118,17 +118,18 @@ class FileConfig:
     viewpoint: list[str] = field(default_factory=lambda: ['com', 'shell'])
     com_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
-            'com_0': {'fname': 'rdf_com_amino_charge.xvg',
-                      'y_col': 'amino_charge'},
+            'com_0': {'fname': 'rdf_com_o_sol.xvg', 'y_col': 'sol_oxygen'},
             'com_1': {'fname': 'rdf_com_d10.xvg', 'y_col': 'D10'},
-            'com_2': {'fname': 'rdf_com_o_sol.xvg', 'y_col': 'sol_oxygen'},
-            'com_3': {'fname': 'rdf_com_sol.xvg', 'y_col': 'SOL'},
-            'com_4': {'fname': 'rdf_com_apt.xvg', 'y_col': 'APT'},
-            'com_5': {'fname': 'rdf_com_n.xvg', 'y_col': 'amino_n'},
-            'com_6': {'fname': 'rdf_com_pot.xvg', 'y_col': 'POT'},
-            'com_7': {'fname': 'rdf_com_cla.xvg', 'y_col': 'CLA'},
-            'com_8': {'fname': 'rdf_com_odn.xvg', 'y_col': 'ODN'}
+            'com_2': {'fname': 'rdf_com_sol.xvg', 'y_col': 'SOL'},
+            'com_3': {'fname': 'rdf_com_odn.xvg', 'y_col': 'ODN'},
+            'com_4': {'fname': 'rdf_com_pot.xvg', 'y_col': 'POT'},
+            'com_5': {'fname': 'rdf_com_cla.xvg', 'y_col': 'CLA'},
+            'com_6': {'fname': 'rdf_com_n.xvg', 'y_col': 'amino_n'},
+            'com_7': {'fname': 'rdf_com_apt.xvg', 'y_col': 'APT'},
+            'com_8': {'fname': 'rdf_com_amino_charge.xvg',
+                      'y_col': 'amino_charge'}
             })
+    com_fout_prefix: typing.Union[str, None] = 'sol_d10'
 
     shell_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
@@ -137,6 +138,7 @@ class FileConfig:
             'shell_2': {'fname': 'rdf_shell_sol.xvg', 'y_col': 'SOL'},
             'shell_3': {'fname': 'rdf_shell_odn.xvg', 'y_col': 'ODN'}
             })
+    shell_fout_prefix: typing.Union[str, None] = None
 
 
 @dataclass
@@ -213,8 +215,14 @@ class MultiRdfPlotter:
             if rdf_df is not None:
                 ax_i = self._plot_layer(ax_i, rdf_df, viewpoint, s_i)
         self._setup_plot_labels(ax_i, viewpoint)
+        tag: typing.Union[str, None] = \
+            getattr(self.configs, f'{viewpoint}_fout_prefix')
+        if tag is not None:
+            prefix = f'{tag}_{viewpoint}'
+        else:
+            prefix = viewpoint
         fout: str = \
-            f'{viewpoint}_overlay_{self.configs.plot_configs.graph_suffix}'
+            f'{prefix}_overlay_{self.configs.plot_configs.graph_suffix}'
         self._save_plot(fig_i, ax_i, fout, viewpoint, close_fig=False)
 
         self._plot_save_window_overlay(ax_i, x_range, viewpoint)

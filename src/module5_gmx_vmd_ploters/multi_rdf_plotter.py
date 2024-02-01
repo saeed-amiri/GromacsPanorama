@@ -129,15 +129,17 @@ class FileConfig:
             'com_8': {'fname': 'rdf_com_amino_charge.xvg',
                       'y_col': 'amino_charge'}
             })
+    com_plot_list: list[int] = field(default_factory=lambda: [0, 1, 2, 3])
     com_fout_prefix: typing.Union[str, None] = 'sol_d10'
 
     shell_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
-            # 'shell_0': {'fname': 'rdf_shell_cla.xvg', 'y_col': 'CLA'},
-            # 'shell_1': {'fname': 'rdf_shell_N.xvg', 'y_col': 'amino_n'},
+            'shell_0': {'fname': 'rdf_shell_cla.xvg', 'y_col': 'CLA'},
+            'shell_1': {'fname': 'rdf_shell_N.xvg', 'y_col': 'amino_n'},
             'shell_2': {'fname': 'rdf_shell_sol.xvg', 'y_col': 'SOL'},
             'shell_3': {'fname': 'rdf_shell_odn.xvg', 'y_col': 'ODN'}
             })
+    shell_plot_list: list[int] = field(default_factory=lambda: [0, 2, 3])
     shell_fout_prefix: typing.Union[str, None] = None
 
 
@@ -177,11 +179,23 @@ class MultiRdfPlotter:
                       ) -> dict[str, pd.DataFrame]:
         """reading data and return them"""
         rdf_data: dict[str, pd.DataFrame] = {}
+        plot_list: list[str] = self._get_data_for_plots(self.configs)
         for file_config in [self.configs.com_files, self.configs.shell_files]:
             for key, config in file_config.items():
-                rdf_data[key] = xvg_to_dataframe.XvgParser(
-                    config['fname'], log, x_type=float).xvg_df
+                if key in plot_list:
+                    rdf_data[key] = xvg_to_dataframe.XvgParser(
+                        config['fname'], log, x_type=float).xvg_df
         return rdf_data
+
+    @staticmethod
+    def _get_data_for_plots(configs: AllConfig) -> list[str]:
+        """make a list from the <config>_plot_list"""
+        plot_list: list[str] = []
+        for com_i, shell_i in zip(configs.com_plot_list,
+                                  configs.shell_plot_list):
+            plot_list.append(f'com_{com_i}')
+            plot_list.append(f'shell_{shell_i}')
+        return plot_list
 
     def initiate_plots(self,
                        rdf_dict: dict[str, pd.DataFrame]

@@ -130,7 +130,7 @@ class FileConfig:
             'com_8': {'fname': 'rdf_com_amino_charge.xvg',
                       'y_col': 'amino_charge'}
             })
-    com_plot_list: list[int] = field(default_factory=lambda: [1])
+    com_plot_list: list[int] = field(default_factory=lambda: [5, 8])
     com_legend_loc: str = 'lower right'
     com_window_legend_loc: str = 'upper left'
 
@@ -182,7 +182,7 @@ class MultiRdfPlotter:
                       ) -> dict[str, pd.DataFrame]:
         """reading data and return them"""
         rdf_data: dict[str, pd.DataFrame] = {}
-        plot_list: list[str] = self._get_data_for_plots(self.configs)
+        plot_list: list[str] = self._get_list_for_plots(self.configs)
         for file_config in [self.configs.com_files, self.configs.shell_files]:
             for key, config in file_config.items():
                 if key in plot_list:
@@ -191,7 +191,7 @@ class MultiRdfPlotter:
         return rdf_data
 
     @staticmethod
-    def _get_data_for_plots(configs: AllConfig) -> list[str]:
+    def _get_list_for_plots(configs: AllConfig) -> list[str]:
         """make a list from the <config>_plot_list"""
         plot_list: list[str] = []
         for com_i in configs.com_plot_list:
@@ -227,17 +227,22 @@ class MultiRdfPlotter:
             x_range,
             height_ratio=self.configs.plot_configs.height_ratio,
             num_xticks=7)
+
         for s_i in sources:
             rdf_df: pd.DataFrame = rdf_dict.get(s_i)
             if rdf_df is not None:
                 ax_i = self._plot_layer(ax_i, rdf_df, viewpoint, s_i)
+
         self._setup_plot_labels(ax_i, viewpoint)
+
+        legend_loc: tuple[str, str] = self._legend_locs(viewpoint)
+
         tag = self._get_fout_tag(viewpoint)
         fout: str = \
             f'{tag}overlay_{self.configs.plot_configs.graph_suffix}'
-        legend_loc: tuple[str, str] = self._legend_locs(viewpoint)
         self._save_plot(
             fig_i, ax_i, fout, viewpoint, close_fig=False, loc=legend_loc[0])
+
         self._plot_window_overlay(ax_i, x_range, viewpoint)
         fout = f'window_{fout}'
         self._save_plot(

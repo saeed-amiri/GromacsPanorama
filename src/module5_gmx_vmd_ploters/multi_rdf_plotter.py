@@ -113,6 +113,7 @@ class BaseGraphConfig:
 @dataclass
 class FileConfig:
     """setups for the input files names and their columns name"""
+    # pylint: disable=too-many-instance-attributes
     # comfile: files which are the viewpoint are the com of the np
     # shellfile: files which are the viewpoint are the shell of the np
     viewpoint: list[str] = field(default_factory=lambda: ['com', 'shell'])
@@ -130,6 +131,8 @@ class FileConfig:
                       'y_col': 'amino_charge'}
             })
     com_plot_list: list[int] = field(default_factory=lambda: [0, 1, 2, 3])
+    com_legend_loc: str = 'lower right'
+    com_window_legend_loc: str = 'upper right'
 
     shell_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
@@ -139,6 +142,8 @@ class FileConfig:
             'shell_3': {'fname': 'rdf_shell_odn.xvg', 'y_col': 'ODN'}
             })
     shell_plot_list: list[int] = field(default_factory=lambda: [0, 2, 3])
+    shell_legend_loc: str = 'upper right'
+    shell_window_legend_loc: str = 'upper right'
 
 
 @dataclass
@@ -227,16 +232,16 @@ class MultiRdfPlotter:
             if rdf_df is not None:
                 ax_i = self._plot_layer(ax_i, rdf_df, viewpoint, s_i)
         self._setup_plot_labels(ax_i, viewpoint)
-        tag: typing.Union[str, None] = \
-            getattr(self.configs, f'{viewpoint}_fout_prefix')
         tag = self._get_fout_tag(viewpoint)
         fout: str = \
             f'{tag}overlay_{self.configs.plot_configs.graph_suffix}'
-        self._save_plot(fig_i, ax_i, fout, viewpoint, close_fig=False)
-
-        self._plot_save_window_overlay(ax_i, x_range, viewpoint)
+        legend_loc: tuple[str, str] = self._legend_locs(viewpoint)
+        self._save_plot(
+            fig_i, ax_i, fout, viewpoint, close_fig=False, loc=legend_loc[0])
+        self._plot_window_overlay(ax_i, x_range, viewpoint)
         fout = f'window_{fout}'
-        self._save_plot(fig_i, ax_i, fout, viewpoint, close_fig=True)
+        self._save_plot(
+            fig_i, ax_i, fout, viewpoint, close_fig=True, loc=legend_loc[1])
 
     def _get_fout_tag(self,
                       viewpoint: str
@@ -250,6 +255,15 @@ class MultiRdfPlotter:
             tag += config_files[f'{viewpoint}_{i}']['y_col']
             tag += '_'
         return tag
+
+    def _legend_locs(self,
+                     viewpoint: str
+                     ) -> tuple[str, str]:
+        """get the loegend loc for each plot"""
+        main_plot_loc: str = getattr(self.configs, f'{viewpoint}_legend_loc')
+        window_plot_loc: str = \
+            getattr(self.configs, f'{viewpoint}_window_legend_loc')
+        return main_plot_loc, window_plot_loc
 
     def plot_multirows_rdf(self,
                            rdf_dict: dict[str, pd.DataFrame],
@@ -283,18 +297,19 @@ class MultiRdfPlotter:
                    ax_i: plt.axes,
                    fout: str,
                    viewpoint: str,
+                   loc: str,  # The legend loc
                    close_fig: bool = True) -> None:
         """ Save the plot with a given fout and optionally close it """
         # pylint: disable=too-many-arguments
         self.info_msg += f'\tThe figure for `{viewpoint}` saved as `{fout}`\n'
         plot_tools.save_close_fig(
-            fig_i, ax_i, fname=fout, if_close=close_fig)
+            fig_i, ax_i, fname=fout, if_close=close_fig, loc=loc)
 
-    def _plot_save_window_overlay(self,
-                                  ax_i: plt.axes,
-                                  x_range: tuple[float, float],
-                                  viewpoint: str
-                                  ) -> plt.axes:
+    def _plot_window_overlay(self,
+                             ax_i: plt.axes,
+                             x_range: tuple[float, float],
+                             viewpoint: str
+                             ) -> plt.axes:
         """plot the graph in the window"""
         x_end: typing.Union[float, None] = \
             self.configs.plot_configs.second_window.get(viewpoint)

@@ -71,21 +71,36 @@ class BaseGraphConfig:
         field(default_factory=lambda: {
             'CLA': 'Cl',
             'amino_n': 'N (APTES)',
-            'SOL': 'O (Water)',
-            'ODN': 'N (ODA)'})
+            'amino_charge': r'H$^+$ (APTES)',
+            'SOL': 'Water',
+            'D10': 'Decane',
+            'APT': 'APTES',
+            'POT': 'Na',
+            'sol_oxygen': 'O (water)',
+            'ODN': 'ODA'})
 
     line_styles: dict[str, str] = \
         field(default_factory=lambda: {
             'CLA': '-',
             'amino_n': '--',
+            'amino_charge': '--',
             'SOL': ':',
+            'D10': ':',
+            'APT': '-',
+            'POT': '-',
+            'sol_oxygen': '--',
             'ODN': '-.'})
 
     colors: dict[str, str] = \
         field(default_factory=lambda: {
             'CLA': 'green',
             'amino_n': 'blue',
+            'amino_charge': 'blue',
             'SOL': 'red',
+            'D10': 'grey',
+            'APT': 'k',
+            'POT': 'brown',
+            'sol_oxygen': 'blue',
             'ODN': 'green'})
 
     height_ratio: float = (5 ** 0.5 - 1) * 1.5
@@ -103,15 +118,24 @@ class FileConfig:
     viewpoint: list[str] = field(default_factory=lambda: ['com', 'shell'])
     com_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
-            'com_0': {'fname': 'gmx_rdf_cla_com.xvg', 'y_col': 'CLA'}
+            'com_0': {'fname': 'rdf_com_amino_charge.xvg',
+                      'y_col': 'amino_charge'},
+            'com_1': {'fname': 'rdf_com_d10.xvg', 'y_col': 'D10'},
+            'com_2': {'fname': 'rdf_com_o_sol.xvg', 'y_col': 'sol_oxygen'},
+            'com_3': {'fname': 'rdf_com_sol.xvg', 'y_col': 'SOL'},
+            'com_4': {'fname': 'rdf_com_apt.xvg', 'y_col': 'APT'},
+            'com_5': {'fname': 'rdf_com_n.xvg', 'y_col': 'amino_n'},
+            'com_6': {'fname': 'rdf_com_pot.xvg', 'y_col': 'POT'},
+            'com_7': {'fname': 'rdf_com_cla.xvg', 'y_col': 'CLA'},
+            'com_8': {'fname': 'rdf_com_odn.xvg', 'y_col': 'ODN'}
             })
 
     shell_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
-            'shell_0': {'fname': 'rdf_shell_cla.xvg', 'y_col': 'CLA'},
-            'shell_1': {'fname': 'rdf_shell_N.xvg', 'y_col': 'amino_n'},
-            # 'shell_2': {'fname': 'rdf_shell_sol.xvg', 'y_col': 'SOL'},
-            # 'shell_3': {'fname': 'rdf_shell_odn.xvg', 'y_col': 'ODN'}
+            # 'shell_0': {'fname': 'rdf_shell_cla.xvg', 'y_col': 'CLA'},
+            # 'shell_1': {'fname': 'rdf_shell_N.xvg', 'y_col': 'amino_n'},
+            'shell_2': {'fname': 'rdf_shell_sol.xvg', 'y_col': 'SOL'},
+            'shell_3': {'fname': 'rdf_shell_odn.xvg', 'y_col': 'ODN'}
             })
 
 

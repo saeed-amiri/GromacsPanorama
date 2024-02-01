@@ -130,7 +130,6 @@ class FileConfig:
                       'y_col': 'amino_charge'}
             })
     com_plot_list: list[int] = field(default_factory=lambda: [0, 1, 2, 3])
-    com_fout_prefix: typing.Union[str, None] = 'sol_d10'
 
     shell_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
@@ -140,7 +139,6 @@ class FileConfig:
             'shell_3': {'fname': 'rdf_shell_odn.xvg', 'y_col': 'ODN'}
             })
     shell_plot_list: list[int] = field(default_factory=lambda: [0, 2, 3])
-    shell_fout_prefix: typing.Union[str, None] = None
 
 
 @dataclass
@@ -231,17 +229,27 @@ class MultiRdfPlotter:
         self._setup_plot_labels(ax_i, viewpoint)
         tag: typing.Union[str, None] = \
             getattr(self.configs, f'{viewpoint}_fout_prefix')
-        if tag is not None:
-            prefix = f'{tag}_{viewpoint}'
-        else:
-            prefix = viewpoint
+        tag = self._get_fout_tag(viewpoint)
         fout: str = \
-            f'{prefix}_overlay_{self.configs.plot_configs.graph_suffix}'
+            f'{tag}overlay_{self.configs.plot_configs.graph_suffix}'
         self._save_plot(fig_i, ax_i, fout, viewpoint, close_fig=False)
 
         self._plot_save_window_overlay(ax_i, x_range, viewpoint)
         fout = f'window_{fout}'
         self._save_plot(fig_i, ax_i, fout, viewpoint, close_fig=True)
+
+    def _get_fout_tag(self,
+                      viewpoint: str
+                      ) -> str:
+        """set the tag for the ouput png based on the plot_list"""
+        config_files: dict[str, dict[str, str]] = \
+            getattr(self.configs, f'{viewpoint}_files')
+        plot_list: list[int] = getattr(self.configs, f'{viewpoint}_plot_list')
+        tag: str = ''
+        for i in plot_list:
+            tag += config_files[f'{viewpoint}_{i}']['y_col']
+            tag += '_'
+        return tag
 
     def plot_multirows_rdf(self,
                            rdf_dict: dict[str, pd.DataFrame],

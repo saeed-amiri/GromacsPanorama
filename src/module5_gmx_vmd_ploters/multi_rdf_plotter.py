@@ -84,8 +84,8 @@ class BaseGraphConfig:
             'CLA': '-',
             'amino_n': '--',
             'amino_charge': '--',
-            'SOL': ':',
-            'D10': ':',
+            'SOL': '-',
+            'D10': '-',
             'APT': '-',
             'POT': '-',
             'sol_oxygen': '--',
@@ -130,9 +130,9 @@ class FileConfig:
             'com_8': {'fname': 'rdf_com_amino_charge.xvg',
                       'y_col': 'amino_charge'}
             })
-    com_plot_list: list[int] = field(default_factory=lambda: [0, 1, 2, 3])
+    com_plot_list: list[int] = field(default_factory=lambda: [1])
     com_legend_loc: str = 'lower right'
-    com_window_legend_loc: str = 'upper right'
+    com_window_legend_loc: str = 'upper left'
 
     shell_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
@@ -141,7 +141,7 @@ class FileConfig:
             'shell_2': {'fname': 'rdf_shell_sol.xvg', 'y_col': 'SOL'},
             'shell_3': {'fname': 'rdf_shell_odn.xvg', 'y_col': 'ODN'}
             })
-    shell_plot_list: list[int] = field(default_factory=lambda: [0, 2, 3])
+    shell_plot_list: list[int] = field(default_factory=lambda: [1, 0])
     shell_legend_loc: str = 'upper right'
     shell_window_legend_loc: str = 'upper right'
 
@@ -194,9 +194,9 @@ class MultiRdfPlotter:
     def _get_data_for_plots(configs: AllConfig) -> list[str]:
         """make a list from the <config>_plot_list"""
         plot_list: list[str] = []
-        for com_i, shell_i in zip(configs.com_plot_list,
-                                  configs.shell_plot_list):
+        for com_i in configs.com_plot_list:
             plot_list.append(f'com_{com_i}')
+        for shell_i in configs.shell_plot_list:
             plot_list.append(f'shell_{shell_i}')
         return plot_list
 

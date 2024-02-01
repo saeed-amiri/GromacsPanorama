@@ -130,7 +130,7 @@ class FileConfig:
             'com_8': {'fname': 'rdf_com_amino_charge.xvg',
                       'y_col': 'amino_charge'}
             })
-    com_plot_list: list[int] = field(default_factory=lambda: [5, 8])
+    com_plot_list: list[int] = field(default_factory=lambda: [0, 1])
     com_legend_loc: str = 'lower right'
     com_window_legend_loc: str = 'upper left'
 
@@ -239,7 +239,7 @@ class MultiRdfPlotter:
 
         tag = self._get_fout_tag(viewpoint)
         fout: str = \
-            f'{tag}overlay_{self.configs.plot_configs.graph_suffix}'
+            f'{viewpoint}{tag}overlay_{self.configs.plot_configs.graph_suffix}'
         self._save_plot(
             fig_i, ax_i, fout, viewpoint, close_fig=False, loc=legend_loc[0])
 
@@ -255,7 +255,7 @@ class MultiRdfPlotter:
         config_files: dict[str, dict[str, str]] = \
             getattr(self.configs, f'{viewpoint}_files')
         plot_list: list[int] = getattr(self.configs, f'{viewpoint}_plot_list')
-        tag: str = ''
+        tag: str = '_'
         for i in plot_list:
             tag += config_files[f'{viewpoint}_{i}']['y_col']
             tag += '_'

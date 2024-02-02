@@ -139,9 +139,10 @@ class FileConfig:
             'shell_0': {'fname': 'rdf_shell_cla.xvg', 'y_col': 'CLA'},
             'shell_1': {'fname': 'rdf_shell_N.xvg', 'y_col': 'amino_n'},
             'shell_2': {'fname': 'rdf_shell_sol.xvg', 'y_col': 'SOL'},
-            'shell_3': {'fname': 'rdf_shell_odn.xvg', 'y_col': 'ODN'}
+            'shell_3': {'fname': 'rdf_shell_d10.xvg', 'y_col': 'D10'},
+            'shell_4': {'fname': 'rdf_shell_odn.xvg', 'y_col': 'ODN'}
             })
-    shell_plot_list: list[int] = field(default_factory=lambda: [1, 0])
+    shell_plot_list: list[int] = field(default_factory=lambda: [2, 3])
     shell_legend_loc: str = 'upper right'
     shell_window_legend_loc: str = 'upper right'
 

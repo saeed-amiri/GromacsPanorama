@@ -47,7 +47,9 @@ def free_char_line(line: str  # line of the itp file
 class Itp:
     """Reads an ITP file and returns a DataFrame of the information
     within the file."""
-    def __init__(self, fname: str):
+    def __init__(self,
+                 fname: str
+                 ) -> None:
         """Initializes the Itp class by reading the file."""
         print(f"{bcolors.OKBLUE}Reading '{fname}' ...{bcolors.ENDC}")
         self.sections = {
@@ -62,7 +64,9 @@ class Itp:
         self.read_file(fname)
         self.create_dataframes()
 
-    def read_file(self, fname: str):
+    def read_file(self,
+                  fname: str
+                  ) -> None:
         """Reads the ITP file and organizes the data into sections."""
         current_section = None
         with open(fname, 'r', encoding='utf8') as file:
@@ -74,7 +78,7 @@ class Itp:
                 elif line and current_section:
                     self.sections[current_section].append(line)
 
-    def create_dataframes(self):
+    def create_dataframes(self) -> None:
         """Converts sections into DataFrames."""
         self.atoms = AtomsInfo(self.sections['atoms']).df
 

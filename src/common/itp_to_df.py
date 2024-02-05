@@ -97,39 +97,34 @@ class Itp:
 
 
 class AtomsTypes:
-    """Get the atomtypes info at the top of the charmm itp files"""
+    """Get the atomtypes info at the top of the CHARMM itp files"""
 
     def __init__(self,
                  atomtypes: list[str]
                  ) -> None:
         self.df: pd.DataFrame = self.get_atoms_types(atomtypes)
 
-    def get_atoms_types(self,
-                        atomtypes: list[str]
-                        ) -> pd.DataFrame:
-        """parse the lines"""
-        sparsed_lines: list[dict[str, typing.Any]] = []
-        for line in atomtypes:
-            if line.startswith(';'):
-                pass
-            else:
-                sparsed_lines.append(self._process_line(line))
-        return pd.DataFrame(sparsed_lines)
+    @staticmethod
+    def get_atoms_types(atomtypes: list[str]) -> pd.DataFrame:
+        """parse the lines into a DataFrame"""
+        parsed_lines = [
+            AtomsTypes._process_line(line) for line in atomtypes if
+                                     not line.startswith(';')
+        ]
+        return pd.DataFrame(parsed_lines)
 
-    def _process_line(self,
-                      line: str
-                      ) -> dict[str, typing.Any]:
-        """sparse lines"""
-        tmp: list[str] = line.split(' ')
-        tmp = [item for item in tmp if item]
+    @staticmethod
+    def _process_line(line: str) -> dict[str, typing.Any]:
+        """sparse line into a dictionary"""
+        parts = line.split()
         return {
-            'name': tmp[0],
-            'atom_nr': int(tmp[1]),
-            'mass': float(tmp[2]),
-            'charge': float(tmp[3]),
-            'ptype': tmp[4],
-            'sigma': float(tmp[5]),
-            'epsilon': float(tmp[6]),
+            'name': parts[0],
+            'atom_nr': int(parts[1]),
+            'mass': float(parts[2]),
+            'charge': float(parts[3]),
+            'ptype': parts[4],
+            'sigma': float(parts[5]),
+            'epsilon': float(parts[6]),
         }
 
 

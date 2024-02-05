@@ -48,7 +48,8 @@ class Itp:
     """Reads an ITP file and returns a DataFrame of the information
     within the file."""
     def __init__(self,
-                 fname: str
+                 fname: str,
+                 section: typing.Union[str, None] = None
                  ) -> None:
         """Initializes the Itp class by reading the file."""
         print(f"{bcolors.OKBLUE}Reading '{fname}' ...{bcolors.ENDC}")
@@ -61,8 +62,19 @@ class Itp:
             'moleculetype': [],
             'atomtypes': []
         }
+        self.initialize_empty_dfs()
         self.read_file(fname)
         self.create_dataframes()
+
+    def initialize_empty_dfs(self) -> None:
+        """Initializes all section DataFrames as empty."""
+        self.atoms = pd.DataFrame()
+        self.bonds = pd.DataFrame()
+        self.angles = pd.DataFrame()
+        self.dihedrals = pd.DataFrame()
+        self.impropers = pd.DataFrame()
+        self.molecules = pd.DataFrame()
+        self.atomtypes = pd.DataFrame()
 
     def read_file(self,
                   fname: str
@@ -78,22 +90,26 @@ class Itp:
                 elif line and current_section:
                     self.sections[current_section].append(line)
 
-    def create_dataframes(self) -> None:
-        """Converts sections into DataFrames."""
-        self.atoms = AtomsInfo(self.sections['atoms']).df
-
-        self.molecules = MoleculeInfo(self.sections['moleculetype']).df
-
-        self.bonds = BondsInfo(
-            atoms=self.atoms, bonds=self.sections['bonds']).df
-
-        self.angles = AnglesInfo(
-            atoms=self.atoms, angles=self.sections['angles']).df
-
-        self.dihedrals = DihedralsInfo(
-            atoms=self.atoms, dihedrals=self.sections['dihedrals']).df
-
-        self.atomtypes = AtomsTypes(self.sections['atomtypes']).df
+    def create_dataframes(self, section: str = None) -> None:
+        """
+        Converts sections into DataFrames, optionally only processing
+        a specified section.
+        """
+        if section is None or section == 'atoms':
+            self.atoms = AtomsInfo(self.sections['atoms']).df
+        if section is None or section == 'moleculetype':
+            self.molecules = MoleculeInfo(self.sections['moleculetype']).df
+        if section is None or section == 'bonds':
+            self.bonds = BondsInfo(
+                atoms=self.atoms, bonds=self.sections['bonds']).df
+        if section is None or section == 'angles':
+            self.angles = AnglesInfo(
+                atoms=self.atoms, angles=self.sections['angles']).df
+        if section is None or section == 'dihedrals':
+            self.dihedrals = DihedralsInfo(
+                atoms=self.atoms, dihedrals=self.sections['dihedrals']).df
+        if section is None or section == 'atomtypes':
+            self.atomtypes = AtomsTypes(self.sections['atomtypes']).df
 
 
 class AtomsTypes:

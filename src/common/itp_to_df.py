@@ -45,106 +45,51 @@ def free_char_line(line: str  # line of the itp file
 
 
 class Itp:
-    """read itp file and return a DataFrame of the information
-    within the file"""
-    def __init__(self,
-                 fname: str  # Name of the itp file
-                 ) -> None:
+    """Reads an ITP file and returns a DataFrame of the information
+    within the file."""
+    def __init__(self, fname: str):
+        """Initializes the Itp class by reading the file."""
         print(f"{bcolors.OKBLUE}Reading '{fname}' ...{bcolors.ENDC}")
-        self.get_itp(fname)
+        self.sections = {
+            'atoms': [],
+            'bonds': [],
+            'angles': [],
+            'dihedrals': [],
+            'impropers': [],
+            'moleculetype': [],
+            'atomtypes': []
+        }
+        self.read_file(fname)
+        self.create_dataframes()
 
-    def get_itp(self,
-                fname: str  # Name of the itp file
-                ) -> None:
-        """read the file line by line and call related methods"""
-        atoms: bool = False  # Flag of 'atoms' occurrence
-        bonds: bool = False  # Flag of 'bonds' occurrence
-        angles: bool = False  # Flag of 'angles' occurrence
-        dihedrals: bool = False  # Flag of 'dihedrals' occurrence
-        impropers: bool = False  # Flag of 'impropers' occurrence
-        moleculetype: bool = False  # Flag of 'moleculetype' occurrence
-        atomtypes: bool = False  # Flag of 'moleculetype' occurrence
-        atoms_info: list[str] = []  # to append atoms lines
-        bonds_info: list[str] = []  # to append bonds lines
-        angles_info: list[str] = []  # to append angles lines
-        dihedrals_info: list[str] = []  # to append dihedrals lines
-        moleculetype_info: list[str] = []  # to append dihedrals lines
-        atomtypes_info: list[str] = []  # to append atomtypes lines
-        with open(fname, 'r', encoding='utf8') as f_r:
-            while True:
-                line: str = f_r.readline()
-                if line.strip():
-                    if line.strip().startswith('['):
-                        wilds: list[str]  # Parts of the line
-                        wilds = line.strip().split()
-                        if wilds[1] == 'atoms':
-                            atoms, bonds, angles, dihedrals, impropers,\
-                                moleculetype, atomtypes = \
-                                True, False, False, False, False, \
-                                False, False
-                        elif wilds[1] == 'bonds':
-                            atoms, bonds, angles, dihedrals, impropers,\
-                                moleculetype, atomtypes = \
-                                False, True, False, False, False, \
-                                False, False
-                        elif wilds[1] == 'angles':
-                            atoms, bonds, angles, dihedrals, impropers,\
-                                moleculetype, atomtypes = \
-                                False, False, True, False, False, \
-                                False, False
-                        elif wilds[1] == 'dihedrals':
-                            atoms, bonds, angles, dihedrals, impropers,\
-                                moleculetype, atomtypes = \
-                                False, False, False, True, False, \
-                                False, False
-                        elif wilds[1] == 'moleculetype':
-                            atoms, bonds, angles, dihedrals, impropers,\
-                                moleculetype, atomtypes = \
-                                False, False, False, False, False, \
-                                True, False
-                        elif wilds[1] == 'atomtypes':
-                            atoms, bonds, angles, dihedrals, impropers,\
-                                moleculetype, atomtypes = \
-                                False, False, False, False, False, \
-                                False, True
-                        else:
-                            atoms, bonds, angles, dihedrals, impropers,\
-                                moleculetype, atomtypes = \
-                                False, False, False, False, False, \
-                                False, False
-                    else:
-                        if moleculetype:
-                            moleculetype_info.append(line)
-                        if atoms:
-                            atoms_info.append(line)
-                        if bonds:
-                            bonds_info.append(line)
-                        if angles:
-                            angles_info.append(line)
-                        if dihedrals:
-                            if 'impropers' not in free_char_line(line):
-                                impropers = False
-                            else:
-                                impropers = True
-                                dihedrals = False
-                        if dihedrals and not impropers:
-                            dihedrals_info.append(line)
-                        if atomtypes:
-                            atomtypes_info.append(line)
-                if not line:
-                    break
-        atom = AtomsInfo(atoms_info)
-        molecules = MoleculeInfo(moleculetype_info)
-        bond = BondsInfo(atoms=atom.df, bonds=bonds_info)
-        angle = AnglesInfo(atoms=atom.df, angles=angles_info)
-        dihedral = DihedralsInfo(atoms=atom.df, dihedrals=dihedrals_info)
-        atomtype = AtomsTypes(atomtypes_info)
-        self.atoms = atom.df
-        self.bonds = bond.df
-        self.angles = angle.df
-        self.dihedrals = dihedral.df
-        self.molecules = molecules.df
-        self.atomtypes = atomtype.df
+    def read_file(self, fname: str):
+        """Reads the ITP file and organizes the data into sections."""
+        current_section = None
+        with open(fname, 'r', encoding='utf8') as file:
+            for line in file:
+                line = line.strip()
+                if line.startswith('['):
+                    section_name = line.split()[1]
+                    current_section = section_name
+                elif line and current_section:
+                    self.sections[current_section].append(line)
+
+    def create_dataframes(self):
+        """Converts sections into DataFrames."""
+        self.atoms = AtomsInfo(self.sections['atoms']).df
+
+        self.molecules = MoleculeInfo(self.sections['moleculetype']).df
+
+        self.bonds = BondsInfo(
+            atoms=self.atoms, bonds=self.sections['bonds']).df
+
+        self.angles = AnglesInfo(
+            atoms=self.atoms, angles=self.sections['angles']).df
+
+        self.dihedrals = DihedralsInfo(
+            atoms=self.atoms, dihedrals=self.sections['dihedrals']).df
+
+        self.atomtypes = AtomsTypes(self.sections['atomtypes']).df
 
 
 class AtomsTypes:

@@ -4,6 +4,7 @@ Set the path for the force fields files in each system
 
 import os
 import socket
+import typing
 from dataclasses import dataclass, field
 
 import common.logger as logger
@@ -13,23 +14,28 @@ from common.colors_text import TextColor as bcolors
 @dataclass
 class FileConfig:
     """set the path and files names"""
-    _myscript_path: str = '/MyScripts/GromacsPanorama/data/force_field'
-    _local_parent: str = '/scratch/saeed'
-    _server_parent: str = '/scratch/projects/hbp00076'
-    local_path: str = os.path.join(_local_parent, _myscript_path)
-    server_path: str = os.path.join(_server_parent, _myscript_path)
+    local_path: str = \
+        '/scratch/saeed/MyScripts/GromacsPanorama/data/force_field'
+    server_path: str = \
+        '/scratch/projects/hbp00076/MyScripts/GromacsPanorama/data/force_field'
 
-    file_names: list[str] = field(default_factory=lambda: [
-        'charmm36_silica.itp', 'CLA.itp', 'POT.itp', 'TIP3.itp'])
+    file_names: dict[str, typing.Any] = field(default_factory=lambda: {
+        'all_atom_info': 'charmm36_silica.itp',
+        'charge_info': ['CLA.itp', 'POT.itp', 'TIP3.itp']})
+
+
 
 
 @dataclass
 class MachinName:
     """set the machine names"""
     local_host: str = 'hmigws03'  # Name of the host in the office
-    server_front_host: list[str] = ['glogin', 'blogin']  # Front names in HLRN
+    # Front names in HLRN
+    server_front_host: list[str] = field(
+        default_factory=lambda: ['glogin', 'blogin'])
     # Name of the goettingen of HLRN
-    server_host_list: list[str] = ['gcn', 'gfn', 'gsn', 'bcn', 'bfn', 'bsn']
+    server_host_list: list[str] = field(
+        default_factory=lambda: ['gcn', 'gfn', 'gsn', 'bcn', 'bfn', 'bsn'])
 
 
 @dataclass
@@ -37,13 +43,14 @@ class AllConfig(FileConfig, MachinName):
     """set all the configurations"""
 
 
-class ConfigCpuNr:
+class ConfigFFPath:
     """
     Find the path of the files
     """
 
-    info_msg: str = 'message from ConfigCpuNr:\n'  # Meesage in methods to log
+    info_msg: str = 'message from ConfigFFPath:\n'  # Meesage in methods to log
     configs: AllConfig
+    ff_files: dict[str, typing.Any]  # Path of the ff files
 
     def __init__(self,
                  log: logger.logging.Logger,
@@ -51,8 +58,23 @@ class ConfigCpuNr:
                  ) -> None:
         self.configs = configs
         self.hostname: str = self.get_hostname()
-        self.cores_nr: int = self.set_ff_path()
+        ff_path: str = self.set_ff_path()
+        self.set_file_names(ff_path)
         self.write_log_msg(log)
+
+    def set_file_names(self,
+                       ff_path: str
+                       ) -> None:
+        """set the list for the ff files' path"""
+        self.ff_files = {}
+        self.ff_files['all_atom_info'] = \
+            os.path.join(ff_path, self.configs.file_names['all_atom_info'])
+        self.ff_files['charge_info'] = [
+            os.path.join(ff_path, item) for item in
+            self.configs.file_names['charge_info']]
+        self.info_msg += '\tThe path of the force field files are set to:\n'
+        for item, path in self.ff_files.items():
+            self.info_msg += f'\t`{item}`: {path}\n'
 
     def set_ff_path(self) -> str:
         """set the nmbers of the cores based on the hostname"""

@@ -47,6 +47,9 @@ def free_char_line(line: str  # line of the itp file
 class Itp:
     """Reads an ITP file and returns a DataFrame of the information
     within the file."""
+    # pylint: disable=too-many-instance-attributes
+    sections: dict[str, list[str]]
+
     def __init__(self,
                  fname: str,
                  section: typing.Union[str, None] = None
@@ -64,7 +67,7 @@ class Itp:
         }
         self.initialize_empty_dfs()
         self.read_file(fname)
-        self.create_dataframes()
+        self.create_dataframes(section)
 
     def initialize_empty_dfs(self) -> None:
         """Initializes all section DataFrames as empty."""
@@ -90,7 +93,9 @@ class Itp:
                 elif line and current_section:
                     self.sections[current_section].append(line)
 
-    def create_dataframes(self, section: str = None) -> None:
+    def create_dataframes(self,
+                          section: typing.Union[str, None]
+                          ) -> None:
         """
         Converts sections into DataFrames, optionally only processing
         a specified section.
@@ -114,10 +119,12 @@ class Itp:
 
 class AtomsTypes:
     """Get the atomtypes info at the top of the charmm itp files"""
+    # pylint: disable=too-few-public-methods
 
     def __init__(self,
                  atomtypes: list[str]
                  ) -> None:
+        # pylint: disable=invalid-name
         self.df: pd.DataFrame = self.get_atoms_types(atomtypes)
 
     def get_atoms_types(self,
@@ -160,6 +167,7 @@ class MoleculeInfo:
                           molecules: list[str]  # line about molecules
                           ) -> None:
         """read and return data about molecule"""
+        # pylint: disable=invalid-name
         l_line: list[str]  # Breaking the line chars
         columns: list[str] = ['Name', 'nrexcl']
         name: list[str] = []  # Name of the molecules
@@ -198,6 +206,7 @@ class AtomsInfo:
     def __init__(self,
                  atoms: list[str]  # lines read by Itp class
                  ) -> None:
+        # pylint: disable=invalid-name
         self.df = self.get_atoms_info(atoms)
 
     def get_atoms_info(self,
@@ -271,6 +280,7 @@ class BondsInfo:
                     atoms: pd.DataFrame  # atoms df from AtomInfo
                     ) -> None:
         """call all the methods to make the bonds DataFrame"""
+        # pylint: disable=invalid-name
         a_i: list[int]  # index of the 1st atoms in the bonds
         a_j: list[int]  # index of the 2nd atoms in the bonds
         funct: list[int]  # index of the type of the bonds
@@ -319,6 +329,7 @@ class BondsInfo:
               atoms: pd.DataFrame  # atoms df from AtomsInfo to cehck the name
               ) -> pd.DataFrame:  # bonds DataFrame
         """make DataFrame and check if they are same as atoms name"""
+        # pylint: disable=too-many-arguments
         df_bonds: pd.DataFrame  # to save the bonds_df
         df_bonds = pd.DataFrame(columns=['ai', 'aj', 'typ', 'cmt', 'name'])
         df_bonds['ai'] = a_i
@@ -362,6 +373,7 @@ class AnglesInfo:
                      atoms: pd.DataFrame  # atoms df from AtomInfo
                      ) -> None:
         """call all the methods to make the bonds DataFrame"""
+        # pylint: disable=invalid-name
         a_i: list[int]  # index of the 1st atoms in the angles
         a_j: list[int]  # index of the 2nd atoms in the angles
         a_k: list[int]  # index of the 3rd atoms in the angles
@@ -412,6 +424,7 @@ class AnglesInfo:
               atoms: pd.DataFrame  # atoms df from AtomsInfo to cehck the name
               ) -> pd.DataFrame:  # angles DataFrame
         """make DataFrame and check if they are same as atoms name"""
+        # pylint: disable=too-many-arguments
         df_angles: pd.DataFrame  # to save the angles_df
         df_angles = \
             pd.DataFrame(columns=['ai', 'aj', 'ak', 'typ', 'cmt', 'name'])
@@ -461,6 +474,7 @@ class DihedralsInfo:
                         atoms: pd.DataFrame  # atoms df from AtomInfo
                         ) -> None:
         """call all the methods to make the bonds DataFrame"""
+        # pylint: disable=invalid-name
         a_i: list[int]  # index of the 1st atoms in the dihedrals
         a_j: list[int]  # index of the 2nd atoms in the dihedrals
         a_k: list[int]  # index of the 3rd atoms in the dihedrals
@@ -515,6 +529,7 @@ class DihedralsInfo:
               atoms: pd.DataFrame  # atoms df from AtomsInfo to cehck the name
               ) -> pd.DataFrame:  # dihedrals DataFrame
         """make DataFrame and check if they are same as atoms name"""
+        # pylint: disable=too-many-arguments
         df_dihedrals: pd.DataFrame  # to save the dihedrals_df
         df_dihedrals = pd.DataFrame(
             columns=['ai', 'aj', 'ak', 'ah', 'typ', 'cmt', 'name'])

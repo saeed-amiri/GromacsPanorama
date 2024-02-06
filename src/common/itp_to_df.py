@@ -90,7 +90,7 @@ class Itp:
                 if line.startswith('['):
                     section_name = line.split()[1]
                     current_section = section_name
-                elif line and current_section:
+                elif line and current_section in self.sections.keys():
                     self.sections[current_section].append(line)
 
     def create_dataframes(self,

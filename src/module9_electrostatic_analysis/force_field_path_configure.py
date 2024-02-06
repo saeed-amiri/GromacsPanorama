@@ -7,7 +7,7 @@ import socket
 import typing
 from dataclasses import dataclass, field
 
-import common.logger as logger
+from common import logger
 from common.colors_text import TextColor as bcolors
 
 
@@ -22,8 +22,6 @@ class FileConfig:
     file_names: dict[str, typing.Any] = field(default_factory=lambda: {
         'all_atom_info': 'charmm36_silica.itp',
         'charge_info': ['CLA.itp', 'POT.itp', 'TIP3.itp']})
-
-
 
 
 @dataclass

@@ -55,9 +55,9 @@ class PdbToPqr:
                  log: logger.logging.Logger
                  ) -> pd.DataFrame:
         """get all the infos"""
-        ReadInputStructureFile(log, self.configs.structure_files)
-        # self.check_all_file(log)
-        # structure_files_type: str = self.get_structure_file_type()
+        strcuture_data: dict[str, pd.DataFrame] = ReadInputStructureFile(
+            log, self.configs.structure_files).structure_dict
+        self.check_ff_files(log)
         # itp_atoms: pd.DataFrame = \
             # itp_to_df.Itp(self.configs.itp_file, section='atoms').atoms
         # if structure_files_type == 'pdb':
@@ -94,11 +94,7 @@ class PdbToPqr:
         all_atom_info['radius'] = radius
         return all_atom_info
 
-    def get_structure_file_type(self) -> str:
-        """find the type of the input structure file"""
-        return self.configs.structure_files.split('.', -1)[1]
-
-    def check_all_file(self,
+    def check_ff_files(self,
                        log: logger.logging.Logger
                        ) -> None:
         """check all the existence of the all files"""
@@ -129,6 +125,7 @@ class ReadInputStructureFile:
     info_msg: str = '\nMessage from ReadInputStructureFile:\n'
     file_type: str  # Type of extension of the files
     _configs: FileConfig
+    structure_dict: dict[str, pd.DataFrame]
 
     def __init__(self,
                  log: logger.logging.Logger,
@@ -136,7 +133,7 @@ class ReadInputStructureFile:
                  configs: FileConfig = FileConfig()
                  ) -> None:
         self._configs = configs
-        self._proccess_files(strucure_files, log)
+        self.structure_dict = self._proccess_files(strucure_files, log)
         self._write_msg(log)
 
     def _proccess_files(self,
@@ -144,14 +141,25 @@ class ReadInputStructureFile:
                         log) -> dict[str, pd.DataFrame]:
         """read and return data about each structure file"""
         self.file_type = self._check_file_extension(strucure_files, log)
-        self._read_files(strucure_files, log)
+        return self._read_files(strucure_files, log)
 
     def _read_files(self,
                     strucure_files: list[str],
                     log: logger.logging.Logger
                     ) -> dict[str, pd.DataFrame]:
         """read the files"""
-        # if self.file_type == ''
+        structure_dict: dict[str, pd.DataFrame] = {}
+        if self.file_type == 'gro':
+            for struct_i in strucure_files:
+                fname_i: str = struct_i.split('.', -1)[0]
+                structure_dict[fname_i] = \
+                    gro_to_df.ReadGro(struct_i, log).gro_data
+        else:
+            for struct_i in strucure_files:
+                fname_i = struct_i.split('.', -1)[0]
+                structure_dict[fname_i] = \
+                    pdb_to_df.Pdb(struct_i, log).pdb_df
+        return structure_dict
 
     def _check_file_extension(self,
                               strucure_files: list[str],

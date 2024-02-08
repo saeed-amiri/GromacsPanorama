@@ -18,7 +18,7 @@ class InvalidFileExtensionError(Exception):
 def check_file_exist(fname: str,  # Name of the file to check
                      log: logger.logging.Logger,  # log the error,
                      if_exit: bool = True
-                     ) -> None:
+                     ) -> typing.Union[None, bool]:
     """check if the file exist, other wise exit"""
     if not os.path.exists(fname):
         log.error(f'Error! `{fname}` dose not exist.')
@@ -28,6 +28,7 @@ def check_file_exist(fname: str,  # Name of the file to check
                      f'exist \n{bcolors.ENDC}')
         else:
             log.warning('\tThere was a problem in reading the file; return\n')
+            return False
     else:
         log.info(msg := f'`{fname}` exist.')
         print(f'{bcolors.OKBLUE}my_tools:\n\t{msg}{bcolors.ENDC}\n')

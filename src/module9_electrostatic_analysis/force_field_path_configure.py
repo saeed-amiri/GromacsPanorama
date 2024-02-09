@@ -21,7 +21,7 @@ class FileConfig:
 
     file_names: dict[str, typing.Any] = field(default_factory=lambda: {
         'all_atom_info': 'charmm36_silica.itp',
-        'apbs_info': 'CHARMM.itp',
+        'apbs_info': 'CHARMM.DAT',
         'charge_info': [
                         'CLA.itp',  # charge for Cl ion
                         'POT.itp',  # charge for Na ion
@@ -76,6 +76,8 @@ class ConfigFFPath:
         self.ff_files = {}
         self.ff_files['all_atom_info'] = \
             os.path.join(ff_path, self.configs.file_names['all_atom_info'])
+        self.ff_files['apbs_info'] = \
+            os.path.join(ff_path, self.configs.file_names['apbs_info'])
         self.ff_files['charge_info'] = [
             os.path.join(ff_path, item) for item in
             self.configs.file_names['charge_info']]

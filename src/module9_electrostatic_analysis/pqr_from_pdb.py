@@ -194,9 +194,13 @@ class ReadInputStructureFile:
 class ReadForceFieldFile:
     """reading the force field files (itp files) and return dataframe
     with names of the atoms and thier charge and radius"""
+    #  pylint: disable=too-few-public-methods
 
     info_msg: str = 'Message from ReadForceFieldFile:\n'
     _configs: AllConfig
+    ff_sigma: pd.DataFrame  # From main itp file for getting sigma
+    ff_charge: dict[str, pd.DataFrame]   # From itp files to get charges
+    apbs_charmm: pd.DataFrame  # Radius of atoms from APBS
 
     def __init__(self,
                  log: logger.logging.Logger,
@@ -214,7 +218,12 @@ class ReadForceFieldFile:
                        ) -> None:
         """prccess the force filed files"""
         self.check_ff_files(ff_files, log)
-        self._read_itp(ff_files, log)
+        self.ff_sigma = \
+            self._read_main_force_field(ff_files['all_atom_info'])
+        self.ff_charge = \
+            self._read_charge_of_atoms(ff_files)
+        self.apbs_charmm = \
+            self._read_apbs_charmm(ff_files['apbs_info'], log)
 
     def check_ff_files(self,
                        ff_files: dict[str, typing.Any],
@@ -236,30 +245,33 @@ class ReadForceFieldFile:
                 self.info_msg += \
                     f"Unexpected value type for key {key}: {type(value)}"
 
-    def _read_itp(self,
-                  ff_files: dict[str, typing.Any],
-                  log: logger.logging.Logger
-                  ) -> None:
-        """read all the itp files and make one dataframe"""
-        self._read_main_force_field(ff_files['all_atom_info'])
-        self._read_charge_of_atoms(ff_files)
-
     def _read_main_force_field(self,
                                ff_file: str
                                ) -> pd.DataFrame:
         """reading the main force file file: charmm36_silica.itp"""
         return itp_to_df.Itp(ff_file, section='atomtypes').atomtypes
 
+    def _read_apbs_charmm(self,
+                          ff_file: str,
+                          log: logger.logging.Logger
+                          ) -> pd.DataFrame:
+        """read charmm file from apbs file"""
+        try:
+            return parse_charmm_data.ParseData(ff_file, log).radius_df
+        except (FileNotFoundError, FileExistsError):
+            self.info_msg += '\tCHARMM file from apbs is not found\n'
+            return pd.DataFrame()
+
     def _read_charge_of_atoms(self,
                               ff_files: dict[str, typing.Any]
-                              ) -> pd.DataFrame:
+                              ) -> dict[str, pd.DataFrame]:
         """reading the itp files which contains the charge of each atom
         used in the simulations:
         These files are:
         key: charge_info:
             'CLA.itp': charge for Cl ion
             'POT.itp': charge for Na ion
-            'TIP3.itp': charge for water atoms 
+            'TIP3.itp': charge for water atoms
             'D10_charmm.itp': charge for the oil (Decane)
             'ODAp_charmm.itp': charges for the protonated ODA
         key: np_info:
@@ -267,14 +279,13 @@ class ReadForceFieldFile:
         Tha charge files are constant and not system dependent but the
         np_info depends on the simulation
         """
-        charge_df: dict[str, pd.DataFrame] = {}
+        charge_dict: dict[str, pd.DataFrame] = {}
         for fpath in ff_files['charge_info']:
             key = os.path.basename(fpath).split('.')[0]
-            charge_df[key] = itp_to_df.Itp(fpath, section='atoms').atoms
-        charge_df['np_info'] = \
+            charge_dict[key] = itp_to_df.Itp(fpath, section='atoms').atoms
+        charge_dict['np_info'] = \
             itp_to_df.Itp(ff_files['np_info'], section='atoms').atoms
-        print(charge_df.keys())
-
+        return charge_dict
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

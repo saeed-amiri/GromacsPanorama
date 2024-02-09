@@ -3,6 +3,7 @@ make the data from the pdb and itp
 
 """
 
+import os
 import sys
 import typing
 from dataclasses import dataclass, field
@@ -255,13 +256,25 @@ class ReadForceFieldFile:
         """reading the itp files which contains the charge of each atom
         used in the simulations:
         These files are:
-        'CLA.itp': charge for Cl ion
-        'POT.itp': charge for Na ion
-        'TIP3.itp': charge for water atoms 
-        'D10_charmm.itp': charge for the oil (Decane)
-        'ODAp_charmm.itp': charges for the protonated ODA
-        'APT_COR.itp': charge for the COR and APT of the NP
+        key: charge_info:
+            'CLA.itp': charge for Cl ion
+            'POT.itp': charge for Na ion
+            'TIP3.itp': charge for water atoms 
+            'D10_charmm.itp': charge for the oil (Decane)
+            'ODAp_charmm.itp': charges for the protonated ODA
+        key: np_info:
+            'APT_COR.itp': charge for the COR and APT of the NP
+        Tha charge files are constant and not system dependent but the
+        np_info depends on the simulation
         """
+        charge_df: dict[str, pd.DataFrame] = {}
+        for fpath in ff_files['charge_info']:
+            key = os.path.basename(fpath).split('.')[0]
+            charge_df[key] = itp_to_df.Itp(fpath, section='atoms').atoms
+        charge_df['np_info'] = \
+            itp_to_df.Itp(ff_files['np_info'], section='atoms').atoms
+        print(charge_df.keys())
+
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

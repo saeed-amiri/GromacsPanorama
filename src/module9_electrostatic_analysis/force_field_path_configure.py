@@ -22,7 +22,10 @@ class FileConfig:
     file_names: dict[str, typing.Any] = field(default_factory=lambda: {
         'all_atom_info': 'charmm36_silica.itp',
         'apbs_info': 'CHARMM.itp',
+        'oda_info': 'D10_charmm.itp',
+        'decane_info': 'ODAp_charmm.itp',
         'charge_info': ['CLA.itp', 'POT.itp', 'TIP3.itp']})
+
     np_info: str = 'APT_COR.itp'
 
 

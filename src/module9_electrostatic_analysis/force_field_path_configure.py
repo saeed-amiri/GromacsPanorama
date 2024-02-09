@@ -21,7 +21,9 @@ class FileConfig:
 
     file_names: dict[str, typing.Any] = field(default_factory=lambda: {
         'all_atom_info': 'charmm36_silica.itp',
+        'apbs_info': 'CHARMM.itp',
         'charge_info': ['CLA.itp', 'POT.itp', 'TIP3.itp']})
+    np_info: str = 'APT_COR.itp'
 
 
 @dataclass
@@ -70,6 +72,7 @@ class ConfigFFPath:
         self.ff_files['charge_info'] = [
             os.path.join(ff_path, item) for item in
             self.configs.file_names['charge_info']]
+        self.ff_files['np_info'] = self.configs.np_info
         self.info_msg += '\tThe path of the force field files are set to:\n'
         for item, path in self.ff_files.items():
             self.info_msg += f'\t`{item}`: {path}\n'

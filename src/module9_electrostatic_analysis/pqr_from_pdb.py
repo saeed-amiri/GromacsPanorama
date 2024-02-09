@@ -56,8 +56,8 @@ class PdbToPqr:
                  log: logger.logging.Logger
                  ) -> pd.DataFrame:
         """get all the infos"""
-        # strcuture_data: dict[str, pd.DataFrame] = ReadInputStructureFile(
-        #     log, self.configs.structure_files).structure_dict
+        strcuture_data: dict[str, pd.DataFrame] = ReadInputStructureFile(
+            log, self.configs.structure_files).structure_dict
         ReadForceFieldFile(log)
         # itp_atoms: pd.DataFrame = \
             # itp_to_df.Itp(self.configs.itp_file, section='atoms').atoms
@@ -135,6 +135,7 @@ class ReadInputStructureFile:
                         strucure_files: list[str],
                         log) -> dict[str, pd.DataFrame]:
         """read and return data about each structure file"""
+        strucure_files = list((dict.fromkeys(strucure_files, '')).keys())
         self.file_type = self._check_file_extension(strucure_files, log)
         return self._read_files(strucure_files, log)
 

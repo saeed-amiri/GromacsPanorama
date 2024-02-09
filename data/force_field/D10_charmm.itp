@@ -5,39 +5,39 @@
 D10           3
 
 [ atoms ]
-; atomnr  atomtype   resnr  resname  atomname  chargegrp   charge       mass
-       1   CT3      1      D10        C1          1   -0.180   12.01100 ; CT # alkane CH3 
-       2   HA3      1      D10       H11          1    0.060    1.00800 ; HC # alkane H.
-       3   HA3      1      D10       H12          1    0.060    1.00800 ; HC # alkane H.
-       4   HA3      1      D10       H13          1    0.060    1.00800 ; HC # alkane H.
-       5   CT3      1      D10       C10          7   -0.180   12.01100 ; CT # alkane CH3 
-       6   HA3      1      D10       H30          7    0.060    1.00800 ; HC # alkane H.
-       7   HA3      1      D10       H31          7    0.060    1.00800 ; HC # alkane H.
-       8   HA3      1      D10       H32          7    0.060    1.00800 ; HC # alkane H.
-       9   CT2      1      D10        C2         13   -0.120   12.01100 ; CT # alkane CH2 
-      10   HA2      1      D10       H14         13    0.060    1.00800 ; HC # alkane H.
-      11   HA2      1      D10       H15         13    0.060    1.00800 ; HC # alkane H.
-      12   CT2      1      D10        C3         17   -0.120   12.01100 ; CT # alkane CH2 
-      13   HA2      1      D10       H16         17    0.060    1.00800 ; HC # alkane H.
-      14   HA2      1      D10       H17         17    0.060    1.00800 ; HC # alkane H.
-      15   CT2      1      D10        C4         21   -0.120   12.01100 ; CT # alkane CH2 
-      16   HA2      1      D10       H18         21    0.060    1.00800 ; HC # alkane H.
-      17   HA2      1      D10       H19         21    0.060    1.00800 ; HC # alkane H.
-      18   CT2      1      D10        C5         25   -0.120   12.01100 ; CT # alkane CH2 
-      19   HA2      1      D10       H20         25    0.060    1.00800 ; HC # alkane H.
-      20   HA2      1      D10       H21         25    0.060    1.00800 ; HC # alkane H.
-      21   CT2      1      D10        C6         29   -0.120   12.01100 ; CT # alkane CH2 
-      22   HA2      1      D10       H22         29    0.060    1.00800 ; HC # alkane H.
-      23   HA2      1      D10       H23         29    0.060    1.00800 ; HC # alkane H.
-      24   CT2      1      D10        C7         33   -0.120   12.01100 ; CT # alkane CH2 
-      25   HA2      1      D10       H24         33    0.060    1.00800 ; HC # alkane H.
-      26   HA2      1      D10       H25         33    0.060    1.00800 ; HC # alkane H.
-      27   CT2      1      D10        C8         37   -0.120   12.01100 ; CT # alkane CH2 
-      28   HA2      1      D10       H26         37    0.060    1.00800 ; HC # alkane H.
-      29   HA2      1      D10       H27         37    0.060    1.00800 ; HC # alkane H.
-      30   CT2      1      D10        C9         41   -0.120   12.01100 ; CT # alkane CH2 
-      31   HA2      1      D10       H28         41    0.060    1.00800 ; HC # alkane H.
-      32   HA2      1      D10       H29         41    0.060    1.00800 ; HC # alkane H.
+; atomnr  atomtype  resnr  resname  atomname  chargegrp  charge  mass  element
+       1   CT3      1      D10        C1          1   -0.180   12.01100 ; C
+       2   HA3      1      D10       H11          1    0.060    1.00800 ; H
+       3   HA3      1      D10       H12          1    0.060    1.00800 ; H
+       4   HA3      1      D10       H13          1    0.060    1.00800 ; H
+       5   CT3      1      D10       C10          7   -0.180   12.01100 ; C
+       6   HA3      1      D10       H30          7    0.060    1.00800 ; H
+       7   HA3      1      D10       H31          7    0.060    1.00800 ; H
+       8   HA3      1      D10       H32          7    0.060    1.00800 ; H
+       9   CT2      1      D10        C2         13   -0.120   12.01100 ; C
+      10   HA2      1      D10       H14         13    0.060    1.00800 ; H
+      11   HA2      1      D10       H15         13    0.060    1.00800 ; H
+      12   CT2      1      D10        C3         17   -0.120   12.01100 ; C
+      13   HA2      1      D10       H16         17    0.060    1.00800 ; H
+      14   HA2      1      D10       H17         17    0.060    1.00800 ; H
+      15   CT2      1      D10        C4         21   -0.120   12.01100 ; C
+      16   HA2      1      D10       H18         21    0.060    1.00800 ; H
+      17   HA2      1      D10       H19         21    0.060    1.00800 ; H
+      18   CT2      1      D10        C5         25   -0.120   12.01100 ; C
+      19   HA2      1      D10       H20         25    0.060    1.00800 ; H
+      20   HA2      1      D10       H21         25    0.060    1.00800 ; H
+      21   CT2      1      D10        C6         29   -0.120   12.01100 ; C
+      22   HA2      1      D10       H22         29    0.060    1.00800 ; H
+      23   HA2      1      D10       H23         29    0.060    1.00800 ; H
+      24   CT2      1      D10        C7         33   -0.120   12.01100 ; C
+      25   HA2      1      D10       H24         33    0.060    1.00800 ; H
+      26   HA2      1      D10       H25         33    0.060    1.00800 ; H
+      27   CT2      1      D10        C8         37   -0.120   12.01100 ; C
+      28   HA2      1      D10       H26         37    0.060    1.00800 ; H
+      29   HA2      1      D10       H27         37    0.060    1.00800 ; H
+      30   CT2      1      D10        C9         41   -0.120   12.01100 ; C
+      31   HA2      1      D10       H28         41    0.060    1.00800 ; H
+      32   HA2      1      D10       H29         41    0.060    1.00800 ; H
 ; Total charge : 0.000 ### Number of unassigned atoms : 0/32
 
 [ bonds ]

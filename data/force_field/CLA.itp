@@ -14,5 +14,5 @@
 CLA	     1
 
 [ atoms ]
-; atomnr  atomtype   resnr  resname  atomname  chargegrp   charge       mass
-     1        CLA      1      CLA    CLA      1     -1.000    35.4500   ; qtot -1.000
+; atomnr  atomtype  resnr  resname  atomname  chargegrp  charge  mass  element
+     1        CLA      1      CLA    CLA      1     -1.000    35.4500   ; Cl

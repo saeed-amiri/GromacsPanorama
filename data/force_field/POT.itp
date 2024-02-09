@@ -15,4 +15,4 @@ POT	     1
 
 [ atoms ]
 ; atomnr  atomtype  resnr  resname  atomname  chargegrp  charge  mass     element
-     1        POT      1      POT    POT      1      1.000    39.0983   ; qtot  1.000
+     1        POT      1      POT    POT      1      1.000    39.0983   ; Na

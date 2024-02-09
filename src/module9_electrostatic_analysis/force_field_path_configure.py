@@ -22,11 +22,15 @@ class FileConfig:
     file_names: dict[str, typing.Any] = field(default_factory=lambda: {
         'all_atom_info': 'charmm36_silica.itp',
         'apbs_info': 'CHARMM.itp',
-        'oda_info': 'D10_charmm.itp',
-        'decane_info': 'ODAp_charmm.itp',
-        'charge_info': ['CLA.itp', 'POT.itp', 'TIP3.itp']})
+        'charge_info': [
+                        'CLA.itp',  # charge for Cl ion
+                        'POT.itp',  # charge for Na ion
+                        'TIP3.itp',  # charge for water atoms 
+                        'D10_charmm.itp',  # charge for the oil (Decane)
+                        'ODAp_charmm.itp'  # charges for the protonated ODA
+                        ]})
 
-    np_info: str = 'APT_COR.itp'
+    np_info: str = 'APT_COR.itp'  # charge for the COR and APT of the NP
 
 
 @dataclass

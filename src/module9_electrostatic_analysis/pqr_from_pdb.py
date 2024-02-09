@@ -29,7 +29,21 @@ class FileConfig:
 
 
 @dataclass
-class AllConfig(FileConfig):
+class FFTypeConfig:
+    """set the name of each file with their name of the data"""
+    ff_type_dict: dict[str, str] = field(
+        default_factory=lambda: {
+            "SOL": 'TIP3',
+            "CLA": 'CLA',
+            "D10": 'D10_charmm',
+            "ODN": 'ODAp_charmm',
+            'APT': 'APT_COR',
+            'COR': 'APT_COR'
+        })
+
+
+@dataclass
+class AllConfig(FileConfig, FFTypeConfig):
     """set all the configs"""
     compute_radius: bool = True
 
@@ -41,6 +55,7 @@ class PdbToPqr:
 
     info_msg: str = 'Message from PdbToPqr:\n'
     configs: AllConfig
+    force_field: "ReadForceFieldFile"
 
     def __init__(self,
                  structure_files: list[str],  # Structure files
@@ -58,36 +73,48 @@ class PdbToPqr:
         """get all the infos"""
         strcuture_data: dict[str, pd.DataFrame] = ReadInputStructureFile(
             log, self.configs.structure_files).structure_dict
-        ReadForceFieldFile(log)
-        # itp_atoms: pd.DataFrame = \
-            # itp_to_df.Itp(self.configs.itp_file, section='atoms').atoms
-        # ff_radius: pd.DataFrame
-        # if self.configs.compute_radius:
-            # ff_radius = self.compute_radius(log)
-        # else:
-            # ff_radius = parse_charmm_data.ParseData(
-                # self.configs.ff_user, log).radius_df
+        self.force_field = ReadForceFieldFile(log)
+        self.ff_radius: pd.DataFrame = self.compute_radius(log)
+        self.generate_pqr(strcuture_data)
 
     def compute_radius(self,
                        log: logger.logging.Logger
                        ) -> pd.DataFrame:
-        """reading the force filed files and compute the radius based
-        on sigma"""
-        ff_files: dict[str, typing.Any] = \
-            force_field_path_configure.ConfigFFPath(log).ff_files
-        all_atom_info = \
-            itp_to_df.Itp(ff_files['all_atom_info'], 'atomtypes').atomtypes
-        return self.set_radius(all_atom_info)
+        """compute the radius based on sigma"""
+        ff_radius: pd.DataFrame = self.force_field.ff_sigma.copy()
+        radius = ff_radius['sigma'] * 1**(1/6) / 2
+        ff_radius['radius'] = radius
+        return ff_radius
+
+    def generate_pqr(self,
+                     strcuture_data: dict[str, pd.DataFrame]
+                     ) -> None:
+        """generate the pqr data and write them"""
+        for fname, struct in strcuture_data.items():
+            self.set_radius(struct)
+
+    def set_radius(self,
+                   struct: pd.DataFrame
+                   ) -> pd.DataFrame:
+        """set the radius column for each structure dataframe"""
+        df_i: pd.DataFrame = struct.copy()
+        df_i['radius'] = [-1 for _ in range(len(df_i))]
 
     @staticmethod
-    def set_radius(all_atom_info: pd.DataFrame
-                   ) -> pd.DataFrame:
-        """Compute the radius based on the sigma vlaues
-        sigma (in nm) = 1 * R_min (in nm) * 2^(-1/6)
-        """
-        radius = all_atom_info['sigma'] * 1**(1/6) / 2
-        all_atom_info['radius'] = radius
-        return all_atom_info
+    def mk_pqr_df(pdb_with_charge_radii: pd.DataFrame
+                  ) -> pd.DataFrame:
+        """prepare df in the format of the pqr file"""
+        columns: list[str] = ['records',
+                              'atom_id',
+                              'atom_name',
+                              'residue_name',
+                              'chain_id',
+                              'residue_number',
+                              'x', 'y', 'z', 'charge', 'radius']
+        float_columns: list[str] = ['x', 'y', 'z', 'charge', 'radius']
+        df_i: pd.DataFrame = pdb_with_charge_radii[columns].copy()
+        df_i[float_columns] = df_i[float_columns].astype(float)
+        return df_i
 
     def check_ff_files(self,
                        log: logger.logging.Logger

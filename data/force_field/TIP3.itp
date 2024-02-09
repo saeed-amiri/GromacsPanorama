@@ -14,7 +14,7 @@
 SOL	     2
 
 [ atoms ]
-; nr	type	resnr	residu	atom	cgnr	charge	mass
+; atomnr  atomtype   resnr  resname  atomname  chargegrp   charge       mass
      1         OT      1     SOL    OH2      1     -0.834    15.9994   ; qtot -0.834
      2         HT      1     SOL     H1      2      0.417     1.0080   ; qtot -0.417
      3         HT      1     SOL     H2      3      0.417     1.0080   ; qtot  0.000

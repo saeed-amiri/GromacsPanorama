@@ -5,7 +5,7 @@
    ODN		3
 
 [ atoms ]
-; atomnr  atomtype  resnr  resname  atomname  chargegrp  charge  mass     element
+; atomnr  atomtype   resnr  resname  atomname  chargegrp   charge       mass
       1      CT3      1      ODN       CT3          1  -0.180  12.011  ;    CT3
       2      HA3      1      ODN      HA31          1   0.060   1.008  ;    HA3
       3      HA3      1      ODN      HA32          1   0.060   1.008  ;    HA3

@@ -55,17 +55,11 @@ class PdbToPqr:
                  log: logger.logging.Logger
                  ) -> pd.DataFrame:
         """get all the infos"""
-        strcuture_data: dict[str, pd.DataFrame] = ReadInputStructureFile(
-            log, self.configs.structure_files).structure_dict
-        self.check_ff_files(log)
+        # strcuture_data: dict[str, pd.DataFrame] = ReadInputStructureFile(
+        #     log, self.configs.structure_files).structure_dict
+        ReadForceFieldFile(log)
         # itp_atoms: pd.DataFrame = \
             # itp_to_df.Itp(self.configs.itp_file, section='atoms').atoms
-        # if structure_files_type == 'pdb':
-            # structure: pd.DataFrame = \
-                # pdb_to_df.Pdb(self.configs.structure_files, log).pdb_df
-        # elif structure_files_type == 'gro':
-            # structure = \
-                # gro_to_df.ReadGro(self.configs.structure_files, log).gro_data
         # ff_radius: pd.DataFrame
         # if self.configs.compute_radius:
             # ff_radius = self.compute_radius(log)
@@ -192,6 +186,88 @@ class ReadInputStructureFile:
                    ) -> None:
         """write and log messages"""
         print(f'{bcolors.OKCYAN}{ReadInputStructureFile.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
+class ReadForceFieldFile:
+    """reading the force field files (itp files) and return dataframe
+    with names of the atoms and thier charge and radius"""
+
+    info_msg: str = 'Message from ReadForceFieldFile:\n'
+    _configs: AllConfig
+
+    def __init__(self,
+                 log: logger.logging.Logger,
+                 configs: AllConfig = AllConfig()
+                 ) -> None:
+        self._configs = configs
+        ff_files: dict[str, typing.Any] = \
+            force_field_path_configure.ConfigFFPath(log).ff_files
+        self._procces_files(ff_files, log)
+        self._write_msg(log)
+
+    def _procces_files(self,
+                       ff_files: dict[str, typing.Any],
+                       log: logger.logging.Logger
+                       ) -> None:
+        """prccess the force filed files"""
+        self.check_ff_files(ff_files, log)
+        self._read_itp(ff_files, log)
+
+    def check_ff_files(self,
+                       ff_files: dict[str, typing.Any],
+                       log: logger.logging.Logger
+                       ) -> None:
+        """check all the existence of the all files"""
+        for key, value in ff_files.items():
+            if isinstance(value, str):
+                # Value is a single file path
+                if my_tools.check_file_exist(value, log) is False:
+                    self.info_msg += f"\tFile does not exist: {value}\n"
+            elif isinstance(value, list):
+                # Value is a list of file paths
+                for file_path in value:
+                    if my_tools.check_file_exist(file_path, log) is False:
+                        self.info_msg += \
+                            f"\tFile does not exist: {file_path}\n"
+            else:
+                self.info_msg += \
+                    f"Unexpected value type for key {key}: {type(value)}"
+
+    def _read_itp(self,
+                  ff_files: dict[str, typing.Any],
+                  log: logger.logging.Logger
+                  ) -> None:
+        """read all the itp files and make one dataframe"""
+        self._read_main_force_field(ff_files['all_atom_info'])
+        self._read_charge_of_atoms(ff_files)
+
+    def _read_main_force_field(self,
+                               ff_file: str
+                               ) -> pd.DataFrame:
+        """reading the main force file file: charmm36_silica.itp"""
+        return itp_to_df.Itp(ff_file, section='atomtypes').atomtypes
+
+    def _read_charge_of_atoms(self,
+                              ff_files: dict[str, typing.Any]
+                              ) -> pd.DataFrame:
+        """reading the itp files which contains the charge of each atom
+        used in the simulations:
+        These files are:
+        'CLA.itp': charge for Cl ion
+        'POT.itp': charge for Na ion
+        'TIP3.itp': charge for water atoms 
+        'D10_charmm.itp': charge for the oil (Decane)
+        'ODAp_charmm.itp': charges for the protonated ODA
+        'APT_COR.itp': charge for the COR and APT of the NP
+        """
+
+    def _write_msg(self,
+                   log: logger.logging.Logger  # To log
+                   ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{ReadForceFieldFile.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
 

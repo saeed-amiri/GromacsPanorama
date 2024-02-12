@@ -159,6 +159,7 @@ class PdbToPqr:
             df_i = self.set_charge(df_i)
             df_i = self.assign_chain_ids(df_i)
             df_i = self.mk_pqr_df(df_i)
+            df_i = self.convert_nm_ang(df_i)
             self.write_pqr(fname := f'{fname}.pqr', df_i)
             self.info_msg += f'\tA pqr file writen as `{fname}`\n'
 
@@ -240,6 +241,13 @@ class PdbToPqr:
         float_columns: list[str] = ['x', 'y', 'z', 'charge', 'radius']
         df_i: pd.DataFrame = pdb_with_charge_radii[columns].copy()
         df_i[float_columns] = df_i[float_columns].astype(float)
+        return df_i
+
+    @staticmethod
+    def convert_nm_ang(df_i: pd.DataFrame) -> pd.DataFrame:
+        """convert the unit of data"""
+        columns: list[str] = ['x', 'y', 'z', 'radius']
+        df_i[columns] *= 10
         return df_i
 
     @staticmethod

@@ -96,7 +96,8 @@ class PdbToPqr:
             df_i = self.set_charge(df_i)
             df_i = self.assign_chain_ids(df_i)
             df_i = self.mk_pqr_df(df_i)
-            self.write_pqr(f'{fname}.pqr', df_i)
+            self.write_pqr(fname := f'{fname}.pqr', df_i)
+            self.info_msg += f'\tA pqr file writen as `{fname}`\n'
 
     def get_atom_type(self,
                       struct: pd.DataFrame,
@@ -120,7 +121,7 @@ class PdbToPqr:
     def set_radius(self,
                    df_i: pd.DataFrame
                    ) -> pd.DataFrame:
-        # Merge to add radius based on atom_type
+        """Merge to add radius based on atom_type"""
         df_i = df_i.merge(self.ff_radius[['name', 'radius']],
                           how='left',
                           left_on='atom_type',
@@ -132,7 +133,6 @@ class PdbToPqr:
                    df_i: pd.DataFrame
                    ) -> pd.DataFrame:
         """set charge values for the atoms"""
-        # print(self.force_field.ff_charge)
         df_i['charge'] = -2.0
         for index, row in df_i.iterrows():
             res: str = row['residue_name']

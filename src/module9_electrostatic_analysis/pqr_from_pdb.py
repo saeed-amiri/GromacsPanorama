@@ -6,8 +6,10 @@ make the data from the pdb and itp
 import os
 import sys
 import typing
+import string
 from dataclasses import dataclass, field
 
+import numpy as np
 import pandas as pd
 
 from common import logger, itp_to_df, pdb_to_df, gro_to_df, my_tools
@@ -91,6 +93,8 @@ class PdbToPqr:
         for fname, struct in strcuture_data.items():
             df_i: pd.DataFrame = self.get_atom_type(struct)
             df_i = self.set_radius(df_i)
+            df_i = self.assign_chain_ids(df_i)
+            df_i = self.mk_pqr_df(df_i)
 
     def get_atom_type(self,
                       struct: pd.DataFrame,
@@ -125,12 +129,31 @@ class PdbToPqr:
                 df_i.at[index, 'radius'] = radius.values[0]
         return df_i
 
+    def assign_chain_ids(self,
+                         df_i: pd.DataFrame
+                         ) -> pd.DataFrame:
+        """Factorize the residue names to get a unique ID for each
+        unique name"""
+        residue_ids: np.ndarray
+        unique_residues: pd.core.indexes.base.Index
+        residue_ids, unique_residues = pd.factorize(df_i['residue_name'])
+        alphabet: list[str] = list(string.ascii_uppercase)
+        chain_ids: list[str] = \
+            alphabet + [f'{i}{j}' for i in alphabet for j in alphabet]
+        # Map from factorized IDs to chain IDs
+        residue_id_to_chain_id: dict[int, str] = \
+            {i: chain_ids[i] for i in range(len(unique_residues))}
+
+        # Apply the mapping to the factorized IDs
+        df_i['chain_id'] = [residue_id_to_chain_id[id] for id in residue_ids]
+
+        return df_i
+
     @staticmethod
     def mk_pqr_df(pdb_with_charge_radii: pd.DataFrame
                   ) -> pd.DataFrame:
         """prepare df in the format of the pqr file"""
-        columns: list[str] = ['records',
-                              'atom_id',
+        columns: list[str] = ['atom_id',
                               'atom_name',
                               'residue_name',
                               'chain_id',

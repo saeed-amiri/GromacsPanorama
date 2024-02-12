@@ -1,6 +1,69 @@
 """
-make the data from the pdb and itp
+This script is designed to generate parameterized PQR files from
+structural data files (PDB or GRO format) using specified force field
+parameters and topology files (ITP format). It integrates structural
+information with atomistic details such as atomic charges and radii
+derived from force field data, facilitating the creation of PQR files
+necessary for molecular simulations and electrostatic analysis.
 
+Main Components:
+    - FileConfig: Data class that specifies the names and types of
+    input and output files, including structure files (PDB/GRO), force
+    field ITP file, and the output PQR file.
+    - FFTypeConfig: Data class defining the mapping between residue
+    names and their corresponding force field types, supporting
+    customized force field assignments.
+    - AllConfig: Inherits from FileConfig and FFTypeConfig to
+    consolidate all configuration settings into a single, accessible
+    object.
+    - PdbToPqr: The core class responsible for orchestrating the
+    conversion process, including reading input files, applying force
+    field parameters (charges and radii), and generating the output
+    PQR file.
+    - ReadInputStructureFile: Utility class for reading and processing
+    structural input files (PDB/GRO), ensuring compatibility with the
+    desired force field parameters.
+    - ReadForceFieldFile: Handles the extraction of force field
+    parameters from ITP files, including atomic charges and radii, and
+    organizes them for easy access and application to the structural
+    data.
+    - Utility Functions: Includes functions for assigning chain IDs,
+    computing atomic radii, setting charges, and formatting the final
+    PQR file output.
+
+Workflow:
+    1. Initialize the script with a list of structure files and a
+    logging mechanism.
+    2. Configuration settings (file names, force field mappings) are
+    defined and passed to the PdbToPqr class.
+    3. Structural input files are read, and relevant atomistic data
+    (atom types, positions) are extracted.
+    4. Force field parameters (atomic charges and radii) are applied
+    based on the atom types and residue names, utilizing mappings
+    defined in FFTypeConfig and data extracted by ReadForceFieldFile.
+    5. Additional properties (e.g., chain IDs) are assigned, and the
+    data is formatted according to PQR file standards.
+    6. The final PQR file is written out for each input structure,
+    ready for use in molecular simulation or analysis tools.
+
+Usage:
+    This script is intended to be used as part of a molecular modeling
+    or simulation workflow, where PQR files are needed for
+    electrostatics calculations or other analyses. It requires a
+    proper environment with necessary dependencies (Pandas, NumPy,
+    etc.) and access to relevant input files (PDB/GRO and ITP).
+
+Example:
+    To run the script from the command line, provide the paths to the
+    structure files as arguments:
+`python pqr_from_pdb.py structure1.pdb structure2.gro`
+
+Ensure that the force field ITP files and any additional configuration
+settings are correctly specified within the script or passed as
+parameters.
+doc. by ChatGpt
+Saeed
+12 Feb 2024
 """
 
 import os

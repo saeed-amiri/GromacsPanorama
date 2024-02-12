@@ -118,17 +118,14 @@ class PdbToPqr:
         return df_i
 
     def set_radius(self,
-                   struct: pd.DataFrame
+                   df_i: pd.DataFrame
                    ) -> pd.DataFrame:
-        """set the radius column for each structure dataframe"""
-        df_i: pd.DataFrame = struct.copy()
-        df_i['radius'] = [-1 for _ in range(len(df_i))]
-        for index, row in df_i.iterrows():
-            atom_type = row['atom_type']
-            radius = \
-                self.ff_radius[self.ff_radius['name'] == atom_type]['radius']
-            if not radius.empty:
-                df_i.at[index, 'radius'] = radius.values[0]
+        # Merge to add radius based on atom_type
+        df_i = df_i.merge(self.ff_radius[['name', 'radius']],
+                          how='left',
+                          left_on='atom_type',
+                          right_on='name')
+        df_i.drop(columns=['name'], inplace=True)
         return df_i
 
     def set_charge(self,

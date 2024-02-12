@@ -117,6 +117,12 @@ class PdbToPqr:
         """set the radius column for each structure dataframe"""
         df_i: pd.DataFrame = struct.copy()
         df_i['radius'] = [-1 for _ in range(len(df_i))]
+        for index, row in df_i.iterrows():
+            atom_type = row['atom_type']
+            radius = \
+                self.ff_radius[self.ff_radius['name'] == atom_type]['radius']
+            if not radius.empty:
+                df_i.at[index, 'radius'] = radius.values[0]
         return df_i
 
     @staticmethod

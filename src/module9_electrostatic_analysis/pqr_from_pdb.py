@@ -37,8 +37,8 @@ class FFTypeConfig:
             "CLA": 'CLA',
             "D10": 'D10_charmm',
             "ODN": 'ODAp_charmm',
-            'APT': 'APT_COR',
-            'COR': 'APT_COR'
+            'APT': 'np_info',
+            'COR': 'np_info'
         })
 
 
@@ -65,7 +65,7 @@ class PdbToPqr:
         configs.structure_files = structure_files
         self.configs = configs
         self.initiate(log)
-        # self.write_msg(log)
+        self.write_msg(log)
 
     def initiate(self,
                  log: logger.logging.Logger
@@ -74,12 +74,10 @@ class PdbToPqr:
         strcuture_data: dict[str, pd.DataFrame] = ReadInputStructureFile(
             log, self.configs.structure_files).structure_dict
         self.force_field = ReadForceFieldFile(log)
-        self.ff_radius: pd.DataFrame = self.compute_radius(log)
+        self.ff_radius: pd.DataFrame = self.compute_radius()
         self.generate_pqr(strcuture_data)
 
-    def compute_radius(self,
-                       log: logger.logging.Logger
-                       ) -> pd.DataFrame:
+    def compute_radius(self) -> pd.DataFrame:
         """compute the radius based on sigma"""
         ff_radius: pd.DataFrame = self.force_field.ff_sigma.copy()
         radius = ff_radius['sigma'] * 1**(1/6) / 2
@@ -91,7 +89,27 @@ class PdbToPqr:
                      ) -> None:
         """generate the pqr data and write them"""
         for fname, struct in strcuture_data.items():
-            self.set_radius(struct)
+            df_i: pd.DataFrame = self.get_atom_type(struct)
+            df_i = self.set_radius(df_i)
+
+    def get_atom_type(self,
+                      struct: pd.DataFrame,
+                      ) -> pd.DataFrame:
+        """get atom type for each of them in the strcuture dataframe"""
+        df_i: pd.DataFrame = struct.copy()
+        df_i['atom_type'] = ['' for _ in range(len(struct))]
+        for index, item in df_i.iterrows():
+            res_i = self.configs.ff_type_dict[item['residue_name']]
+            atom_i = item['atom_name']
+            ff_i = self.force_field.ff_charge[res_i]
+
+            atom_type_series = ff_i[ff_i['atomname'] == atom_i]['atomtype']
+            if not atom_type_series.empty:
+                atom_type = atom_type_series.values[0]
+                df_i.at[index, 'atom_type'] = atom_type
+            else:
+                df_i.at[index, 'atom_type'] = 'nan'
+        return df_i
 
     def set_radius(self,
                    struct: pd.DataFrame
@@ -99,6 +117,7 @@ class PdbToPqr:
         """set the radius column for each structure dataframe"""
         df_i: pd.DataFrame = struct.copy()
         df_i['radius'] = [-1 for _ in range(len(df_i))]
+        return df_i
 
     @staticmethod
     def mk_pqr_df(pdb_with_charge_radii: pd.DataFrame

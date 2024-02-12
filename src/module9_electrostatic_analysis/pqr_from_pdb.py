@@ -93,8 +93,10 @@ class PdbToPqr:
         for fname, struct in strcuture_data.items():
             df_i: pd.DataFrame = self.get_atom_type(struct)
             df_i = self.set_radius(df_i)
+            df_i = self.set_charge(df_i)
             df_i = self.assign_chain_ids(df_i)
             df_i = self.mk_pqr_df(df_i)
+            self.write_pqr(f'{fname}.pqr', df_i)
 
     def get_atom_type(self,
                       struct: pd.DataFrame,
@@ -127,6 +129,22 @@ class PdbToPqr:
                 self.ff_radius[self.ff_radius['name'] == atom_type]['radius']
             if not radius.empty:
                 df_i.at[index, 'radius'] = radius.values[0]
+        return df_i
+
+    def set_charge(self,
+                   df_i: pd.DataFrame
+                   ) -> pd.DataFrame:
+        """set charge values for the atoms"""
+        # print(self.force_field.ff_charge)
+        df_i['charge'] = -2.0
+        for index, row in df_i.iterrows():
+            res: str = row['residue_name']
+            ff_df: pd.DataFrame = \
+                self.force_field.ff_charge[self.configs.ff_type_dict[res]]
+            atom_type: str = row['atom_type']
+            charge: float = \
+                ff_df[ff_df['atomtype'] == atom_type]['charge'].values[0]
+            df_i.at[index, 'charge'] = charge
         return df_i
 
     def assign_chain_ids(self,
@@ -163,6 +181,27 @@ class PdbToPqr:
         df_i: pd.DataFrame = pdb_with_charge_radii[columns].copy()
         df_i[float_columns] = df_i[float_columns].astype(float)
         return df_i
+
+    @staticmethod
+    def write_pqr(pqr_file_name: str,
+                  pqr_df: pd.DataFrame
+                  ) -> None:
+        """writing the pqr to a file"""
+        with open(pqr_file_name, 'w', encoding='utf8') as f_w:
+            for _, row in pqr_df.iterrows():
+                line = f"ATOM  {row['atom_id']:>5} " \
+                       f"{row['atom_name']:<4} " \
+                       f"{row['residue_name']:<3} " \
+                       f"{row['chain_id']:>1} " \
+                       f"{row['residue_number']:>5} " \
+                       f"{row['x']:>8.3f}" \
+                       f"{row['y']:>8.3f}" \
+                       f"{row['z']:>8.3f} " \
+                       f"{row['charge']:>7.4f} " \
+                       f"{row['radius']:>6.4f}\n"
+                f_w.write(line)
+            f_w.write('TER\n')
+            f_w.write('END\n')
 
     def check_ff_files(self,
                        log: logger.logging.Logger

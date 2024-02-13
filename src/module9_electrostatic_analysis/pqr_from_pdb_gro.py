@@ -239,10 +239,9 @@ class PdbToPqr:
         df_np: pd.DataFrame = df_i[
             (df_i['residue_name'] == 'COR') | (df_i['residue_name'] == 'APT')]
         df_oda: pd.DataFrame = df_i[df_i['residue_name'] == 'ODN']
-        df_solution: pd.DataFrame = df_i[~(
-            (df_i['residue_name'] == 'COR') |
-            (df_i['residue_name'] == 'APT') |
-            (df_i['residue_name'] == 'ODN'))]
+        df_solution: pd.DataFrame = df_i[~((df_i['residue_name'] == 'COR') |
+                                           (df_i['residue_name'] == 'APT') |
+                                           (df_i['residue_name'] == 'ODN'))]
 
         if not df_solution.empty:
             df_solution = self._set_solution_charge(df_solution)

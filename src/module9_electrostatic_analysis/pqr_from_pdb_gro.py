@@ -238,15 +238,22 @@ class PdbToPqr:
         df_i['charge'] = 0.0
         df_np: pd.DataFrame = df_i[
             (df_i['residue_name'] == 'COR') | (df_i['residue_name'] == 'APT')]
-        df_no_np: pd.DataFrame = df_i[~(
-            (df_i['residue_name'] == 'COR') | (df_i['residue_name'] == 'APT'))]
-        if not df_no_np.empty:
-            df_no_np = self._set_no_np_charge(df_no_np)
+        df_oda: pd.DataFrame = df_i[df_i['residue_name'] == 'ODN']
+        df_solution: pd.DataFrame = df_i[~(
+            (df_i['residue_name'] == 'COR') |
+            (df_i['residue_name'] == 'APT') |
+            (df_i['residue_name'] == 'ODN'))]
+
+        if not df_solution.empty:
+            df_solution = self._set_solution_charge(df_solution)
+
+        if not df_oda.empty:
+            df_oda = self._set_oda_charge(df_oda)
 
         if not df_np.empty:
             df_np = self._set_np_charge(df_np, log)
 
-        df_recombined = pd.concat([df_np, df_no_np])
+        df_recombined = pd.concat([df_np, df_oda, df_solution])
         df_recombined = df_recombined.sort_index()
         self._report_residue_charge(df_recombined)
         self.info_msg += ('\tThe total charge of this portion is: '
@@ -263,23 +270,39 @@ class PdbToPqr:
                 df_recombined[df_recombined['residue_name'] == res]
             total_charge: float = sum(df_i['charge'])
             self.info_msg += f'\t\t{res}: {total_charge:.3f}\n'
+            df_i.to_csv(f'{res}_charge_debug', sep=' ')
             del df_i
 
-    def _set_no_np_charge(self,
-                          df_no_np: pd.DataFrame
-                          ) -> pd.DataFrame:
+    def _set_oda_charge(self,
+                        df_oda: pd.DataFrame
+                        ) -> pd.DataFrame:
+        """set the charges for ODA"""
+        res_indices: list[int] = list(set(df_oda['residue_number']))
+        ff_df: pd.DataFrame = \
+            self.force_field.ff_charge[self.configs.ff_type_dict['ODN']]
+        df_list: list[pd.DataFrame] = []
+        for res in res_indices:
+            df_i = df_oda[df_oda['residue_number'] == res].copy()
+            df_i['charge'] = list(ff_df['charge'])
+            df_list.append(df_i)
+        df_updated: pd.DataFrame = pd.concat(df_list)
+        return df_updated.sort_index()
+
+    def _set_solution_charge(self,
+                             df_solution: pd.DataFrame
+                             ) -> pd.DataFrame:
         """set the charges for the section without np"""
-        for index, row in df_no_np.iterrows():
+        for index, row in df_solution.iterrows():
             res: str = row['residue_name']
             ff_df: pd.DataFrame = \
                 self.force_field.ff_charge[self.configs.ff_type_dict[res]]
             atom_type: str = row['atom_type']
             charge: float = \
                 ff_df[ff_df['atomtype'] == atom_type]['charge'].values[0]
-            df_no_np.at[index, 'charge'] = float(charge)
+            df_solution.at[index, 'charge'] = float(charge)
         self.info_msg += ('\tTotal charge of the no_np section is: '
-                          f'{sum(df_no_np["charge"]):.3f}\n')
-        return df_no_np
+                          f'{sum(df_solution["charge"]):.3f}\n')
+        return df_solution
 
     def _set_np_charge(self,
                        df_np: pd.DataFrame,

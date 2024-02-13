@@ -246,6 +246,8 @@ class PdbToPqr:
                 charge: float = \
                     ff_df[ff_df['atomtype'] == atom_type]['charge'].values[0]
                 df_no_np.at[index, 'charge'] = float(charge)
+            self.info_msg += ('\tTotal charge of the no_np section is: '
+                                f'{sum(df_no_np["charge"]):.3f}\n')
         if not df_np.empty:
             if len(df_np) == len(
                ff_df := self.force_field.ff_charge['np_info']):
@@ -265,6 +267,8 @@ class PdbToPqr:
                             ff_df[
                                 ff_df['atomnr'] == atom_id]['charge'].values[0]
                     df_np.at[index, 'charge'] = float(charge)
+                self.info_msg += ('\tTotal charge of the np section is: '
+                                  f'{sum(df_np["charge"]):.3f}\n')
 
             else:
                 log.error(msg := '\tError! There is problem in np data!\n')

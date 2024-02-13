@@ -70,6 +70,7 @@ import os
 import sys
 import typing
 import string
+from collections import Counter
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -108,7 +109,20 @@ class FFTypeConfig:
 
 
 @dataclass
-class AllConfig(FileConfig, FFTypeConfig):
+class NumerInResidue:
+    """Number of atoms in each residues"""
+    res_number_dict: dict[str, int] = field(
+        default_factory=lambda: {
+            "SOL": 3,
+            "CLA": 1,
+            "D10": 32,
+            "ODN": 59,
+            'COR': 4356
+        })
+
+
+@dataclass
+class AllConfig(FileConfig, FFTypeConfig, NumerInResidue):
     """set all the configs"""
     compute_radius: bool = True
 
@@ -140,7 +154,7 @@ class PdbToPqr:
             log, self.configs.structure_files).structure_dict
         self.force_field = ReadForceFieldFile(log)
         self.ff_radius: pd.DataFrame = self.compute_radius()
-        self.generate_pqr(strcuture_data)
+        self.generate_pqr(strcuture_data, log)
 
     def compute_radius(self) -> pd.DataFrame:
         """compute the radius based on sigma"""
@@ -150,18 +164,35 @@ class PdbToPqr:
         return ff_radius
 
     def generate_pqr(self,
-                     strcuture_data: dict[str, pd.DataFrame]
+                     strcuture_data: dict[str, pd.DataFrame],
+                     log: logger.logging.Logger
                      ) -> None:
         """generate the pqr data and write them"""
         for fname, struct in strcuture_data.items():
+            self.count_residues(struct)
             df_i: pd.DataFrame = self.get_atom_type(struct)
             df_i = self.set_radius(df_i)
-            df_i = self.set_charge(df_i)
+            df_i = self.set_charge(df_i, log)
             df_i = self.assign_chain_ids(df_i)
             df_i = self.mk_pqr_df(df_i)
             df_i = self.convert_nm_ang(df_i)
             self.write_pqr(fname := f'{fname}.pqr', df_i)
             self.info_msg += f'\tA pqr file writen as `{fname}`\n'
+
+    def count_residues(self,
+                       struct: pd.DataFrame
+                       ) -> None:
+        """count the number of the each residue in each input"""
+        residues: list[str] = list(struct['residue_name'])
+        counts: "Counter" = Counter(residues)
+        msg: str = '\tNumber of each resdiue and atoms:\n'
+        for item, value in counts.items():
+            msg += f'\t{item}: {value} atoms'
+            if item != 'APT':
+                msg += f' -> {value/self.configs.res_number_dict[item]} res\n'
+            else:
+                msg += '\n'
+        self.info_msg += msg
 
     def get_atom_type(self,
                       struct: pd.DataFrame,
@@ -196,21 +227,55 @@ class PdbToPqr:
         return df_i
 
     def set_charge(self,
-                   df_i: pd.DataFrame
+                   df_i: pd.DataFrame,
+                   log: logger.logging.Logger
                    ) -> pd.DataFrame:
         """set charge values for the atoms"""
-        df_i['charge'] = -2.0
-        for index, row in df_i.iterrows():
-            res: str = row['residue_name']
-            ff_df: pd.DataFrame = \
-                self.force_field.ff_charge[self.configs.ff_type_dict[res]]
-            atom_type: str = row['atom_type']
-            charge: float = \
-                ff_df[ff_df['atomtype'] == atom_type]['charge'].values[0]
-            df_i.at[index, 'charge'] = float(charge)
+        np_flag: bool = True
+        df_i['charge'] = 0.0
+        df_np: pd.DataFrame = df_i[
+            (df_i['residue_name'] == 'COR') | (df_i['residue_name'] == 'APT')]
+        df_no_np: pd.DataFrame = df_i[~(
+            (df_i['residue_name'] == 'COR') | (df_i['residue_name'] == 'APT'))]
+        if not df_no_np.empty:
+            for index, row in df_no_np.iterrows():
+                res: str = row['residue_name']
+                ff_df: pd.DataFrame = \
+                    self.force_field.ff_charge[self.configs.ff_type_dict[res]]
+                atom_type: str = row['atom_type']
+                charge: float = \
+                    ff_df[ff_df['atomtype'] == atom_type]['charge'].values[0]
+                df_no_np.at[index, 'charge'] = float(charge)
+        if not df_np.empty:
+            if len(df_np) == len(
+               ff_df := self.force_field.ff_charge['np_info']):
+                for index, row in df_np.iterrows():
+                    if np_flag:
+                        np_id_zero: int = int(row['atom_id'])
+                        np_flag = False
+                    atom_id: int = int(row['atom_id'] - np_id_zero + 1)
+                    res_nr: int = row['residue_number']
+                    try:
+                        charge = \
+                            ff_df[(ff_df['atomnr'] == atom_id) &
+                                  (ff_df['resnr'] == res_nr)
+                                  ]['charge'].values[0]
+                    except IndexError:
+                        charge = \
+                            ff_df[
+                                ff_df['atomnr'] == atom_id]['charge'].values[0]
+                    df_np.at[index, 'charge'] = float(charge)
+
+            else:
+                log.error(msg := '\tError! There is problem in np data!\n')
+                sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
+        df_recombined = pd.concat([df_np, df_no_np])
+        df_recombined = df_recombined.sort_index()
+
         self.info_msg += ('\tThe total charge of this portion is: '
-                          f'`{sum(df_i["charge"]):.3f}`\n')
-        return df_i
+                          f'`{sum(df_recombined["charge"]):.3f}`\n')
+        return df_recombined
 
     def assign_chain_ids(self,
                          df_i: pd.DataFrame

@@ -231,48 +231,16 @@ class PdbToPqr:
                    log: logger.logging.Logger
                    ) -> pd.DataFrame:
         """set charge values for the atoms"""
-        np_flag: bool = True
         df_i['charge'] = 0.0
         df_np: pd.DataFrame = df_i[
             (df_i['residue_name'] == 'COR') | (df_i['residue_name'] == 'APT')]
         df_no_np: pd.DataFrame = df_i[~(
             (df_i['residue_name'] == 'COR') | (df_i['residue_name'] == 'APT'))]
         if not df_no_np.empty:
-            for index, row in df_no_np.iterrows():
-                res: str = row['residue_name']
-                ff_df: pd.DataFrame = \
-                    self.force_field.ff_charge[self.configs.ff_type_dict[res]]
-                atom_type: str = row['atom_type']
-                charge: float = \
-                    ff_df[ff_df['atomtype'] == atom_type]['charge'].values[0]
-                df_no_np.at[index, 'charge'] = float(charge)
-            self.info_msg += ('\tTotal charge of the no_np section is: '
-                                f'{sum(df_no_np["charge"]):.3f}\n')
-        if not df_np.empty:
-            if len(df_np) == len(
-               ff_df := self.force_field.ff_charge['np_info']):
-                for index, row in df_np.iterrows():
-                    if np_flag:
-                        np_id_zero: int = int(row['atom_id'])
-                        np_flag = False
-                    atom_id: int = int(row['atom_id'] - np_id_zero + 1)
-                    res_nr: int = row['residue_number']
-                    try:
-                        charge = \
-                            ff_df[(ff_df['atomnr'] == atom_id) &
-                                  (ff_df['resnr'] == res_nr)
-                                  ]['charge'].values[0]
-                    except IndexError:
-                        charge = \
-                            ff_df[
-                                ff_df['atomnr'] == atom_id]['charge'].values[0]
-                    df_np.at[index, 'charge'] = float(charge)
-                self.info_msg += ('\tTotal charge of the np section is: '
-                                  f'{sum(df_np["charge"]):.3f}\n')
+            df_no_np = self._set_no_np_charge(df_no_np)
 
-            else:
-                log.error(msg := '\tError! There is problem in np data!\n')
-                sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+        if not df_np.empty:
+            df_np = self._set_np_charge(df_np, log)
 
         df_recombined = pd.concat([df_np, df_no_np])
         df_recombined = df_recombined.sort_index()
@@ -280,6 +248,53 @@ class PdbToPqr:
         self.info_msg += ('\tThe total charge of this portion is: '
                           f'`{sum(df_recombined["charge"]):.3f}`\n')
         return df_recombined
+
+    def _set_no_np_charge(self,
+                          df_no_np: pd.DataFrame
+                          ) -> pd.DataFrame:
+        """set the charges for the section without np"""
+        for index, row in df_no_np.iterrows():
+            res: str = row['residue_name']
+            ff_df: pd.DataFrame = \
+                self.force_field.ff_charge[self.configs.ff_type_dict[res]]
+            atom_type: str = row['atom_type']
+            charge: float = \
+                ff_df[ff_df['atomtype'] == atom_type]['charge'].values[0]
+            df_no_np.at[index, 'charge'] = float(charge)
+        self.info_msg += ('\tTotal charge of the no_np section is: '
+                          f'{sum(df_no_np["charge"]):.3f}\n')
+        return df_no_np
+
+    def _set_np_charge(self,
+                       df_np: pd.DataFrame,
+                       log: logger.logging.Logger
+                       ) -> pd.DataFrame:
+        """set the charges for the np section"""
+        np_flag: bool = True
+        if len(df_np) == len(
+           ff_df := self.force_field.ff_charge['np_info']):
+            for index, row in df_np.iterrows():
+                if np_flag:
+                    np_id_zero: int = int(row['atom_id'])
+                    np_flag = False
+                atom_id: int = int(row['atom_id'] - np_id_zero + 1)
+                res_nr: int = row['residue_number']
+                try:
+                    charge = \
+                        ff_df[(ff_df['atomnr'] == atom_id) &
+                              (ff_df['resnr'] == res_nr)
+                              ]['charge'].values[0]
+                except IndexError:
+                    charge = \
+                        ff_df[
+                            ff_df['atomnr'] == atom_id]['charge'].values[0]
+                df_np.at[index, 'charge'] = float(charge)
+            self.info_msg += ('\tTotal charge of the np section is: '
+                              f'{sum(df_np["charge"]):.3f}\n')
+        else:
+            log.error(msg := '\tError! There is problem in np data!\n')
+            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+        return df_np
 
     def assign_chain_ids(self,
                          df_i: pd.DataFrame

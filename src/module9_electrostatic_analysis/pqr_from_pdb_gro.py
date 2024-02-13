@@ -110,14 +110,18 @@ class FFTypeConfig:
 
 @dataclass
 class NumerInResidue:
-    """Number of atoms in each residues"""
+    """Number of atoms in each residues
+    The number of atoms in APT is not known since it changes based on
+    contact angle"""
     res_number_dict: dict[str, int] = field(
         default_factory=lambda: {
             "SOL": 3,
             "CLA": 1,
+            'POT': 1,
             "D10": 32,
             "ODN": 59,
-            'COR': 4356
+            'COR': 4356,
+            'APT': 0
         })
 
 
@@ -244,10 +248,22 @@ class PdbToPqr:
 
         df_recombined = pd.concat([df_np, df_no_np])
         df_recombined = df_recombined.sort_index()
-
+        self._report_residue_charge(df_recombined)
         self.info_msg += ('\tThe total charge of this portion is: '
                           f'`{sum(df_recombined["charge"]):.3f}`\n')
         return df_recombined
+
+    def _report_residue_charge(self,
+                               df_recombined: pd.DataFrame
+                               ) -> None:
+        """log all the charges for each residues"""
+        self.info_msg += '\tThe charges in each residue:\n'
+        for res in self.configs.res_number_dict.keys():
+            df_i: pd.DataFrame = \
+                df_recombined[df_recombined['residue_name'] == res]
+            total_charge: float = sum(df_i['charge'])
+            self.info_msg += f'\t\t{res}: {total_charge:.3f}\n'
+            del df_i
 
     def _set_no_np_charge(self,
                           df_no_np: pd.DataFrame

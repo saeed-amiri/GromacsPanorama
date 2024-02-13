@@ -191,7 +191,7 @@ class PdbToPqr:
         counts: "Counter" = Counter(residues)
         msg: str = '\tNumber of each resdiue and atoms:\n'
         for item, value in counts.items():
-            msg += f'\t{item}: {value} atoms'
+            msg += f'\t\t{item}: {value} atoms'
             if item != 'APT':
                 msg += f' -> {value/self.configs.res_number_dict[item]} res\n'
             else:

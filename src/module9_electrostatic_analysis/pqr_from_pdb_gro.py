@@ -191,6 +191,8 @@ class PdbToPqr:
                           left_on='atom_type',
                           right_on='name')
         df_i.drop(columns=['name'], inplace=True)
+        self.info_msg += \
+            f'\tThe number of atoms of this portion is: `{len(df_i)}`\n'
         return df_i
 
     def set_charge(self,
@@ -205,7 +207,9 @@ class PdbToPqr:
             atom_type: str = row['atom_type']
             charge: float = \
                 ff_df[ff_df['atomtype'] == atom_type]['charge'].values[0]
-            df_i.at[index, 'charge'] = charge
+            df_i.at[index, 'charge'] = float(charge)
+        self.info_msg += ('\tThe total charge of this portion is: '
+                          f'`{sum(df_i["charge"]):.3f}`\n')
         return df_i
 
     def assign_chain_ids(self,

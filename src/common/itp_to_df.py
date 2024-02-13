@@ -237,14 +237,14 @@ class AtomsInfo:
                                  f'itp file\n{bcolors.ENDC}')
             else:
                 l_line = free_char_line(line)
-                atomnr.append(l_line[0])
+                atomnr.append(int(l_line[0]))
                 atomtype.append(l_line[1])
-                resnr.append(l_line[2])
+                resnr.append(int(l_line[2]))
                 resname.append(l_line[3])
                 atomname.append(l_line[4])
                 chargegrp.append(l_line[5])
-                charge.append(l_line[6])
-                mass.append(l_line[7])
+                charge.append(float(l_line[6]))
+                mass.append(float(l_line[7]))
                 element.append(l_line[8])
         df_atoms: pd.DataFrame  # DataFrame from the infos
         df_atoms = pd.DataFrame(columns=columns)

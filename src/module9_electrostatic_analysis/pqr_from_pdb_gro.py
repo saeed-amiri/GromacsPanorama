@@ -197,7 +197,11 @@ class PdbToPqr:
             if item != 'APT':
                 msg += f' -> {value/self.configs.res_number_dict[item]} res\n'
             else:
-                msg += '\n'
+                df_apt: pd.DataFrame = struct[struct['residue_name'] == 'APT']
+                res_nr: int = len(set(df_apt['residue_number']))
+                h_charge_nr: int = \
+                    len(df_apt[df_apt['atom_name'] == 'HN3']['atom_name'])
+                msg += f' -> {res_nr} res\n\t\t\t{h_charge_nr} charged APT\n'
         self.info_msg += msg
 
     def get_atom_type(self,

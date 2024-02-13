@@ -154,8 +154,10 @@ class PdbToPqr:
                  log: logger.logging.Logger
                  ) -> pd.DataFrame:
         """get all the infos"""
-        strcuture_data: dict[str, pd.DataFrame] = ReadInputStructureFile(
-            log, self.configs.structure_files).structure_dict
+        strcuture_info: "ReadInputStructureFile" = ReadInputStructureFile(
+            log, self.configs.structure_files)
+        strcuture_data: dict[str, pd.DataFrame] = strcuture_info.structure_dict
+        self.file_type: str = strcuture_info.file_type
         self.force_field = ReadForceFieldFile(log)
         self.ff_radius: pd.DataFrame = self.compute_radius()
         self.generate_pqr(strcuture_data, log)
@@ -179,7 +181,7 @@ class PdbToPqr:
             df_i = self.set_charge(df_i, log)
             df_i = self.assign_chain_ids(df_i)
             df_i = self.mk_pqr_df(df_i)
-            df_i = self.convert_nm_ang(df_i)
+            df_i = self.convert_nm_ang(self.file_type, df_i)
             self.write_pqr(fname := f'{fname}.pqr', df_i)
             self.info_msg += f'\tA pqr file writen as `{fname}`\n'
 
@@ -370,9 +372,13 @@ class PdbToPqr:
         return df_i
 
     @staticmethod
-    def convert_nm_ang(df_i: pd.DataFrame) -> pd.DataFrame:
+    def convert_nm_ang(file_type: str,
+                       df_i: pd.DataFrame) -> pd.DataFrame:
         """convert the unit of data"""
-        columns: list[str] = ['x', 'y', 'z', 'radius']
+        if file_type == 'gro':
+            columns: list[str] = ['x', 'y', 'z', 'radius']
+        else:
+            columns = ['radius']
         df_i[columns] *= 10
         return df_i
 

@@ -34,7 +34,7 @@ class FileConfig:
 
 
 @dataclass
-class MachinName:
+class MachineName:
     """set the machine names"""
     local_host: str = 'hmigws03'  # Name of the host in the office
     # Front names in HLRN
@@ -46,7 +46,7 @@ class MachinName:
 
 
 @dataclass
-class AllConfig(FileConfig, MachinName):
+class AllConfig(FileConfig, MachineName):
     """set all the configurations"""
 
 

@@ -28,3 +28,20 @@ from dataclasses import dataclass, field
 
 from common import logger, itp_to_df, pdb_to_df, gro_to_df, my_tools
 from common.colors_text import TextColor as bcolors
+
+from module9_electrostatic_analysis import pqr_from_pdb_gro, \
+    run_vmd_atom_extraction
+
+
+@dataclass
+class RunConfig:
+    """setting up run configurations"""
+    run_vmd: bool = True
+    run_pqr: bool = True
+    run_apbs: bool = True
+
+
+@dataclass
+class AllConfig(RunConfig):
+    """set all the configs and parameters"""
+

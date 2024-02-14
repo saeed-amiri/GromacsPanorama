@@ -24,6 +24,8 @@ Saeed
 """
 
 import os
+import sys
+import subprocess
 from dataclasses import dataclass, field
 
 from common import logger
@@ -103,6 +105,7 @@ class ExecuteTclVmd:
                  ) -> None:
         self.configs = configs
         self.prepare_tcl(src)
+        self.exacute_vmd(log)
         self.write_log_msg(log)
 
     def prepare_tcl(self,
@@ -112,6 +115,24 @@ class ExecuteTclVmd:
         self._set_path(src)
         updated_tcl: str = self._update_tcl()
         self._write_tcl(updated_tcl)
+
+    def exacute_vmd(self,
+                    log: logger.logging.Logger
+                    ) -> None:
+        """exacute the vmd file to get the files"""
+        command = ["vmd", "-dispdev", "text", "-e", self.configs.fout]
+        result = subprocess.run(
+            command, capture_output=True, text=True, check=True)
+
+        try:
+            result = subprocess.run(
+                command, capture_output=True, text=True, check=True)
+            self.info_msg += "\tCommand executed successfully! The log is:\n\n"
+            self.info_msg += result.stdout
+        except subprocess.CalledProcessError as err:
+            log.error(msg :=
+                f"\tError! in executing command: {result.stderr}\n{err}\n")
+            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
 
     def _update_tcl(self) -> str:
         """

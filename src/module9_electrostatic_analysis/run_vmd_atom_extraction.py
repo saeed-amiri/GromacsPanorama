@@ -35,7 +35,7 @@ from common.colors_text import TextColor as bcolors
 
 @dataclass
 class TclBase:
-    """set the path of the input files"""
+    """template for the tcl run"""
     tcl_base: str = '''
     # Load the gro and trr and with optinal number of frames
     set mol [mol new @GRO  type @TYPE waitfor all]

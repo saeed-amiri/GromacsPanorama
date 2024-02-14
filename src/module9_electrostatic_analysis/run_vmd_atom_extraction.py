@@ -138,15 +138,16 @@ class ExecuteTclVmd:
                    updated_tcl: str
                    ) -> None:
         """Write the updated tcl into a file"""
-        with open(self.configs.fout, 'w', encoding='utf8') as f_w:
+        with open(fout := self.configs.fout, 'w', encoding='utf8') as f_w:
             f_w.write(updated_tcl)
+        self.info_msg += f'\tThe tcl file is saved as `{fout}`\n'
 
     def write_log_msg(self,
                       log: logger.logging.Logger  # Name of the output file
                       ) -> None:
         """writing and logging messages from methods"""
         log.info(self.info_msg)
-        print(f'{bcolors.OKBLUE}{self.__module__}:\n'
+        print(f'{bcolors.OKGREEN}{self.__module__}:\n'
               f'\t{self.info_msg}\n{bcolors.ENDC}')
 
 

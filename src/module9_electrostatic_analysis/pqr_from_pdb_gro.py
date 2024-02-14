@@ -139,6 +139,7 @@ class PdbToPqr:
     info_msg: str = 'Message from PdbToPqr:\n'
     configs: AllConfig
     force_field: "ReadForceFieldFile"
+    pqr_files_list: list[str]  # Name of the pqr files outputs
 
     def __init__(self,
                  structure_files: list[str],  # Structure files
@@ -160,7 +161,7 @@ class PdbToPqr:
         self.file_type: str = strcuture_info.file_type
         self.force_field = ReadForceFieldFile(log)
         self.ff_radius: pd.DataFrame = self.compute_radius()
-        self.generate_pqr(strcuture_data, log)
+        self.pqr_files_list = self.generate_pqr(strcuture_data, log)
 
     def compute_radius(self) -> pd.DataFrame:
         """compute the radius based on sigma"""
@@ -172,8 +173,9 @@ class PdbToPqr:
     def generate_pqr(self,
                      strcuture_data: dict[str, pd.DataFrame],
                      log: logger.logging.Logger
-                     ) -> None:
+                     ) -> list[str]:
         """generate the pqr data and write them"""
+        pqr_files_list: list[str] = []
         for fname, struct in strcuture_data.items():
             self.count_residues(fname, struct)
             df_i: pd.DataFrame = self.get_atom_type(struct)
@@ -183,8 +185,10 @@ class PdbToPqr:
             df_i = self.mk_pqr_df(df_i)
             df_i = self.convert_nm_ang(self.file_type, df_i)
             self.write_pqr(fname := f'{fname}.pqr', df_i)
+            pqr_files_list.append(fname)
             self.info_msg += f'\tA pqr file writen as `{fname}`\n'
             self.info_msg += '\t' + '-' * 75 + '\n'
+        return pqr_files_list
 
     def count_residues(self,
                        fname: str,

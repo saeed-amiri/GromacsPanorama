@@ -165,7 +165,7 @@ class PdbToPqr:
     def compute_radius(self) -> pd.DataFrame:
         """compute the radius based on sigma"""
         ff_radius: pd.DataFrame = self.force_field.ff_sigma.copy()
-        radius = ff_radius['sigma'] * 1**(1/6) / 2
+        radius = ff_radius['sigma'] * 2**(1/6) / 2
         ff_radius['radius'] = radius
         return ff_radius
 
@@ -175,7 +175,7 @@ class PdbToPqr:
                      ) -> None:
         """generate the pqr data and write them"""
         for fname, struct in strcuture_data.items():
-            self.count_residues(struct)
+            self.count_residues(fname, struct)
             df_i: pd.DataFrame = self.get_atom_type(struct)
             df_i = self.set_radius(df_i)
             df_i = self.set_charge(df_i, log)
@@ -184,14 +184,16 @@ class PdbToPqr:
             df_i = self.convert_nm_ang(self.file_type, df_i)
             self.write_pqr(fname := f'{fname}.pqr', df_i)
             self.info_msg += f'\tA pqr file writen as `{fname}`\n'
+            self.info_msg += '\t' + '-' * 75 + '\n'
 
     def count_residues(self,
+                       fname: str,
                        struct: pd.DataFrame
                        ) -> None:
         """count the number of the each residue in each input"""
         residues: list[str] = list(struct['residue_name'])
         counts: "Counter" = Counter(residues)
-        msg: str = '\tNumber of each resdiue and atoms:\n'
+        msg: str = f'\tNumber of each resdiue and atoms in `{fname}`:\n'
         for item, value in counts.items():
             msg += f'\t\t{item}: {value} atoms'
             if item != 'APT':

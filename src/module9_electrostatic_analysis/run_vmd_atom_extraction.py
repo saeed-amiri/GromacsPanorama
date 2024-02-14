@@ -98,6 +98,7 @@ class ExecuteTclVmd:
 
     info_msg: str = 'Message from ExecuteTclVmd:\n'
     configs: AllConfig
+    struct_files: list[str]
 
     def __init__(self,
                  src: str,  # Path of the working dir (pwd)
@@ -106,7 +107,8 @@ class ExecuteTclVmd:
                  ) -> None:
         self.configs = configs
         self.prepare_tcl(src)
-        self.exacute_vmd(log)
+        stdout: typing.Union[str, None] = self.exacute_vmd(log)
+        self.struct_files = self.get_structs_names(stdout)
         self.write_log_msg(log)
 
     def prepare_tcl(self,
@@ -132,10 +134,27 @@ class ExecuteTclVmd:
             self.info_msg += result.stdout
             return result.stdout
         except subprocess.CalledProcessError as err:
-            log.error(msg :=
-                f"\tError! in executing command: {result.stderr}\n{err}\n")
+            msg: str = \
+                f"\tError! in executing command: {result.stderr}\n{err}\n"
+            log.error(msg)
             sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
-        return None
+
+    def get_structs_names(self,
+                          stdout: typing.Union[str, None]
+                          ) -> list[str]:
+        """trim the name of the output files and return it as a list"""
+        if stdout is not None:
+            lines_with_name: list[str] = [
+                item for item in stdout.split('\n') if
+                (item.startswith('Info) Finished with coordinate file') &
+                 (self.configs.key_values['OUTNAME'] in item))]
+            files: list[str] = [
+                item.split('coordinate file')[1].split('.', -1)[0] for
+                item in lines_with_name]
+            files = [
+                f'{item}.{self.configs.key_values["TYPE"]}' for item in files]
+            return files
+        return ['None']
 
     def _update_tcl(self) -> str:
         """

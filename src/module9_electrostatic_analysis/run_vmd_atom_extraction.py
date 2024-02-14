@@ -25,6 +25,7 @@ Saeed
 
 import os
 import sys
+import typing
 import subprocess
 from dataclasses import dataclass, field
 
@@ -118,7 +119,7 @@ class ExecuteTclVmd:
 
     def exacute_vmd(self,
                     log: logger.logging.Logger
-                    ) -> None:
+                    ) -> typing.Union[str, None]:
         """exacute the vmd file to get the files"""
         command = ["vmd", "-dispdev", "text", "-e", self.configs.fout]
         result = subprocess.run(
@@ -129,10 +130,12 @@ class ExecuteTclVmd:
                 command, capture_output=True, text=True, check=True)
             self.info_msg += "\tCommand executed successfully! The log is:\n\n"
             self.info_msg += result.stdout
+            return result.stdout
         except subprocess.CalledProcessError as err:
             log.error(msg :=
                 f"\tError! in executing command: {result.stderr}\n{err}\n")
             sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+        return None
 
     def _update_tcl(self) -> str:
         """

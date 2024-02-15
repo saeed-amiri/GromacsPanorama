@@ -56,3 +56,33 @@ class ParameterConfig:
 @dataclass
 class AllConfig(ApbsBaseFile, ParameterConfig):
     """set the all the parameters and configurations"""
+    fout: str = 'apbs.in'
+
+
+class ExecuteApbs:
+    """
+    upda the apbs input files and run them
+    """
+
+    info_msg: str = 'Message from ExecuteApbs:\n'
+    configs: AllConfig
+
+    def __init__(self,
+                 src: list[str],  # List of the pqr files
+                 log: logger.logging.Logger,
+                 configs: AllConfig = AllConfig()
+                 ) -> None:
+        self.configs = configs
+        self.write_log_msg(log)
+
+    def write_log_msg(self,
+                      log: logger.logging.Logger  # Name of the output file
+                      ) -> None:
+        """writing and logging messages from methods"""
+        log.info(self.info_msg)
+        print(f'{bcolors.OKGREEN}{self.__module__}:\n'
+              f'\t{self.info_msg}\n{bcolors.ENDC}')
+
+
+if __name__ == '__main__':
+    ExecuteApbs(src=sys.argv[1:], log=logger.setup_logger('run_apbs.log'))

@@ -107,7 +107,7 @@ class ExecuteTclVmd:
                  ) -> None:
         self.configs = configs
         self.prepare_tcl(src)
-        stdout: typing.Union[str, None] = self.exacute_vmd(log)
+        stdout: typing.Union[str, None] = self.execute_vmd(log)
         self.struct_files = self.get_structs_names(stdout)
         self.write_log_msg(log)
 
@@ -119,7 +119,7 @@ class ExecuteTclVmd:
         updated_tcl: str = self._update_tcl()
         self._write_tcl(updated_tcl)
 
-    def exacute_vmd(self,
+    def execute_vmd(self,
                     log: logger.logging.Logger
                     ) -> typing.Union[str, None]:
         """exacute the vmd file to get the files"""
@@ -161,7 +161,7 @@ class ExecuteTclVmd:
         Replace placeholders in the template with values from
         ParameterConfig.
         """
-        template = self.configs.tcl_base
+        template: str = self.configs.tcl_base
         for key, value in self.configs.key_values.items():
             placeholder = f"@{key}"
             template = template.replace(placeholder, value)

@@ -124,8 +124,6 @@ class ExecuteTclVmd:
                     ) -> typing.Union[str, None]:
         """exacute the vmd file to get the files"""
         command = ["vmd", "-dispdev", "text", "-e", self.configs.fout]
-        result = subprocess.run(
-            command, capture_output=True, text=True, check=True)
 
         try:
             result = subprocess.run(

@@ -167,7 +167,8 @@ class RdfByMDAnalysis:
         # specific requirements.
         # As an example, a simple normalization by the number of
         # frames and target atoms might look like this:
-        rdf_i = rdf_histogram / (len(self.u_traj.trajectory) * len(target_group))
+        rdf_i = \
+            rdf_histogram / (len(self.u_traj.trajectory) * len(target_group))
         # Calculate bin centers from distances for plotting
         bin_centers = (distances[:-1] + distances[1:]) / 2
 

@@ -7,6 +7,7 @@ import typing
 from dataclasses import dataclass, field
 
 import MDAnalysis as mda
+from MDAnalysis.analysis import rdf
 
 from common import logger
 from common.colors_text import TextColor as bcolors
@@ -64,6 +65,7 @@ class RdfByMDAnalysis:
 
     info_msg: str = 'Message from RdfByMDAnalysis:\n'
     configs: AllConfig
+    u_traj: mda.Universe  # Trajectory read by MDAnalysis
 
     def __init__(self,
                  fname: str,  # Trr or Xtc file,
@@ -72,6 +74,25 @@ class RdfByMDAnalysis:
                  ) -> None:
         self.configs = configs
         self.write_log_msg(log)
+        self.get_rdf(fname, log)
+
+    def get_rdf(self,
+                fname: str,
+                log: logger.logging.Logger
+                ) -> None:
+        """set the parameters and get the rdf"""
+        self._read_trajectory(fname, log)
+
+    def _read_trajectory(self,
+                         fname: str,
+                         log: logger.logging.Logger
+                         ) -> None:
+        """read the input file"""
+        try:
+            self.u_traj = mda.Universe(fname)
+        except ValueError as err:
+            log.error(msg := '\tThe input file is not correct!\n')
+            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}\n\t{err}\n')
 
     def write_log_msg(self,
                       log: logger.logging.Logger  # Name of the output file

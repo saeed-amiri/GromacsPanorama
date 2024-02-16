@@ -2,7 +2,6 @@
 Computing Rdf by MDAnalysis module
 """
 
-import os
 import sys
 import typing
 from dataclasses import dataclass, field
@@ -53,3 +52,35 @@ class ParamConfig:
         0, 10
     )))
     density: bool = True
+
+
+@dataclass
+class AllConfig(GroupConfig, ParamConfig):
+    """set all the parameters for the computations"""
+
+
+class RdfByMDAnalysis:
+    """compute the rdf"""
+
+    info_msg: str = 'Message from RdfByMDAnalysis:\n'
+    configs: AllConfig
+
+    def __init__(self,
+                 fname: str,  # Trr or Xtc file,
+                 log: logger.logging.Logger,
+                 configs: AllConfig = AllConfig()
+                 ) -> None:
+        self.configs = configs
+        self.write_log_msg(log)
+
+    def write_log_msg(self,
+                      log: logger.logging.Logger  # Name of the output file
+                      ) -> None:
+        """writing and logging messages from methods"""
+        log.info(self.info_msg)
+        print(f'{bcolors.OKGREEN}{self.__module__}:\n'
+              f'\t{self.info_msg}\n{bcolors.ENDC}')
+
+
+if __name__ == '__main__':
+    RdfByMDAnalysis(sys.argv[1], logger.setup_logger('rdf_by_mda.log'))

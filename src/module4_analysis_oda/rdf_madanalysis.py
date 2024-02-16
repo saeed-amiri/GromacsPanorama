@@ -29,12 +29,12 @@ class GroupConfig:
     ref_group: dict[str, typing.Any] = field(default_factory=lambda: ({
         'sel_type': 'resname',
         'sel_names': ['COR'],
-        'sel_pos': 'COM'
+        'sel_pos': 'com'
     }))
 
     target_group: dict[str, typing.Any] = field(default_factory=lambda: ({
-        'sel_type': 'resname',
-        'sel_names': ['CLA'],
+        'sel_type': 'name',
+        'sel_names': ['N'],
         'sel_pos': 'position'
     }))
 
@@ -53,7 +53,7 @@ class ParamConfig:
         compare RDFs between AtomGroups that contain different numbers
         of atoms."
     """
-    n_bins: int = 75  # Default value in MDA
+    n_bins: int = 1073  # Default value in MDA
     dist_range: tuple[float, float] = field(init=False)
     density: bool = True
 
@@ -89,7 +89,10 @@ class RdfByMDAnalysis:
         self.configs.dist_range: tuple[float, float] = self._set_rdf_range()
         ref_group: "mda.core.groups.AtomGroup" = self._get_ref_group()
         target_group: "mda.core.groups.AtomGroup" = self._get_target_group()
-        self._compute_rdf(ref_group, target_group)
+        if self.configs.ref_group['sel_pos'] == 'position':
+            self._compute_rdf_from_all(ref_group, target_group)
+        elif self.configs.ref_group['sel_pos'] == 'com':
+            self._compute_rdf_from_com(ref_group, target_group)
 
     def _set_rdf_range(self) -> tuple[float, float]:
         """find thelimitation of the box to set the range of the
@@ -102,7 +105,6 @@ class RdfByMDAnalysis:
         self.info_msg += (f'\tBox dims at frame `{frame_index}` is:\n'
                           f'\t\t{box_dimensions[0:3]}\n'
                           f'\t\tdist range is set to `{dist_range[1]:.3f}`\n')
-        dist_range = (0, 100)
         return dist_range
 
     def _get_ref_group(self) -> "mda.core.groups.AtomGroup":
@@ -125,10 +127,63 @@ class RdfByMDAnalysis:
             f'\tTarget group: `{target_group}` has `{nr_sel_group}` atoms \n'
         return selected_group
 
-    def _compute_rdf(self,
-                     ref_group: "mda.core.groups.AtomGroup",
-                     target_group: "mda.core.groups.AtomGroup"
-                     ) -> np.ndarray:
+    def _compute_rdf_from_com(self,
+                              ref_group: "mda.core.groups.AtomGroup",
+                              target_group: "mda.core.groups.AtomGroup"
+                              ) -> np.ndarray:
+        """
+        Calculate RDF from the center of mass of ref_group to atoms in
+        target_group.
+
+        Parameters:
+        - u: MDAnalysis Universe object.
+        - ref_group: MDAnalysis AtomGroup for the reference group.
+        - target_group: MDAnalysis AtomGroup for the target group.
+        - nbins: Number of bins for the RDF histogram.
+        - range: The minimum and maximum distances for the RDF calculation.
+        """
+        self.info_msg += '\tComputing RDF from COM of the reference group\n'
+
+        distances = np.linspace(self.configs.dist_range[0],
+                                self.configs.dist_range[1],
+                                self.configs.n_bins+1)
+        rdf_histogram = np.zeros(self.configs.n_bins)
+
+        for tstep in self.u_traj.trajectory:
+            box: np.ndarray = tstep.dimensions
+            com = ref_group.center_of_mass()
+            distances_to_com = \
+                np.linalg.norm(target_group.positions - com, axis=1)
+
+            # Note: This simple example does not consider periodic boundary
+            # conditions for distances.
+            hist, _ = np.histogram(distances_to_com, bins=distances)
+            rdf_histogram += hist
+
+        # Normalize the RDF
+        # This part requires careful consideration of volume elements
+        # and density to correctly normalize the RDF.
+        # The normalization process can vary based on your system and
+        # specific requirements.
+        # As an example, a simple normalization by the number of
+        # frames and target atoms might look like this:
+        rdf_i = rdf_histogram / (len(self.u_traj.trajectory) * len(target_group))
+        # Calculate bin centers from distances for plotting
+        bin_centers = (distances[:-1] + distances[1:]) / 2
+
+        rdf_arr: np.ndarray = np.zeros((self.configs.n_bins, 2))
+        rdf_arr[:, 0] = bin_centers
+        rdf_arr[:, 1] = rdf_i
+
+        if self.configs.show_plot:
+            plt.plot(bin_centers, rdf_i, '-0')
+            plt.show()
+        return rdf_arr
+
+    def _compute_rdf_from_all(self,
+                              ref_group: "mda.core.groups.AtomGroup",
+                              target_group: "mda.core.groups.AtomGroup"
+                              ) -> np.ndarray:
         """compute rdf for the selected groups"""
         # Initialize the InterRDF object with your groups
         rdf_analyzer = rdf.InterRDF(ref_group, target_group,

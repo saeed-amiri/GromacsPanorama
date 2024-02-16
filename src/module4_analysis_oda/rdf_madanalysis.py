@@ -6,6 +6,9 @@ import sys
 import typing
 from dataclasses import dataclass, field
 
+import numpy as np
+import matplotlib.pylab as plt
+
 import MDAnalysis as mda
 from MDAnalysis.analysis import rdf
 
@@ -60,6 +63,7 @@ class ParamConfig:
 @dataclass
 class AllConfig(GroupConfig, ParamConfig):
     """set all the parameters for the computations"""
+    show_plot: bool = True
 
 
 class RdfByMDAnalysis:
@@ -86,6 +90,7 @@ class RdfByMDAnalysis:
         self._read_trajectory(fname, log)
         ref_group: "mda.core.groups.AtomGroup" = self._get_ref_group()
         target_group: "mda.core.groups.AtomGroup" = self._get_target_group()
+        self._compute_rdf(ref_group, target_group)
 
     def _get_ref_group(self) -> "mda.core.groups.AtomGroup":
         """get the reference group"""
@@ -106,6 +111,33 @@ class RdfByMDAnalysis:
         self.info_msg += \
             f'\tTarget group: `{target_group}` has `{nr_sel_group}` atoms \n'
         return selected_group
+
+    def _compute_rdf(self,
+                     ref_group: "mda.core.groups.AtomGroup",
+                     target_group: "mda.core.groups.AtomGroup"
+                     ) -> np.ndarray:
+        """compute rdf for the selected groups"""
+        # Initialize the InterRDF object with your groups
+        rdf_analyzer = rdf.InterRDF(ref_group, target_group,
+                                    nbins=self.configs.n_bins,
+                                    range=self.configs.dist_range)
+
+        # Run the analysis
+        rdf_analyzer.run()
+
+        # Access the results
+        rdf_values = rdf_analyzer.results.rdf
+        rdf_distances = rdf_analyzer.results.bins
+        rdf_arr: np.ndarray = np.zeros((len(rdf_values), 2))
+        rdf_arr[:, 0] = rdf_distances
+        rdf_arr[:, 1] = rdf_values
+
+        # Optionally, log or print the results for verification
+        self.info_msg += "\tComputed RDF successfully.\n"
+        if self.configs.show_plot:
+            plt.plot(rdf_distances, rdf_values, '-0')
+            plt.show()
+        return rdf_arr
 
     def _read_trajectory(self,
                          fname: str,

@@ -29,7 +29,7 @@ class GroupConfig:
         'sel_pos': 'COM'
     }))
 
-    traget_group: dict[str, typing.Any] = field(default_factory=lambda: ({
+    target_group: dict[str, typing.Any] = field(default_factory=lambda: ({
         'sel_type': 'resname',
         'sel_names': ['CLA'],
         'sel_pos': 'position'
@@ -75,8 +75,8 @@ class RdfByMDAnalysis:
                  configs: AllConfig = AllConfig()
                  ) -> None:
         self.configs = configs
-        self.write_log_msg(log)
         self.get_rdf(fname, log)
+        self.write_log_msg(log)
 
     def get_rdf(self,
                 fname: str,
@@ -84,16 +84,27 @@ class RdfByMDAnalysis:
                 ) -> None:
         """set the parameters and get the rdf"""
         self._read_trajectory(fname, log)
-        self._get_ref_group()
+        ref_group: "mda.core.groups.AtomGroup" = self._get_ref_group()
+        target_group: "mda.core.groups.AtomGroup" = self._get_target_group()
 
-    def _get_ref_group(self) -> mda.core.groups.AtomGroup:
+    def _get_ref_group(self) -> "mda.core.groups.AtomGroup":
         """get the reference group"""
         ref_group: str = f'{self.configs.ref_group["sel_type"]}' + " "
         ref_group += ' '.join(self.configs.ref_group["sel_names"])
         selected_group = self.u_traj.select_atoms(ref_group)
         nr_sel_group = selected_group.n_atoms
         self.info_msg += \
-            f'\tSelected group: `{ref_group}` has `{nr_sel_group}` atoms \n'
+            f'\tReference group: `{ref_group}` has `{nr_sel_group}` atoms \n'
+        return selected_group
+
+    def _get_target_group(self) -> "mda.core.groups.AtomGroup":
+        """get the reference group"""
+        target_group: str = f'{self.configs.target_group["sel_type"]}' + " "
+        target_group += ' '.join(self.configs.target_group["sel_names"])
+        selected_group = self.u_traj.select_atoms(target_group)
+        nr_sel_group = selected_group.n_atoms
+        self.info_msg += \
+            f'\tTarget group: `{target_group}` has `{nr_sel_group}` atoms \n'
         return selected_group
 
     def _read_trajectory(self,

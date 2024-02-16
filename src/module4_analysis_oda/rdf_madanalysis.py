@@ -9,26 +9,28 @@ from dataclasses import dataclass, field
 import MDAnalysis as mda
 from MDAnalysis.analysis import rdf
 
-from common import logger
+from common import logger, my_tools
 from common.colors_text import TextColor as bcolors
 
 
 @dataclass
 class GroupConfig:
     """set the configurations for the rdf
+    userguide.mdanalysis.org/1.1.1/selections.html?highlight=select_atoms
+
     sel_type -> str: type of the selection, is it residue or atom
     sel_names -> list[str]: names of the selection groups
     sel_pos -> str: If use the ceter of mass (COM) of the group or their
         poistions
     """
     ref_group: dict[str, typing.Any] = field(default_factory=lambda: ({
-        'sel_type': 'residue',
+        'sel_type': 'resname',
         'sel_names': ['COR'],
         'sel_pos': 'COM'
     }))
 
     traget_group: dict[str, typing.Any] = field(default_factory=lambda: ({
-        'sel_type': 'residue',
+        'sel_type': 'resname',
         'sel_names': ['CLA'],
         'sel_pos': 'position'
     }))
@@ -82,14 +84,27 @@ class RdfByMDAnalysis:
                 ) -> None:
         """set the parameters and get the rdf"""
         self._read_trajectory(fname, log)
+        self._get_ref_group()
+
+    def _get_ref_group(self) -> mda.core.groups.AtomGroup:
+        """get the reference group"""
+        ref_group: str = f'{self.configs.ref_group["sel_type"]}' + " "
+        ref_group += ' '.join(self.configs.ref_group["sel_names"])
+        selected_group = self.u_traj.select_atoms(ref_group)
+        nr_sel_group = selected_group.n_atoms
+        self.info_msg += \
+            f'\tSelected group: `{ref_group}` has `{nr_sel_group}` atoms \n'
+        return selected_group
 
     def _read_trajectory(self,
                          fname: str,
                          log: logger.logging.Logger
                          ) -> None:
         """read the input file"""
+        tpr_file: str = fname.split('.', -1)[0] + '.tpr'
+        my_tools.check_file_exist(tpr_file, log, if_exit=True)
         try:
-            self.u_traj = mda.Universe(fname)
+            self.u_traj = mda.Universe(tpr_file, fname)
         except ValueError as err:
             log.error(msg := '\tThe input file is not correct!\n')
             sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}\n\t{err}\n')

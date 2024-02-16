@@ -54,9 +54,7 @@ class ParamConfig:
         of atoms."
     """
     n_bins: int = 75  # Default value in MDA
-    dist_range: tuple[float, float] = field(default_factory=lambda: ((
-        0, 10
-    )))
+    dist_range: tuple[float, float] = field(init=False)
     density: bool = True
 
 
@@ -88,9 +86,24 @@ class RdfByMDAnalysis:
                 ) -> None:
         """set the parameters and get the rdf"""
         self._read_trajectory(fname, log)
+        self.configs.dist_range: tuple[float, float] = self._set_rdf_range()
         ref_group: "mda.core.groups.AtomGroup" = self._get_ref_group()
         target_group: "mda.core.groups.AtomGroup" = self._get_target_group()
         self._compute_rdf(ref_group, target_group)
+
+    def _set_rdf_range(self) -> tuple[float, float]:
+        """find thelimitation of the box to set the range of the
+        calculations
+        set the range based on the maximum size of the box
+        """
+        frame_index: int = 0
+        box_dimensions = self.u_traj.trajectory[frame_index].dimensions
+        dist_range: tuple[float, float] = (0.0, max(box_dimensions[0:3]) / 2)
+        self.info_msg += (f'\tBox dims at frame `{frame_index}` is:\n'
+                          f'\t\t{box_dimensions[0:3]}\n'
+                          f'\t\tdist range is set to `{dist_range[1]:.3f}`\n')
+        dist_range = (0, 100)
+        return dist_range
 
     def _get_ref_group(self) -> "mda.core.groups.AtomGroup":
         """get the reference group"""

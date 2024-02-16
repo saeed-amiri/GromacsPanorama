@@ -89,6 +89,7 @@ class ExecuteApbs:
                  configs: AllConfig = AllConfig()
                  ) -> None:
         self.configs = configs
+        self.pwd: str = os.getcwd()
         apbs_in: list[str] = self.prepare_input(src)
         self.execute_apbs(apbs_in, log)
         self.write_log_msg(log)
@@ -103,9 +104,9 @@ class ExecuteApbs:
         in_list: list[str] = []
         apbs_in: str = self._set_parameter()
         for item in src:
-            in_i = apbs_in.replace('&IN_STRUCTURE', item)
+            in_i = apbs_in.replace('&IN_STRUCTURE', os.path.join(self.pwd, item))
             in_list.append(in_i)
-        return apbs_in
+        return in_list
 
     def execute_apbs(self,
                      apbs_in: list[str],
@@ -113,20 +114,21 @@ class ExecuteApbs:
                      ) -> typing.Union[str, None]:
         """(re)write the input file and run the apbs command"""
         self._set_environment()
+        for input in apbs_in:
+            with open(fout := self.configs.fout, 'w', encoding='utf8') as f_w:
+                f_w.write(input)
+                in_path: str = os.path.join(self.pwd, fout)
+                os.system(f'apbs {in_path}')
 
     def _set_environment(self) -> None:
         """Load the modules needed for running APBS."""
-        commands: list[str] = [cmd.strip() for cmd in
-            self.configs.env_modules.strip().split('\n') if cmd]
-        combined_command = '; '.join(commands)
+        # Write the environment configuration to a script
+        script_path = os.path.join(self.pwd, 'env.sh')
+        with open(script_path, 'w') as f_w:
+            f_w.write(self.configs.env_modules)
 
-        # Execute the combined command in a shell
-        subprocess.run(combined_command,
-                       shell=True,
-                       check=True,
-                       capture_output=True,
-                       text=True,
-                       executable='/bin/bash')
+        source_command = f'bash {script_path}'
+        os.system(source_command)
 
     def _set_parameter(self) -> str:
         """set the parameters in the input template"""

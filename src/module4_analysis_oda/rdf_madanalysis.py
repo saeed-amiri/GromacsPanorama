@@ -238,6 +238,39 @@ class RdfByMDAnalysis:
             log.error(msg := '\tThe input file is not correct!\n')
             sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}\n\t{err}\n')
 
+    def _arr_to_df(self,
+                   rdf_arr: np.ndarray
+                   ) -> pd.DataFrame:
+        """convert the arr to dataframe to write to xvg file"""
+        self.configs.columns.extend(
+            self.configs.target_group["sel_names"][0])
+        rdf_df: pd.DataFrame = pd.DataFrame(columns=self.configs.columns)
+        rdf_df['distance'] = rdf_arr[:, 0] / 10
+        rdf_df[self.configs.columns[1]] = rdf_arr[:, 1]
+        rdf_df.set_index('distance', inplace=True)
+        return rdf_df
+
+    def _write_xvg(self,
+                   rdf_df: pd.DataFrame,
+                   log: logger.logging.Logger
+                   ) -> None:
+        """write the rdf to a xvg file"""
+        fout: str = \
+            f'{self.configs.fout_prefix}_{self.configs.ref_group["sel_pos"]}'
+        fout += f'_{self.configs.target_group["sel_names"][0]}'
+        fout += ".xvg"
+        extra_msg: list[str] = [
+            '# This RDF is calculate by using MDAnalysis',
+            f'# Ran by {self.__module__}']
+        my_tools.write_xvg(rdf_df,
+                           log,
+                           extra_msg,
+                           fout,
+                           write_index=True,
+                           x_axis_label='r (nm)',
+                           y_axis_label='g (r)',
+                           title='Radial distribution')
+
     def write_log_msg(self,
                       log: logger.logging.Logger  # Name of the output file
                       ) -> None:

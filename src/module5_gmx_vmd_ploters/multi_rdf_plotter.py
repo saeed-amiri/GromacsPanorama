@@ -145,7 +145,7 @@ class FileConfig:
             'shell_3': {'fname': 'rdf_shell_d10.xvg', 'y_col': 'D10'},
             'shell_4': {'fname': 'rdf_shell_odn.xvg', 'y_col': 'ODN'}
             })
-    shell_plot_list: list[int] = field(default_factory=lambda: [2, 3])
+    shell_plot_list: list[int] = field(default_factory=lambda: [0, 1, 2])
     shell_legend_loc: str = 'upper right'
     shell_window_legend_loc: str = 'upper right'
 
@@ -211,6 +211,7 @@ class MultiRdfPlotter:
         for viewpoint in self.configs.viewpoint:
             sources = getattr(self.configs, f'{viewpoint}_files')
             self.plot_overlay_rdf(rdf_dict, sources, viewpoint)
+            self.plot_single_rdf(rdf_dict, sources, viewpoint)
             self.plot_multirows_rdf(rdf_dict, sources, viewpoint)
 
     def plot_overlay_rdf(self,
@@ -251,6 +252,45 @@ class MultiRdfPlotter:
         fout = f'window_{fout}'
         self._save_plot(
             fig_i, ax_i, fout, viewpoint, close_fig=True, loc=legend_loc[1])
+    
+    def plot_single_rdf(self,
+                        rdf_dict: dict[str, pd.DataFrame],
+                        sources: dict[str, dict[str, str]],
+                        viewpoint: str
+                        ) -> None:
+        """
+        Multiple RDFs will be plotted on the same axes, one on top of
+        the other
+        """
+        first_key: str = next(iter(rdf_dict))
+        x_range: tuple[float, float] = (rdf_dict[first_key]['r_nm'].iat[0],
+                                        rdf_dict[first_key]['r_nm'].iat[-1])
+        for s_i in sources:
+            ax_i: plt.axes
+            fig_i: plt.figure
+            fig_i, ax_i = plot_tools.mk_canvas(
+                x_range,
+                height_ratio=self.configs.plot_configs.height_ratio,
+                num_xticks=7)
+
+            rdf_df: pd.DataFrame = rdf_dict.get(s_i)
+            if rdf_df is not None:
+                ax_i = self._plot_layer(ax_i, rdf_df, viewpoint, s_i)
+
+                self._setup_plot_labels(ax_i, viewpoint)
+
+                legend_loc: tuple[str, str] = self._legend_locs(viewpoint)
+                y_column: str = \
+                    getattr(self.configs, f'{viewpoint}_files')[s_i]['y_col']
+                tag: str = f'{y_column}_single_'
+                fout: str = \
+                    f'{viewpoint}{tag}{self.configs.plot_configs.graph_suffix}'
+                self._save_plot(fig_i,
+                                ax_i,
+                                fout,
+                                viewpoint,
+                                close_fig=False,
+                                loc=legend_loc[0])
 
     def _get_fout_tag(self,
                       viewpoint: str

@@ -192,6 +192,8 @@ class RdfByMDAnalysis:
         rdf_arr: np.ndarray = np.zeros((self.configs.n_bins, 2))
         rdf_arr[:, 0] = bin_centers
         rdf_arr[:, 1] = rdf_i
+        self.info_msg += \
+            "\tComputed RDF from all the COM of ref successfully\n"
 
         if self.configs.show_plot:
             plt.plot(bin_centers, rdf_i, '-0')
@@ -219,7 +221,7 @@ class RdfByMDAnalysis:
         rdf_arr[:, 1] = rdf_values
 
         # Optionally, log or print the results for verification
-        self.info_msg += "\tComputed RDF successfully.\n"
+        self.info_msg += "\tComputed RDF from all the ref atoms successfully\n"
         if self.configs.show_plot:
             plt.plot(rdf_distances, rdf_values, '-0')
             plt.show()
@@ -244,11 +246,12 @@ class RdfByMDAnalysis:
                    ) -> pd.DataFrame:
         """convert the arr to dataframe to write to xvg file"""
         self.configs.columns.extend(
-            self.configs.target_group["sel_names"][0])
+            self.configs.target_group["sel_names"])
         rdf_df: pd.DataFrame = pd.DataFrame(columns=self.configs.columns)
         rdf_df['distance'] = rdf_arr[:, 0] / 10
         rdf_df[self.configs.columns[1]] = rdf_arr[:, 1]
         rdf_df.set_index('distance', inplace=True)
+        self.info_msg += f'\tThe distance is converted to [nm]\n'
         return rdf_df
 
     def _write_xvg(self,
@@ -271,6 +274,7 @@ class RdfByMDAnalysis:
                            x_axis_label='r (nm)',
                            y_axis_label='g (r)',
                            title='Radial distribution')
+        self.info_msg += f'\tThe rdf is saved as `{fout}`\n'
 
     def write_log_msg(self,
                       log: logger.logging.Logger  # Name of the output file

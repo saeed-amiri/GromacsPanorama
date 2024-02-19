@@ -35,7 +35,7 @@ class GroupConfig:
 
     target_group: dict[str, typing.Any] = field(default_factory=lambda: ({
         'sel_type': 'name',
-        'sel_names': ['OH2'],
+        'sel_names': ['CLA'],
         'sel_pos': 'position'
     }))
 
@@ -159,15 +159,18 @@ class RdfByMDAnalysis:
         - nbins: Number of bins for the RDF histogram.
         - range: The minimum and maximum distances for the RDF calculation.
         """
+        # pylint: disable=too-many-locals
         self.info_msg += '\tComputing RDF from COM of the reference group\n'
 
-        distances = np.linspace(self.configs.dist_range[0],
-                                self.configs.dist_range[1],
-                                self.configs.n_bins+1)
-        rdf_histogram = np.zeros(self.configs.n_bins)
+        distances: np.ndarray = np.linspace(self.configs.dist_range[0],
+                                            self.configs.dist_range[1],
+                                            self.configs.n_bins+1)
+        rdf_histogram: np.ndarray = np.zeros(self.configs.n_bins)
+        box: np.ndarray = self.u_traj.dimensions[:3]
+        system_volume: np.float32 = np.prod(box)
+        number_density: np.float64 = len(target_group) / system_volume * 1e-4
 
-        for tstep in self.u_traj.trajectory:
-            box: np.ndarray = tstep.dimensions
+        for _ in self.u_traj.trajectory:
             com = ref_group.center_of_mass()
             distances_to_com = \
                 np.linalg.norm(target_group.positions - com, axis=1)
@@ -177,26 +180,23 @@ class RdfByMDAnalysis:
             hist, _ = np.histogram(distances_to_com, bins=distances)
             rdf_histogram += hist
 
-        # Normalize the RDF
-        # This part requires careful consideration of volume elements
-        # and density to correctly normalize the RDF.
-        # The normalization process can vary based on your system and
-        # specific requirements.
-        # As an example, a simple normalization by the number of
-        # frames and target atoms might look like this:
-        rdf_i = \
-            rdf_histogram / (len(self.u_traj.trajectory) * len(target_group))
-        # Calculate bin centers from distances for plotting
-        bin_centers = (distances[:-1] + distances[1:]) / 2
+        # Normalize RDF
+        shell_volumes: np.float64 = \
+            4 * np.pi * (distances[:-1] ** 2) * np.diff(distances)
+        normalized_rdf: np.ndarray = \
+            rdf_histogram / (shell_volumes * number_density * len(ref_group))
+        normalized_rdf /= len(self.u_traj.trajectory)
 
-        rdf_arr: np.ndarray = np.zeros((self.configs.n_bins, 2))
-        rdf_arr[:, 0] = bin_centers
-        rdf_arr[:, 1] = rdf_i
+        bin_centers = (distances[:-1] + distances[1:]) / 2
+        rdf_arr = np.vstack((bin_centers, normalized_rdf)).T
+
         self.info_msg += \
             "\tComputed RDF from the COM of ref successfully\n"
 
         if self.configs.show_plot:
-            plt.plot(bin_centers, rdf_i, '-0')
+            plt.plot(bin_centers, normalized_rdf, '-')
+            plt.xlabel('Distance (nm)')
+            plt.ylabel('g(r)')
             plt.show()
         return rdf_arr
 
@@ -206,7 +206,8 @@ class RdfByMDAnalysis:
                               ) -> np.ndarray:
         """compute rdf for the selected groups"""
         # Initialize the InterRDF object with your groups
-        rdf_analyzer = rdf.InterRDF(ref_group, target_group,
+        rdf_analyzer = rdf.InterRDF(ref_group,
+                                    target_group,
                                     nbins=self.configs.n_bins,
                                     range=self.configs.dist_range)
 
@@ -251,7 +252,7 @@ class RdfByMDAnalysis:
         rdf_df['distance'] = rdf_arr[:, 0] / 10
         rdf_df[self.configs.columns[1]] = rdf_arr[:, 1]
         rdf_df.set_index('distance', inplace=True)
-        self.info_msg += f'\tThe distance is converted to [nm]\n'
+        self.info_msg += '\tThe distance is converted to [nm]\n'
         return rdf_df
 
     def _write_xvg(self,

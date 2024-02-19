@@ -230,6 +230,7 @@ class RdfByMDAnalysis:
                          log: logger.logging.Logger
                          ) -> None:
         """read the input file"""
+        my_tools.check_file_exist(fname, log, if_exit=True)
         tpr_file: str = fname.split('.', -1)[0] + '.tpr'
         my_tools.check_file_exist(tpr_file, log, if_exit=True)
         try:
@@ -281,4 +282,11 @@ class RdfByMDAnalysis:
 
 
 if __name__ == '__main__':
-    RdfByMDAnalysis(sys.argv[1], logger.setup_logger('rdf_by_mda.log'))
+    LOG: logger.logging.Logger = logger.setup_logger('rdf_by_mda.log')
+    try:
+        FNAME: str = sys.argv[1]
+    except IndexError as err_0:
+        LOG.warning(MSG := 'The input was empty! The traj set to `npt.trr`\n')
+        print(f'{bcolors.CAUTION}{MSG}{bcolors.ENDC}')
+        FNAME = 'npt.trr'
+    RdfByMDAnalysis(FNAME, LOG)

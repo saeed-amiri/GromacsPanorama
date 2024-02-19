@@ -7,6 +7,7 @@ import typing
 from dataclasses import dataclass, field
 
 import numpy as np
+import pandas as pd
 import matplotlib.pylab as plt
 
 import MDAnalysis as mda
@@ -34,7 +35,7 @@ class GroupConfig:
 
     target_group: dict[str, typing.Any] = field(default_factory=lambda: ({
         'sel_type': 'name',
-        'sel_names': ['N'],
+        'sel_names': ['CLA'],
         'sel_pos': 'position'
     }))
 
@@ -53,13 +54,25 @@ class ParamConfig:
         compare RDFs between AtomGroups that contain different numbers
         of atoms."
     """
-    n_bins: int = 1073  # Default value in MDA
+    n_bins: int = 1080  # Default value in MDA
     dist_range: tuple[float, float] = field(init=False)
     density: bool = True
 
 
 @dataclass
-class AllConfig(GroupConfig, ParamConfig):
+class OutFileConfig:
+    """set the parameters for the output file
+    The final file will be written in xvg format, similar to GROMACS
+    RDF output.
+    The columns' names of the target group, which will be set
+    inside the script
+    """
+    fout_prefix: str = 'rdf_mda'
+    columns: list[str] = field(default_factory=lambda: (['distance']))
+
+
+@dataclass
+class AllConfig(GroupConfig, ParamConfig, OutFileConfig):
     """set all the parameters for the computations"""
     show_plot: bool = True
 
@@ -86,13 +99,17 @@ class RdfByMDAnalysis:
                 ) -> None:
         """set the parameters and get the rdf"""
         self._read_trajectory(fname, log)
-        self.configs.dist_range: tuple[float, float] = self._set_rdf_range()
+        self.configs.dist_range = self._set_rdf_range()
         ref_group: "mda.core.groups.AtomGroup" = self._get_ref_group()
         target_group: "mda.core.groups.AtomGroup" = self._get_target_group()
         if self.configs.ref_group['sel_pos'] == 'position':
-            self._compute_rdf_from_all(ref_group, target_group)
+            rdf_arr: np.ndarray = \
+                self._compute_rdf_from_all(ref_group, target_group)
         elif self.configs.ref_group['sel_pos'] == 'com':
-            self._compute_rdf_from_com(ref_group, target_group)
+            rdf_arr = self._compute_rdf_from_com(ref_group, target_group)
+
+        rdf_df: pd.DataFrame = self._arr_to_df(rdf_arr)
+        self._write_xvg(rdf_df, log)
 
     def _set_rdf_range(self) -> tuple[float, float]:
         """find thelimitation of the box to set the range of the

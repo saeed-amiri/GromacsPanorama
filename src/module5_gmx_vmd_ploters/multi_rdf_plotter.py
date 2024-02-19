@@ -279,7 +279,7 @@ class MultiRdfPlotter:
                 legend_loc: tuple[str, str] = self._legend_locs(viewpoint)
                 y_column: str = \
                     getattr(self.configs, f'{viewpoint}_files')[s_i]['y_col']
-                tag: str = f'{y_column}_single_'
+                tag: str = f'_{y_column}_single_'
                 fout: str = \
                     f'{viewpoint}{tag}{self.configs.plot_configs.graph_suffix}'
                 self._save_plot(fig_i,

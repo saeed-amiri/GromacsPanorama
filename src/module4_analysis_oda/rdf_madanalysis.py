@@ -35,7 +35,7 @@ class GroupConfig:
 
     target_group: dict[str, typing.Any] = field(default_factory=lambda: ({
         'sel_type': 'name',
-        'sel_names': ['CLA'],
+        'sel_names': ['OH2'],
         'sel_pos': 'position'
     }))
 
@@ -193,7 +193,7 @@ class RdfByMDAnalysis:
         rdf_arr[:, 0] = bin_centers
         rdf_arr[:, 1] = rdf_i
         self.info_msg += \
-            "\tComputed RDF from all the COM of ref successfully\n"
+            "\tComputed RDF from the COM of ref successfully\n"
 
         if self.configs.show_plot:
             plt.plot(bin_centers, rdf_i, '-0')

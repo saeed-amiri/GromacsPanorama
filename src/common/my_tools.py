@@ -123,7 +123,6 @@ def write_xvg(df_i: pd.DataFrame,
         warnings.warn(msg, UserWarning)
 
     columns: list[str] = df_i.columns.to_list()
-
     comment_lines: list[str] = [
         '# Written by my_tools.write_xvg\n',
         f'# Current directory: {os.getcwd()}',
@@ -143,7 +142,6 @@ def write_xvg(df_i: pd.DataFrame,
     ]
     legend_lines: list[str] = \
         [f'@ s{i} legend "{col}"' for i, col in enumerate(columns)]
-    
     log.info(f'\t`{fname}` is written succsssfuly\n')
 
     with open(fname, 'w', encoding='utf8') as f_w:

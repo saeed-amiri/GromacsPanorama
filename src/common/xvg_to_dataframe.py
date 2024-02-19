@@ -78,7 +78,6 @@ class XvgParser:
         columns_names: list[str] = []
         columns_names.append(self.xaxis)
         columns_names.extend(self.columns_names)
-        print(columns_names)
         if (l_1 := len(columns_names)) != (l_2 := len(data_list[0])):
             msg = (f'\n\tThe number of columns` names: `{l_1}` not the same'
                    f' as the number of data columns: `{l_2}`\n')

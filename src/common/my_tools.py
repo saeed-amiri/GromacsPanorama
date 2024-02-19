@@ -99,13 +99,21 @@ def clean_string(input_string: str) -> str:
 def write_xvg(df_i: pd.DataFrame,
               log: logger.logging.Logger,
               extra_msg: list[str],
-              fname: str = 'df.xvg'
+              fname: str = 'df.xvg',
+              write_index: bool = True,
+              x_axis_label: str = 'Frame index',
+              y_axis_label: str = 'Varies',
+              title: str = 'Contact information'
               ) -> None:
     """
     Write the data into xvg format
     Raises:
         ValueError: If the DataFrame has no columns.
     """
+    if df_i is None:
+        log.error(msg := f'{__name__}\tThe DataFarme is `None`!\n')
+        sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
     if df_i.columns.empty:
         log.error(msg := "\tThe DataFrame has no columns.\n")
         raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}\n')
@@ -122,9 +130,9 @@ def write_xvg(df_i: pd.DataFrame,
     ] + extra_msg
 
     header_lines: list[str] = [
-        '@   title "Contact information"',
-        '@   xaxis label "Frame index"',
-        '@   yaxis label "Varies"',
+        f'@   title "{title}"',
+        f'@   xaxis label "{x_axis_label}"',
+        f'@   yaxis label "{y_axis_label}"',
         '@TYPE xy',
         '@ view 0.15, 0.15, 0.75, 0.85',
         '@legend on',
@@ -135,8 +143,10 @@ def write_xvg(df_i: pd.DataFrame,
     ]
     legend_lines: list[str] = \
         [f'@ s{i} legend "{col}"' for i, col in enumerate(columns)]
+    
+    log.info(f'\t`{fname}` is written succsssfuly\n')
 
     with open(fname, 'w', encoding='utf8') as f_w:
         f_w.writelines([line + '\n' for line in
                         comment_lines + header_lines + legend_lines])
-        df_i.to_csv(f_w, sep=' ', index=True, header=None, na_rep='NaN')
+        df_i.to_csv(f_w, sep=' ', index=write_index, header=None, na_rep='NaN')

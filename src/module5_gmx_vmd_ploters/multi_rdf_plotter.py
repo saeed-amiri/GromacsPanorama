@@ -77,7 +77,7 @@ class BaseGraphConfig:
             'D10': 'Decane',
             'APT': 'APTES',
             'POT': 'Na',
-            'sol_oxygen': 'O (water)',
+            'OH2': 'O (water)',
             'ODN': 'ODA'})
 
     line_styles: dict[str, str] = \
@@ -90,7 +90,7 @@ class BaseGraphConfig:
             'D10': '-',
             'APT': '-',
             'POT': '-',
-            'sol_oxygen': '--',
+            'OH2': '-',
             'ODN': '-.'})
 
     colors: dict[str, str] = \
@@ -103,7 +103,7 @@ class BaseGraphConfig:
             'D10': 'grey',
             'APT': 'k',
             'POT': 'brown',
-            'sol_oxygen': 'blue',
+            'OH2': 'red',
             'ODN': 'green'})
 
     height_ratio: float = (5 ** 0.5 - 1) * 1.5
@@ -122,7 +122,7 @@ class FileConfig:
     viewpoint: list[str] = field(default_factory=lambda: ['com', 'shell'])
     com_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
-            'com_0': {'fname': 'rdf_com_o_sol.xvg', 'y_col': 'sol_oxygen'},
+            'com_0': {'fname': 'rdf_mda_com_OH2.xvg', 'y_col': 'OH2'},
             'com_1': {'fname': 'rdf_com_d10.xvg', 'y_col': 'D10'},
             'com_2': {'fname': 'rdf_com_sol.xvg', 'y_col': 'SOL'},
             'com_3': {'fname': 'rdf_com_odn.xvg', 'y_col': 'ODN'},
@@ -133,7 +133,7 @@ class FileConfig:
             'com_8': {'fname': 'rdf_com_amino_charge.xvg',
                       'y_col': 'amino_charge'}
             })
-    com_plot_list: list[int] = field(default_factory=lambda: [5, 6])
+    com_plot_list: list[int] = field(default_factory=lambda: [0, 5, 6])
     com_legend_loc: str = 'lower right'
     com_window_legend_loc: str = 'upper left'
 

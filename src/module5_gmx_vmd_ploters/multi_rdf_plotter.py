@@ -71,6 +71,7 @@ class BaseGraphConfig:
         field(default_factory=lambda: {
             'CLA': 'Cl',
             'amino_n': 'N (APTES)',
+            'N': 'N (APTES)',
             'amino_charge': r'H$^+$ (APTES)',
             'SOL': 'Water',
             'D10': 'Decane',
@@ -83,6 +84,7 @@ class BaseGraphConfig:
         field(default_factory=lambda: {
             'CLA': '-',
             'amino_n': '--',
+            'N': '--',
             'amino_charge': '--',
             'SOL': '-',
             'D10': '-',
@@ -95,6 +97,7 @@ class BaseGraphConfig:
         field(default_factory=lambda: {
             'CLA': 'green',
             'amino_n': 'blue',
+            'N': 'blue',
             'amino_charge': 'blue',
             'SOL': 'red',
             'D10': 'grey',
@@ -124,13 +127,13 @@ class FileConfig:
             'com_2': {'fname': 'rdf_com_sol.xvg', 'y_col': 'SOL'},
             'com_3': {'fname': 'rdf_com_odn.xvg', 'y_col': 'ODN'},
             'com_4': {'fname': 'rdf_com_pot.xvg', 'y_col': 'POT'},
-            'com_5': {'fname': 'rdf_com_cla.xvg', 'y_col': 'CLA'},
-            'com_6': {'fname': 'rdf_com_n.xvg', 'y_col': 'amino_n'},
+            'com_5': {'fname': 'rdf_mda_com_CLA.xvg', 'y_col': 'CLA'},
+            'com_6': {'fname': 'rdf_mda_com_N.xvg', 'y_col': 'N'},
             'com_7': {'fname': 'rdf_com_apt.xvg', 'y_col': 'APT'},
             'com_8': {'fname': 'rdf_com_amino_charge.xvg',
                       'y_col': 'amino_charge'}
             })
-    com_plot_list: list[int] = field(default_factory=lambda: [0, 1])
+    com_plot_list: list[int] = field(default_factory=lambda: [5, 6])
     com_legend_loc: str = 'lower right'
     com_window_legend_loc: str = 'upper left'
 

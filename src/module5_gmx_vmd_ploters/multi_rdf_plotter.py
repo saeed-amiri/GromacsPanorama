@@ -252,29 +252,26 @@ class MultiRdfPlotter:
         fout = f'window_{fout}'
         self._save_plot(
             fig_i, ax_i, fout, viewpoint, close_fig=True, loc=legend_loc[1])
-    
+
     def plot_single_rdf(self,
                         rdf_dict: dict[str, pd.DataFrame],
                         sources: dict[str, dict[str, str]],
                         viewpoint: str
                         ) -> None:
         """
-        Multiple RDFs will be plotted on the same axes, one on top of
-        the other
-        """
-        first_key: str = next(iter(rdf_dict))
-        x_range: tuple[float, float] = (rdf_dict[first_key]['r_nm'].iat[0],
-                                        rdf_dict[first_key]['r_nm'].iat[-1])
+        Single RDF will be plotted"""
         for s_i in sources:
             ax_i: plt.axes
             fig_i: plt.figure
-            fig_i, ax_i = plot_tools.mk_canvas(
-                x_range,
-                height_ratio=self.configs.plot_configs.height_ratio,
-                num_xticks=7)
 
             rdf_df: pd.DataFrame = rdf_dict.get(s_i)
             if rdf_df is not None:
+                x_range: tuple[float, float] = \
+                    (rdf_df['r_nm'].iat[0], rdf_df['r_nm'].iat[0])
+                fig_i, ax_i = plot_tools.mk_canvas(
+                    x_range,
+                    height_ratio=self.configs.plot_configs.height_ratio,
+                    num_xticks=7)
                 ax_i = self._plot_layer(ax_i, rdf_df, viewpoint, s_i)
 
                 self._setup_plot_labels(ax_i, viewpoint)

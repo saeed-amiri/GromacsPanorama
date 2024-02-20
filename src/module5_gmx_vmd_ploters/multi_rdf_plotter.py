@@ -133,7 +133,7 @@ class FileConfig:
             'com_8': {'fname': 'rdf_com_amino_charge.xvg',
                       'y_col': 'amino_charge'}
             })
-    com_plot_list: list[int] = field(default_factory=lambda: [0, 5, 6])
+    com_plot_list: list[int] = field(default_factory=lambda: [5, 6])
     com_legend_loc: str = 'lower right'
     com_window_legend_loc: str = 'upper left'
 
@@ -145,7 +145,7 @@ class FileConfig:
             'shell_3': {'fname': 'rdf_shell_d10.xvg', 'y_col': 'D10'},
             'shell_4': {'fname': 'rdf_shell_odn.xvg', 'y_col': 'ODN'}
             })
-    shell_plot_list: list[int] = field(default_factory=lambda: [0, 1, 2])
+    shell_plot_list: list[int] = field(default_factory=lambda: [])
     shell_legend_loc: str = 'upper right'
     shell_window_legend_loc: str = 'upper right'
 
@@ -155,7 +155,7 @@ class OverlayConfig(BaseGraphConfig):
     """set the parameters for the overlay plots"""
     # Max on the x-axis to set the window
     second_window: dict[str, float] = field(
-        default_factory=lambda: {'com': 4.2, 'shell': 1.5})
+        default_factory=lambda: {'com': 4.05, 'shell': 1.5})
     nr_xtick_in_window = int = 4
 
 
@@ -212,7 +212,7 @@ class MultiRdfPlotter:
             sources = getattr(self.configs, f'{viewpoint}_files')
             self.plot_overlay_rdf(rdf_dict, sources, viewpoint)
             self.plot_single_rdf(rdf_dict, sources, viewpoint)
-            self.plot_multirows_rdf(rdf_dict, sources, viewpoint)
+            # self.plot_multirows_rdf(rdf_dict, sources, viewpoint)
 
     def plot_overlay_rdf(self,
                          rdf_dict: dict[str, pd.DataFrame],
@@ -237,7 +237,6 @@ class MultiRdfPlotter:
             rdf_df: pd.DataFrame = rdf_dict.get(s_i)
             if rdf_df is not None:
                 ax_i = self._plot_layer(ax_i, rdf_df, viewpoint, s_i)
-
         self._setup_plot_labels(ax_i, viewpoint)
 
         legend_loc: tuple[str, str] = self._legend_locs(viewpoint)
@@ -279,7 +278,7 @@ class MultiRdfPlotter:
                 legend_loc: tuple[str, str] = self._legend_locs(viewpoint)
                 y_column: str = \
                     getattr(self.configs, f'{viewpoint}_files')[s_i]['y_col']
-                tag: str = f'_{y_column}_single_'
+                tag: str = f'{y_column}_single_'
                 fout: str = \
                     f'{viewpoint}{tag}{self.configs.plot_configs.graph_suffix}'
                 self._save_plot(fig_i,
@@ -326,6 +325,11 @@ class MultiRdfPlotter:
         first_key: str = next(iter(rdf_dict))
         x_range: tuple[float, float] = (rdf_dict[first_key]['r_nm'].iat[0],
                                         rdf_dict[first_key]['r_nm'].iat[-1])
+        # print(viewpoint, len(rdf_dict), len(sources))
+        rdf_dict = {k: v for k, v in rdf_dict.items() if v is not None}
+        # print(viewpoint, len(rdf_dict), len(sources))
+        for k in self.configs.com_plot_list:
+            print(k, rdf_dict[f'{viewpoint}_{k}'])
 
     def _setup_plot_labels(self,
                            ax_i: plt.axes,
@@ -367,7 +371,7 @@ class MultiRdfPlotter:
                         x_range[1],
                         self.configs.plot_configs.nr_xtick_in_window).tolist()
         ax_i.set_xticks(xticks)
-        ax_i.set_xlim(x_range)
+        ax_i.set_xlim(0, x_range[1])
         return ax_i
 
     def _plot_layer(self,

@@ -261,25 +261,27 @@ class RdfByMDAnalysis:
             sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}\n\t{err}\n')
 
     def _arr_to_df(self,
-                   rdf_arr: np.ndarray
+                   rdf_arr: np.ndarray,
+                   columns: list[str]
                    ) -> pd.DataFrame:
         """convert the arr to dataframe to write to xvg file"""
-        self.configs.columns.extend(
+        columns.extend(
             self.configs.target_group["sel_names"])
-        rdf_df: pd.DataFrame = pd.DataFrame(columns=self.configs.columns)
+        rdf_df: pd.DataFrame = pd.DataFrame(columns=columns)
         rdf_df['distance'] = rdf_arr[:, 0] / 10
-        rdf_df[self.configs.columns[1]] = rdf_arr[:, 1]
+        rdf_df[columns[1]] = rdf_arr[:, 1]
         rdf_df.set_index('distance', inplace=True)
         self.info_msg += '\tThe distance is converted to [nm]\n'
         return rdf_df
 
     def _write_xvg(self,
                    rdf_df: pd.DataFrame,
-                   log: logger.logging.Logger
+                   log: logger.logging.Logger,
+                   fout_prefix: str
                    ) -> None:
         """write the rdf to a xvg file"""
         fout: str = \
-            f'{self.configs.fout_prefix}_{self.configs.ref_group["sel_pos"]}'
+            f'{fout_prefix}_{self.configs.ref_group["sel_pos"]}'
         fout += f'_{self.configs.target_group["sel_names"][0]}'
         fout += ".xvg"
         extra_msg: list[str] = [

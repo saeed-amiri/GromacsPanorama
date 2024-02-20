@@ -35,7 +35,7 @@ class GroupConfig:
 
     target_group: dict[str, typing.Any] = field(default_factory=lambda: ({
         'sel_type': 'name',
-        'sel_names': ['CLA'],
+        'sel_names': ['N'],
         'sel_pos': 'position'
     }))
 
@@ -67,7 +67,8 @@ class OutFileConfig:
     The columns' names of the target group, which will be set
     inside the script
     """
-    fout_prefix: str = 'rdf_mda'
+    rdf_prefix: str = 'rdf_mda'
+    cdf_prefix: str = 'cdf_mda'
     columns: list[str] = field(default_factory=lambda: (['distance']))
 
 
@@ -106,10 +107,15 @@ class RdfByMDAnalysis:
             rdf_arr: np.ndarray = \
                 self._compute_rdf_from_all(ref_group, target_group)
         elif self.configs.ref_group['sel_pos'] == 'com':
-            rdf_arr = self._compute_rdf_from_com(ref_group, target_group)
+            rdf_arr, cdf_arr = \
+                self._compute_rdf_from_com(ref_group, target_group)
 
-        rdf_df: pd.DataFrame = self._arr_to_df(rdf_arr)
-        self._write_xvg(rdf_df, log)
+        rdf_df: pd.DataFrame = \
+            self._arr_to_df(rdf_arr, self.configs.columns.copy())
+        self._write_xvg(rdf_df, log, fout_prefix=self.configs.rdf_prefix)
+        cdf_df: pd.DataFrame = \
+            self._arr_to_df(cdf_arr, self.configs.columns.copy())
+        self._write_xvg(cdf_df, log, fout_prefix=self.configs.cdf_prefix)
 
     def _set_rdf_range(self) -> tuple[float, float]:
         """find thelimitation of the box to set the range of the
@@ -147,7 +153,7 @@ class RdfByMDAnalysis:
     def _compute_rdf_from_com(self,
                               ref_group: "mda.core.groups.AtomGroup",
                               target_group: "mda.core.groups.AtomGroup"
-                              ) -> np.ndarray:
+                              ) -> tuple[np.ndarray, np.ndarray]:
         """
         Calculate RDF from the center of mass of ref_group to atoms in
         target_group.
@@ -161,11 +167,10 @@ class RdfByMDAnalysis:
         """
         # pylint: disable=too-many-locals
         self.info_msg += '\tComputing RDF from COM of the reference group\n'
-
+        rdf_counts = np.zeros(self.configs.n_bins)
         distances: np.ndarray = np.linspace(self.configs.dist_range[0],
                                             self.configs.dist_range[1],
                                             self.configs.n_bins+1)
-        rdf_histogram: np.ndarray = np.zeros(self.configs.n_bins)
         box: np.ndarray = self.u_traj.dimensions[:3]
         system_volume: np.float32 = np.prod(box)
         number_density: np.float64 = len(target_group) / system_volume * 1e-4
@@ -177,18 +182,23 @@ class RdfByMDAnalysis:
 
             # Note: This simple example does not consider periodic boundary
             # conditions for distances.
-            hist, _ = np.histogram(distances_to_com, bins=distances)
-            rdf_histogram += hist
+            for i in range(len(distances) - 1):
+                indices = np.where((distances_to_com > distances[i]) &
+                                   (distances_to_com <= distances[i + 1]))[0]
+                rdf_counts[i] += len(indices)
 
         # Normalize RDF
-        shell_volumes: np.float64 = \
-            4 * np.pi * (distances[:-1] ** 2) * np.diff(distances)
-        normalized_rdf: np.ndarray = \
-            rdf_histogram / (shell_volumes * number_density * len(ref_group))
-        normalized_rdf /= len(self.u_traj.trajectory)
+        shell_volumes = 4 * np.pi * (distances[:-1] ** 2) * np.diff(distances)
+        normalized_rdf = \
+            rdf_counts / (shell_volumes * number_density * len(ref_group))
+        normalized_rdf /= len(self.u_traj.trajectory)  # Average over frames
+
+        cdf_counts: np.ndarray = \
+            np.cumsum(rdf_counts) / len(self.u_traj.trajectory)
 
         bin_centers = (distances[:-1] + distances[1:]) / 2
         rdf_arr = np.vstack((bin_centers, normalized_rdf)).T
+        cdf_arr = np.vstack((bin_centers, cdf_counts)).T
 
         self.info_msg += \
             "\tComputed RDF from the COM of ref successfully\n"
@@ -198,7 +208,15 @@ class RdfByMDAnalysis:
             plt.xlabel('Distance (nm)')
             plt.ylabel('g(r)')
             plt.show()
-        return rdf_arr
+
+            plt.subplot(1, 2, 2)
+            plt.plot(bin_centers, cdf_counts, '-')
+            plt.xlabel('Distance (nm)')
+            plt.ylabel('CDF')
+            plt.title('Cumulative Distribution Function')
+            plt.tight_layout()
+            plt.show()
+        return rdf_arr, cdf_arr
 
     def _compute_rdf_from_all(self,
                               ref_group: "mda.core.groups.AtomGroup",

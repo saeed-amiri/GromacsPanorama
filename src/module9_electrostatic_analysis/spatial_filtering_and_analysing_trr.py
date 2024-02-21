@@ -125,6 +125,21 @@ class NubmerInResidue:
 
 
 @dataclass
+class ChainIdConfig:
+    """set the name of each file with their name of the data"""
+    chain_id_dict: dict[str, str] = field(
+        default_factory=lambda: {
+            "SOL": 'A',
+            "D10": 'B',
+            "CLA": 'C',
+            "POT": 'D',
+            "ODN": 'E',
+            'APT': 'F',
+            'COR': 'G'
+        })
+
+
+@dataclass
 class GroupName:
     """set the names of atoms for the groups
     e.g., np_group: str = 'resname COR APT'
@@ -136,7 +151,7 @@ class GroupName:
 class DebugConfig:
     """set options for configurations of computaion"""
     filter_debug: dict[str, typing.Any] = field(default_factory=lambda: {
-        'if': True,
+        'if': False,
         'suffix': '_filter_debug.pdb',
         'indices': [0, 1]
     })
@@ -147,6 +162,7 @@ class AllConfig(InFileConfig,
                 OutFileConfig,
                 FFTypeConfig,
                 NubmerInResidue,
+                ChainIdConfig,
                 GroupName,
                 DebugConfig
                 ):
@@ -243,6 +259,41 @@ class TrrFilterAnalysis:
                           ) -> None:
         """analaysing each frame by counting the number of atoms and
         residues"""
+        for frame in sel_list:
+            df_frame: pd.DataFrame = self._get_gro_df(frame)
+            df_frame = self._assign_chain_ids(df_frame)
+            print(df_frame)
+
+    def _get_gro_df(self,
+                    frame: "mda.core.groups.AtomGroup"
+                    ) -> pd.DataFrame:
+        """put the frame data into gro format"""
+
+        residue_indices = [atom.resindex for atom in frame.atoms]
+        residue_names = [atom.resname for atom in frame.atoms]
+        atom_names = [atom.name for atom in frame.atoms]
+        atom_ids = [atom.id for atom in frame.atoms]
+        positions = frame.atoms.positions  # x, y, z positions
+
+        return pd.DataFrame({
+            'residue_index': residue_indices,
+            'residue_name': residue_names,
+            'atom_name': atom_names,
+            'atom_id': atom_ids,
+            'x': positions[:, 0],
+            'y': positions[:, 1],
+            'z': positions[:, 2]
+        })
+
+    def _assign_chain_ids(self,
+                          df_i: pd.DataFrame
+                          ) -> pd.DataFrame:
+        """Factorize the residue names to get a unique ID for each
+        unique name"""
+        chain_ids: list[str] = \
+            [self.configs.chain_id_dict[item] for item in df_i['residue_name']]
+        df_i['chain_id'] = chain_ids
+        return df_i
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

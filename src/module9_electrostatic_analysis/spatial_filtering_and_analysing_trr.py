@@ -176,6 +176,7 @@ class TrrFilterAnalysis:
     info_msg: str = 'Message from TrrFilterAnalysis:\n'
     configs: AllConfig
     force_field: "ReadForceFieldFile"
+    ff_radius: pd.DataFrame
 
     def __init__(self,
                  trajectory: str,
@@ -196,8 +197,9 @@ class TrrFilterAnalysis:
         com_list: list[np.ndarray]  # Center of mass of the NP
         sel_list: list["mda.core.groups.AtomGroup"]  # All atoms in radius
 
-        self.force_field = ReadForceFieldFile(log)
         self.set_check_in_files(log)
+        self.force_field = ReadForceFieldFile(log)
+        self.ff_radius: pd.DataFrame = self.compute_radius()
         com_list, sel_list = self.read_trajectory()
         self.analaysing_frames(sel_list)
 
@@ -218,6 +220,13 @@ class TrrFilterAnalysis:
             else:
                 log.error(msg := f'\tError! `{gro}` or `{tpr}` not exist!\n')
                 sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
+    def compute_radius(self) -> pd.DataFrame:
+        """compute the radius based on sigma"""
+        ff_radius: pd.DataFrame = self.force_field.ff_sigma.copy()
+        radius = ff_radius['sigma'] * 2**(1/6) / 2
+        ff_radius['radius'] = radius
+        return ff_radius
 
     def read_trajectory(self
                         ) -> tuple[list[np.ndarray],
@@ -262,7 +271,8 @@ class TrrFilterAnalysis:
         for frame in sel_list:
             df_frame: pd.DataFrame = self._get_gro_df(frame)
             df_frame = self._assign_chain_ids(df_frame)
-            print(df_frame)
+            df_frame = self._get_atom_type(df_frame)
+            df_frame = self._set_radius(df_frame)
 
     def _get_gro_df(self,
                     frame: "mda.core.groups.AtomGroup"
@@ -293,6 +303,38 @@ class TrrFilterAnalysis:
         chain_ids: list[str] = \
             [self.configs.chain_id_dict[item] for item in df_i['residue_name']]
         df_i['chain_id'] = chain_ids
+        return df_i
+
+    def _get_atom_type(self,
+                       struct: pd.DataFrame,
+                       ) -> pd.DataFrame:
+        """get atom type for each of them in the strcuture dataframe"""
+        df_i: pd.DataFrame = struct.copy()
+        df_i['atom_type'] = ['' for _ in range(len(struct))]
+        for index, item in df_i.iterrows():
+            res_i = self.configs.ff_type_dict[item['residue_name']]
+            atom_i = item['atom_name']
+            ff_i = self.force_field.ff_charge[res_i]
+
+            atom_type_series = ff_i[ff_i['atomname'] == atom_i]['atomtype']
+            if not atom_type_series.empty:
+                atom_type = atom_type_series.values[0]
+                df_i.at[index, 'atom_type'] = atom_type
+            else:
+                df_i.at[index, 'atom_type'] = 'nan'
+        return df_i
+
+    def _set_radius(self,
+                    df_i: pd.DataFrame
+                    ) -> pd.DataFrame:
+        """Merge to add radius based on atom_type"""
+        df_i = df_i.merge(self.ff_radius[['name', 'radius']],
+                          how='left',
+                          left_on='atom_type',
+                          right_on='name')
+        df_i.drop(columns=['name'], inplace=True)
+        self.info_msg += \
+            f'\tThe number of atoms of this portion is: `{len(df_i)}`\n'
         return df_i
 
     def write_msg(self,

@@ -165,9 +165,14 @@ class TrrFilterAnalysis:
                  ) -> None:
         """setting the names, reading files, filttering traj file and
         analaysing and writting output"""
+
+        com_list: list[np.ndarray]  # Center of mass of the NP
+        sel_list: list["mda.core.groups.AtomGroup"]  # All atoms in radius
+
         self.force_field = ReadForceFieldFile(log)
         self.set_check_in_files(log)
-        self.read_trajectory()
+        com_list, sel_list = self.read_trajectory()
+        sel_list[0].write('output_filename')
 
     def set_check_in_files(self,
                            log: logger.logging.Logger
@@ -191,21 +196,28 @@ class TrrFilterAnalysis:
                         ) -> tuple[list[np.ndarray],
                                    list["mda.core.groups.AtomGroup"]]:
         """read the traj file"""
+        # pylint: disable=unsubscriptable-object
+
         u_traj = \
             mda.Universe(self.configs.topology, self.configs.trajectory)
         nanoparticle = u_traj.select_atoms(self.configs.np_group)
         com_list: list[np.ndarray] = []
         sel_list: list["mda.core.groups.AtomGroup"] = []
 
-        # Iterate over all frames in the trajectory
-        for _ in u_traj.trajectory:
-            com: np.ndarray = nanoparticle.center_of_mass()
+        for _ in u_traj.trajectory[:1]:
+            com = nanoparticle.center_of_mass()
             com_list.append(com)
-            selection_str = \
-                f'point {com[0]} {com[1]} {com[2]} {self.configs.stern_radius}'
-            selection: "mda.core.groups.AtomGroup" = \
-                u_traj.select_atoms(selection_str)
-            sel_list.append(selection)
+
+            # Manual selection based on distance calculation
+            all_atoms = u_traj.atoms.positions
+            distances = np.linalg.norm(all_atoms - com, axis=1)
+            within_radius_indices = \
+                np.where(distances <= self.configs.stern_radius)[0]
+
+            # Create an AtomGroup from atoms within the specified radius
+            selected_atoms = u_traj.atoms[within_radius_indices]
+            sel_list.append(selected_atoms.residues.atoms)
+
         return com_list, sel_list
 
     def write_msg(self,

@@ -143,7 +143,31 @@ class TrrFilterAnalysis:
                  ) -> None:
         self.configs = configs
         self.configs.traj_fname = traj_fname
+        self.initiate(log)
         self.write_msg(log)
+
+    def initiate(self,
+                 log: logger.logging.Logger
+                 ) -> None:
+        """setting the names, reading files, filttering traj file and
+        analaysing and writting output"""
+        self.set_check_in_files(log)
+
+    def set_check_in_files(self,
+                           log: logger.logging.Logger
+                           ) -> None:
+        """set the names and check if they exist"""
+        root_name: str = self.configs.traj_fname.split('.', -1)[0]
+        tpr: str = f'{root_name}.tpr'
+        gro: str = f'{root_name}.gro'
+        if (if_tpr := my_tools.check_file_exist(tpr, log, False)) is None:
+            self.info_msg += f'\tThe topology file is set to `{tpr}`\n'
+        elif if_tpr is False:
+            if my_tools.check_file_exist(gro, log, False) is None:
+                self.info_msg += f'\tThe topology file is set to `{tpr}`\n'
+            else:
+                log.error(msg := f'\tError! `{gro}` or `{tpr}` not exist!\n')
+                sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

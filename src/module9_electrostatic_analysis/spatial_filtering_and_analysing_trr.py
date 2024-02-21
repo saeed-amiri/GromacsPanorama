@@ -66,8 +66,7 @@ import MDAnalysis as mda
 from common import logger, itp_to_df, my_tools
 from common.colors_text import TextColor as bcolors
 
-from module9_electrostatic_analysis import parse_charmm_data, \
-    force_field_path_configure
+from module9_electrostatic_analysis import force_field_path_configure
 
 
 @dataclass
@@ -233,6 +232,7 @@ class TrrFilterAnalysis:
                                    list["mda.core.groups.AtomGroup"]]:
         """read the traj file"""
         # pylint: disable=unsubscriptable-object
+        # pylint: disable=too-many-locals
 
         u_traj = \
             mda.Universe(self.configs.topology, self.configs.trajectory)
@@ -250,8 +250,17 @@ class TrrFilterAnalysis:
             within_radius_indices = \
                 np.where(distances <= self.configs.stern_radius)[0]
 
-            # Create an AtomGroup from atoms within the specified radius
-            selected_atoms = u_traj.atoms[within_radius_indices]
+            # Ensuring APT and COR residues are always included
+            apt_cor_residues = \
+                u_traj.select_atoms("resname APT or resname COR")
+            apt_cor_indices = set(apt_cor_residues.indices)
+            within_radius_set = set(within_radius_indices)
+            combined_indices_set = within_radius_set.union(apt_cor_indices)
+
+            combined_indices_list = sorted(list(combined_indices_set))
+            combined_indices_array = np.array(combined_indices_list)
+
+            selected_atoms = u_traj.atoms[combined_indices_array]
             sel_list.append(selected_atoms.residues.atoms)
             if self.configs.filter_debug['if']:
                 time = tstep.time
@@ -270,9 +279,14 @@ class TrrFilterAnalysis:
         residues"""
         for frame in sel_list:
             df_frame: pd.DataFrame = self._get_gro_df(frame)
+            df_frame.to_csv('df_1', sep=' ')
             df_frame = self._assign_chain_ids(df_frame)
+            df_frame.to_csv('df_2', sep=' ')
             df_frame = self._get_atom_type(df_frame)
+            df_frame.to_csv('df_3', sep=' ')
             df_frame = self._set_radius(df_frame)
+            df_frame.to_csv('df_4', sep=' ')
+            self._count_residues(df_frame)
 
     def _get_gro_df(self,
                     frame: "mda.core.groups.AtomGroup"
@@ -336,6 +350,25 @@ class TrrFilterAnalysis:
         self.info_msg += \
             f'\tThe number of atoms of this portion is: `{len(df_i)}`\n'
         return df_i
+
+    def _count_residues(self,
+                        struct: pd.DataFrame
+                        ) -> None:
+        """count the number of the each residue in each input"""
+        residues: list[str] = list(struct['residue_name'])
+        counts: "Counter" = Counter(residues)
+        msg = ''
+        for item, value in counts.items():
+            msg += f'\t\t{item}: {value} atoms'
+            if item != 'APT':
+                msg += f' -> {value/self.configs.res_number_dict[item]} res\n'
+            else:
+                df_apt: pd.DataFrame = struct[struct['atom_name'] == 'N']
+                res_nr: int = len(set(df_apt['residue_index']))
+                h_charge_nr: int = \
+                    len(struct[struct['atom_name'] == 'HN3']['atom_name'])
+                msg += f' -> {res_nr} res\n\t\t\t{h_charge_nr} charged APT\n'
+        self.info_msg += msg
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

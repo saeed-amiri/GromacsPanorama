@@ -232,7 +232,7 @@ class TrrFilterAnalysis:
                 if time in self.configs.filter_debug['indices']:
                     fout: str = \
                         f'sel_{int(time)}{self.configs.filter_debug["suffix"]}'
-                    with mda.Writer(fout, reindex=False) as f_w:
+                    with mda.Writer(fout, reindex=False, bonds=None) as f_w:
                         f_w.write(selected_atoms.residues.atoms)
                     self.info_msg += f'\t{fout} is written for debugging\n'
         return com_list, sel_list

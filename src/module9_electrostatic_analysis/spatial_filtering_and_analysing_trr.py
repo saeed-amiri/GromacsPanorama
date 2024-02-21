@@ -133,11 +133,22 @@ class GroupName:
 
 
 @dataclass
+class DebugConfig:
+    """set options for configurations of computaion"""
+    filter_debug: dict[str, typing.Any] = field(default_factory=lambda: {
+        'if': True,
+        'suffix': '_filter_debug.pdb',
+        'indices': [0, 1]
+    })
+
+
+@dataclass
 class AllConfig(InFileConfig,
                 OutFileConfig,
                 FFTypeConfig,
                 NubmerInResidue,
-                GroupName
+                GroupName,
+                DebugConfig
                 ):
     """set all the configurations and parameters"""
     stern_radius: float = 30  # In Ångströms
@@ -172,7 +183,6 @@ class TrrFilterAnalysis:
         self.force_field = ReadForceFieldFile(log)
         self.set_check_in_files(log)
         com_list, sel_list = self.read_trajectory()
-        sel_list[0].write('output_filename')
 
     def set_check_in_files(self,
                            log: logger.logging.Logger
@@ -204,7 +214,7 @@ class TrrFilterAnalysis:
         com_list: list[np.ndarray] = []
         sel_list: list["mda.core.groups.AtomGroup"] = []
 
-        for _ in u_traj.trajectory[:1]:
+        for tstep in u_traj.trajectory[:1]:
             com = nanoparticle.center_of_mass()
             com_list.append(com)
 
@@ -217,7 +227,14 @@ class TrrFilterAnalysis:
             # Create an AtomGroup from atoms within the specified radius
             selected_atoms = u_traj.atoms[within_radius_indices]
             sel_list.append(selected_atoms.residues.atoms)
-
+            if self.configs.filter_debug['if']:
+                time = tstep.time
+                if time in self.configs.filter_debug['indices']:
+                    fout: str = \
+                        f'sel_{int(time)}{self.configs.filter_debug["suffix"]}'
+                    with mda.Writer(fout, reindex=False) as f_w:
+                        f_w.write(selected_atoms.residues.atoms)
+                    self.info_msg += f'\t{fout} is written for debugging\n'
         return com_list, sel_list
 
     def write_msg(self,

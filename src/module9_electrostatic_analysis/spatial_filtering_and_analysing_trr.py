@@ -61,6 +61,8 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
+import MDAnalysis as mda
+
 from common import logger, itp_to_df, my_tools
 from common.colors_text import TextColor as bcolors
 
@@ -72,7 +74,8 @@ from module9_electrostatic_analysis import parse_charmm_data, \
 class InFileConfig:
     """Set the name of the input files"""
     # Name of the input file, set by user:
-    traj_fname: str = field(init=False)
+    trajectory: str = field(init=False)
+    topology: str = field(init=False)
 
     # ForceField file to get the charges of the nanoparticle, since
     # they are different depend on the contact angle:
@@ -105,7 +108,7 @@ class FFTypeConfig:
 
 
 @dataclass
-class NumerInResidue:
+class NubmerInResidue:
     """Number of atoms in each residues
     The number of atoms in APT is not known since it changes based on
     contact angle"""
@@ -122,10 +125,20 @@ class NumerInResidue:
 
 
 @dataclass
+class GroupName:
+    """set the names of atoms for the groups
+    e.g., np_group: str = 'resname COR APT'
+    """
+    np_group: str = 'resname COR APT'
+
+
+@dataclass
 class AllConfig(InFileConfig,
                 OutFileConfig,
                 FFTypeConfig,
-                NumerInResidue):
+                NubmerInResidue,
+                GroupName
+                ):
     """set all the configurations and parameters"""
     stern_radius: float = 30  # In Ångströms
 
@@ -138,12 +151,12 @@ class TrrFilterAnalysis:
     force_field: "ReadForceFieldFile"
 
     def __init__(self,
-                 traj_fname: str,
+                 trajectory: str,
                  log: logger.logging.Logger,
                  configs: AllConfig = AllConfig()
                  ) -> None:
         self.configs = configs
-        self.configs.traj_fname = traj_fname
+        self.configs.trajectory = trajectory
         self.initiate(log)
         self.write_msg(log)
 
@@ -154,22 +167,46 @@ class TrrFilterAnalysis:
         analaysing and writting output"""
         self.force_field = ReadForceFieldFile(log)
         self.set_check_in_files(log)
+        self.read_trajectory()
 
     def set_check_in_files(self,
                            log: logger.logging.Logger
                            ) -> None:
         """set the names and check if they exist"""
-        root_name: str = self.configs.traj_fname.split('.', -1)[0]
+        root_name: str = self.configs.trajectory.split('.', -1)[0]
         tpr: str = f'{root_name}.tpr'
         gro: str = f'{root_name}.gro'
         if (if_tpr := my_tools.check_file_exist(tpr, log, False)) is None:
+            self.configs.topology = tpr
             self.info_msg += f'\tThe topology file is set to `{tpr}`\n'
         elif if_tpr is False:
             if my_tools.check_file_exist(gro, log, False) is None:
                 self.info_msg += f'\tThe topology file is set to `{tpr}`\n'
+                self.configs.topology = gro
             else:
                 log.error(msg := f'\tError! `{gro}` or `{tpr}` not exist!\n')
                 sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
+    def read_trajectory(self
+                        ) -> tuple[list[np.ndarray],
+                                   list["mda.core.groups.AtomGroup"]]:
+        """read the traj file"""
+        u_traj = \
+            mda.Universe(self.configs.topology, self.configs.trajectory)
+        nanoparticle = u_traj.select_atoms(self.configs.np_group)
+        com_list: list[np.ndarray] = []
+        sel_list: list["mda.core.groups.AtomGroup"] = []
+
+        # Iterate over all frames in the trajectory
+        for _ in u_traj.trajectory:
+            com: np.ndarray = nanoparticle.center_of_mass()
+            com_list.append(com)
+            selection_str = \
+                f'point {com[0]} {com[1]} {com[2]} {self.configs.stern_radius}'
+            selection: "mda.core.groups.AtomGroup" = \
+                u_traj.select_atoms(selection_str)
+            sel_list.append(selection)
+        return com_list, sel_list
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

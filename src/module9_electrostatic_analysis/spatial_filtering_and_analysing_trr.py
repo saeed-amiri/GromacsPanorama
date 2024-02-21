@@ -200,7 +200,7 @@ class TrrFilterAnalysis:
         self.force_field = ReadForceFieldFile(log)
         self.ff_radius: pd.DataFrame = self.compute_radius()
         com_list, sel_list = self.read_trajectory()
-        self.analaysing_frames(sel_list)
+        self.analaysing_frames(sel_list, log)
 
     def set_check_in_files(self,
                            log: logger.logging.Logger
@@ -273,19 +273,17 @@ class TrrFilterAnalysis:
         return com_list, sel_list
 
     def analaysing_frames(self,
-                          sel_list: list["mda.core.groups.AtomGroup"]
+                          sel_list: list["mda.core.groups.AtomGroup"],
+                          log: logger.logging.Logger
                           ) -> None:
         """analaysing each frame by counting the number of atoms and
         residues"""
         for frame in sel_list:
             df_frame: pd.DataFrame = self._get_gro_df(frame)
-            df_frame.to_csv('df_1', sep=' ')
             df_frame = self._assign_chain_ids(df_frame)
-            df_frame.to_csv('df_2', sep=' ')
             df_frame = self._get_atom_type(df_frame)
-            df_frame.to_csv('df_3', sep=' ')
             df_frame = self._set_radius(df_frame)
-            df_frame.to_csv('df_4', sep=' ')
+            df_frame = self._set_charge(df_frame, log)
             self._count_residues(df_frame)
 
     def _get_gro_df(self,
@@ -300,7 +298,7 @@ class TrrFilterAnalysis:
         positions: np.ndarray = frame.atoms.positions
 
         return pd.DataFrame({
-            'residue_index': residue_indices,
+            'residue_number': residue_indices,
             'residue_name': residue_names,
             'atom_name': atom_names,
             'atom_id': atom_ids,
@@ -364,11 +362,115 @@ class TrrFilterAnalysis:
                 msg += f' -> {value/self.configs.res_number_dict[item]} res\n'
             else:
                 df_apt: pd.DataFrame = struct[struct['atom_name'] == 'N']
-                res_nr: int = len(set(df_apt['residue_index']))
+                res_nr: int = len(set(df_apt['residue_number']))
                 h_charge_nr: int = \
                     len(struct[struct['atom_name'] == 'HN3']['atom_name'])
                 msg += f' -> {res_nr} res\n\t\t\t{h_charge_nr} charged APT\n'
         self.info_msg += msg
+
+    def _set_charge(self,
+                    df_i: pd.DataFrame,
+                    log: logger.logging.Logger
+                    ) -> pd.DataFrame:
+        """set charge values for the atoms"""
+        df_i['charge'] = 0.0
+        df_np: pd.DataFrame = df_i[
+            (df_i['residue_name'] == 'COR') | (df_i['residue_name'] == 'APT')]
+        df_oda: pd.DataFrame = df_i[df_i['residue_name'] == 'ODN']
+        df_solution: pd.DataFrame = df_i[~((df_i['residue_name'] == 'COR') |
+                                           (df_i['residue_name'] == 'APT') |
+                                           (df_i['residue_name'] == 'ODN'))]
+
+        if not df_solution.empty:
+            df_solution = self._set_solution_charge(df_solution)
+
+        if not df_oda.empty:
+            df_oda = self._set_oda_charge(df_oda)
+
+        if not df_np.empty:
+            df_np = self._set_np_charge(df_np, log)
+
+        df_recombined = pd.concat([df_np, df_oda, df_solution])
+        df_recombined = df_recombined.sort_index()
+        self._report_residue_charge(df_recombined)
+        self.info_msg += ('\tThe total charge of this portion is: '
+                          f'`{sum(df_recombined["charge"]):.3f}`\n')
+        return df_recombined
+
+    def _report_residue_charge(self,
+                               df_recombined: pd.DataFrame
+                               ) -> None:
+        """log all the charges for each residues"""
+        self.info_msg += '\tThe charges in each residue:\n'
+        for res in self.configs.res_number_dict.keys():
+            df_i: pd.DataFrame = \
+                df_recombined[df_recombined['residue_name'] == res]
+            total_charge: float = sum(df_i['charge'])
+            self.info_msg += f'\t\t{res}: {total_charge:.3f}\n'
+            df_i.to_csv(f'{res}_charge_debug', sep=' ')
+            del df_i
+
+    def _set_oda_charge(self,
+                        df_oda: pd.DataFrame
+                        ) -> pd.DataFrame:
+        """set the charges for ODA"""
+        res_indices: list[int] = list(set(df_oda['residue_number']))
+        ff_df: pd.DataFrame = \
+            self.force_field.ff_charge[self.configs.ff_type_dict['ODN']]
+        df_list: list[pd.DataFrame] = []
+        for res in res_indices:
+            df_i = df_oda[df_oda['residue_number'] == res].copy()
+            df_i['charge'] = list(ff_df['charge'])
+            df_list.append(df_i)
+        df_updated: pd.DataFrame = pd.concat(df_list)
+        return df_updated.sort_index()
+
+    def _set_solution_charge(self,
+                             df_solution: pd.DataFrame
+                             ) -> pd.DataFrame:
+        """set the charges for the section without np"""
+        for index, row in df_solution.iterrows():
+            res: str = row['residue_name']
+            ff_df: pd.DataFrame = \
+                self.force_field.ff_charge[self.configs.ff_type_dict[res]]
+            atom_type: str = row['atom_type']
+            charge: float = \
+                ff_df[ff_df['atomtype'] == atom_type]['charge'].values[0]
+            df_solution.at[index, 'charge'] = float(charge)
+        self.info_msg += ('\tTotal charge of the no_np section is: '
+                          f'{sum(df_solution["charge"]):.3f}\n')
+        return df_solution
+
+    def _set_np_charge(self,
+                       df_np: pd.DataFrame,
+                       log: logger.logging.Logger
+                       ) -> pd.DataFrame:
+        """set the charges for the np section"""
+        np_flag: bool = True
+        if len(df_np) == len(
+           ff_df := self.force_field.ff_charge['np_info']):
+            for index, row in df_np.iterrows():
+                if np_flag:
+                    np_id_zero: int = int(row['atom_id'])
+                    np_flag = False
+                atom_id: int = int(row['atom_id'] - np_id_zero + 1)
+                res_nr: int = row['residue_number']
+                try:
+                    charge = \
+                        ff_df[(ff_df['atomnr'] == atom_id) &
+                              (ff_df['resnr'] == res_nr)
+                              ]['charge'].values[0]
+                except IndexError:
+                    charge = \
+                        ff_df[
+                            ff_df['atomnr'] == atom_id]['charge'].values[0]
+                df_np.at[index, 'charge'] = float(charge)
+            self.info_msg += ('\tTotal charge of the np section is: '
+                              f'{sum(df_np["charge"]):.3f}\n')
+        else:
+            log.error(msg := '\tError! There is problem in np data!\n')
+            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+        return df_np
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

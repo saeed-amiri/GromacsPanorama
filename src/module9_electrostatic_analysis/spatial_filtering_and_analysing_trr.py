@@ -279,11 +279,11 @@ class TrrFilterAnalysis:
                     ) -> pd.DataFrame:
         """put the frame data into gro format"""
 
-        residue_indices = [atom.resindex for atom in frame.atoms]
-        residue_names = [atom.resname for atom in frame.atoms]
-        atom_names = [atom.name for atom in frame.atoms]
-        atom_ids = [atom.id for atom in frame.atoms]
-        positions = frame.atoms.positions  # x, y, z positions
+        residue_indices: list[int] = [atom.resindex for atom in frame.atoms]
+        residue_names: list[str] = [atom.resname for atom in frame.atoms]
+        atom_names: list[str] = [atom.name for atom in frame.atoms]
+        atom_ids: list[int] = [atom.id for atom in frame.atoms]
+        positions: np.ndarray = frame.atoms.positions
 
         return pd.DataFrame({
             'residue_index': residue_indices,

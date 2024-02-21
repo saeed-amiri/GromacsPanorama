@@ -183,6 +183,7 @@ class TrrFilterAnalysis:
         self.force_field = ReadForceFieldFile(log)
         self.set_check_in_files(log)
         com_list, sel_list = self.read_trajectory()
+        self.analaysing_frames(sel_list)
 
     def set_check_in_files(self,
                            log: logger.logging.Logger
@@ -237,6 +238,12 @@ class TrrFilterAnalysis:
                     self.info_msg += f'\t{fout} is written for debugging\n'
         return com_list, sel_list
 
+    def analaysing_frames(self,
+                          sel_list: list["mda.core.groups.AtomGroup"]
+                          ) -> None:
+        """analaysing each frame by counting the number of atoms and
+        residues"""
+
     def write_msg(self,
                   log: logger.logging.Logger  # To log
                   ) -> None:
@@ -255,7 +262,6 @@ class ReadForceFieldFile:
     _configs: AllConfig
     ff_sigma: pd.DataFrame  # From main itp file for getting sigma
     ff_charge: dict[str, pd.DataFrame]   # From itp files to get charges
-    apbs_charmm: pd.DataFrame  # Radius of atoms from APBS
 
     def __init__(self,
                  log: logger.logging.Logger,
@@ -277,8 +283,6 @@ class ReadForceFieldFile:
             self._read_main_force_field(ff_files['all_atom_info'])
         self.ff_charge = \
             self._read_charge_of_atoms(ff_files)
-        self.apbs_charmm = \
-            self._read_apbs_charmm(ff_files['apbs_info'], log)
 
     def check_ff_files(self,
                        ff_files: dict[str, typing.Any],
@@ -305,17 +309,6 @@ class ReadForceFieldFile:
                                ) -> pd.DataFrame:
         """reading the main force file file: charmm36_silica.itp"""
         return itp_to_df.Itp(ff_file, section='atomtypes').atomtypes
-
-    def _read_apbs_charmm(self,
-                          ff_file: str,
-                          log: logger.logging.Logger
-                          ) -> pd.DataFrame:
-        """read charmm file from apbs file"""
-        try:
-            return parse_charmm_data.ParseData(ff_file, log).radius_df
-        except (FileNotFoundError, FileExistsError):
-            self.info_msg += '\tCHARMM file from apbs is not found\n'
-            return pd.DataFrame()
 
     def _read_charge_of_atoms(self,
                               ff_files: dict[str, typing.Any]

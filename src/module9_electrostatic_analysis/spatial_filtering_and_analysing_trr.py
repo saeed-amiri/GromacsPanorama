@@ -72,7 +72,7 @@ from module9_electrostatic_analysis import parse_charmm_data, \
 class InFileConfig:
     """Set the name of the input files"""
     # Name of the input file, set by user:
-    traj_file: str = field(init=False)
+    traj_fname: str = field(init=False)
 
     # ForceField file to get the charges of the nanoparticle, since
     # they are different depend on the contact angle:
@@ -128,3 +128,31 @@ class AllConfig(InFileConfig,
                 NumerInResidue):
     """set all the configurations and parameters"""
     stern_radius: float = 30  # In Ångströms
+
+
+class TrrFilterAnalysis:
+    """get the trajectory and do the analysis"""
+
+    info_msg: str = 'Message from TrrFilterAnalysis:\n'
+    configs: AllConfig
+
+    def __init__(self,
+                 traj_fname: str,
+                 log: logger.logging.Logger,
+                 configs: AllConfig = AllConfig()
+                 ) -> None:
+        self.configs = configs
+        self.configs.traj_fname = traj_fname
+        self.write_msg(log)
+
+    def write_msg(self,
+                  log: logger.logging.Logger  # To log
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{TrrFilterAnalysis.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
+if __name__ == '__main__':
+    TrrFilterAnalysis(sys.argv[1], logger.setup_logger('trr_charge.log'))

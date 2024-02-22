@@ -160,7 +160,7 @@ class DebugConfig:
         'suffix': '_charge_debug_df',
         'indices': [0, 1]
     })
-    counts_df_debug:dict[str, typing.Any] = field(default_factory=lambda: {
+    counts_df_debug: dict[str, typing.Any] = field(default_factory=lambda: {
         'if': False,
         'suffix': '_final_debug_df',
     })
@@ -536,16 +536,16 @@ class TrrFilterAnalysis:
             charge_dict[res] = round(total_res_charge, 2)
             total_q += total_res_charge
             if (self.configs.charge_debug['if'] and
-                frame_i in self.configs.charge_debug['indices']):
+               frame_i in self.configs.charge_debug['indices']):
                 df_i.to_csv(
                     f'{res}_{frame_i}{self.configs.charge_debug["suffix"]}',
                     sep=' ')
             del df_i
-        total_q = round(total_q , 2)
+        total_q = round(total_q, 2)
         charge_dict['total'] = total_q
         q_density: float = \
             total_q / (4 * np.pi * (self.configs.stern_radius/10)**2)
-        charge_dict['q_density [e/nm2]'] = round(q_density, 4 )
+        charge_dict['q_density [e/nm2]'] = round(q_density, 4)
         return charge_dict
 
     def _set_oda_charge(self,

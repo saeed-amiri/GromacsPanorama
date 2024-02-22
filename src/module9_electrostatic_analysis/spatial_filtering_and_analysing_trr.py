@@ -63,7 +63,7 @@ import pandas as pd
 
 import MDAnalysis as mda
 
-from common import logger, itp_to_df, my_tools
+from common import logger, itp_to_df, my_tools, cpuconfig
 from common.colors_text import TextColor as bcolors
 
 from module9_electrostatic_analysis import force_field_path_configure
@@ -172,11 +172,16 @@ class AllConfig(InFileConfig,
 
 class TrrFilterAnalysis:
     """get the trajectory and do the analysis"""
+    # pylint: disable=too-many-instance-attributes
 
     info_msg: str = 'Message from TrrFilterAnalysis:\n'
     configs: AllConfig
     force_field: "ReadForceFieldFile"
     ff_radius: pd.DataFrame
+    num_frames: int
+    com_list: list[np.ndarray]  # COM of the nanoparticle
+    df_numbers: pd.DataFrame
+    df_charges: pd.DataFrame
 
     def __init__(self,
                  trajectory: str,
@@ -194,20 +199,17 @@ class TrrFilterAnalysis:
         """setting the names, reading files, filttering traj file and
         analaysing and writting output"""
 
-        com_list: list[np.ndarray]  # Center of mass of the NP
         sel_list: list["mda.core.groups.AtomGroup"]  # All atoms in radius
-        df_numbers: pd.DataFrame
-        df_charges: pd.DataFrame
 
         self.set_check_in_files(log)
         self.force_field = ReadForceFieldFile(log)
         self.ff_radius: pd.DataFrame = self.compute_radius()
-        com_list, sel_list = self.read_trajectory()
+        self.com_list, sel_list = self.read_trajectory()
         if self.configs.if_parallel:
-            df_numbers, df_charges = \
+            self.df_numbers, self.df_charges = \
                 self.analyzing_frames_parallel(sel_list, log)
         else:
-            df_numbers, df_charges = \
+            self.df_numbers, self.df_charges = \
                 self.analyzing_frames(sel_list, log)
 
     def set_check_in_files(self,
@@ -245,10 +247,11 @@ class TrrFilterAnalysis:
         u_traj = \
             mda.Universe(self.configs.topology, self.configs.trajectory)
         nanoparticle = u_traj.select_atoms(self.configs.np_group)
+        self.num_frames = u_traj.trajectory.n_frames
         com_list: list[np.ndarray] = []
         sel_list: list["mda.core.groups.AtomGroup"] = []
 
-        for tstep in u_traj.trajectory[:3]:
+        for tstep in u_traj.trajectory:
             com = nanoparticle.center_of_mass()
             com_list.append(com)
 
@@ -309,12 +312,13 @@ class TrrFilterAnalysis:
                                   log: logger.logging.Logger
                                   ) -> tuple[pd.DataFrame, ...]:
         """analysing the frames in parallel"""
+        n_cores: int = self._initiate_cpu(log)
         # Prepare data for multiprocessing
         frame_data_list = [(i, frame, log) for
                            i, frame in enumerate(sel_list)]
 
         # Initialize multiprocessing pool
-        with Pool(processes=4) as pool:
+        with Pool(processes=n_cores) as pool:
             results = pool.map(self.process_frame, frame_data_list)
 
         # Unpack results
@@ -348,6 +352,17 @@ class TrrFilterAnalysis:
             self._report_residue_charge(frame_i, df_frame)
 
         return count_nr, count_q
+
+    def _initiate_cpu(self,
+                      log: logger.logging.Logger
+                      ) -> int:
+        """
+        Return the number of core for run based on the data and the machine
+        """
+        cpu_info = cpuconfig.ConfigCpuNr(log)
+        n_cores: int = min(cpu_info.cores_nr, self.num_frames)
+        self.info_msg += f'\tThe numbers of using cores: {n_cores}\n'
+        return n_cores
 
     def _get_gro_df(self,
                     frame: "mda.core.groups.AtomGroup"

@@ -54,7 +54,6 @@ Saeed
 import os
 import sys
 import typing
-import string
 from collections import Counter
 from dataclasses import dataclass, field
 
@@ -278,13 +277,15 @@ class TrrFilterAnalysis:
                           ) -> None:
         """analaysing each frame by counting the number of atoms and
         residues"""
-        for frame in sel_list:
+        count_dir: dict[str, float]
+        for frame_i, frame in enumerate(sel_list):
             df_frame: pd.DataFrame = self._get_gro_df(frame)
             df_frame = self._assign_chain_ids(df_frame)
             df_frame = self._get_atom_type(df_frame)
             df_frame = self._set_radius(df_frame)
             df_frame = self._set_charge(df_frame, log)
-            self._count_residues(df_frame)
+            count_dir = self._count_residues(frame_i, df_frame, log)
+            print(count_dir)
 
     def _get_gro_df(self,
                     frame: "mda.core.groups.AtomGroup"
@@ -350,23 +351,43 @@ class TrrFilterAnalysis:
         return df_i
 
     def _count_residues(self,
-                        struct: pd.DataFrame
+                        frame: int,
+                        df_frame: pd.DataFrame,
+                        log: logger.logging.Logger
                         ) -> None:
         """count the number of the each residue in each input"""
-        residues: list[str] = list(struct['residue_name'])
+        nr_dict: dict[str, float] = {
+            "frame": frame,
+            "SOL": 0.0,
+            "D10": 0.0,
+            "CLA": 0.0,
+            "POT": 0.0,
+            "ODN": 0.0,
+            'APT': 0.0,
+            'COR': 0.0}
+        residues: list[str] = list(df_frame['residue_name'])
         counts: "Counter" = Counter(residues)
-        msg = ''
+        msg = '\tThe Number of atoms in each residue is:\n'
         for item, value in counts.items():
             msg += f'\t\t{item}: {value} atoms'
             if item != 'APT':
-                msg += f' -> {value/self.configs.res_number_dict[item]} res\n'
+                nr_i: float = value/self.configs.res_number_dict[item]
+                if nr_i != int(nr_i):
+                    log.error(msg := (f'Error! The residue `{item}` is '
+                                      f'not complete number {nr_i}!\n'))
+                    sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
+                nr_dict[item] = value/self.configs.res_number_dict[item]
+                msg += f' -> {nr_dict[item]} res\n'
             else:
-                df_apt: pd.DataFrame = struct[struct['atom_name'] == 'N']
+                df_apt: pd.DataFrame = df_frame[df_frame['atom_name'] == 'N']
                 res_nr: int = len(set(df_apt['residue_number']))
+                nr_dict[item] = res_nr
                 h_charge_nr: int = \
-                    len(struct[struct['atom_name'] == 'HN3']['atom_name'])
+                    len(df_frame[df_frame['atom_name'] == 'HN3']['atom_name'])
                 msg += f' -> {res_nr} res\n\t\t\t{h_charge_nr} charged APT\n'
         self.info_msg += msg
+        return nr_dict
 
     def _set_charge(self,
                     df_i: pd.DataFrame,

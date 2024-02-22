@@ -239,7 +239,7 @@ class TrrFilterAnalysis:
         com_list: list[np.ndarray] = []
         sel_list: list["mda.core.groups.AtomGroup"] = []
 
-        for tstep in u_traj.trajectory[:1]:
+        for tstep in u_traj.trajectory[:3]:
             com = nanoparticle.center_of_mass()
             com_list.append(com)
 
@@ -277,15 +277,17 @@ class TrrFilterAnalysis:
                           ) -> None:
         """analaysing each frame by counting the number of atoms and
         residues"""
-        count_dir: dict[str, float]
+        count_dir: list[dict[str, float]] = []
         for frame_i, frame in enumerate(sel_list):
             df_frame: pd.DataFrame = self._get_gro_df(frame)
             df_frame = self._assign_chain_ids(df_frame)
             df_frame = self._get_atom_type(df_frame)
             df_frame = self._set_radius(df_frame)
             df_frame = self._set_charge(df_frame, log)
-            count_dir = self._count_residues(frame_i, df_frame, log)
-            print(count_dir)
+            count_i: dict[str, float] = \
+                self._count_residues(frame_i, df_frame, log)
+            count_dir.append(count_i)
+        df_nr: pd.DataFrame = pd.DataFrame.from_dict(count_dir)
 
     def _get_gro_df(self,
                     frame: "mda.core.groups.AtomGroup"

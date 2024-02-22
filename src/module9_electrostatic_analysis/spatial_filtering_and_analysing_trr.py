@@ -389,6 +389,7 @@ class TrrFilterAnalysis:
                     len(df_frame[df_frame['atom_name'] == 'HN3']['atom_name'])
                 msg += f' -> {res_nr} res\n\t\t\t{h_charge_nr} charged APT\n'
         self.info_msg += msg
+        self.info_msg += '\t' + '-' * 75 + '\n'
         return nr_dict
 
     def _set_charge(self,

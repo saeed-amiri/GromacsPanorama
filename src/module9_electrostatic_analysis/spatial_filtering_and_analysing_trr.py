@@ -54,6 +54,7 @@ Saeed
 import os
 import sys
 import typing
+from datetime import datetime
 from collections import Counter
 from multiprocessing import Pool
 from dataclasses import dataclass, field
@@ -154,6 +155,15 @@ class DebugConfig:
         'suffix': '_filter_debug.pdb',
         'indices': [0, 1]
     })
+    charge_debug: dict[str, typing.Any] = field(default_factory=lambda: {
+        'if': False,
+        'suffix': '_charge_debug_df',
+        'indices': [0, 1]
+    })
+    counts_df_debug:dict[str, typing.Any] = field(default_factory=lambda: {
+        'if': False,
+        'suffix': '_final_debug_df',
+    })
 
 
 @dataclass
@@ -211,6 +221,11 @@ class TrrFilterAnalysis:
         else:
             self.df_numbers, self.df_charges = \
                 self.analyzing_frames(sel_list, log)
+        if self.configs.counts_df_debug['if']:
+            self.df_charges.to_csv(
+                f'charges{self.configs.counts_df_debug["suffix"]}', sep=' ')
+            self.df_numbers.to_csv(
+                f'numbers{self.configs.counts_df_debug["suffix"]}', sep=' ')
 
     def set_check_in_files(self,
                            log: logger.logging.Logger
@@ -291,18 +306,12 @@ class TrrFilterAnalysis:
         residues"""
         count_nr_dir: list[dict[str, float]] = []
         count_q_dir: list[dict[str, float]] = []
+
         for frame_i, frame in enumerate(sel_list):
-            df_frame: pd.DataFrame = self._get_gro_df(frame)
-            df_frame = self._assign_chain_ids(df_frame)
-            df_frame = self._get_atom_type(df_frame)
-            df_frame = self._set_radius(df_frame)
-            df_frame = self._set_charge(frame_i, df_frame, log)
-            count_nr: dict[str, float] = \
-                self._count_residues(frame_i, df_frame, log)
+            count_nr, count_q = self.process_frame((frame_i, frame, log))
             count_nr_dir.append(count_nr)
-            count_q: dict[str, float] = \
-                self._report_residue_charge(frame_i, df_frame)
             count_q_dir.append(count_q)
+
         df_nr: pd.DataFrame = pd.DataFrame.from_dict(count_nr_dir)
         df_q: pd.DataFrame = pd.DataFrame.from_dict(count_q_dir)
         self._write_xvg(df_nr, log, 'number')
@@ -509,6 +518,7 @@ class TrrFilterAnalysis:
         charge_dict: dict[str, float] = {
             "frame": frame_i,
             "total": 0.0,
+            "q_density [e/nm2]": 0.0,
             "SOL": 0.0,
             "D10": 0.0,
             "CLA": 0.0,
@@ -523,11 +533,19 @@ class TrrFilterAnalysis:
                 df_recombined[df_recombined['residue_name'] == res]
             total_res_charge: float = sum(df_i['charge'])
             self.info_msg += f'\t\t{res}: {total_res_charge:.3f}\n'
-            charge_dict[res] = float(f'{total_res_charge:.2f}')
+            charge_dict[res] = round(total_res_charge, 2)
             total_q += total_res_charge
-            df_i.to_csv(f'{res}_charge_debug', sep=' ')
+            if (self.configs.charge_debug['if'] and
+                frame_i in self.configs.charge_debug['indices']):
+                df_i.to_csv(
+                    f'{res}_{frame_i}{self.configs.charge_debug["suffix"]}',
+                    sep=' ')
             del df_i
-        charge_dict['total'] = float(f'{total_q:.2f}')
+        total_q = round(total_q , 2)
+        charge_dict['total'] = total_q
+        q_density: float = \
+            total_q / (4 * np.pi * (self.configs.stern_radius/10)**2)
+        charge_dict['q_density [e/nm2]'] = round(q_density, 4 )
         return charge_dict
 
     def _set_oda_charge(self,
@@ -608,8 +626,9 @@ class TrrFilterAnalysis:
                            log,
                            extra_msg,
                            fout,
-                           write_index=True,
-                           x_axis_label='r (nm)',
+                           write_index=False,
+                           x_axis_label='Frame index',
+                           y_axis_label=f'{fout_prefix}',
                            title=f'{fout_prefix}')
         self.info_msg += f'\tThe {fout_prefix} is saved as `{fout}`\n'
 
@@ -617,6 +636,9 @@ class TrrFilterAnalysis:
                   log: logger.logging.Logger  # To log
                   ) -> None:
         """write and log messages"""
+        now = datetime.now()
+        self.info_msg += \
+            f'\tTime: {now.strftime("%Y-%m-%d %H:%M:%S")}\n'
         print(f'{bcolors.OKCYAN}{TrrFilterAnalysis.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
@@ -708,6 +730,9 @@ class ReadForceFieldFile:
                    log: logger.logging.Logger  # To log
                    ) -> None:
         """write and log messages"""
+        now = datetime.now()
+        self.info_msg += \
+            f'\tTime: {now.strftime("%Y-%m-%d %H:%M:%S")}\n'
         print(f'{bcolors.OKCYAN}{ReadForceFieldFile.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)

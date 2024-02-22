@@ -277,17 +277,22 @@ class TrrFilterAnalysis:
                           ) -> None:
         """analaysing each frame by counting the number of atoms and
         residues"""
-        count_dir: list[dict[str, float]] = []
+        count_nr_dir: list[dict[str, float]] = []
+        count_q_dir: list[dict[str, float]] = []
         for frame_i, frame in enumerate(sel_list):
             df_frame: pd.DataFrame = self._get_gro_df(frame)
             df_frame = self._assign_chain_ids(df_frame)
             df_frame = self._get_atom_type(df_frame)
             df_frame = self._set_radius(df_frame)
-            df_frame = self._set_charge(df_frame, log)
-            count_i: dict[str, float] = \
+            df_frame = self._set_charge(frame_i, df_frame, log)
+            count_nr: dict[str, float] = \
                 self._count_residues(frame_i, df_frame, log)
-            count_dir.append(count_i)
-        df_nr: pd.DataFrame = pd.DataFrame.from_dict(count_dir)
+            count_nr_dir.append(count_nr)
+            count_q: dict[str, float] = \
+                self._report_residue_charge(frame_i, df_frame)
+            count_q_dir.append(count_q)
+        df_nr: pd.DataFrame = pd.DataFrame.from_dict(count_nr_dir)
+        df_q: pd.DataFrame = pd.DataFrame.from_dict(count_q_dir)
 
     def _get_gro_df(self,
                     frame: "mda.core.groups.AtomGroup"
@@ -356,7 +361,7 @@ class TrrFilterAnalysis:
                         frame: int,
                         df_frame: pd.DataFrame,
                         log: logger.logging.Logger
-                        ) -> None:
+                        ) -> dict[str, float]:
         """count the number of the each residue in each input"""
         nr_dict: dict[str, float] = {
             "frame": frame,
@@ -393,6 +398,7 @@ class TrrFilterAnalysis:
         return nr_dict
 
     def _set_charge(self,
+                    frame_i: int,
                     df_i: pd.DataFrame,
                     log: logger.logging.Logger
                     ) -> pd.DataFrame:
@@ -416,23 +422,39 @@ class TrrFilterAnalysis:
 
         df_recombined = pd.concat([df_np, df_oda, df_solution])
         df_recombined = df_recombined.sort_index()
-        self._report_residue_charge(df_recombined)
+        self._report_residue_charge(frame_i, df_recombined)
         self.info_msg += ('\tThe total charge of this portion is: '
                           f'`{sum(df_recombined["charge"]):.3f}`\n')
         return df_recombined
 
     def _report_residue_charge(self,
+                               frame_i: int,
                                df_recombined: pd.DataFrame
-                               ) -> None:
+                               ) -> dict[str, float]:
         """log all the charges for each residues"""
+        charge_dict: dict[str, float] = {
+            "frame": frame_i,
+            "total": 0.0,
+            "SOL": 0.0,
+            "D10": 0.0,
+            "CLA": 0.0,
+            "POT": 0.0,
+            "ODN": 0.0,
+            'APT': 0.0,
+            'COR': 0.0}
         self.info_msg += '\tThe charges in each residue:\n'
+        total_q: float = 0.0
         for res in self.configs.res_number_dict.keys():
             df_i: pd.DataFrame = \
                 df_recombined[df_recombined['residue_name'] == res]
-            total_charge: float = sum(df_i['charge'])
-            self.info_msg += f'\t\t{res}: {total_charge:.3f}\n'
+            total_res_charge: float = sum(df_i['charge'])
+            self.info_msg += f'\t\t{res}: {total_res_charge:.3f}\n'
+            charge_dict[res] = float(f'{total_res_charge:.2f}')
+            total_q += total_res_charge
             df_i.to_csv(f'{res}_charge_debug', sep=' ')
             del df_i
+        charge_dict['total'] = float(f'{total_q:.2f}')
+        return charge_dict
 
     def _set_oda_charge(self,
                         df_oda: pd.DataFrame

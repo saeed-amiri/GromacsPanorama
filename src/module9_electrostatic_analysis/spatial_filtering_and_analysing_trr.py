@@ -305,6 +305,8 @@ class TrrFilterAnalysis:
             count_q_dir.append(count_q)
         df_nr: pd.DataFrame = pd.DataFrame.from_dict(count_nr_dir)
         df_q: pd.DataFrame = pd.DataFrame.from_dict(count_q_dir)
+        self._write_xvg(df_nr, log, 'number')
+        self._write_xvg(df_q, log, 'charge')
         return df_nr, df_q
 
     def analyzing_frames_parallel(self,
@@ -328,6 +330,8 @@ class TrrFilterAnalysis:
         # Convert results to DataFrames
         df_nr = pd.DataFrame.from_dict(count_nr_dir)
         df_q = pd.DataFrame.from_dict(count_q_dir)
+        self._write_xvg(df_nr, log, 'number')
+        self._write_xvg(df_q, log, 'charge')
         return df_nr, df_q
 
     def process_frame(self,
@@ -587,6 +591,27 @@ class TrrFilterAnalysis:
             log.error(msg := '\tError! There is problem in np data!\n')
             sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
         return df_np
+
+    def _write_xvg(self,
+                   df_i: pd.DataFrame,
+                   log: logger.logging.Logger,
+                   fout_prefix: str
+                   ) -> None:
+        """write the rdf to a xvg file"""
+        fout: str = \
+            f'{fout_prefix}_df'
+        fout += ".xvg"
+        extra_msg: list[str] = [
+            f'# This {fout_prefix} is analyzed by using MDAnalysis',
+            f'# Ran by {self.__module__}']
+        my_tools.write_xvg(df_i,
+                           log,
+                           extra_msg,
+                           fout,
+                           write_index=True,
+                           x_axis_label='r (nm)',
+                           title=f'{fout_prefix}')
+        self.info_msg += f'\tThe {fout_prefix} is saved as `{fout}`\n'
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

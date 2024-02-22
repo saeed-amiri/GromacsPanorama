@@ -55,6 +55,7 @@ import os
 import sys
 import typing
 from collections import Counter
+from multiprocessing import Pool
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -166,6 +167,7 @@ class AllConfig(InFileConfig,
                 ):
     """set all the configurations and parameters"""
     stern_radius: float = 30  # In Ångströms
+    if_parallel: bool = True
 
 
 class TrrFilterAnalysis:
@@ -194,12 +196,19 @@ class TrrFilterAnalysis:
 
         com_list: list[np.ndarray]  # Center of mass of the NP
         sel_list: list["mda.core.groups.AtomGroup"]  # All atoms in radius
+        df_numbers: pd.DataFrame
+        df_charges: pd.DataFrame
 
         self.set_check_in_files(log)
         self.force_field = ReadForceFieldFile(log)
         self.ff_radius: pd.DataFrame = self.compute_radius()
         com_list, sel_list = self.read_trajectory()
-        self.analaysing_frames(sel_list, log)
+        if self.configs.if_parallel:
+            df_numbers, df_charges = \
+                self.analyzing_frames_parallel(sel_list, log)
+        else:
+            df_numbers, df_charges = \
+                self.analyzing_frames(sel_list, log)
 
     def set_check_in_files(self,
                            log: logger.logging.Logger
@@ -271,10 +280,10 @@ class TrrFilterAnalysis:
                     self.info_msg += f'\t{fout} is written for debugging\n'
         return com_list, sel_list
 
-    def analaysing_frames(self,
-                          sel_list: list["mda.core.groups.AtomGroup"],
-                          log: logger.logging.Logger
-                          ) -> None:
+    def analyzing_frames(self,
+                         sel_list: list["mda.core.groups.AtomGroup"],
+                         log: logger.logging.Logger
+                         ) -> tuple[pd.DataFrame, ...]:
         """analaysing each frame by counting the number of atoms and
         residues"""
         count_nr_dir: list[dict[str, float]] = []
@@ -293,6 +302,52 @@ class TrrFilterAnalysis:
             count_q_dir.append(count_q)
         df_nr: pd.DataFrame = pd.DataFrame.from_dict(count_nr_dir)
         df_q: pd.DataFrame = pd.DataFrame.from_dict(count_q_dir)
+        return df_nr, df_q
+
+    def analyzing_frames_parallel(self,
+                                  sel_list: list["mda.core.groups.AtomGroup"],
+                                  log: logger.logging.Logger
+                                  ) -> tuple[pd.DataFrame, ...]:
+        """analysing the frames in parallel"""
+        # Prepare data for multiprocessing
+        frame_data_list = [(i, frame, log) for
+                           i, frame in enumerate(sel_list)]
+
+        # Initialize multiprocessing pool
+        with Pool(processes=4) as pool:
+            results = pool.map(self.process_frame, frame_data_list)
+
+        # Unpack results
+        count_nr_dir = [result[0] for result in results]
+        count_q_dir = [result[1] for result in results]
+
+        # Convert results to DataFrames
+        df_nr = pd.DataFrame.from_dict(count_nr_dir)
+        df_q = pd.DataFrame.from_dict(count_q_dir)
+        return df_nr, df_q
+
+    def process_frame(self,
+                      frame_data,
+                      ) -> tuple[dict[str, float], ...]:
+        """process single frame"""
+        frame_i: int  # Index of the frame
+        frame: "mda.core.groups.AtomGroup"
+        log: logger.logging.Logger
+
+        frame_i, frame, log = frame_data
+
+        df_frame: pd.DataFrame
+        df_frame = self._get_gro_df(frame)
+        df_frame = self._assign_chain_ids(df_frame)
+        df_frame = self._get_atom_type(df_frame)
+        df_frame = self._set_radius(df_frame)
+        df_frame = self._set_charge(frame_i, df_frame, log)
+        count_nr: dict[str, float] = \
+            self._count_residues(frame_i, df_frame, log)
+        count_q: dict[str, float] = \
+            self._report_residue_charge(frame_i, df_frame)
+
+        return count_nr, count_q
 
     def _get_gro_df(self,
                     frame: "mda.core.groups.AtomGroup"

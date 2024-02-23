@@ -48,12 +48,12 @@ class BaseGraphConfig:
     """Basic setups for graphs"""
 
     # pylint: disable=too-many-instance-attributes
-    graph_suffix: str = 'gmx.png'
+    graph_suffix: str = 'mda.png'
     y_col_name: str = 'density'
     xcol_name: str = 'r_nm'
 
     labels: dict[str, str] = field(default_factory=lambda: {
-        'ylabel': 'g(r)',
+        'ylabel': 'cdf',
         'xlabel': 'r [nm]'
     })
 
@@ -122,18 +122,18 @@ class FileConfig:
     viewpoint: list[str] = field(default_factory=lambda: ['com', 'shell'])
     com_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
-            'com_0': {'fname': 'rdf_mda_com_OH2.xvg', 'y_col': 'OH2'},
+            'com_0': {'fname': 'cdf_mda_com_OH2.xvg', 'y_col': 'OH2'},
             'com_1': {'fname': 'rdf_com_d10.xvg', 'y_col': 'D10'},
             'com_2': {'fname': 'rdf_com_sol.xvg', 'y_col': 'SOL'},
             'com_3': {'fname': 'rdf_com_odn.xvg', 'y_col': 'ODN'},
             'com_4': {'fname': 'rdf_com_pot.xvg', 'y_col': 'POT'},
-            'com_5': {'fname': 'rdf_mda_com_CLA.xvg', 'y_col': 'CLA'},
-            'com_6': {'fname': 'rdf_mda_com_N.xvg', 'y_col': 'N'},
+            'com_5': {'fname': 'cdf_mda_com_CLA.xvg', 'y_col': 'CLA'},
+            'com_6': {'fname': 'cdf_mda_com_N.xvg', 'y_col': 'N'},
             'com_7': {'fname': 'rdf_com_apt.xvg', 'y_col': 'APT'},
             'com_8': {'fname': 'rdf_com_amino_charge.xvg',
                       'y_col': 'amino_charge'}
             })
-    com_plot_list: list[int] = field(default_factory=lambda: [5, 6])
+    com_plot_list: list[int] = field(default_factory=lambda: [0, 5, 6])
     com_legend_loc: str = 'lower right'
     com_window_legend_loc: str = 'upper left'
 
@@ -158,11 +158,35 @@ class OverlayConfig(BaseGraphConfig):
         default_factory=lambda: {'com': 4.05, 'shell': 1.5})
     nr_xtick_in_window = int = 4
 
+@dataclass
+class VerticalLineConfig:
+    """set the location and style of the vertical lines"""
+    nominal_cor: float = 2.5
+    nominal_np: float = 3.0
+
+    v_legends: dict[str, str] = \
+        field(default_factory=lambda: {
+            'nominal_cor': 'nominal silica',
+            'nominal_np': 'nominal NP'})
+
+    v_line_styles: dict[str, str] = \
+        field(default_factory=lambda: {
+            'nominal_cor': ':',
+            'nominal_np': ':'})
+
+    v_colors: dict[str, str] = \
+        field(default_factory=lambda: {
+            'nominal_cor': 'k',
+            'nominal_np': 'brown'})
+
 
 @dataclass
-class AllConfig(FileConfig):
+class AllConfig(FileConfig, VerticalLineConfig):
     """Set the all the configs"""
     plot_configs: OverlayConfig = field(default_factory=OverlayConfig)
+    plot_verticals_single: bool = True
+    plot_verticals_overlay: bool = True
+    plot_verticals_window: bool = True
 
 
 class MultiRdfPlotter:
@@ -244,10 +268,16 @@ class MultiRdfPlotter:
         tag = self._get_fout_tag(viewpoint)
         fout: str = \
             f'{viewpoint}{tag}overlay_{self.configs.plot_configs.graph_suffix}'
+        if self.configs.plot_verticals_overlay:
+            ax_j = self._plot_vlines(ax_i)
+        else:
+            ax_j = ax_i
+
         self._save_plot(
-            fig_i, ax_i, fout, viewpoint, close_fig=False, loc=legend_loc[0])
+            fig_i, ax_j, fout, viewpoint, close_fig=False, loc=legend_loc[0])
 
         self._plot_window_overlay(ax_i, x_range, viewpoint)
+
         fout = f'window_{fout}'
         self._save_plot(
             fig_i, ax_i, fout, viewpoint, close_fig=True, loc=legend_loc[1])
@@ -281,6 +311,8 @@ class MultiRdfPlotter:
                 tag: str = f'{y_column}_single_'
                 fout: str = \
                     f'{viewpoint}{tag}{self.configs.plot_configs.graph_suffix}'
+                if self.configs.plot_verticals_single:
+                    ax_i = self._plot_vlines(ax_i)
                 self._save_plot(fig_i,
                                 ax_i,
                                 fout,
@@ -372,6 +404,7 @@ class MultiRdfPlotter:
                         self.configs.plot_configs.nr_xtick_in_window).tolist()
         ax_i.set_xticks(xticks)
         ax_i.set_xlim(0, x_range[1])
+        ax_i.set_ylim(0, 400)
         return ax_i
 
     def _plot_layer(self,
@@ -390,6 +423,24 @@ class MultiRdfPlotter:
                   label=self.configs.plot_configs.legends[y_column],
                   **self.configs.plot_configs.graph_styles)
         return ax_i
+
+    def _plot_vlines(self,
+                     ax_in: plt.axes
+                     ) -> plt.axes:
+        """plot vlines for the np"""
+        ymin: float = 0.0
+        ymax: float = ax_in.get_ylim()[1]
+        ax_in.vlines(x=self.configs.nominal_cor,
+                    ymin=ymin,
+                    ymax=ymax,
+                    ls=self.configs.v_line_styles['nominal_cor'],
+                    color=self.configs.v_colors['nominal_cor'])
+        ax_in.vlines(x=self.configs.nominal_np,
+                    ymin=ymin,
+                    ymax=ymax,
+                    ls=self.configs.v_line_styles['nominal_np'],
+                    color=self.configs.v_colors['nominal_np'])
+        return ax_in
 
     def write_msg(self,
                   log: logger.logging.Logger

@@ -54,12 +54,9 @@ frameworks for comprehensive colloidal system analysis.
 Saeed
 """
 
-import os
 import sys
 import typing
 from datetime import datetime
-from collections import Counter
-from multiprocessing import Pool
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -131,18 +128,19 @@ class ChargeDensity:
     # pylint: disable=too-few-public-methods
 
     info_msg: str = 'Message from ChargeDensity:\n'
+    density: np.ndarray
 
     def __init__(self,
                  log: logger.logging.Logger,
                  configs: AllConfig
                  ) -> None:
-        self._get_density(configs, log)
+        self.density = self._get_density(configs, log)
         self._write_msg(log)
 
     def _get_density(self,
                      configs: AllConfig,
                      log: logger.logging.Logger
-                     ) -> None:
+                     ) -> np.ndarray:
         """read the input files and compute the charge desnity"""
         charge: np.ndarray = \
             self._get_column(configs.charge_fname, log, column='total')
@@ -152,12 +150,35 @@ class ChargeDensity:
                                  log,
                                  column='contact_angles',
                                  if_exit=False)
+            self.info_msg += \
+                f'\tContact angle is getting from `{configs.contact_fname}`\n'
         except FileNotFoundError as _:
             self.info_msg += \
                 (f'\t`{configs.contact_fname}` not found!\n\tAaverage '
                  f'angle `{configs.avg_contact_angle}` is used.\n')
             contact_angle = np.zeros(charge.shape)
             contact_angle += configs.avg_contact_angle
+        cap_surface: np.ndarray = \
+            self._compute_under_water_area(configs.np_radius, contact_angle)
+        density: np.ndarray = charge / cap_surface
+        return density
+
+    def _compute_under_water_area(self,
+                                  np_radius: float,
+                                  contact_angle: np.ndarray
+                                  ) -> np.ndarray:
+        """compute the area under water
+        if the contact angle is theta, and radius is r:
+            the area of the upper cap of the NP is:
+                A=2\\pi r^{2}(1 - \\cos \\theta)
+            and for lower cap:
+                A=2\\pi r^{2}(1 + \\cos \\theta)
+        The result is return in nm^2
+        """
+        in_water_cap_area: np.ndarray = \
+            2 * np.pi * (1 + np.deg2rad(contact_angle)) * np_radius**2
+        area_in_nm: np.ndarray = in_water_cap_area / 100
+        return area_in_nm
 
     def _get_column(self,
                     fname: str,

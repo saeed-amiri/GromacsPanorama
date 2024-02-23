@@ -628,7 +628,7 @@ class TrrFilterAnalysis:
                            log,
                            extra_msg,
                            fout,
-                           write_index=False,
+                           write_index=True,
                            x_axis_label='Frame index',
                            y_axis_label=f'{fout_prefix}',
                            title=f'{fout_prefix}')

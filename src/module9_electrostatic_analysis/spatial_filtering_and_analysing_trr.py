@@ -616,6 +616,8 @@ class TrrFilterAnalysis:
                    fout_prefix: str
                    ) -> None:
         """write the rdf to a xvg file"""
+        df_i.sort_value(by='frame', inplace=True)
+        df_i.set_index('frame', inplace=True)
         fout: str = \
             f'{fout_prefix}_df'
         fout += ".xvg"

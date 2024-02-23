@@ -167,18 +167,30 @@ class ChargeDensity:
                                   np_radius: float,
                                   contact_angle: np.ndarray
                                   ) -> np.ndarray:
-        """compute the area under water
-        if the contact angle is theta, and radius is r:
-            the area of the upper cap of the NP is:
-                A=2\\pi r^{2}(1 - \\cos \\theta)
-            and for lower cap:
-                A=2\\pi r^{2}(1 + \\cos \\theta)
-        The result is return in nm^2
         """
+        Compute the area under water for a NP at a given contact angle.
+
+        The area is calculated based on the NP's radius and the contact
+        angle, assuming the contact angle provides the extent of
+        exposure to water.
+
+        Parameters:
+        - np_radius: Radius of the NP in Ångströms.
+        - contact_angle: Contact angle(s) in degrees.
+
+        Returns:
+        - The area of the NP's surface exposed to water, in nm^2.
+        """
+        # Convert angles from degrees to radians for mathematical operations
+        radians: np.ndarray = np.deg2rad(contact_angle)
+
+        # Compute the surface area of the cap exposed to water
+        # Formula: A = 2 * π * r^2 * (1 + cos(θ))
+        # Alco converted from Ångströms^2 to nm^2
         in_water_cap_area: np.ndarray = \
-            2 * np.pi * (1 + np.deg2rad(contact_angle)) * np_radius**2
-        area_in_nm: np.ndarray = in_water_cap_area / 100
-        return area_in_nm
+            2 * np.pi * np_radius**2 * (1 + np.cos(radians)) / 100
+
+        return in_water_cap_area
 
     def _get_column(self,
                     fname: str,

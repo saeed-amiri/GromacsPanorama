@@ -53,3 +53,37 @@ frameworks for comprehensive colloidal system analysis.
 22 Feb 2024
 Saeed
 """
+
+import os
+import sys
+import typing
+from datetime import datetime
+from collections import Counter
+from multiprocessing import Pool
+from dataclasses import dataclass, field
+
+import numpy as np
+import pandas as pd
+
+
+from common import logger, itp_to_df, my_tools
+from common.colors_text import TextColor as bcolors
+
+
+@dataclass
+class FileConfig:
+    """set the name of the input files"""
+    charge_fname: str = 'charge_df.xvg'
+    contact_fname: str = 'contact.xvg'
+    fout: str = 'potential.xvg'
+
+
+@dataclass
+class ParameterConfig:
+    """set parameters for the phi calculation"""
+    np_radius: float = 30.0  # In Ångströms
+
+
+@dataclass
+class AllConfig(FileConfig, ParameterConfig):
+    """set all the parameters and confiurations"""

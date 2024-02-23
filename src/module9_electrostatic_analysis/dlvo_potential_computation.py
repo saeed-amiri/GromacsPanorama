@@ -96,20 +96,15 @@ class ElectroStaticComputation:
 
     info_msg: str = 'Message from ElectroStaticComputation:\n'
     configs: AllConfig
+    charge_density: np.ndarray
 
     def __init__(self,
                  log: logger.logging.Logger,
                  configs: AllConfig = AllConfig()
                  ) -> None:
         self.configs = configs
-        self.compute_density(log)
+        self.charge_density = ChargeDensity(log, self.configs).density
         self.write_msg(log)
-
-    def compute_density(self,
-                        log: logger.logging.Logger
-                        ) -> None:
-        """compute the true density for the part inside water"""
-        ChargeDensity(log, self.configs)
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log
@@ -158,8 +153,10 @@ class ChargeDensity:
                  f'angle `{configs.avg_contact_angle}` is used.\n')
             contact_angle = np.zeros(charge.shape)
             contact_angle += configs.avg_contact_angle
+
         cap_surface: np.ndarray = \
             self._compute_under_water_area(configs.np_radius, contact_angle)
+
         density: np.ndarray = charge / cap_surface
         return density
 

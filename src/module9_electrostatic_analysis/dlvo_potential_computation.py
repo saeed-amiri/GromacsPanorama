@@ -54,8 +54,6 @@ frameworks for comprehensive colloidal system analysis.
 Saeed
 """
 
-import sys
-import typing
 from datetime import datetime
 from dataclasses import dataclass, field
 
@@ -63,7 +61,7 @@ import numpy as np
 import pandas as pd
 
 
-from common import logger, my_tools, xvg_to_dataframe
+from common import logger, xvg_to_dataframe
 from common.colors_text import TextColor as bcolors
 
 
@@ -84,6 +82,15 @@ class ParameterConfig:
     """
     np_radius: float = 30.0  # In Ångströms
     avg_contact_angle: float = 36.0  # In Degrees
+    # Parameters for the phi computation
+    phi_parameters: dict[str, float] = field(default_factory=lambda: {
+        'T': 298.15,  # Temperature of the system
+        'c_salt': .05,   # Bulk concentration of the salt in M(=mol/l)
+        'epsilon': 78.5,  # medium  permittivity,
+        'epsilon_0': 8.854187817e-12,   # vacuum permittivity, farads per meter
+        'k_boltzman_JK': 1.380649e-23,  # Joules per Kelvin (J/K)
+        'k_boltzman_eVK': 8.617333262145e-5  # Electronvolts per Kelvin (eV/K)
+    })
 
 
 @dataclass
@@ -97,14 +104,32 @@ class ElectroStaticComputation:
     info_msg: str = 'Message from ElectroStaticComputation:\n'
     configs: AllConfig
     charge_density: np.ndarray
+    charge: np.ndarray
 
     def __init__(self,
                  log: logger.logging.Logger,
                  configs: AllConfig = AllConfig()
                  ) -> None:
         self.configs = configs
-        self.charge_density = ChargeDensity(log, self.configs).density
+        self.initiate(log)
         self.write_msg(log)
+
+    def initiate(self,
+                 log: logger.logging.Logger
+                 ) -> None:
+        """initiate computation by finding debye length"""
+        charge_info = ChargeDensity(log, self.configs)
+        self.charge, self.charge_density = \
+            charge_info.density, charge_info.density
+        debye_l: np.ndarray = self.get_debye()
+
+    def get_debye(self) -> np.ndarray:
+        """find debye length"""
+        param: dict[str, float] = self.configs.phi_parameters
+        debye_l: np.ndarray = np.sqrt(param['T'] * param['k_boltzman_JK'] *
+                                 param['epsilon_0'] * param['epsilon'] /
+                                 (2 * param['c_salt'])) * self.charge
+        return debye_l
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log
@@ -124,18 +149,19 @@ class ChargeDensity:
 
     info_msg: str = 'Message from ChargeDensity:\n'
     density: np.ndarray
+    charge: np.ndarray
 
     def __init__(self,
                  log: logger.logging.Logger,
                  configs: AllConfig
                  ) -> None:
-        self.density = self._get_density(configs, log)
+        self.charge, self.density = self._get_density(configs, log)
         self._write_msg(log)
 
     def _get_density(self,
                      configs: AllConfig,
                      log: logger.logging.Logger
-                     ) -> np.ndarray:
+                     ) -> tuple[np.ndarray, np.ndarray]:
         """read the input files and compute the charge desnity"""
         charge: np.ndarray = \
             self._get_column(configs.charge_fname, log, column='total')
@@ -158,7 +184,7 @@ class ChargeDensity:
             self._compute_under_water_area(configs.np_radius, contact_angle)
 
         density: np.ndarray = charge / cap_surface
-        return density
+        return charge, density
 
     def _compute_under_water_area(self,
                                   np_radius: float,

@@ -91,7 +91,10 @@ class ParameterConfig:
         'epsilon_0': 8.854187817e-12,   # vacuum permittivity, farads per meter
         'k_boltzman_JK': 1.380649e-23,  # Joules per Kelvin (J/K)
         'k_boltzman_eVK': 8.617333262145e-5,  # Electronvolts per Kelvin (eV/K)
-        'phi_0': 1.0  # The potential at zero point
+        'phi_0': 1.0,  # The potential at zero point
+        'box_xlim': 12.3,  # Length of the box in x direction
+        'box_ylim': 12.3,  # Length of the box in y direction
+        'box_zlim': 12.3  # Length of the box in z direction
     })
 
 
@@ -150,22 +153,24 @@ class ElectroStaticComputation:
         """
         compute phi_r with different approximations
         """
+        phi_0: float = self.configs.phi_parameters['phi_0']
+        box_lim: float = self.configs.phi_parameters['box_xlim']
         radii: np.ndarray
         phi_r: np.ndarray
-        radii, phi_r = self._linear_planar_possion(debye_l)
+        radii, phi_r = self._linear_planar_possion(debye_l, phi_0, box_lim)
         plt.plot(radii, phi_r)
         plt.show()
         return radii, phi_r
 
     def _linear_planar_possion(self,
-                               debye_l: np.ndarray
+                               debye_l: np.ndarray,
+                               phi_0: float,
+                               box_lim: float,
                                ) -> tuple[np.ndarray, np.ndarray]:
         """compute the potential based on the linearized Possion-Boltzmann
         relation:
         phi(r) = phi_0 * exp(-r/debye_l)"""
-        phi_0: float = self.configs.phi_parameters['phi_0']
-        radius: float = 12.2  # Box length
-        radii: np.ndarray = np.linspace(0, radius, len(self.charge))
+        radii: np.ndarray = np.linspace(0, box_lim, len(self.charge))
         phi_r: np.ndarray = phi_0 * np.exp(-radii/debye_l)
         return radii, phi_r
 

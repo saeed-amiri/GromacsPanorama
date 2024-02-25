@@ -110,7 +110,7 @@ class AllConfig(FileConfig, ParameterConfig):
         graham: Graham equation
     """
     debye_type: str = 'possion'
-    compute_type: str = 'planar'
+    compute_type: str = 'sphere'
 
 
 class ElectroStaticComputation:
@@ -157,7 +157,10 @@ class ElectroStaticComputation:
         box_lim: float = self.configs.phi_parameters['box_xlim']
         radii: np.ndarray
         phi_r: np.ndarray
-        radii, phi_r = self._linear_planar_possion(debye_l, phi_0, box_lim)
+        if (compute_type := self.configs.compute_type) == 'planar':
+            radii, phi_r = self._linear_planar_possion(debye_l, phi_0, box_lim)
+        elif compute_type == 'sphere':
+            radii, phi_r = self._linear_shpere(debye_l, phi_0, box_lim)
         plt.plot(radii, phi_r)
         plt.show()
         return radii, phi_r
@@ -172,6 +175,22 @@ class ElectroStaticComputation:
         phi(r) = phi_0 * exp(-r/debye_l)"""
         radii: np.ndarray = np.linspace(0, box_lim, len(self.charge))
         phi_r: np.ndarray = phi_0 * np.exp(-radii/debye_l)
+        return radii, phi_r
+
+    def _linear_shpere(self,
+                       debye_l: np.ndarray,
+                       phi_0: float,
+                       box_lim: float,
+                       ) -> tuple[np.ndarray, np.ndarray]:
+        """compute the potential based on the linearized Possion-Boltzmann
+        relation for a sphere:
+        phi(r) = phi_0 * (r_np/r) * exp(-(r-r_np)/debye_l)
+        r_np := the nanoparticle radius
+        """
+        r_np: float = self.configs.np_radius
+        radii: np.ndarray = np.linspace(r_np, box_lim, len(self.charge))
+        phi_r: np.ndarray = \
+            phi_0 * (r_np/radii) * np.exp(-(radii-r_np)/debye_l)
         return radii, phi_r
 
     def write_msg(self,

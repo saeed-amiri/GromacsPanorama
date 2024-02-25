@@ -60,6 +60,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
+import matplotlib.pylab as plt
 
 from common import logger, xvg_to_dataframe
 from common.colors_text import TextColor as bcolors
@@ -89,13 +90,24 @@ class ParameterConfig:
         'epsilon': 78.5,  # medium  permittivity,
         'epsilon_0': 8.854187817e-12,   # vacuum permittivity, farads per meter
         'k_boltzman_JK': 1.380649e-23,  # Joules per Kelvin (J/K)
-        'k_boltzman_eVK': 8.617333262145e-5  # Electronvolts per Kelvin (eV/K)
+        'k_boltzman_eVK': 8.617333262145e-5,  # Electronvolts per Kelvin (eV/K)
+        'phi_0': 1.0  # The potential at zero point
     })
 
 
 @dataclass
 class AllConfig(FileConfig, ParameterConfig):
-    """set all the parameters and confiurations"""
+    """set all the parameters and confiurations
+    computation types:
+    compute_type:
+        planar: Linearized Possion-Boltzmann for planar approximation
+        sheperical: Linearized Possion-Boltzmann for a sphere
+    debye_type:
+        poisson: Poisson-Boltzmann equation
+        graham: Graham equation
+    """
+    debye_type: str = 'possion'
+    compute_type: str = 'planar'
 
 
 class ElectroStaticComputation:
@@ -122,14 +134,40 @@ class ElectroStaticComputation:
         self.charge, self.charge_density = \
             charge_info.density, charge_info.density
         debye_l: np.ndarray = self.get_debye()
+        self.compute_potential(debye_l)
 
     def get_debye(self) -> np.ndarray:
         """find debye length"""
         param: dict[str, float] = self.configs.phi_parameters
         debye_l: np.ndarray = np.sqrt(param['T'] * param['k_boltzman_JK'] *
-                                 param['epsilon_0'] * param['epsilon'] /
-                                 (2 * param['c_salt'])) * self.charge
-        return debye_l
+                                      param['epsilon'] * param['epsilon_0'] /
+                                      (2 * param['c_salt'])) / self.charge
+        return debye_l*1e15
+
+    def compute_potential(self,
+                          debye_l: np.ndarray
+                          ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        compute phi_r with different approximations
+        """
+        radii: np.ndarray
+        phi_r: np.ndarray
+        radii, phi_r = self._linear_planar_possion(debye_l)
+        plt.plot(radii, phi_r)
+        plt.show()
+        return radii, phi_r
+
+    def _linear_planar_possion(self,
+                               debye_l: np.ndarray
+                               ) -> tuple[np.ndarray, np.ndarray]:
+        """compute the potential based on the linearized Possion-Boltzmann
+        relation:
+        phi(r) = phi_0 * exp(-r/debye_l)"""
+        phi_0: float = self.configs.phi_parameters['phi_0']
+        radius: float = 12.2  # Box length
+        radii: np.ndarray = np.linspace(0, radius, len(self.charge))
+        phi_r: np.ndarray = phi_0 * np.exp(-radii/debye_l)
+        return radii, phi_r
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

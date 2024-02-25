@@ -141,6 +141,14 @@ class ElectroStaticComputation:
 
     def get_debye(self) -> np.ndarray:
         """find debye length"""
+        debye_l: np.ndarray = self._get_poisson_debye()
+        return debye_l
+
+    def _get_poisson_debye(self) -> np.ndarray:
+        """computing the debye length based on Poisson-Boltzmann apprx.
+        See:
+        pp. 96, Surface and Interfacial Forces, H-J Burr and M.Kappl
+        """
         param: dict[str, float] = self.configs.phi_parameters
         debye_l: np.ndarray = np.sqrt(param['T'] * param['k_boltzman_JK'] *
                                       param['epsilon'] * param['epsilon_0'] /
@@ -172,7 +180,9 @@ class ElectroStaticComputation:
                                ) -> tuple[np.ndarray, np.ndarray]:
         """compute the potential based on the linearized Possion-Boltzmann
         relation:
-        phi(r) = phi_0 * exp(-r/debye_l)"""
+        phi(r) = phi_0 * exp(-r/debye_l)
+        pp. 96, Surface and Interfacial Forces, H-J Burr and M.Kappl
+        """
         radii: np.ndarray = np.linspace(0, box_lim, len(self.charge))
         phi_r: np.ndarray = phi_0 * np.exp(-radii/debye_l)
         return radii, phi_r
@@ -186,6 +196,7 @@ class ElectroStaticComputation:
         relation for a sphere:
         phi(r) = phi_0 * (r_np/r) * exp(-(r-r_np)/debye_l)
         r_np := the nanoparticle radius
+        pp. 110, Surface and Interfacial Forces, H-J Burr and M.Kappl
         """
         r_np: float = self.configs.np_radius
         radii: np.ndarray = np.linspace(r_np, box_lim, len(self.charge))

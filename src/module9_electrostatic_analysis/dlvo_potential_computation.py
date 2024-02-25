@@ -105,12 +105,12 @@ class AllConfig(FileConfig, ParameterConfig):
     compute_type:
         planar: Linearized Possion-Boltzmann for planar approximation
         sheperical: Linearized Possion-Boltzmann for a sphere
-    debye_type:
-        poisson: Poisson-Boltzmann equation
-        graham: Graham equation
+    phi_0_set:
+        grahame: Grahame equation
+        constant: from a constant value
     """
-    debye_type: str = 'possion'
     compute_type: str = 'sphere'
+    phi_0_type: str = 'grahame'
 
 
 class ElectroStaticComputation:
@@ -140,11 +140,6 @@ class ElectroStaticComputation:
         self.compute_potential(debye_l)
 
     def get_debye(self) -> np.ndarray:
-        """find debye length"""
-        debye_l: np.ndarray = self._get_poisson_debye()
-        return debye_l
-
-    def _get_poisson_debye(self) -> np.ndarray:
         """computing the debye length based on Poisson-Boltzmann apprx.
         See:
         pp. 96, Surface and Interfacial Forces, H-J Burr and M.Kappl
@@ -161,10 +156,12 @@ class ElectroStaticComputation:
         """
         compute phi_r with different approximations
         """
-        phi_0: float = self.configs.phi_parameters['phi_0']
         box_lim: float = self.configs.phi_parameters['box_xlim']
+        phi_0: float = self._get_phi_zero(debye_l)
+
         radii: np.ndarray
         phi_r: np.ndarray
+
         if (compute_type := self.configs.compute_type) == 'planar':
             radii, phi_r = self._linear_planar_possion(debye_l, phi_0, box_lim)
         elif compute_type == 'sphere':
@@ -172,6 +169,17 @@ class ElectroStaticComputation:
         plt.plot(radii, phi_r)
         plt.show()
         return radii, phi_r
+
+    def _get_phi_zero(self,
+                      debye_l: np.ndarray
+                      ) -> float:
+        """get the value of the phi_0 based on the configuration"""
+        if (phi_0_type := self.configs.phi_0_type) == 'constant':
+            phi_0: float = self.configs.phi_parameters['phi_0']
+        elif phi_0_type == 'grahame':
+            phi_0 = self._compute_phi_0_grahame(debye_l)
+        self.info_msg += f'\t{phi_0 = :.3f} from `{phi_0_type}` vlaues\n'
+        return phi_0
 
     def _linear_planar_possion(self,
                                debye_l: np.ndarray,
@@ -203,6 +211,22 @@ class ElectroStaticComputation:
         phi_r: np.ndarray = \
             phi_0 * (r_np/radii) * np.exp(-(radii-r_np)/debye_l)
         return radii, phi_r
+
+    def _compute_phi_0_grahame(self,
+                               debye_l: np.ndarray
+                               ) -> float:
+        """compute the phi_0 based on the linearized Possion-Boltzmann
+        relation:
+        phi_0 = debye_l * q_density / (epsilon * epsilon_0)
+        pp. 102, Surface and Interfacial Forces, H-J Burr and M.Kappl
+        """
+        debye_ave: float = debye_l.mean()
+        density_ave: float = self.charge_density.mean()
+        phi_0: float = \
+            debye_ave * density_ave / (self.configs.phi_parameters['epsilon'] *
+                                       self.configs.phi_parameters['epsilon_0']
+                                       )
+        return phi_0
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

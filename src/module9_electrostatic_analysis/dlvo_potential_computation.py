@@ -139,7 +139,6 @@ class ElectroStaticComputation:
                  configs: AllConfig = AllConfig()
                  ) -> None:
         self.configs = configs
-        # IonicStrengthCalculation('topol.top', log, self.configs)
         self.initiate(log)
         self.write_msg(log)
 
@@ -150,22 +149,37 @@ class ElectroStaticComputation:
         charge_info = ChargeDensity(log, self.configs)
         self.charge, self.charge_density = \
             charge_info.density, charge_info.density
-        debye_l: np.ndarray = self.get_debye()
+        ionic_strength: float = IonicStrengthCalculation(
+            'topol.top', log, self.configs).ionic_strength
+        debye_l: np.ndarray = self.get_debye(ionic_strength)
         self.compute_potential(debye_l)
 
-    def get_debye(self) -> np.ndarray:
+    def get_debye(self,
+                  ionic_strength: float
+                  ) -> np.ndarray:
         """computing the debye length based on Poisson-Boltzmann apprx.
         See:
         pp. 96, Surface and Interfacial Forces, H-J Burr and M.Kappl
         """
         param: dict[str, float] = self.configs.phi_parameters
+
+        # Convert to elementary charge
         e_charge: np.ndarray = self.charge * param['e_charge']
-        c_0_nr: float = param['c_salt'] * 1e3 * param['n_avogadro']
-        debye_l: np.ndarray = np.sqrt(param['T'] * param['k_boltzman_JK'] *
-                                      param['epsilon'] * param['epsilon_0'] /
-                                      (2 * c_0_nr * e_charge**2))
+
+        # ionnic strength in mol/m^3
+        ionic_str_mol_m: float = ionic_strength * 1e3
+
+        # Getting debye length
+        debye_l: np.ndarray = np.sqrt(
+            param['T'] * param['k_boltzman_JK'] *
+            param['epsilon'] * param['epsilon_0'] /
+            (2 * ionic_str_mol_m * param['n_avogadro'] * e_charge**2))
+
+        # convert to nm
         debye_l_nm = debye_l * 1e9
+
         self.info_msg += f'\t`{debye_l_nm.mean() = :.4f}` [nm]\n'
+
         return debye_l_nm
 
     def compute_potential(self,

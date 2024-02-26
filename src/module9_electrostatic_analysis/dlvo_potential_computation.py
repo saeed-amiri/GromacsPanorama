@@ -54,6 +54,7 @@ frameworks for comprehensive colloidal system analysis.
 Saeed
 """
 
+import sys
 from datetime import datetime
 from dataclasses import dataclass, field
 
@@ -84,7 +85,7 @@ class ParameterConfig:
     np_radius: float = 30.0  # In Ångströms
     np_core_charge: int = -8  # Number of charge inside the NP
     avg_contact_angle: float = 36.0  # In Degrees
-    nr_aptes_charges: int = 322  # Protonated APTES
+    nr_aptes_charges: int = 314  # Protonated APTES
     # Parameters for the phi computation
     phi_parameters: dict[str, float] = field(default_factory=lambda: {
         'T': 298.15,  # Temperature of the system
@@ -106,7 +107,7 @@ class ParameterConfig:
         'CLA': -1,
         'ODN': +1,
         'POT': +1,
-        'APT_COR': +322
+        'APT_COR': +1
     }))
 
 

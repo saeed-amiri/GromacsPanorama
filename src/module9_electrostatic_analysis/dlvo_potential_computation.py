@@ -293,20 +293,27 @@ class IonicStrengthCalculation:
                  configs: AllConfig
                  ) -> None:
         res_nr: dict[str, int] = my_tools.read_topol_resnr(topol_fname, log)
-        self.compute_ionic_strength(res_nr, configs)
+        self.ionic_strength = self.compute_ionic_strength(res_nr, configs, log)
         self._write_msg(log)
 
     def compute_ionic_strength(self,
                                res_nr: dict[str, int],
-                               configs: AllConfig
-                               ) -> None:
+                               configs: AllConfig,
+                               log: logger.logging.Logger
+                               ) -> float:
         """compute the ionic strength based on the number of charge
         groups"""
+        ionic_strength: float = 0.0
         volume: float = self._get_water_volume(configs)
         concentration_dict = \
             self._compute_concentration(res_nr, volume, configs)
         self._check_electroneutrality(
-            res_nr, concentration_dict, configs.charge_sings)
+            res_nr, concentration_dict, configs.charge_sings, log)
+        for res, _ in res_nr.items():
+            ionic_strength += \
+                concentration_dict[res] * configs.charge_sings[res]**2
+        self.info_msg += f'\t{ionic_strength = :.5f} [mol/l]\n'
+        return ionic_strength
 
     def _compute_concentration(self,
                                res_nr: dict[str, int],
@@ -318,40 +325,45 @@ class IonicStrengthCalculation:
         concentration: dict[str, float] = {}
         for res, nr in res_nr.items():
             if res not in ['D10', 'APT_COR']:
-                concentration[res] = nr / (
-                    volume * configs.phi_parameters['n_avogadro'])
+                pass
             elif res == 'APT_COR':
-                concentration[res] = configs.nr_aptes_charges / (
-                    volume * configs.phi_parameters['n_avogadro'])
+                nr = configs.nr_aptes_charges
             elif res == 'D10':
                 concentration[res] = 0.0
+            concentration[res] = nr / (
+                    volume * configs.phi_parameters['n_avogadro'])
         return concentration
 
     def _check_electroneutrality(self,
-                                 res_nr: dict[str, int],
+                                 res_nr: dict[str, int],  # nr. of charges
                                  concentration: dict[str, float],
-                                 charge_signs: dict[str, int]
+                                 charge_sings: dict[str, int],
+                                 log: logger.logging.Logger
                                  ) -> None:
         """check the electroneutrality of the system:
         must: \\sum_i c_i Z_i = 0
         """
         # pylint: disable=invalid-name
-        electro: float = 0
-        for res, nr in res_nr.items():
-            electro += nr * concentration[res] * charge_signs[res]
-        print(electro)
+        electroneutrality: float = 0
+        for res, _ in res_nr.items():
+            electroneutrality += concentration[res] * charge_sings[res]
+        if round(electroneutrality, 3) != 0.0:
+            log.error(
+                msg := f'\tError! `{electroneutrality = }` must be zero!\n')
+            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
 
     def _get_water_volume(self,
                           configs: AllConfig
                           ) -> float:
         """return volume of the water section in the box
         dimensions are in nm, the return should be in liters, so:
-        nm^3 -> liters: (1e-9)^3 * 1000 = 1e-24
+        nm^3 -> liters: (1e-9)^3 * 1000 = 1e-24 liters
         """
         volume: float = \
             configs.phi_parameters['box_xlim'] * \
             configs.phi_parameters['box_ylim'] * \
             configs.phi_parameters['box_zlim'] * 1e-24
+        self.info_msg += f'\tWater section `{volume = }` liters\n'
         return volume
 
     def _write_msg(self,

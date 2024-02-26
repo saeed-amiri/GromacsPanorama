@@ -225,7 +225,7 @@ class ElectroStaticComputation:
         r_np := the nanoparticle radius
         pp. 110, Surface and Interfacial Forces, H-J Burr and M.Kappl
         """
-        r_np: float = self.configs.np_radius / 10.0  # [nm]
+        r_np: float = self.configs.np_radius / 10.0  # [A] -> [nm]
         radii: np.ndarray = np.linspace(r_np, box_lim, len(self.charge))
         phi_r: np.ndarray = np.zeros(debye_l.shape)
         for phi, debye in zip(phi_0, debye_l):

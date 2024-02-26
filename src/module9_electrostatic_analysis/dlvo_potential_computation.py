@@ -157,10 +157,13 @@ class ElectroStaticComputation:
         pp. 96, Surface and Interfacial Forces, H-J Burr and M.Kappl
         """
         param: dict[str, float] = self.configs.phi_parameters
+        e_charge: np.ndarray = self.charge * param['e_charge']
+        c_0_nr: float = param['c_salt'] * 1e3 * param['n_avogadro']
         debye_l: np.ndarray = np.sqrt(param['T'] * param['k_boltzman_JK'] *
                                       param['epsilon'] * param['epsilon_0'] /
-                                      (2 * param['c_salt'])) / self.charge
-        return debye_l
+                                      (2 * c_0_nr * e_charge**2))
+        debye_l_nm = debye_l * 1e9
+        return debye_l_nm
 
     def compute_potential(self,
                           debye_l: np.ndarray

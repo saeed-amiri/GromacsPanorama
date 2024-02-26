@@ -148,3 +148,30 @@ def write_xvg(df_i: pd.DataFrame,
         f_w.writelines([line + '\n' for line in
                         comment_lines + header_lines + legend_lines])
         df_i.to_csv(f_w, sep=' ', index=write_index, header=None, na_rep='NaN')
+
+def read_topol_resnr(fname: str,
+                    log: logger.logging.Logger
+                    ) -> dict[str, int]:
+    """read the topol file and retrun the number of each residue"""
+    check_file_exist(fname, log)
+    molecules: bool = False
+    res_list: list[str] = []
+    residue_nr: dict[str, int] = {}
+
+    with open(fname, encoding='utf8', mode='r') as topol:
+        for line in topol:
+            if line:
+                if line.startswith(';') or line.startswith('#'):
+                    pass
+                elif line.startswith('[ molecules ]') and not molecules:
+                    molecules = True
+                elif molecules:
+                    res_list.append(line.strip())
+    for line in res_list:
+        items = line.split(' ')
+        items = [item for item in items if item]
+        residue_nr[items[0]] = int(items[1])
+    log.info(msg := f'`{__name__}`: `{fname}` is read:\n\t{residue_nr = }\n')
+    print(f'{bcolors.OKBLUE}my_tools:\n\t{msg}{bcolors.ENDC}\n')
+    return residue_nr
+        

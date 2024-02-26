@@ -138,6 +138,7 @@ class ElectroStaticComputation:
                  configs: AllConfig = AllConfig()
                  ) -> None:
         self.configs = configs
+        # IonicStrengthCalculation('topol.top', log, self.configs)
         self.initiate(log)
         self.write_msg(log)
 
@@ -253,6 +254,98 @@ class ElectroStaticComputation:
         self.info_msg += \
             f'\tTime: {now.strftime("%Y-%m-%d %H:%M:%S")}\n'
         print(f'{bcolors.OKCYAN}{ElectroStaticComputation.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
+class IonicStrengthCalculation:
+    """computation of the ionic strength in the system by considering
+    all charge groups in the system.
+    The number of charge group are a lot, and effect of the salt on
+    the results is very small. The results are almost the same without
+    any salt in the box. If the concentration of the salt is zero, then
+    the computing the debye length is impossible!
+    """
+    # pylint: disable=too-few-public-methods
+
+    info_msg: str = 'Message from IonicStrengthCalculation:\n'
+    ionic_strength: float
+
+    def __init__(self,
+                 topol_fname: str,  # Name of the topology file
+                 log: logger.logging.Logger,
+                 configs: AllConfig
+                 ) -> None:
+        res_nr: dict[str, int] = my_tools.read_topol_resnr(topol_fname, log)
+        self.compute_ionic_strength(res_nr, configs)
+        self._write_msg(log)
+
+    def compute_ionic_strength(self,
+                               res_nr: dict[str, int],
+                               configs: AllConfig
+                               ) -> None:
+        """compute the ionic strength based on the number of charge
+        groups"""
+        volume: float = self._get_water_volume(configs)
+        concentration_dict = \
+            self._compute_concentration(res_nr, volume, configs)
+        self._check_electroneutrality(
+            res_nr, concentration_dict, configs.charge_sings)
+
+    def _compute_concentration(self,
+                               res_nr: dict[str, int],
+                               volume: float,
+                               configs: AllConfig
+                               ) -> dict[str, float]:
+        """compute the concentration for each charge group"""
+        # pylint: disable=invalid-name
+        concentration: dict[str, float] = {}
+        for res, nr in res_nr.items():
+            if res not in ['D10', 'APT_COR']:
+                concentration[res] = nr / (
+                    volume * configs.phi_parameters['n_avogadro'])
+            elif res == 'APT_COR':
+                concentration[res] = configs.nr_aptes_charges / (
+                    volume * configs.phi_parameters['n_avogadro'])
+            elif res == 'D10':
+                concentration[res] = 0.0
+        return concentration
+
+    def _check_electroneutrality(self,
+                                 res_nr: dict[str, int],
+                                 concentration: dict[str, float],
+                                 charge_signs: dict[str, int]
+                                 ) -> None:
+        """check the electroneutrality of the system:
+        must: \\sum_i c_i Z_i = 0
+        """
+        # pylint: disable=invalid-name
+        electro: float = 0
+        for res, nr in res_nr.items():
+            electro += nr * concentration[res] * charge_signs[res]
+        print(electro)
+
+    def _get_water_volume(self,
+                          configs: AllConfig
+                          ) -> float:
+        """return volume of the water section in the box
+        dimensions are in nm, the return should be in liters, so:
+        nm^3 -> liters: (1e-9)^3 * 1000 = 1e-24
+        """
+        volume: float = \
+            configs.phi_parameters['box_xlim'] * \
+            configs.phi_parameters['box_ylim'] * \
+            configs.phi_parameters['box_zlim'] * 1e-24
+        return volume
+
+    def _write_msg(self,
+                   log: logger.logging.Logger  # To log
+                   ) -> None:
+        """write and log messages"""
+        now = datetime.now()
+        self.info_msg += \
+            f'\tTime: {now.strftime("%Y-%m-%d %H:%M:%S")}\n'
+        print(f'{bcolors.OKCYAN}{IonicStrengthCalculation.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
 

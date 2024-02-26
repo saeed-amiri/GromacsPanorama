@@ -62,7 +62,7 @@ import pandas as pd
 
 import matplotlib.pylab as plt
 
-from common import logger, xvg_to_dataframe
+from common import logger, xvg_to_dataframe, my_tools
 from common.colors_text import TextColor as bcolors
 
 
@@ -82,21 +82,23 @@ class ParameterConfig:
     not availabel
     """
     np_radius: float = 30.0  # In Ångströms
+    np_core_charge: int = -8  # Number of charge inside the NP
     avg_contact_angle: float = 36.0  # In Degrees
+    nr_aptes_charges: int = 322  # Protonated APTES
     # Parameters for the phi computation
     phi_parameters: dict[str, float] = field(default_factory=lambda: {
         'T': 298.15,  # Temperature of the system
-        'e_charge': 1.6e-19,  # Elementary charge [C]
-        'c_salt': .01,   # Bulk concentration of the salt in M(=mol/l)
+        'e_charge': 1.602e-19,  # Elementary charge [C]
+        'c_salt': .005,   # Bulk concentration of the salt in M(=mol/l)
         'epsilon': 78.5,  # medium  permittivity,
         'epsilon_0': 8.854187817e-12,   # vacuum permittivity, farads per meter
         'n_avogadro': 6.022e23,  # Avogadro's number
         'k_boltzman_JK': 1.380649e-23,  # Joules per Kelvin (J/K)
         'k_boltzman_eVK': 8.617333262145e-5,  # Electronvolts per Kelvin (eV/K)
         'phi_0': 1.0e-9,  # The potential at zero point (V)
-        'box_xlim': 12.3,  # Length of the box in x direction [nm]
-        'box_ylim': 12.3,  # Length of the box in y direction [nm]
-        'box_zlim': 12.3  # Length of the box in z direction [nm]
+        'box_xlim': 21.7,  # Length of the box in x direction [nm]
+        'box_ylim': 21.7,  # Length of the box in y direction [nm]
+        'box_zlim': 11.3  # Length of the box in z direction [nm] (water)
     })
 
 

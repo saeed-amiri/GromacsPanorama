@@ -86,6 +86,7 @@ class ParameterConfig:
     # Parameters for the phi computation
     phi_parameters: dict[str, float] = field(default_factory=lambda: {
         'T': 298.15,  # Temperature of the system
+        'e_charge': 1.6e-19,  # Elementary charge [C]
         'c_salt': .01,   # Bulk concentration of the salt in M(=mol/l)
         'epsilon': 78.5,  # medium  permittivity,
         'epsilon_0': 8.854187817e-12,   # vacuum permittivity, farads per meter
@@ -149,7 +150,7 @@ class ElectroStaticComputation:
         debye_l: np.ndarray = np.sqrt(param['T'] * param['k_boltzman_JK'] *
                                       param['epsilon'] * param['epsilon_0'] /
                                       (2 * param['c_salt'])) / self.charge
-        return debye_l*1e15
+        return debye_l
 
     def compute_potential(self,
                           debye_l: np.ndarray
@@ -229,7 +230,7 @@ class ElectroStaticComputation:
         phi_0: np.ndarray = debye_l * self.charge_density / (
             self.configs.phi_parameters['epsilon'] *
             self.configs.phi_parameters['epsilon_0'])
-        return phi_0*1e-9
+        return phi_0
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log
@@ -282,8 +283,9 @@ class ChargeDensity:
 
         cap_surface: np.ndarray = \
             self._compute_under_water_area(configs.np_radius, contact_angle)
-
-        density: np.ndarray = charge / cap_surface
+        density: np.ndarray = \
+            (charge * configs.phi_parameters['e_charge']) / cap_surface
+        self.info_msg += f'\tAve. `{density.mean() = :.3f}` [m^2]\n'
         return charge, density
 
     def _compute_under_water_area(self,
@@ -309,11 +311,10 @@ class ChargeDensity:
 
         # Compute the surface area of the cap exposed to water
         # Formula: A = 2 * π * r^2 * (1 + cos(θ))
-        # Alco converted from Ångströms^2 to nm^2
+        # Alco converted from Ångströms^2 to m^2
         in_water_cap_area: np.ndarray = \
-            2 * np.pi * np_radius**2 * (1 + np.cos(radians)) / 100
-
-        return in_water_cap_area
+            2 * np.pi * np_radius**2 * (1 + np.cos(radians))
+        return in_water_cap_area * 1e-20
 
     def _get_column(self,
                     fname: str,

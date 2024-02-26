@@ -164,7 +164,7 @@ class ElectroStaticComputation:
                                       param['epsilon'] * param['epsilon_0'] /
                                       (2 * c_0_nr * e_charge**2))
         debye_l_nm = debye_l * 1e9
-        self.info_msg += f'\t`{debye_l_nm.mean() = :.4f}`\n [nm]'
+        self.info_msg += f'\t`{debye_l_nm.mean() = :.4f}` [nm]\n'
         return debye_l_nm
 
     def compute_potential(self,
@@ -197,7 +197,7 @@ class ElectroStaticComputation:
         elif phi_0_type == 'grahame':
             phi_0 = self._compute_phi_0_grahame(debye_l)
         self.info_msg += \
-            f'\tAvg. {phi_0.mean() = :.3f} from `{phi_0_type}` vlaues\n'
+            f'\tAvg. {phi_0.mean() = :.3f} from `{phi_0_type}` values\n'
         return phi_0
 
     def _linear_planar_possion(self,
@@ -242,7 +242,7 @@ class ElectroStaticComputation:
         phi_0 = debye_l * q_density / (epsilon * epsilon_0)
         pp. 102, Surface and Interfacial Forces, H-J Burr and M.Kappl
         """
-        phi_0: np.ndarray = debye_l * self.charge_density / (
+        phi_0: np.ndarray = debye_l * 1e-9 * self.charge_density / (
             self.configs.phi_parameters['epsilon'] *
             self.configs.phi_parameters['epsilon_0'])
         return phi_0
@@ -392,7 +392,9 @@ class ChargeDensity:
             self._compute_under_water_area(configs.np_radius, contact_angle)
         density: np.ndarray = \
             (charge * configs.phi_parameters['e_charge']) / cap_surface
-        self.info_msg += f'\tAve. `{density.mean() = :.3f}` [m^2]\n'
+        self.info_msg += (f'\tAve. `{charge.mean() = :.3f}` [e]\n'
+                          f'\t`{cap_surface.mean()*1e18 = :.3f}` [nm^2]\n'
+                          f'\tAve. `charge_{density.mean() = :.3f}` [C/m^2]\n')
         return charge, density
 
     def _compute_under_water_area(self,

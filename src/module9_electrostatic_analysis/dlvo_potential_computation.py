@@ -86,15 +86,16 @@ class ParameterConfig:
     # Parameters for the phi computation
     phi_parameters: dict[str, float] = field(default_factory=lambda: {
         'T': 298.15,  # Temperature of the system
-        'c_salt': .05,   # Bulk concentration of the salt in M(=mol/l)
+        'c_salt': .01,   # Bulk concentration of the salt in M(=mol/l)
         'epsilon': 78.5,  # medium  permittivity,
         'epsilon_0': 8.854187817e-12,   # vacuum permittivity, farads per meter
+        'n_avogadro': 6.022e23,  # Avogadro's number
         'k_boltzman_JK': 1.380649e-23,  # Joules per Kelvin (J/K)
         'k_boltzman_eVK': 8.617333262145e-5,  # Electronvolts per Kelvin (eV/K)
-        'phi_0': 1.0,  # The potential at zero point
-        'box_xlim': 12.3,  # Length of the box in x direction
-        'box_ylim': 12.3,  # Length of the box in y direction
-        'box_zlim': 12.3  # Length of the box in z direction
+        'phi_0': 1.0e-9,  # The potential at zero point (V)
+        'box_xlim': 12.3,  # Length of the box in x direction [nm]
+        'box_ylim': 12.3,  # Length of the box in y direction [nm]
+        'box_zlim': 12.3  # Length of the box in z direction [nm]
     })
 
 
@@ -226,7 +227,7 @@ class ElectroStaticComputation:
             debye_ave * density_ave / (self.configs.phi_parameters['epsilon'] *
                                        self.configs.phi_parameters['epsilon_0']
                                        )
-        return phi_0
+        return phi_0*1e-9
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

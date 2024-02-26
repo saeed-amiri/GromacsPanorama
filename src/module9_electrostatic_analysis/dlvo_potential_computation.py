@@ -83,14 +83,14 @@ class ParameterConfig:
     not availabel
     """
     np_radius: float = 30.0  # In Ångströms
-    np_core_charge: int = -8  # Number of charge inside the NP
     avg_contact_angle: float = 36.0  # In Degrees
-    nr_aptes_charges: int = 314  # Protonated APTES
+    np_core_charge: int = -8  # Number of charge inside the NP
+    all_aptes_charges: int = 322  # Protonated APTES
     # Parameters for the phi computation
     phi_parameters: dict[str, float] = field(default_factory=lambda: {
         'T': 298.15,  # Temperature of the system
         'e_charge': 1.602e-19,  # Elementary charge [C]
-        'c_salt': .005,   # Bulk concentration of the salt in M(=mol/l)
+        'c_salt': 0.005,   # Bulk concentration of the salt in M(=mol/l)
         'epsilon': 78.5,  # medium  permittivity,
         'epsilon_0': 8.854187817e-12,   # vacuum permittivity, farads per meter
         'n_avogadro': 6.022e23,  # Avogadro's number
@@ -109,6 +109,9 @@ class ParameterConfig:
         'POT': +1,
         'APT_COR': +1
     }))
+    def __post_init__(self):
+        self.nr_aptes_charges: int = \
+            self.np_core_charge + self.all_aptes_charges
 
 
 @dataclass
@@ -363,7 +366,7 @@ class IonicStrengthCalculation:
             configs.phi_parameters['box_xlim'] * \
             configs.phi_parameters['box_ylim'] * \
             configs.phi_parameters['box_zlim'] * 1e-24
-        self.info_msg += f'\tWater section `{volume = }` liters\n'
+        self.info_msg += f'\tWater section `{volume = :.4e}` liters\n'
         return volume
 
     def _write_msg(self,
@@ -446,7 +449,7 @@ class ChargeDensity:
         radians: np.ndarray = np.deg2rad(contact_angle)
 
         # Compute the surface area of the cap exposed to water
-        # Formula: A = 2 * π * r^2 * (1 + cos(θ))
+        # Formula: A = 2 * pi * r^2 * (1 + cos(θ))
         # Alco converted from Ångströms^2 to m^2
         in_water_cap_area: np.ndarray = \
             2 * np.pi * np_radius**2 * (1 + np.cos(radians))

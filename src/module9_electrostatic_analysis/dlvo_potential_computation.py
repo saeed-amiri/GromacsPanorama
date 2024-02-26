@@ -158,7 +158,7 @@ class ElectroStaticComputation:
         compute phi_r with different approximations
         """
         box_lim: float = self.configs.phi_parameters['box_xlim']
-        phi_0: float = self._get_phi_zero(debye_l)
+        phi_0: np.ndarray = self._get_phi_zero(debye_l)
 
         radii: np.ndarray
         phi_r: np.ndarray
@@ -173,18 +173,20 @@ class ElectroStaticComputation:
 
     def _get_phi_zero(self,
                       debye_l: np.ndarray
-                      ) -> float:
+                      ) -> np.ndarray:
         """get the value of the phi_0 based on the configuration"""
+        phi_0: np.ndarray = np.zeros(debye_l.shape)
         if (phi_0_type := self.configs.phi_0_type) == 'constant':
-            phi_0: float = self.configs.phi_parameters['phi_0']
+            phi_0 += self.configs.phi_parameters['phi_0']
         elif phi_0_type == 'grahame':
             phi_0 = self._compute_phi_0_grahame(debye_l)
-        self.info_msg += f'\t{phi_0 = :.3f} from `{phi_0_type}` vlaues\n'
+        self.info_msg += \
+            f'\tAvg. {phi_0.mean() = :.3f} from `{phi_0_type}` vlaues\n'
         return phi_0
 
     def _linear_planar_possion(self,
                                debye_l: np.ndarray,
-                               phi_0: float,
+                               phi_0: np.ndarray,
                                box_lim: float,
                                ) -> tuple[np.ndarray, np.ndarray]:
         """compute the potential based on the linearized Possion-Boltzmann
@@ -198,7 +200,7 @@ class ElectroStaticComputation:
 
     def _linear_shpere(self,
                        debye_l: np.ndarray,
-                       phi_0: float,
+                       phi_0: np.ndarray,
                        box_lim: float,
                        ) -> tuple[np.ndarray, np.ndarray]:
         """compute the potential based on the linearized Possion-Boltzmann
@@ -207,26 +209,26 @@ class ElectroStaticComputation:
         r_np := the nanoparticle radius
         pp. 110, Surface and Interfacial Forces, H-J Burr and M.Kappl
         """
-        r_np: float = self.configs.np_radius
+        r_np: float = self.configs.np_radius / 10.0  # [nm]
         radii: np.ndarray = np.linspace(r_np, box_lim, len(self.charge))
-        phi_r: np.ndarray = \
-            phi_0 * (r_np/radii) * np.exp(-(radii-r_np)/debye_l)
+        phi_r: np.ndarray = np.zeros(debye_l.shape)
+        for phi, debye in zip(phi_0, debye_l):
+            phi_r += \
+                phi * (r_np/radii) * np.exp(-(radii-r_np)/debye)
+        phi_r /= len(debye_l)
         return radii, phi_r
 
     def _compute_phi_0_grahame(self,
                                debye_l: np.ndarray
-                               ) -> float:
+                               ) -> np.ndarray:
         """compute the phi_0 based on the linearized Possion-Boltzmann
         relation:
         phi_0 = debye_l * q_density / (epsilon * epsilon_0)
         pp. 102, Surface and Interfacial Forces, H-J Burr and M.Kappl
         """
-        debye_ave: float = debye_l.mean()
-        density_ave: float = self.charge_density.mean()
-        phi_0: float = \
-            debye_ave * density_ave / (self.configs.phi_parameters['epsilon'] *
-                                       self.configs.phi_parameters['epsilon_0']
-                                       )
+        phi_0: np.ndarray = debye_l * self.charge_density / (
+            self.configs.phi_parameters['epsilon'] *
+            self.configs.phi_parameters['epsilon_0'])
         return phi_0*1e-9
 
     def write_msg(self,

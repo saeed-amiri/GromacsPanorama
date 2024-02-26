@@ -164,6 +164,7 @@ class ElectroStaticComputation:
                                       param['epsilon'] * param['epsilon_0'] /
                                       (2 * c_0_nr * e_charge**2))
         debye_l_nm = debye_l * 1e9
+        self.info_msg += f'\t`{debye_l_nm.mean() = :.4f}`\n [nm]'
         return debye_l_nm
 
     def compute_potential(self,

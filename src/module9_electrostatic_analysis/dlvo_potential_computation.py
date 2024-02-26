@@ -100,6 +100,14 @@ class ParameterConfig:
         'box_ylim': 21.7,  # Length of the box in y direction [nm]
         'box_zlim': 11.3  # Length of the box in z direction [nm] (water)
     })
+    charge_sings: dict[str, int] = field(default_factory=lambda: ({
+        'SOL': 0,
+        'D10': 0,
+        'CLA': -1,
+        'ODN': +1,
+        'POT': +1,
+        'APT_COR': +322
+    }))
 
 
 @dataclass

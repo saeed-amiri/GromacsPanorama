@@ -90,7 +90,7 @@ class ParameterConfig:
     phi_parameters: dict[str, float] = field(default_factory=lambda: {
         'T': 298.15,  # Temperature of the system
         'e_charge': 1.602e-19,  # Elementary charge [C]
-        'c_salt': 0.005,   # Bulk concentration of the salt in M(=mol/l)
+        'c_salt': 0.0046,   # Bulk concentration of the salt in M(=mol/l)
         'epsilon': 78.5,  # medium  permittivity,
         'epsilon_0': 8.854187817e-12,   # vacuum permittivity, farads per meter
         'n_avogadro': 6.022e23,  # Avogadro's number
@@ -109,7 +109,8 @@ class ParameterConfig:
         'POT': +1,
         'APT_COR': +1
     }))
-    def __post_init__(self):
+
+    def __post_init__(self) -> None:
         self.nr_aptes_charges: int = \
             self.np_core_charge + self.all_aptes_charges
 
@@ -124,9 +125,13 @@ class AllConfig(FileConfig, ParameterConfig):
     phi_0_set:
         grahame: Grahame equation
         constant: from a constant value
+    ionic strength:
+        salt: use the slac concentration
+        all: compute it from all charge groups in the system
     """
     compute_type: str = 'sphere'
     phi_0_type: str = 'grahame'
+    ionic_type: str = 'salt'
 
 
 class ElectroStaticComputation:
@@ -152,8 +157,14 @@ class ElectroStaticComputation:
         charge_info = ChargeDensity(log, self.configs)
         self.charge, self.charge_density = \
             charge_info.density, charge_info.density
-        ionic_strength: float = IonicStrengthCalculation(
-            'topol.top', log, self.configs).ionic_strength
+        if self.configs.ionic_type == 'all':
+            ionic_strength: float = IonicStrengthCalculation(
+                'topol.top', log, self.configs).ionic_strength
+            self.info_msg += f'\tUsing all charge groups {ionic_strength = }\n'
+        elif self.configs.ionic_type == 'salt':
+            ionic_strength = self.configs.phi_parameters['c_salt']
+            self.info_msg += \
+                f'\tUsing salt concentration: {ionic_strength} Mol\n'
         debye_l: np.ndarray = self.get_debye(ionic_strength)
         self.compute_potential(debye_l)
 

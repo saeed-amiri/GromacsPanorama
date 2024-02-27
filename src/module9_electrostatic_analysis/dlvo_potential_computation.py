@@ -121,7 +121,7 @@ class AllConfig(FileConfig, ParameterConfig):
     computation types:
     compute_type:
         planar: Linearized Possion-Boltzmann for planar approximation
-        sheperical: Linearized Possion-Boltzmann for a sphere
+        sphere: Linearized Possion-Boltzmann for a sphere
     phi_0_set:
         grahame: Grahame equation
         constant: from a constant value
@@ -129,7 +129,7 @@ class AllConfig(FileConfig, ParameterConfig):
         salt: use the slac concentration
         all: compute it from all charge groups in the system
     """
-    compute_type: str = 'sphere'
+    compute_type: str = 'planar'
     phi_0_type: str = 'grahame'
     ionic_type: str = 'salt'
 
@@ -240,7 +240,12 @@ class ElectroStaticComputation:
         pp. 96, Surface and Interfacial Forces, H-J Burr and M.Kappl
         """
         radii: np.ndarray = np.linspace(0, box_lim, len(self.charge))
-        phi_r: np.ndarray = phi_0 * np.exp(-radii/debye_l)
+        phi_r: np.ndarray = np.zeros(debye_l.shape)
+
+        for phi, debye in zip(phi_0, debye_l):
+            phi_r += phi * np.exp(-radii/debye)
+        
+        phi_r /= len(debye_l)
         return radii, phi_r
 
     def _linear_shpere(self,
@@ -269,7 +274,7 @@ class ElectroStaticComputation:
         """compute the phi_0 based on the linearized Possion-Boltzmann
         relation:
         phi_0 = debye_l * q_density / (epsilon * epsilon_0)
-        pp. 102, Surface and Interfacial Forces, H-J Burr and M.Kappl
+        pp. 103, Surface and Interfacial Forces, H-J Burr and M.Kappl
         """
         phi_0: np.ndarray = debye_l * 1e-9 * self.charge_density / (
             self.configs.phi_parameters['epsilon'] *
@@ -435,7 +440,8 @@ class ChargeDensity:
             (charge * configs.phi_parameters['e_charge']) / cap_surface
         self.info_msg += (f'\tAve. `{charge.mean() = :.3f}` [e]\n'
                           f'\t`{cap_surface.mean()*1e18 = :.3f}` [nm^2]\n'
-                          f'\tAve. `charge_{density.mean() = :.3f}` [C/m^2]\n')
+                          f'\tAve. `charge_{density.mean() = :.3f}` '
+                          f'[C/m^2] or [As/m^2] \n')
         return charge, density
 
     def _compute_under_water_area(self,

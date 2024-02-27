@@ -124,6 +124,7 @@ class AllConfig(FileConfig, ParameterConfig):
         sphere: Linearized Possion-Boltzmann for a sphere
     phi_0_set:
         grahame: Grahame equation
+        grahame_low: Grahame equation for low potential
         constant: from a constant value
     ionic strength:
         salt: use the slac concentration
@@ -217,20 +218,22 @@ class ElectroStaticComputation:
         return radii, phi_r
 
     def _get_phi_zero(self,
-                      debye_l: np.ndarray
+                      debye_l: float
                       ) -> np.ndarray:
         """get the value of the phi_0 based on the configuration"""
-        phi_0: np.ndarray = np.zeros(debye_l.shape)
+        phi_0: np.ndarray = np.zeros(self.charge.shape)
         if (phi_0_type := self.configs.phi_0_type) == 'constant':
             phi_0 += self.configs.phi_parameters['phi_0']
-        elif phi_0_type == 'grahame':
+        elif phi_0_type == 'grahame_low':
             phi_0 = self._compute_phi_0_grahame_low_potential(debye_l)
+        elif phi_0_type == 'grahame':
+            phi_0 = self._compute_phi_0_grahame(debye_l)
         self.info_msg += \
             f'\tAvg. {phi_0.mean() = :.3f} [V] from `{phi_0_type}` values\n'
         return phi_0
 
     def _linear_planar_possion(self,
-                               debye_l: np.ndarray,
+                               debye_l: float,
                                phi_0: np.ndarray,
                                box_lim: float,
                                ) -> tuple[np.ndarray, np.ndarray]:
@@ -279,6 +282,23 @@ class ElectroStaticComputation:
         phi_0: np.ndarray = debye_l * 1e-9 * self.charge_density / (
             self.configs.phi_parameters['epsilon'] *
             self.configs.phi_parameters['epsilon_0'])
+        return phi_0
+
+    def _compute_phi_0_grahame(self,
+                               debye_l: float
+                               ) -> np.ndarray:
+        """computing the potential at zero from equation 4.32
+        phi_0 = (2k_B*T/e) sinh^-1(
+            debye_l * q_density * e / (2 * epsilon * epsilon_0 * k_B * T))
+        pp. 103, Surface and Interfacial Forces, H-J Burr and M.Kappl
+        """
+        param: dict[str, float] = self.configs.phi_parameters
+        kbt: float = param['T'] * param['k_boltzman_JK']
+        epsilon: float = param['epsilon'] * param['epsilon_0']
+        args: np.ndarray = \
+            debye_l * 1e-9 * param['e_charge'] * self.charge_density / \
+            (2 * epsilon * kbt)
+        phi_0: np.ndarray = 2 * kbt * np.arcsinh(args) / param['e_charge']
         return phi_0
 
     def write_msg(self,

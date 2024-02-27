@@ -226,7 +226,7 @@ class ElectroStaticComputation:
         elif phi_0_type == 'grahame':
             phi_0 = self._compute_phi_0_grahame(debye_l)
         self.info_msg += \
-            f'\tAvg. {phi_0.mean() = :.3f} from `{phi_0_type}` values\n'
+            f'\tAvg. {phi_0.mean() = :.3f} [V] from `{phi_0_type}` values\n'
         return phi_0
 
     def _linear_planar_possion(self,

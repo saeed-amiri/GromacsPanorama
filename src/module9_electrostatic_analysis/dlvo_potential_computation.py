@@ -165,42 +165,39 @@ class ElectroStaticComputation:
             ionic_strength = self.configs.phi_parameters['c_salt']
             self.info_msg += \
                 f'\tUsing salt concentration: {ionic_strength} Mol\n'
-        debye_l: np.ndarray = self.get_debye(ionic_strength)
+        debye_l: float = self.get_debye(ionic_strength)
         self.compute_potential(debye_l)
 
     def get_debye(self,
                   ionic_strength: float
-                  ) -> np.ndarray:
+                  ) -> float:
         """computing the debye length based on Poisson-Boltzmann apprx.
         See:
         pp. 96, Surface and Interfacial Forces, H-J Burr and M.Kappl
         """
         param: dict[str, float] = self.configs.phi_parameters
 
-        # Convert to elementary charge
-        e_charge: np.ndarray = self.charge * param['e_charge']
-
         # ionnic strength in mol/m^3
         ionic_str_mol_m3: float = ionic_strength * 1e3
 
         # Getting debye length
-        debye_l: np.ndarray = np.sqrt(
+        debye_l: np.float64 = np.sqrt(
             param['T'] * param['k_boltzman_JK'] *
             param['epsilon'] * param['epsilon_0'] /
-            (2 * ionic_str_mol_m3 * param['n_avogadro'] * e_charge**2))
+            (2 * ionic_str_mol_m3 * param['n_avogadro'] * param['e_charge']**2
+             ))
 
         # convert to nm
         debye_l_nm = debye_l * 1e9
 
         self.info_msg += (
-            f'\t`{debye_l_nm.mean() = :.4f}` [nm]\n\t'
-            rf'$kappa$ r ={debye_l_nm.mean()*self.configs.np_radius/10:.3f}'
+            f'\t`{debye_l_nm = :.4f}` [nm]\n\t'
+            rf'$kappa$ r ={debye_l_nm*self.configs.np_radius/10:.3f}'
             '\n')
-
-        return debye_l_nm
+        return float(debye_l_nm)
 
     def compute_potential(self,
-                          debye_l: np.ndarray
+                          debye_l: float
                           ) -> tuple[np.ndarray, np.ndarray]:
         """
         compute phi_r with different approximations
@@ -243,16 +240,16 @@ class ElectroStaticComputation:
         pp. 96, Surface and Interfacial Forces, H-J Burr and M.Kappl
         """
         radii: np.ndarray = np.linspace(0, box_lim, len(self.charge))
-        phi_r: np.ndarray = np.zeros(debye_l.shape)
+        phi_r: np.ndarray = np.zeros(radii.shape)
 
-        for phi, debye in zip(phi_0, debye_l):
-            phi_r += phi * np.exp(-radii/debye)
+        for phi in phi_0:
+            phi_r += phi * np.exp(-radii/debye_l)
 
-        phi_r /= len(debye_l)
+        phi_r /= len(radii)
         return radii, phi_r
 
     def _linear_shpere(self,
-                       debye_l: np.ndarray,
+                       debye_l: float,
                        phi_0: np.ndarray,
                        box_lim: float,
                        ) -> tuple[np.ndarray, np.ndarray]:
@@ -264,15 +261,15 @@ class ElectroStaticComputation:
         """
         r_np: float = self.configs.np_radius / 10.0  # [A] -> [nm]
         radii: np.ndarray = np.linspace(r_np, box_lim, len(self.charge))
-        phi_r: np.ndarray = np.zeros(debye_l.shape)
-        for phi, debye in zip(phi_0, debye_l):
+        phi_r: np.ndarray = np.zeros(radii.shape)
+        for phi in phi_0:
             phi_r += \
-                phi * (r_np/radii) * np.exp(-(radii-r_np)/debye)
-        phi_r /= len(debye_l)
+                phi * (r_np/radii) * np.exp(-(radii-r_np)/debye_l)
+        phi_r /= len(radii)
         return radii, phi_r
 
     def _compute_phi_0_grahame_low_potential(self,
-                                             debye_l: np.ndarray
+                                             debye_l: float
                                              ) -> np.ndarray:
         """compute the phi_0 based on the linearized Possion-Boltzmann
         relation:

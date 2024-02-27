@@ -227,7 +227,7 @@ class ElectroStaticComputation:
         if (phi_0_type := self.configs.phi_0_type) == 'constant':
             phi_0 += self.configs.phi_parameters['phi_0']
         elif phi_0_type == 'grahame':
-            phi_0 = self._compute_phi_0_grahame(debye_l)
+            phi_0 = self._compute_phi_0_grahame_low_potential(debye_l)
         self.info_msg += \
             f'\tAvg. {phi_0.mean() = :.3f} [V] from `{phi_0_type}` values\n'
         return phi_0
@@ -271,9 +271,9 @@ class ElectroStaticComputation:
         phi_r /= len(debye_l)
         return radii, phi_r
 
-    def _compute_phi_0_grahame(self,
-                               debye_l: np.ndarray
-                               ) -> np.ndarray:
+    def _compute_phi_0_grahame_low_potential(self,
+                                             debye_l: np.ndarray
+                                             ) -> np.ndarray:
         """compute the phi_0 based on the linearized Possion-Boltzmann
         relation:
         phi_0 = debye_l * q_density / (epsilon * epsilon_0)

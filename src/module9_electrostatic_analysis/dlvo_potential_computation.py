@@ -181,13 +181,13 @@ class ElectroStaticComputation:
         e_charge: np.ndarray = self.charge * param['e_charge']
 
         # ionnic strength in mol/m^3
-        ionic_str_mol_m: float = ionic_strength * 1e3
+        ionic_str_mol_m3: float = ionic_strength * 1e3
 
         # Getting debye length
         debye_l: np.ndarray = np.sqrt(
             param['T'] * param['k_boltzman_JK'] *
             param['epsilon'] * param['epsilon_0'] /
-            (2 * ionic_str_mol_m * param['n_avogadro'] * e_charge**2))
+            (2 * ionic_str_mol_m3 * param['n_avogadro'] * e_charge**2))
 
         # convert to nm
         debye_l_nm = debye_l * 1e9

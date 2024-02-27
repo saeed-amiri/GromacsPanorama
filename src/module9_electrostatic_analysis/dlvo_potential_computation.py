@@ -192,7 +192,10 @@ class ElectroStaticComputation:
         # convert to nm
         debye_l_nm = debye_l * 1e9
 
-        self.info_msg += f'\t`{debye_l_nm.mean() = :.4f}` [nm]\n'
+        self.info_msg += (
+            f'\t`{debye_l_nm.mean() = :.4f}` [nm]\n\t'
+            rf'$kappa$ r ={debye_l_nm.mean()*self.configs.np_radius/10:.3f}'
+            '\n')
 
         return debye_l_nm
 
@@ -244,7 +247,7 @@ class ElectroStaticComputation:
 
         for phi, debye in zip(phi_0, debye_l):
             phi_r += phi * np.exp(-radii/debye)
-        
+
         phi_r /= len(debye_l)
         return radii, phi_r
 

@@ -202,7 +202,10 @@ class ElectroStaticComputation:
             self.info_msg += \
                 f'\tUsing salt concentration: {ionic_strength} Mol\n'
         debye_l: float = self.get_debye(ionic_strength)
-        self.compute_potential(debye_l)
+        radii: np.ndarray
+        phi_r: np.ndarray
+        radii, phi_r = self.compute_potential(debye_l)
+        self.plot_save_phi(radii, phi_r, debye_l)
 
     def get_debye(self,
                   ionic_strength: float
@@ -335,6 +338,48 @@ class ElectroStaticComputation:
             (2 * epsilon * kbt)
         phi_0: np.ndarray = 2 * kbt * np.arcsinh(args) / param['e_charge']
         return phi_0
+
+    def plot_save_phi(self,
+                      radii: np.ndarray,
+                      phi_r: np.ndarray,
+                      debye_l: float
+                      ) -> None:
+        """plot and save the electostatic potential"""
+        configs: PlotConfig = self.configs.plot_config
+        phi_mv: np.ndarray = phi_r * 100
+        # Find the index of the closest value in radii to debye_l
+        idx_closest = np.abs(radii - debye_l).argmin()
+        # Get the corresponding phi_r value
+        phi_value = phi_mv[idx_closest]
+        ax_i: plt.axes
+        fig_i: plt.figure
+        fig_i, ax_i = plot_tools.mk_canvas(x_range=(0, radii.max()),
+                                           height_ratio=configs.height_ratio,
+                                           num_xticks=20)
+        ax_i.plot(radii, phi_mv, **configs.graph_styles)
+        ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
+        ax_i.set_xlabel(configs.labels.get('xlabel'))
+        ax_i.set_ylabel(configs.labels.get('ylabel'))
+        # Plot vertical line at debye_l
+        y_lims: tuple[float, float] = ax_i.get_ylim()
+        x_lims: tuple[float, float] = ax_i.get_xlim()
+        y_lim_min: float = -0.85
+        ax_i.vlines(x=debye_l,
+                    ymin=y_lim_min,
+                    ymax=phi_value,
+                    color=configs.colors[1],
+                    linestyle=configs.line_styles[1],
+                    label=f'Debye Length: {debye_l:.2f} [nm]')
+        # Plot horizontal line from phi_value to the graph
+        ax_i.hlines(y=phi_value,
+                    xmin=0,
+                    xmax=debye_l,
+                    color=configs.colors[2],
+                    linestyle=configs.line_styles[2],
+                    label=f'Potential: {phi_value: .2f} [mV]')
+        ax_i.set_xlim(x_lims)
+        ax_i.set_ylim((y_lim_min, y_lims[1]))
+        plot_tools.save_close_fig(fig_i, ax_i, fname=configs.graph_suffix)
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

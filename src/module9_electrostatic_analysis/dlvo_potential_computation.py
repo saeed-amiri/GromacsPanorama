@@ -363,7 +363,8 @@ class ElectroStaticComputation:
         kappa_r: float = self.configs.np_radius / debye_l / 10
         ax_i.set_xlabel(configs.labels.get('xlabel'))
         ax_i.set_ylabel(configs.labels.get('ylabel'))
-        ax_i.set_title(rf'$\lambda_D^{{-1}} a$ = $\kappa a$ = {kappa_r:.2f}')
+        ax_i.set_title(
+            rf' $\kappa a$ := $\lambda_D^{{-1}} r_{{NP}}$ = {kappa_r:.2f}')
 
         y_lims: tuple[float, float] = ax_i.get_ylim()
         x_lims: tuple[float, float] = ax_i.get_xlim()

@@ -165,9 +165,10 @@ class AllConfig(FileConfig, ParameterConfig):
         salt: use the slac concentration
         all: compute it from all charge groups in the system
     """
-    compute_type: str = 'planar'
+    compute_type: str = 'sphere'
     phi_0_type: str = 'grahame'
     ionic_type: str = 'salt'
+    plot_config: PlotConfig = field(default_factory=PlotConfig)
 
 
 class ElectroStaticComputation:
@@ -250,9 +251,7 @@ class ElectroStaticComputation:
         if (compute_type := self.configs.compute_type) == 'planar':
             radii, phi_r = self._linear_planar_possion(debye_l, phi_0, box_lim)
         elif compute_type == 'sphere':
-            radii, phi_r = self._linear_shpere(debye_l, phi_0, box_lim)
-        plt.plot(radii, phi_r)
-        plt.show()
+            radii, phi_r = self._linear_shpere(debye_l, phi_0, box_lim/2)
         return radii, phi_r
 
     def _get_phi_zero(self,

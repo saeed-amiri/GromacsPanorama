@@ -53,7 +53,7 @@ class BaseGraphConfig:
     xcol_name: str = 'r_nm'
 
     labels: dict[str, str] = field(default_factory=lambda: {
-        'ylabel': 'cdf',
+        'ylabel': 'rdf',
         'xlabel': 'r [nm]'
     })
 
@@ -120,15 +120,16 @@ class FileConfig:
     # comfile: files which are the viewpoint are the com of the np
     # shellfile: files which are the viewpoint are the shell of the np
     viewpoint: list[str] = field(default_factory=lambda: ['com', 'shell'])
+    normalize_type: str = 'max'
     com_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
-            'com_0': {'fname': 'cdf_mda_com_OH2.xvg', 'y_col': 'OH2'},
+            'com_0': {'fname': 'rdf_mda_com_OH2.xvg', 'y_col': 'OH2'},
             'com_1': {'fname': 'rdf_com_d10.xvg', 'y_col': 'D10'},
             'com_2': {'fname': 'rdf_com_sol.xvg', 'y_col': 'SOL'},
             'com_3': {'fname': 'rdf_com_odn.xvg', 'y_col': 'ODN'},
             'com_4': {'fname': 'rdf_com_pot.xvg', 'y_col': 'POT'},
-            'com_5': {'fname': 'cdf_mda_com_CLA.xvg', 'y_col': 'CLA'},
-            'com_6': {'fname': 'cdf_mda_com_N.xvg', 'y_col': 'N'},
+            'com_5': {'fname': 'rdf_mda_com_CLA.xvg', 'y_col': 'CLA'},
+            'com_6': {'fname': 'rdf_mda_com_N.xvg', 'y_col': 'N'},
             'com_7': {'fname': 'rdf_com_apt.xvg', 'y_col': 'APT'},
             'com_8': {'fname': 'rdf_com_amino_charge.xvg',
                       'y_col': 'amino_charge'}
@@ -256,11 +257,15 @@ class MultiRdfPlotter:
             x_range,
             height_ratio=self.configs.plot_configs.height_ratio,
             num_xticks=7)
-
+        norm_factor: float = 1.0
         for s_i in sources:
             rdf_df: pd.DataFrame = rdf_dict.get(s_i)
             if rdf_df is not None:
-                ax_i = self._plot_layer(ax_i, rdf_df, viewpoint, s_i)
+                if self.configs.normalize_type == 'max':
+                    col: str = self.configs.com_files[s_i].get('y_col')
+                    norm_factor = rdf_df[col].max()
+                ax_i = self._plot_layer(
+                    ax_i, rdf_df , viewpoint, s_i, norm_factor)
         self._setup_plot_labels(ax_i, viewpoint)
 
         legend_loc: tuple[str, str] = self._legend_locs(viewpoint)
@@ -276,7 +281,7 @@ class MultiRdfPlotter:
         self._save_plot(
             fig_i, ax_j, fout, viewpoint, close_fig=False, loc=legend_loc[0])
 
-        self._plot_window_overlay(ax_i, x_range, viewpoint)
+        self._plot_window_overlay(ax_i, x_range, viewpoint, norm_factor)
 
         fout = f'window_{fout}'
         self._save_plot(
@@ -390,7 +395,8 @@ class MultiRdfPlotter:
     def _plot_window_overlay(self,
                              ax_i: plt.axes,
                              x_range: tuple[float, float],
-                             viewpoint: str
+                             viewpoint: str,
+                             norm_factor: float = 1.0
                              ) -> plt.axes:
         """plot the graph in the window"""
         x_end: typing.Union[float, None] = \
@@ -403,21 +409,27 @@ class MultiRdfPlotter:
                         x_range[1],
                         self.configs.plot_configs.nr_xtick_in_window).tolist()
         ax_i.set_xticks(xticks)
-        ax_i.set_xlim(0, x_range[1])
-        ax_i.set_ylim(0, 400)
+        xlims: tuple[float, float] = ax_i.get_xlim()
+        ax_i.set_xlim(xlims[0]/5, x_range[1])
+        if norm_factor == 1.0:
+            ax_i.set_ylim(-0.0, 400)
+        else:
+            ax_i.set_ylim(-0.0, 1.05)
+
         return ax_i
 
     def _plot_layer(self,
                     ax_i: plt.axis,
                     rdf_df: pd.DataFrame,
                     viewpoint: str,
-                    s_i: str
+                    s_i: str,
+                    norm_factor: float = 1
                     ) -> plt.axes:
         """plot on dataset"""
         y_column: str = \
             getattr(self.configs, f'{viewpoint}_files')[s_i]['y_col']
         ax_i.plot(rdf_df['r_nm'],
-                  rdf_df[y_column],
+                  rdf_df[y_column] / norm_factor,
                   c=self.configs.plot_configs.colors[y_column],
                   ls=self.configs.plot_configs.line_styles[y_column],
                   label=self.configs.plot_configs.legends[y_column],

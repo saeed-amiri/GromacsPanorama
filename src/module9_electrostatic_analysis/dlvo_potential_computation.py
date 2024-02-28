@@ -55,6 +55,7 @@ Saeed
 """
 
 import sys
+import typing
 from datetime import datetime
 from dataclasses import dataclass, field
 
@@ -63,7 +64,7 @@ import pandas as pd
 
 import matplotlib.pylab as plt
 
-from common import logger, xvg_to_dataframe, my_tools
+from common import logger, xvg_to_dataframe, my_tools, plot_tools
 from common.colors_text import TextColor as bcolors
 
 
@@ -113,6 +114,40 @@ class ParameterConfig:
     def __post_init__(self) -> None:
         self.nr_aptes_charges: int = \
             self.np_core_charge + self.all_aptes_charges
+
+
+@dataclass
+class PlotConfig:
+    """
+    Basic configurations and setup for the plots.
+    """
+    # pylint: disable=too-many-instance-attributes
+    graph_suffix: str = 'els_potential.png'
+
+    labels: dict[str, str] = field(default_factory=lambda: {
+        'title': 'ELS potential',
+        'ylabel': 'ELS potential [mV]',
+        'xlabel': 'r [nm]'
+    })
+
+    graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
+        'label': '15Oda',
+        'color': 'black',
+        'marker': 'o',
+        'linestyle': '-',
+        'markersize': 0,
+    })
+
+    line_styles: list[str] = \
+        field(default_factory=lambda: ['-', ':', '--', '-.'])
+    colors: list[str] = \
+        field(default_factory=lambda: ['black', 'red', 'blue', 'green'])
+
+    height_ratio: float = (5 ** 0.5 - 1) * 1.5
+
+    y_unit: str = ''
+
+    legend_loc: str = 'lower right'
 
 
 @dataclass

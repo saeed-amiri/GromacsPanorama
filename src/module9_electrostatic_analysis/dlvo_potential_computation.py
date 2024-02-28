@@ -83,7 +83,9 @@ class ParameterConfig:
     contact angle, is optioanl, it is used in case the contact file is
     not availabel
     """
+    # pylint: disable=too-many-instance-attributes
     np_radius: float = 30.0  # In Ångströms
+    stern_layer: float = 30.0  # In Ångströms
     avg_contact_angle: float = 36.0  # In Degrees
     np_core_charge: int = -8  # Number of charge inside the NP
     all_aptes_charges: int = 322  # Protonated APTES
@@ -125,8 +127,8 @@ class PlotConfig:
     graph_suffix: str = 'els_potential.png'
 
     labels: dict[str, str] = field(default_factory=lambda: {
-        'title': 'ELS potential',
-        'ylabel': r'ELS potential $\psi$ [mV]',
+        'title': 'potential',
+        'ylabel': r'potential $\psi$ [mV]',
         'xlabel': 'distance x [nm]'
     })
 
@@ -357,8 +359,11 @@ class ElectroStaticComputation:
         ax_i.plot(radii, phi_mv, **configs.graph_styles)
         ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
 
+        # kappa * radius of the np
+        kappa_r: float = self.configs.np_radius / debye_l / 10
         ax_i.set_xlabel(configs.labels.get('xlabel'))
         ax_i.set_ylabel(configs.labels.get('ylabel'))
+        ax_i.set_title(rf'$\lambda_D^{{-1}} a$ = $\kappa a$ = {kappa_r:.2f}')
 
         y_lims: tuple[float, float] = ax_i.get_ylim()
         x_lims: tuple[float, float] = ax_i.get_xlim()
@@ -426,7 +431,7 @@ class ElectroStaticComputation:
                                 y_lim_min: float
                                 ) -> plt.axes:
         """plot the stern layer lines"""
-        ax_i.vlines(x=(x_temp := self.configs.np_radius/10),
+        ax_i.vlines(x=(x_temp := self.configs.stern_layer/10),
                     ymin=y_lim_min,
                     ymax=phi_mv.max(),
                     color=configs.colors[0],

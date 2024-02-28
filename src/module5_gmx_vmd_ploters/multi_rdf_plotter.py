@@ -286,8 +286,8 @@ class MultiRdfPlotter:
         legend_loc: tuple[str, str] = self._legend_locs(viewpoint)
 
         tag = self._get_fout_tag(viewpoint)
-        fout: str = \
-            f'{viewpoint}{tag}overlay_{self.configs.plot_configs.graph_suffix}'
+        fout: str = f'{self.configs.data_sets}_{viewpoint}{tag}'
+        fout += f'overlay_{self.configs.plot_configs.graph_suffix}'
         if self.configs.plot_verticals_overlay:
             ax_j = self._plot_vlines(ax_i)
         else:
@@ -329,8 +329,8 @@ class MultiRdfPlotter:
                 y_column: str = \
                     getattr(self.configs, f'{viewpoint}_files')[s_i]['y_col']
                 tag: str = f'{y_column}_single_'
-                fout: str = \
-                    f'{viewpoint}{tag}{self.configs.plot_configs.graph_suffix}'
+                fout: str = f'{self.configs.data_sets}_{viewpoint}{tag}'
+                fout += f'{self.configs.plot_configs.graph_suffix}'
                 if self.configs.plot_verticals_single:
                     ax_i = self._plot_vlines(ax_i)
                 self._save_plot(fig_i,

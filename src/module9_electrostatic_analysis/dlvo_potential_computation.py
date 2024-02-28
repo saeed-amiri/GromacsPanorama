@@ -148,6 +148,9 @@ class PlotConfig:
     y_unit: str = ''
 
     legend_loc: str = 'lower right'
+    if_stern_line: bool = True
+    if_debye_line: bool = True
+    if_2nd_debye: bool = False
 
 
 @dataclass
@@ -346,10 +349,6 @@ class ElectroStaticComputation:
         """plot and save the electostatic potential"""
         configs: PlotConfig = self.configs.plot_config
         phi_mv: np.ndarray = phi_r * 100
-        # Find the index of the closest value in radii to debye_l
-        idx_closest = np.abs(radii - debye_l).argmin()
-        # Get the corresponding phi_r value
-        phi_value = phi_mv[idx_closest]
         ax_i: plt.axes
         fig_i: plt.figure
         fig_i, ax_i = plot_tools.mk_canvas(x_range=(0, radii.max()),
@@ -363,9 +362,23 @@ class ElectroStaticComputation:
         y_lims: tuple[float, float] = ax_i.get_ylim()
         x_lims: tuple[float, float] = ax_i.get_xlim()
         y_lim_min: float = -0.85
-        ax_i = self._plot_debye_lines(
-            ax_i, phi_value, debye_l, y_lim_min, configs)
-        ax_i = self._plot_stern_layer_lines(ax_i, phi_mv, configs, y_lim_min)
+        if configs.if_stern_line:
+            ax_i = self._plot_stern_layer_lines(
+                ax_i, phi_mv, configs, y_lim_min)
+        if configs.if_debye_line:
+            # Find the index of the closest value in radii to debye_l
+            idx_closest = np.abs(radii - debye_l).argmin()
+            # Get the corresponding phi_r value
+            phi_value = phi_mv[idx_closest]
+            ax_i = self._plot_debye_lines(
+                ax_i, phi_value, debye_l, y_lim_min, configs)
+        if configs.if_2nd_debye:
+            # Find the index of the closest value in radii to debye_l
+            idx_closest = np.abs(radii - debye_l*2).argmin()
+            # Get the corresponding phi_r value
+            phi_value = phi_mv[idx_closest]
+            ax_i = self._plot_debye_lines(
+                ax_i, phi_value, debye_l*2, y_lim_min, configs, label='2')
         ax_i.set_xlim(x_lims)
         ax_i.set_ylim((y_lim_min, y_lims[1]))
         plot_tools.save_close_fig(fig_i, ax_i, fname=configs.graph_suffix)
@@ -375,23 +388,31 @@ class ElectroStaticComputation:
                           phi_value: float,
                           debye_l: float,
                           y_lim_min: float,
-                          configs: PlotConfig
+                          configs: PlotConfig,
+                          label: str = ''
                           ) -> plt.axes:
         """plot lines for the debye length"""
         # pylint: disable=too-many-arguments
+        if not label:
+            l_s1: int = 1
+            l_s2: int = 2
+        else:
+            l_s1 = 3
+            l_s2 = 3
+
         ax_i.vlines(x=debye_l,
                     ymin=y_lim_min,
                     ymax=phi_value,
-                    color=configs.colors[1],
-                    linestyle=configs.line_styles[1],
-                    label=f'Debye Length: {debye_l:.2f} [nm]')
+                    color=configs.colors[l_s1],
+                    linestyle=configs.line_styles[l_s1],
+                    label=f'Debye Length/{label}: {debye_l:.2f} [nm]')
         # Plot horizontal line from phi_value to the graph
         ax_i.hlines(y=phi_value,
                     xmin=0,
                     xmax=debye_l,
-                    color=configs.colors[2],
-                    linestyle=configs.line_styles[2],
-                    label=f'Potential: {phi_value: .2f} [mV]')
+                    color=configs.colors[l_s2],
+                    linestyle=configs.line_styles[l_s2],
+                    label=f'Potential_{label}: {phi_value: .2f} [mV]')
         return ax_i
 
     def _plot_stern_layer_lines(self,

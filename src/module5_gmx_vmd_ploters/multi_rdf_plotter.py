@@ -188,7 +188,7 @@ class VerticalLineConfig:
 class AllConfig(FileConfig, VerticalLineConfig):
     """Set the all the configs"""
 
-    data_sets: str = 'rdf'  # rdf or cdf
+    data_sets: str = 'cdf'  # rdf or cdf
 
     plot_configs: OverlayConfig = field(default_factory=OverlayConfig)
     plot_verticals_single: bool = True
@@ -276,7 +276,8 @@ class MultiRdfPlotter:
         for s_i in sources:
             rdf_df: pd.DataFrame = rdf_dict.get(s_i)
             if rdf_df is not None:
-                if self.configs.normalize_type == 'max':
+                if (self.configs.normalize_type == 'max' and
+                    self.configs.data_sets == 'rdf'):
                     col = self.configs.com_files[s_i].get('y_col')
                     norm_factor = rdf_df[col].max()
                 ax_i = self._plot_layer(

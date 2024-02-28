@@ -363,6 +363,22 @@ class ElectroStaticComputation:
         y_lims: tuple[float, float] = ax_i.get_ylim()
         x_lims: tuple[float, float] = ax_i.get_xlim()
         y_lim_min: float = -0.85
+        ax_i = self._plot_debye_lines(
+            ax_i, phi_value, debye_l, y_lim_min, configs)
+        ax_i = self._plot_stern_layer_lines(ax_i, phi_mv, configs, y_lim_min)
+        ax_i.set_xlim(x_lims)
+        ax_i.set_ylim((y_lim_min, y_lims[1]))
+        plot_tools.save_close_fig(fig_i, ax_i, fname=configs.graph_suffix)
+
+    def _plot_debye_lines(self,
+                          ax_i: plt.axes,
+                          phi_value: float,
+                          debye_l: float,
+                          y_lim_min: float,
+                          configs: PlotConfig
+                          ) -> plt.axes:
+        """plot lines for the debye length"""
+        # pylint: disable=too-many-arguments
         ax_i.vlines(x=debye_l,
                     ymin=y_lim_min,
                     ymax=phi_value,
@@ -376,9 +392,28 @@ class ElectroStaticComputation:
                     color=configs.colors[2],
                     linestyle=configs.line_styles[2],
                     label=f'Potential: {phi_value: .2f} [mV]')
-        ax_i.set_xlim(x_lims)
-        ax_i.set_ylim((y_lim_min, y_lims[1]))
-        plot_tools.save_close_fig(fig_i, ax_i, fname=configs.graph_suffix)
+        return ax_i
+
+    def _plot_stern_layer_lines(self,
+                                ax_i: plt.axes,
+                                phi_mv: np.ndarray,
+                                configs: PlotConfig,
+                                y_lim_min: float
+                                ) -> plt.axes:
+        """plot the stern layer lines"""
+        ax_i.vlines(x=(x_temp := self.configs.np_radius/10),
+                    ymin=y_lim_min,
+                    ymax=phi_mv.max(),
+                    color=configs.colors[0],
+                    linestyle=configs.line_styles[1],
+                    label=f'Stern layer: {x_temp:.2f} [nm]')
+        ax_i.hlines(y=(phi_0 := phi_mv.max()),
+                    xmin=0,
+                    xmax=x_temp,
+                    color=configs.colors[3],
+                    linestyle=configs.line_styles[1],
+                    label=fr'$\psi_0$: {phi_0: .2f} [mV]')
+        return ax_i
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

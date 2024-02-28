@@ -120,18 +120,20 @@ class FileConfig:
     # comfile: files which are the viewpoint are the com of the np
     # shellfile: files which are the viewpoint are the shell of the np
     viewpoint: list[str] = field(default_factory=lambda: ['com', 'shell'])
+
     normalize_type: str = 'max'
+
     com_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
-            'com_0': {'fname': 'rdf_mda_com_OH2.xvg', 'y_col': 'OH2'},
-            'com_1': {'fname': 'rdf_com_d10.xvg', 'y_col': 'D10'},
-            'com_2': {'fname': 'rdf_com_sol.xvg', 'y_col': 'SOL'},
-            'com_3': {'fname': 'rdf_com_odn.xvg', 'y_col': 'ODN'},
-            'com_4': {'fname': 'rdf_com_pot.xvg', 'y_col': 'POT'},
-            'com_5': {'fname': 'rdf_mda_com_CLA.xvg', 'y_col': 'CLA'},
-            'com_6': {'fname': 'rdf_mda_com_N.xvg', 'y_col': 'N'},
-            'com_7': {'fname': 'rdf_com_apt.xvg', 'y_col': 'APT'},
-            'com_8': {'fname': 'rdf_com_amino_charge.xvg',
+            'com_0': {'fname': 'mda_com_OH2.xvg', 'y_col': 'OH2'},
+            'com_1': {'fname': 'com_d10.xvg', 'y_col': 'D10'},
+            'com_2': {'fname': 'com_sol.xvg', 'y_col': 'SOL'},
+            'com_3': {'fname': 'com_odn.xvg', 'y_col': 'ODN'},
+            'com_4': {'fname': 'com_pot.xvg', 'y_col': 'POT'},
+            'com_5': {'fname': 'mda_com_CLA.xvg', 'y_col': 'CLA'},
+            'com_6': {'fname': 'mda_com_N.xvg', 'y_col': 'N'},
+            'com_7': {'fname': 'com_apt.xvg', 'y_col': 'APT'},
+            'com_8': {'fname': 'com_amino_charge.xvg',
                       'y_col': 'amino_charge'}
             })
     com_plot_list: list[int] = field(default_factory=lambda: [0, 5, 6])
@@ -140,11 +142,11 @@ class FileConfig:
 
     shell_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
-            'shell_0': {'fname': 'rdf_shell_cla.xvg', 'y_col': 'CLA'},
-            'shell_1': {'fname': 'rdf_shell_N.xvg', 'y_col': 'amino_n'},
-            'shell_2': {'fname': 'rdf_shell_sol.xvg', 'y_col': 'SOL'},
-            'shell_3': {'fname': 'rdf_shell_d10.xvg', 'y_col': 'D10'},
-            'shell_4': {'fname': 'rdf_shell_odn.xvg', 'y_col': 'ODN'}
+            'shell_0': {'fname': 'shell_cla.xvg', 'y_col': 'CLA'},
+            'shell_1': {'fname': 'shell_N.xvg', 'y_col': 'amino_n'},
+            'shell_2': {'fname': 'shell_sol.xvg', 'y_col': 'SOL'},
+            'shell_3': {'fname': 'shell_d10.xvg', 'y_col': 'D10'},
+            'shell_4': {'fname': 'shell_odn.xvg', 'y_col': 'ODN'}
             })
     shell_plot_list: list[int] = field(default_factory=lambda: [])
     shell_legend_loc: str = 'upper right'
@@ -158,6 +160,7 @@ class OverlayConfig(BaseGraphConfig):
     second_window: dict[str, float] = field(
         default_factory=lambda: {'com': 4.05, 'shell': 1.5})
     nr_xtick_in_window = int = 4
+
 
 @dataclass
 class VerticalLineConfig:
@@ -184,10 +187,20 @@ class VerticalLineConfig:
 @dataclass
 class AllConfig(FileConfig, VerticalLineConfig):
     """Set the all the configs"""
+
+    data_sets: str = 'rdf'  # rdf or cdf
+
     plot_configs: OverlayConfig = field(default_factory=OverlayConfig)
     plot_verticals_single: bool = True
     plot_verticals_overlay: bool = True
     plot_verticals_window: bool = True
+
+    def __post_init__(self) -> None:
+        for dic in [self.com_files, self.shell_files]:
+            for _, data in dic.items():
+                fname: str = data['fname']
+                data['fname'] = f'{self.data_sets}_{fname}'
+        self.plot_configs.labels['ylabel'] = self.data_sets
 
 
 class MultiRdfPlotter:
@@ -248,6 +261,8 @@ class MultiRdfPlotter:
         Multiple RDFs will be plotted on the same axes, one on top of
         the other
         """
+        # pylint: disable=too-many-locals
+
         first_key: str = next(iter(rdf_dict))
         x_range: tuple[float, float] = (rdf_dict[first_key]['r_nm'].iat[0],
                                         rdf_dict[first_key]['r_nm'].iat[-1])
@@ -262,10 +277,10 @@ class MultiRdfPlotter:
             rdf_df: pd.DataFrame = rdf_dict.get(s_i)
             if rdf_df is not None:
                 if self.configs.normalize_type == 'max':
-                    col: str = self.configs.com_files[s_i].get('y_col')
+                    col = self.configs.com_files[s_i].get('y_col')
                     norm_factor = rdf_df[col].max()
                 ax_i = self._plot_layer(
-                    ax_i, rdf_df , viewpoint, s_i, norm_factor)
+                    ax_i, rdf_df, viewpoint, s_i, norm_factor)
         self._setup_plot_labels(ax_i, viewpoint)
 
         legend_loc: tuple[str, str] = self._legend_locs(viewpoint)
@@ -426,6 +441,8 @@ class MultiRdfPlotter:
                     norm_factor: float = 1
                     ) -> plt.axes:
         """plot on dataset"""
+        # pylint: disable=too-many-arguments
+
         y_column: str = \
             getattr(self.configs, f'{viewpoint}_files')[s_i]['y_col']
         ax_i.plot(rdf_df['r_nm'],
@@ -443,15 +460,15 @@ class MultiRdfPlotter:
         ymin: float = 0.0
         ymax: float = ax_in.get_ylim()[1]
         ax_in.vlines(x=self.configs.nominal_cor,
-                    ymin=ymin,
-                    ymax=ymax,
-                    ls=self.configs.v_line_styles['nominal_cor'],
-                    color=self.configs.v_colors['nominal_cor'])
+                     ymin=ymin,
+                     ymax=ymax,
+                     ls=self.configs.v_line_styles['nominal_cor'],
+                     color=self.configs.v_colors['nominal_cor'])
         ax_in.vlines(x=self.configs.nominal_np,
-                    ymin=ymin,
-                    ymax=ymax,
-                    ls=self.configs.v_line_styles['nominal_np'],
-                    color=self.configs.v_colors['nominal_np'])
+                     ymin=ymin,
+                     ymax=ymax,
+                     ls=self.configs.v_line_styles['nominal_np'],
+                     color=self.configs.v_colors['nominal_np'])
         return ax_in
 
     def write_msg(self,

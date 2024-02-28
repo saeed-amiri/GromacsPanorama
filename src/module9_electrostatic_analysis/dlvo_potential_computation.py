@@ -126,8 +126,8 @@ class PlotConfig:
 
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'ELS potential',
-        'ylabel': 'ELS potential [mV]',
-        'xlabel': 'r [nm]'
+        'ylabel': r'ELS potential $\psi$ [mV]',
+        'xlabel': 'distance x [nm]'
     })
 
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
@@ -356,32 +356,34 @@ class ElectroStaticComputation:
                                            num_xticks=20)
         ax_i.plot(radii, phi_mv, **configs.graph_styles)
         ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
+
         ax_i.set_xlabel(configs.labels.get('xlabel'))
         ax_i.set_ylabel(configs.labels.get('ylabel'))
-        # Plot vertical line at debye_l
+
         y_lims: tuple[float, float] = ax_i.get_ylim()
         x_lims: tuple[float, float] = ax_i.get_xlim()
         y_lim_min: float = -0.85
+
         if configs.if_stern_line:
             ax_i = self._plot_stern_layer_lines(
                 ax_i, phi_mv, configs, y_lim_min)
         if configs.if_debye_line:
-            # Find the index of the closest value in radii to debye_l
             idx_closest = np.abs(radii - debye_l).argmin()
-            # Get the corresponding phi_r value
             phi_value = phi_mv[idx_closest]
             ax_i = self._plot_debye_lines(
                 ax_i, phi_value, debye_l, y_lim_min, configs)
         if configs.if_2nd_debye:
-            # Find the index of the closest value in radii to debye_l
             idx_closest = np.abs(radii - debye_l*2).argmin()
-            # Get the corresponding phi_r value
             phi_value = phi_mv[idx_closest]
             ax_i = self._plot_debye_lines(
                 ax_i, phi_value, debye_l*2, y_lim_min, configs, label='2')
+
         ax_i.set_xlim(x_lims)
         ax_i.set_ylim((y_lim_min, y_lims[1]))
-        plot_tools.save_close_fig(fig_i, ax_i, fname=configs.graph_suffix)
+
+        plot_tools.save_close_fig(
+            fig_i, ax_i, fname=(fout := configs.graph_suffix))
+        self.info_msg += f'\tFigure saved as `{fout}`\n'
 
     def _plot_debye_lines(self,
                           ax_i: plt.axes,
@@ -396,23 +398,25 @@ class ElectroStaticComputation:
         if not label:
             l_s1: int = 1
             l_s2: int = 2
+            h_label: str = r'$_{\lambda_D}$'
         else:
             l_s1 = 3
             l_s2 = 3
+            h_label = rf'$_{{{label}\lambda_D}}$'
 
         ax_i.vlines(x=debye_l,
                     ymin=y_lim_min,
                     ymax=phi_value,
                     color=configs.colors[l_s1],
                     linestyle=configs.line_styles[l_s1],
-                    label=f'Debye Length/{label}: {debye_l:.2f} [nm]')
+                    label=rf'${label}\lambda_D$: {debye_l:.2f} [nm]')
         # Plot horizontal line from phi_value to the graph
         ax_i.hlines(y=phi_value,
                     xmin=0,
                     xmax=debye_l,
                     color=configs.colors[l_s2],
                     linestyle=configs.line_styles[l_s2],
-                    label=f'Potential_{label}: {phi_value: .2f} [mV]')
+                    label=rf'$\psi${h_label}: {phi_value: .2f} [mV]')
         return ax_i
 
     def _plot_stern_layer_lines(self,

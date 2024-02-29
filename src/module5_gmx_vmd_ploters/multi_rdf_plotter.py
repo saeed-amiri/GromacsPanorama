@@ -189,7 +189,7 @@ class VerticalLineConfig:
 @dataclass
 class AllConfig(FileConfig, VerticalLineConfig):
     """Set the all the configs"""
-
+    if_public: bool = False
     data_sets: str = 'rdf'  # rdf or cdf
 
     plot_configs: OverlayConfig = field(default_factory=OverlayConfig)
@@ -402,7 +402,8 @@ class MultiRdfPlotter:
                            viewpoint: str
                            ) -> plt.axes:
         """set labels"""
-        ax_i.set_title(self.configs.plot_configs.titles.get(viewpoint))
+        if not self.configs.if_public:
+            ax_i.set_title(self.configs.plot_configs.titles.get(viewpoint))
         ax_i.set_xlabel(self.configs.plot_configs.labels['xlabel'])
         ax_i.set_ylabel(self.configs.plot_configs.labels['ylabel'])
         ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)

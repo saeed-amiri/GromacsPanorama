@@ -38,6 +38,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
+import matplotlib
 import matplotlib.pylab as plt
 
 from common import logger, plot_tools, xvg_to_dataframe
@@ -189,8 +190,8 @@ class VerticalLineConfig:
 @dataclass
 class AllConfig(FileConfig, VerticalLineConfig):
     """Set the all the configs"""
-    if_public: bool = False
-    data_sets: str = 'rdf'  # rdf or cdf
+    if_public: bool = True
+    data_sets: str = 'cdf'  # rdf or cdf
 
     plot_configs: OverlayConfig = field(default_factory=OverlayConfig)
     plot_verticals_single: bool = True
@@ -202,9 +203,8 @@ class AllConfig(FileConfig, VerticalLineConfig):
             for _, data in dic.items():
                 fname: str = data['fname']
                 data['fname'] = f'{self.data_sets}_{fname}'
-        if (norm := self.normalize_type != 'max'):
-            self.plot_configs.labels['ylabel'] = self.data_sets
-        elif not norm and self.data_sets == 'rdf':
+        self.plot_configs.labels['ylabel'] = self.data_sets
+        if self.normalize_type == 'max' and self.data_sets == 'rdf':
             self.plot_configs.labels['ylabel'] = 'g(r), a. u. '
 
 
@@ -303,18 +303,26 @@ class MultiRdfPlotter:
         fout: str = f'{self.configs.data_sets}_{viewpoint}{tag}'
         fout += f'overlay_{self.configs.plot_configs.graph_suffix}'
         if self.configs.plot_verticals_overlay:
-            ax_j = self._plot_vlines(ax_i)
+            ax_j, vlines = self._plot_vlines(ax_i)
         else:
             ax_j = ax_i
 
         self._save_plot(
             fig_i, ax_j, fout, viewpoint, close_fig=False, loc=legend_loc[0])
-        self._plot_window_overlay(
+        ax_i = self._plot_window_overlay(
             ax_i, x_range, viewpoint, x_max, norm_factor)
 
         fout = f'window_{fout}'
         self._save_plot(
-            fig_i, ax_i, fout, viewpoint, close_fig=True, loc=legend_loc[1])
+            fig_i, ax_i, fout, viewpoint, close_fig=False, loc=legend_loc[1])
+        ax_i = self._plot_shadow(ax_i, vlines)
+        if self.configs.data_sets == 'rdf':
+            fout = f'shadow_{fout}'
+            self._save_plot(
+                fig_i, ax_i, fout, viewpoint, close_fig=True, loc=legend_loc[1]
+                )
+        else:
+            plt.close(fig_i)
 
     def plot_single_rdf(self,
                         rdf_dict: dict[str, pd.DataFrame],
@@ -346,7 +354,7 @@ class MultiRdfPlotter:
                 fout: str = f'{self.configs.data_sets}_{viewpoint}{tag}'
                 fout += f'{self.configs.plot_configs.graph_suffix}'
                 if self.configs.plot_verticals_single:
-                    ax_i = self._plot_vlines(ax_i)
+                    ax_i, _ = self._plot_vlines(ax_i)
                 self._save_plot(fig_i,
                                 ax_i,
                                 fout,
@@ -430,6 +438,7 @@ class MultiRdfPlotter:
                              norm_factor: float = 1.0,
                              ) -> plt.axes:
         """plot the graph in the window"""
+        # pylint: disable=too-many-arguments
         x_end: typing.Union[float, None] = \
             self.configs.plot_configs.second_window.get(viewpoint)
         if x_end is None:
@@ -482,21 +491,49 @@ class MultiRdfPlotter:
 
     def _plot_vlines(self,
                      ax_in: plt.axes
-                     ) -> plt.axes:
+                     ) -> tuple[
+                        plt.axes,
+                        tuple[matplotlib.collections.LineCollection, ...]]:
         """plot vlines for the np"""
         ylims: tuple[float, float] = ax_in.get_ylim()
-        ax_in.vlines(x=self.configs.nominal_cor,
-                     ymin=ylims[0],
-                     ymax=ylims[1],
-                     ls=self.configs.v_line_styles['nominal_cor'],
-                     color=self.configs.v_colors['nominal_cor'])
-        ax_in.vlines(x=self.configs.nominal_np,
-                     ymin=ylims[0],
-                     ymax=ylims[1],
-                     ls=self.configs.v_line_styles['nominal_np'],
-                     color=self.configs.v_colors['nominal_np'])
+        vline1 = ax_in.vlines(x=self.configs.nominal_cor,
+                              ymin=ylims[0],
+                              ymax=ylims[1],
+                              ls=self.configs.v_line_styles['nominal_cor'],
+                              color=self.configs.v_colors['nominal_cor'])
+        vline2 = ax_in.vlines(x=self.configs.nominal_np,
+                              ymin=ylims[0],
+                              ymax=ylims[1],
+                              ls=self.configs.v_line_styles['nominal_np'],
+                              color=self.configs.v_colors['nominal_np'])
         ax_in.set_ylim(ylims)
-        return ax_in
+        return ax_in, (vline1, vline2)
+
+    def _plot_shadow(self,
+                     ax_i: plt.axes,
+                     vlines: tuple[matplotlib.collections.LineCollection, ...]
+                     ) -> plt.axis:
+        """"""
+        for vline in vlines:
+            vline.remove()
+        x_lims: tuple[float, float] = ax_i.get_xlim()
+        y_lims: tuple[float, float] = ax_i.get_ylim()
+        ax_i.fill_between(x=[x_lims[0], self.configs.nominal_cor],
+                          y1=y_lims[0],
+                          y2=y_lims[1],
+                          color='grey',
+                          alpha=0.2,
+                          edgecolor=None)
+        ax_i.fill_between(
+            x=[self.configs.nominal_cor, self.configs.nominal_np],
+            y1=y_lims[0],
+            y2=y_lims[1],
+            color='red',
+            alpha=0.1,
+            edgecolor=None)
+        ax_i.grid(False, axis='both')
+        ax_i.set_yticks([])
+        return ax_i
 
     def write_msg(self,
                   log: logger.logging.Logger

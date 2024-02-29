@@ -151,7 +151,7 @@ class FileConfig:
             'shell_3': {'fname': 'shell_d10.xvg', 'y_col': 'D10'},
             'shell_4': {'fname': 'shell_odn.xvg', 'y_col': 'ODN'}
             })
-    shell_plot_list: list[int] = field(default_factory=lambda: [])
+    shell_plot_list: list[int] = field(default_factory=lambda: [0, 1, 2])
     shell_legend_loc: str = 'upper right'
     shell_window_legend_loc: str = 'upper right'
 
@@ -191,7 +191,7 @@ class VerticalLineConfig:
 class AllConfig(FileConfig, VerticalLineConfig):
     """Set the all the configs"""
     if_public: bool = True
-    data_sets: str = 'cdf'  # rdf or cdf
+    data_sets: str = 'rdf'  # rdf or cdf
 
     plot_configs: OverlayConfig = field(default_factory=OverlayConfig)
     plot_verticals_single: bool = True
@@ -286,7 +286,7 @@ class MultiRdfPlotter:
             if rdf_df is not None:
                 if (self.configs.normalize_type == 'max' and
                    self.configs.data_sets == 'rdf'):
-                    col = self.configs.com_files[s_i].get('y_col')
+                    col = sources[s_i].get('y_col')
                     norm_factor = rdf_df[col].max()
                 ax_i = self._plot_layer(
                     ax_i, rdf_df, viewpoint, s_i, norm_factor)
@@ -302,7 +302,7 @@ class MultiRdfPlotter:
         tag = self._get_fout_tag(viewpoint)
         fout: str = f'{self.configs.data_sets}_{viewpoint}{tag}'
         fout += f'overlay_{self.configs.plot_configs.graph_suffix}'
-        if self.configs.plot_verticals_overlay:
+        if self.configs.plot_verticals_overlay and viewpoint != 'shell':
             ax_j, vlines = self._plot_vlines(ax_i)
         else:
             ax_j = ax_i
@@ -315,8 +315,8 @@ class MultiRdfPlotter:
         fout = f'window_{fout}'
         self._save_plot(
             fig_i, ax_i, fout, viewpoint, close_fig=False, loc=legend_loc[1])
-        ax_i = self._plot_shadow(ax_i, vlines)
-        if self.configs.data_sets == 'rdf':
+        if self.configs.data_sets == 'rdf' and viewpoint != 'shell':
+            ax_i = self._plot_shadow(ax_i, vlines)
             fout = f'shadow_{fout}'
             self._save_plot(
                 fig_i, ax_i, fout, viewpoint, close_fig=True, loc=legend_loc[1]
@@ -353,8 +353,12 @@ class MultiRdfPlotter:
                 tag: str = f'{y_column}_single_'
                 fout: str = f'{self.configs.data_sets}_{viewpoint}{tag}'
                 fout += f'{self.configs.plot_configs.graph_suffix}'
-                if self.configs.plot_verticals_single:
+                if self.configs.plot_verticals_single and viewpoint != 'shell':
                     ax_i, _ = self._plot_vlines(ax_i)
+                if self.configs.data_sets == 'rdf':
+                    ax_i.set_ylabel('g(r)')
+                else:
+                    ax_i.set_ylabel('cdf')
                 self._save_plot(fig_i,
                                 ax_i,
                                 fout,

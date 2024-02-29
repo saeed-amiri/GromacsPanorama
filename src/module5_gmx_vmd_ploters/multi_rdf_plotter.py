@@ -37,6 +37,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
+
 import matplotlib.pylab as plt
 
 from common import logger, plot_tools, xvg_to_dataframe
@@ -129,7 +130,7 @@ class FileConfig:
             'com_1': {'fname': 'com_d10.xvg', 'y_col': 'D10'},
             'com_2': {'fname': 'com_sol.xvg', 'y_col': 'SOL'},
             'com_3': {'fname': 'com_odn.xvg', 'y_col': 'ODN'},
-            'com_4': {'fname': 'com_pot.xvg', 'y_col': 'POT'},
+            'com_4': {'fname': 'mda_com_POT.xvg', 'y_col': 'POT'},
             'com_5': {'fname': 'mda_com_CLA.xvg', 'y_col': 'CLA'},
             'com_6': {'fname': 'mda_com_N.xvg', 'y_col': 'N'},
             'com_7': {'fname': 'com_apt.xvg', 'y_col': 'APT'},
@@ -188,7 +189,7 @@ class VerticalLineConfig:
 class AllConfig(FileConfig, VerticalLineConfig):
     """Set the all the configs"""
 
-    data_sets: str = 'cdf'  # rdf or cdf
+    data_sets: str = 'rdf'  # rdf or cdf
 
     plot_configs: OverlayConfig = field(default_factory=OverlayConfig)
     plot_verticals_single: bool = True
@@ -458,18 +459,18 @@ class MultiRdfPlotter:
                      ax_in: plt.axes
                      ) -> plt.axes:
         """plot vlines for the np"""
-        ymin: float = 0.0
-        ymax: float = ax_in.get_ylim()[1]
+        ylims: tuple[float, float] = ax_in.get_ylim()
         ax_in.vlines(x=self.configs.nominal_cor,
-                     ymin=ymin,
-                     ymax=ymax,
+                     ymin=ylims[0],
+                     ymax=ylims[1],
                      ls=self.configs.v_line_styles['nominal_cor'],
                      color=self.configs.v_colors['nominal_cor'])
         ax_in.vlines(x=self.configs.nominal_np,
-                     ymin=ymin,
-                     ymax=ymax,
+                     ymin=ylims[0],
+                     ymax=ylims[1],
                      ls=self.configs.v_line_styles['nominal_np'],
                      color=self.configs.v_colors['nominal_np'])
+        ax_in.set_ylim(ylims)
         return ax_in
 
     def write_msg(self,

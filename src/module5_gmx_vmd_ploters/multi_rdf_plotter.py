@@ -122,7 +122,7 @@ class FileConfig:
     # shellfile: files which are the viewpoint are the shell of the np
     viewpoint: list[str] = field(default_factory=lambda: ['com', 'shell'])
 
-    normalize_type: str = 'max'
+    normalize_type: str = 'max'  # or any other words neside max!
 
     com_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
@@ -202,7 +202,10 @@ class AllConfig(FileConfig, VerticalLineConfig):
             for _, data in dic.items():
                 fname: str = data['fname']
                 data['fname'] = f'{self.data_sets}_{fname}'
-        self.plot_configs.labels['ylabel'] = self.data_sets
+        if (norm := self.normalize_type != 'max'):
+            self.plot_configs.labels['ylabel'] = self.data_sets
+        elif not norm and self.data_sets == 'rdf':
+            self.plot_configs.labels['ylabel'] = 'g(r), a. u. '
 
 
 class MultiRdfPlotter:

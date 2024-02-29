@@ -422,7 +422,7 @@ class ElectroStaticComputation:
                     xmax=debye_l,
                     color=configs.colors[l_s2],
                     linestyle=configs.line_styles[l_s2],
-                    label=rf'$\psi${h_label}: {phi_value: .2f} [mV]')
+                    label=rf'$\psi${h_label}: {phi_value:.2f} [mV]')
         return ax_i
 
     def _plot_stern_layer_lines(self,
@@ -443,7 +443,7 @@ class ElectroStaticComputation:
                     xmax=x_temp,
                     color=configs.colors[3],
                     linestyle=configs.line_styles[1],
-                    label=fr'$\psi_0$: {phi_0: .2f} [mV]')
+                    label=fr'$\psi_0$: {phi_0:.2f} [mV]')
         return ax_i
 
     def write_msg(self,

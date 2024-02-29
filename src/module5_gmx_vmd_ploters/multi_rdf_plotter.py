@@ -140,6 +140,7 @@ class FileConfig:
     com_plot_list: list[int] = field(default_factory=lambda: [0, 5, 6])
     com_legend_loc: str = 'lower right'
     com_window_legend_loc: str = 'upper left'
+    com_max_indicator: str = 'com_5'
 
     shell_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
@@ -160,7 +161,7 @@ class OverlayConfig(BaseGraphConfig):
     # Max on the x-axis to set the window
     second_window: dict[str, float] = field(
         default_factory=lambda: {'com': 4.05, 'shell': 1.5})
-    nr_xtick_in_window = int = 4
+    nr_xtick_in_window = int = 5
 
 
 @dataclass
@@ -249,6 +250,9 @@ class MultiRdfPlotter:
         """initiate plots"""
         for viewpoint in self.configs.viewpoint:
             sources = getattr(self.configs, f'{viewpoint}_files')
+            sources = {
+                key: value for key, value in sources.items() if
+                key in list(rdf_dict.keys())}
             self.plot_overlay_rdf(rdf_dict, sources, viewpoint)
             self.plot_single_rdf(rdf_dict, sources, viewpoint)
             # self.plot_multirows_rdf(rdf_dict, sources, viewpoint)
@@ -263,7 +267,7 @@ class MultiRdfPlotter:
         the other
         """
         # pylint: disable=too-many-locals
-
+        x_max: int = -1
         first_key: str = next(iter(rdf_dict))
         x_range: tuple[float, float] = (rdf_dict[first_key]['r_nm'].iat[0],
                                         rdf_dict[first_key]['r_nm'].iat[-1])
@@ -278,11 +282,16 @@ class MultiRdfPlotter:
             rdf_df: pd.DataFrame = rdf_dict.get(s_i)
             if rdf_df is not None:
                 if (self.configs.normalize_type == 'max' and
-                    self.configs.data_sets == 'rdf'):
+                   self.configs.data_sets == 'rdf'):
                     col = self.configs.com_files[s_i].get('y_col')
                     norm_factor = rdf_df[col].max()
                 ax_i = self._plot_layer(
                     ax_i, rdf_df, viewpoint, s_i, norm_factor)
+            if s_i == self.configs.com_max_indicator and \
+               self.configs.data_sets == 'rdf':
+                max_loc: int = rdf_df[col].argmax()
+                x_max = rdf_df['r_nm'][max_loc]
+
         self._setup_plot_labels(ax_i, viewpoint)
 
         legend_loc: tuple[str, str] = self._legend_locs(viewpoint)
@@ -297,8 +306,8 @@ class MultiRdfPlotter:
 
         self._save_plot(
             fig_i, ax_j, fout, viewpoint, close_fig=False, loc=legend_loc[0])
-
-        self._plot_window_overlay(ax_i, x_range, viewpoint, norm_factor)
+        self._plot_window_overlay(
+            ax_i, x_range, viewpoint, x_max, norm_factor)
 
         fout = f'window_{fout}'
         self._save_plot(
@@ -413,7 +422,8 @@ class MultiRdfPlotter:
                              ax_i: plt.axes,
                              x_range: tuple[float, float],
                              viewpoint: str,
-                             norm_factor: float = 1.0
+                             x_max: float = -1.0,
+                             norm_factor: float = 1.0,
                              ) -> plt.axes:
         """plot the graph in the window"""
         x_end: typing.Union[float, None] = \
@@ -422,10 +432,21 @@ class MultiRdfPlotter:
             x_end = x_range[1]
         x_range = (x_range[0], x_end)
         xticks: list[float] = \
-            np.linspace(x_range[0],
+            np.linspace(0,
                         x_range[1],
                         self.configs.plot_configs.nr_xtick_in_window).tolist()
-        ax_i.set_xticks(xticks)
+        if x_max != -1.0:
+            xticks_width: float = xticks[1] - xticks[0]
+            xticks_new: list[float] = []
+            for i in range(-3, 3):
+                if i != 0:
+                    xticks_new.append(round((i*xticks_width + x_max), 1))
+                else:
+                    xticks_new.append(i*xticks_width + x_max)
+            xticks_new.append(0)
+        else:
+            xticks_new = xticks
+        ax_i.set_xticks(xticks_new)
         xlims: tuple[float, float] = ax_i.get_xlim()
         ax_i.set_xlim(xlims[0]/5, x_range[1])
         if norm_factor == 1.0:

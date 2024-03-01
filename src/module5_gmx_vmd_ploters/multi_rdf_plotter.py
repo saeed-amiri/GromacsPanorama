@@ -154,6 +154,7 @@ class FileConfig:
     shell_plot_list: list[int] = field(default_factory=lambda: [0, 3, 4])
     shell_legend_loc: str = 'upper right'
     shell_window_legend_loc: str = 'upper right'
+    shell_max_indicator: str = 'shell_0'
 
 
 @dataclass
@@ -170,6 +171,9 @@ class VerticalLineConfig:
     """set the location and style of the vertical lines"""
     nominal_cor: float = 2.5
     nominal_np: float = 3.0
+    shell_cor_n_first_pick: float = 0.28
+    shell_cor_n_2nd_pick: float = 0.48
+    shell_cor_cl_pick: float = 0.33
 
     v_legends: dict[str, str] = \
         field(default_factory=lambda: {
@@ -290,10 +294,14 @@ class MultiRdfPlotter:
                     norm_factor = rdf_df[col].max()
                 ax_i = self._plot_layer(
                     ax_i, rdf_df, viewpoint, s_i, norm_factor)
-            if s_i == self.configs.com_max_indicator and \
-               self.configs.data_sets == 'rdf':
-                max_loc: int = rdf_df[col].argmax()
-                x_max = rdf_df['r_nm'][max_loc]
+            if self.configs.data_sets == 'rdf':
+                if viewpoint == 'com' and \
+                   s_i == self.configs.com_max_indicator:
+                    max_loc: int = rdf_df[col].argmax()
+                    x_max = rdf_df['r_nm'][max_loc]
+                elif viewpoint == 'shell' and \
+                        s_i == self.configs.shell_max_indicator:
+                    x_max = self.configs.shell_cor_cl_pick
 
         self._setup_plot_labels(ax_i, viewpoint)
 
@@ -455,11 +463,13 @@ class MultiRdfPlotter:
         if x_max != -1.0:
             xticks_width: float = xticks[1] - xticks[0]
             xticks_new: list[float] = []
-            for i in range(-3, 3):
+            for i in range(-3, 5):
+                tick = i*xticks_width + x_max
                 if i != 0:
-                    xticks_new.append(round((i*xticks_width + x_max), 1))
+                    if tick > 0:
+                        xticks_new.append(round(tick, 1))
                 else:
-                    xticks_new.append(i*xticks_width + x_max)
+                    xticks_new.append(tick)
             xticks_new.append(0)
         else:
             xticks_new = xticks

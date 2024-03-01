@@ -246,7 +246,11 @@ class TrrFilterAnalysis:
                 sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
 
     def compute_radius(self) -> pd.DataFrame:
-        """compute the radius based on sigma"""
+        """Compute the radius based on sigma.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing the computed radius values.
+        """
         ff_radius: pd.DataFrame = self.force_field.ff_sigma.copy()
         radius = ff_radius['sigma'] * 2**(1/6) / 2
         ff_radius['radius'] = radius
@@ -370,11 +374,11 @@ class TrrFilterAnalysis:
                       log: logger.logging.Logger
                       ) -> int:
         """
-        Return the number of core for run based on the data and the machine
+        Return the number of cores to use based on the data and the machine
         """
         cpu_info = cpuconfig.ConfigCpuNr(log)
         n_cores: int = min(cpu_info.cores_nr, self.num_frames)
-        self.info_msg += f'\tThe numbers of using cores: {n_cores}\n'
+        self.info_msg += f'\tThe number of cores to use: {n_cores}\n'
         return n_cores
 
     def _get_gro_df(self,

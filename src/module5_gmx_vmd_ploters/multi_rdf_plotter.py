@@ -40,6 +40,7 @@ import pandas as pd
 
 import matplotlib
 import matplotlib.pylab as plt
+import matplotlib.ticker as tck
 
 from common import logger, plot_tools, xvg_to_dataframe
 from common.colors_text import TextColor as bcolors
@@ -169,6 +170,7 @@ class OverlayConfig(BaseGraphConfig):
 @dataclass
 class VerticalLineConfig:
     """set the location and style of the vertical lines"""
+    # pylint: disable=too-many-instance-attributes
     nominal_cor: float = 2.5
     nominal_np: float = 3.0
     shell_cor_n_first_pick: float = 0.28
@@ -274,7 +276,7 @@ class MultiRdfPlotter:
         the other
         """
         # pylint: disable=too-many-locals
-        x_max: int = -1
+        x_max: float = -1.0
         first_key: str = next(iter(rdf_dict))
         x_range: tuple[float, float] = (rdf_dict[first_key]['r_nm'].iat[0],
                                         rdf_dict[first_key]['r_nm'].iat[-1])
@@ -589,8 +591,20 @@ class MultiRdfPlotter:
             color='red',
             alpha=0.1,
             edgecolor=None)
+        # Enabling minor x-ticks
+        ax_i.xaxis.set_minor_locator(tck.AutoMinorLocator())
+
+        ax_i.axvline(x=self.configs.shell_cor_cl_pick,
+                     color='gray',
+                     linestyle=':',
+                     linewidth=1
+                     )
+
+        ax_i.grid(False, which='minor', axis='x')
         ax_i.grid(False, axis='both')
+
         ax_i.set_yticks([])
+
         return ax_i
 
     def write_msg(self,
@@ -604,4 +618,3 @@ class MultiRdfPlotter:
 
 if __name__ == '__main__':
     MultiRdfPlotter(log=logger.setup_logger('multi_rdf_plot.log'))
-    

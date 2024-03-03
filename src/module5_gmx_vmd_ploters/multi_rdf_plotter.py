@@ -323,12 +323,25 @@ class MultiRdfPlotter:
         fout = f'window_{fout}'
         self._save_plot(
             fig_i, ax_i, fout, viewpoint, close_fig=False, loc=legend_loc[1])
-        if self.configs.data_sets == 'rdf' and viewpoint != 'shell':
-            ax_i = self._plot_shadow(ax_i, vlines)
-            fout = f'shadow_{fout}'
-            self._save_plot(
-                fig_i, ax_i, fout, viewpoint, close_fig=True, loc=legend_loc[1]
-                )
+        if self.configs.data_sets == 'rdf':
+            if viewpoint == 'com':
+                ax_i = self._plot_shadow_com(ax_i, vlines)
+                fout = f'shadow_{fout}'
+                self._save_plot(fig_i,
+                                ax_i,
+                                fout,
+                                viewpoint,
+                                close_fig=True,
+                                loc=legend_loc[1])
+            elif viewpoint == 'shell':
+                ax_i = self._plot_shadow_shell(ax_i)
+                fout = f'shadow_{fout}'
+                self._save_plot(fig_i,
+                                ax_i,
+                                fout,
+                                viewpoint,
+                                close_fig=True,
+                                loc=legend_loc[1])
         else:
             plt.close(fig_i)
 
@@ -523,11 +536,16 @@ class MultiRdfPlotter:
         ax_in.set_ylim(ylims)
         return ax_in, (vline1, vline2)
 
-    def _plot_shadow(self,
-                     ax_i: plt.axes,
-                     vlines: tuple[matplotlib.collections.LineCollection, ...]
-                     ) -> plt.axis:
-        """"""
+    def _plot_shadow_com(
+            self,
+            ax_i: plt.axes,
+            vlines: tuple[matplotlib.collections.LineCollection, ...]
+            ) -> plt.axis:
+        """
+        Plot the shadow regions for the center of mass (COM) in the given axes.
+        Returns:
+            plt.axis: The modified axes object.
+        """
         for vline in vlines:
             vline.remove()
         x_lims: tuple[float, float] = ax_i.get_xlim()
@@ -540,6 +558,32 @@ class MultiRdfPlotter:
                           edgecolor=None)
         ax_i.fill_between(
             x=[self.configs.nominal_cor, self.configs.nominal_np],
+            y1=y_lims[0],
+            y2=y_lims[1],
+            color='red',
+            alpha=0.1,
+            edgecolor=None)
+        ax_i.grid(False, axis='both')
+        ax_i.set_yticks([])
+        return ax_i
+
+    def _plot_shadow_shell(self, ax_i: plt.axes) -> plt.axis:
+        """
+        Plot the shadow shell region on the given axes.
+        Returns:
+            plt.axis: The modified axes object.
+        """
+        x_lims: tuple[float, float] = ax_i.get_xlim()
+        y_lims: tuple[float, float] = ax_i.get_ylim()
+        ax_i.fill_between(x=[x_lims[0], self.configs.shell_cor_n_first_pick],
+                          y1=y_lims[0],
+                          y2=y_lims[1],
+                          color='grey',
+                          alpha=0.2,
+                          edgecolor=None)
+        ax_i.fill_between(
+            x=[self.configs.shell_cor_n_first_pick,
+               self.configs.shell_cor_n_2nd_pick],
             y1=y_lims[0],
             y2=y_lims[1],
             color='red',

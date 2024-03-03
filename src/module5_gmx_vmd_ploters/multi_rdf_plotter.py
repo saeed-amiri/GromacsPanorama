@@ -75,7 +75,7 @@ class BaseGraphConfig:
             'amino_n': 'N (APTES)',
             'N': 'N (APTES)',
             'amino_charge': r'H$^+$ (APTES)',
-            'SOL': 'Water',
+            'SOL': 'O (water)',
             'D10': 'Decane',
             'APT': 'APTES',
             'POT': 'Na',
@@ -145,13 +145,13 @@ class FileConfig:
 
     shell_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
-            'shell_0': {'fname': 'shell_cla.xvg', 'y_col': 'CLA'},
-            'shell_1': {'fname': 'shell_N.xvg', 'y_col': 'amino_n'},
-            'shell_2': {'fname': 'shell_sol.xvg', 'y_col': 'SOL'},
-            'shell_3': {'fname': 'shell_d10.xvg', 'y_col': 'D10'},
-            'shell_4': {'fname': 'shell_odn.xvg', 'y_col': 'ODN'}
+            'shell_0': {'fname': 'shell_sol.xvg', 'y_col': 'SOL'},
+            'shell_1': {'fname': 'shell_d10.xvg', 'y_col': 'D10'},
+            'shell_2': {'fname': 'shell_odn.xvg', 'y_col': 'ODN'},
+            'shell_3': {'fname': 'shell_cla.xvg', 'y_col': 'CLA'},
+            'shell_4': {'fname': 'shell_N.xvg', 'y_col': 'amino_n'}
             })
-    shell_plot_list: list[int] = field(default_factory=lambda: [0, 1, 2])
+    shell_plot_list: list[int] = field(default_factory=lambda: [0, 3, 4])
     shell_legend_loc: str = 'upper right'
     shell_window_legend_loc: str = 'upper right'
 

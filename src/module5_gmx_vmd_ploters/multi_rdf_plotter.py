@@ -107,7 +107,7 @@ class BaseGraphConfig:
             'APT': 'k',
             'POT': 'brown',
             'OH2': 'red',
-            'ODN': 'green'})
+            'ODN': 'orange'})
 
     height_ratio: float = (5 ** 0.5 - 1) * 1.5
 
@@ -150,10 +150,11 @@ class FileConfig:
             'shell_1': {'fname': 'shell_d10.xvg', 'y_col': 'D10'},
             'shell_2': {'fname': 'shell_odn.xvg', 'y_col': 'ODN'},
             'shell_3': {'fname': 'shell_cla.xvg', 'y_col': 'CLA'},
-            'shell_4': {'fname': 'shell_N.xvg', 'y_col': 'amino_n'}
+            'shell_4': {'fname': 'shell_N.xvg', 'y_col': 'amino_n'},
+            'shell_5': {'fname': 'shell_pot.xvg', 'y_col': 'POT'},
             })
-    shell_plot_list: list[int] = field(default_factory=lambda: [0, 3, 4])
-    shell_legend_loc: str = 'upper right'
+    shell_plot_list: list[int] = field(default_factory=lambda: [1, 2])
+    shell_legend_loc: str = 'upper left'
     shell_window_legend_loc: str = 'upper right'
     shell_max_indicator: str = 'shell_0'
 
@@ -176,6 +177,7 @@ class VerticalLineConfig:
     shell_cor_n_first_pick: float = 0.28
     shell_cor_n_2nd_pick: float = 0.48
     shell_cor_cl_pick: float = 0.33
+    xmax_for_cdf: float = 2.820082901848687
 
     v_legends: dict[str, str] = \
         field(default_factory=lambda: {
@@ -197,7 +199,7 @@ class VerticalLineConfig:
 class AllConfig(FileConfig, VerticalLineConfig):
     """Set the all the configs"""
     if_public: bool = True
-    data_sets: str = 'rdf'  # rdf or cdf
+    data_sets: str = 'cdf'  # rdf or cdf
 
     plot_configs: OverlayConfig = field(default_factory=OverlayConfig)
     plot_verticals_single: bool = True
@@ -304,6 +306,8 @@ class MultiRdfPlotter:
                 elif viewpoint == 'shell' and \
                         s_i == self.configs.shell_max_indicator:
                     x_max = self.configs.shell_cor_cl_pick
+            else:
+                x_max = self.configs.xmax_for_cdf
 
         self._setup_plot_labels(ax_i, viewpoint)
 
@@ -487,7 +491,7 @@ class MultiRdfPlotter:
                     xticks_new.append(tick)
             xticks_new.append(0)
         else:
-            xticks_new = xticks
+            xticks_new = [round(tick, 2) for tick in xticks]
         ax_i.set_xticks(xticks_new)
         xlims: tuple[float, float] = ax_i.get_xlim()
         ax_i.set_xlim(xlims[0]/5, x_range[1])
@@ -591,7 +595,6 @@ class MultiRdfPlotter:
             color='red',
             alpha=0.1,
             edgecolor=None)
-        # Enabling minor x-ticks
         ax_i.xaxis.set_minor_locator(tck.AutoMinorLocator())
 
         ax_i.axvline(x=self.configs.shell_cor_cl_pick,

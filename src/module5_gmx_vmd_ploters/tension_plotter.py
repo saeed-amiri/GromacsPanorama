@@ -148,7 +148,7 @@ class FileConfig:
     """
     fnames: dict[str, str] = field(default_factory=lambda: {
         'no_np': 'tension',
-        'with_np': 'tension_with_np'})
+        })
 
 
 @dataclass
@@ -170,6 +170,7 @@ class AllConfig(FileConfig, ParameterConfig):
     log_config: LogGraph = field(default_factory=LogGraph)
     errbar_config: ErrorBarGraph = field(default_factory=ErrorBarGraph)
     double_config: DoubleDataLog = field(default_factory=DoubleDataLog)
+    if_publish: bool = False
 
 
 class PlotTension:
@@ -312,11 +313,11 @@ class PlotTension:
 
         ax_i.set_xlabel(configs.labels['xlabel'])
         ax_i.set_ylabel(f'{configs.labels["ylabel"]} {configs.y_unit}')
-
-        if add_key_to_title:
-            ax_i.set_title(f'{configs.labels["title"]} ({key})')
-        else:
-            ax_i.set_title(f'{configs.labels["title"]}')
+        if self.configs.if_publish:
+            if add_key_to_title:
+                ax_i.set_title(f'{configs.labels["title"]} ({key})')
+            else:
+                ax_i.set_title(f'{configs.labels["title"]}')
         ax_i.grid(True, which='both', linestyle='--', color='gray', alpha=0.5)
 
         if return_ax:

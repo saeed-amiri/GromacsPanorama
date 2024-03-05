@@ -131,14 +131,14 @@ class Plot5PLF2S:
         ax_i.vlines(first_turn_vline,
                     ymin=ylims[0],
                     ymax=ylims[1],
-                    color='r',
+                    color='g',
                     ls=':',
                     label='first turn')
 
         ax_i.vlines(second_turn_vline,
                     ymin=ylims[0],
                     ymax=ylims[1],
-                    color='g',
+                    color='r',
                     ls=':',
                     label='second trun')
         ax_i.set_ylim(ylims)

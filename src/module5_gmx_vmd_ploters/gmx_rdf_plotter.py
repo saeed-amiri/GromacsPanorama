@@ -46,18 +46,18 @@ class BaseConfig:
     Basic configurations and setup for the plots.
     """
     # pylint: disable=too-many-instance-attributes
-    graph_suffix: str = 'gmx.png'
-    ycol_name: str = 'density'
-    xcol_name: str = 'r_nm'
+    graph_suffix: str = 'fit_apram.png'
+    ycol_name: str = 'distance'
+    xcol_name: str = 'Oda number'
 
     labels: dict[str, str] = field(default_factory=lambda: {
-        'title': 'Computed density',
-        'ylabel': 'g(r)',
-        'xlabel': 'r [nm]'
+        'title': 'fitted parameter',
+        'ylabel': 'distance from COM',
+        'xlabel': 'Nr. Oda'
     })
 
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
-        'label': 'density',
+        'label': 'number',
         'color': 'black',
         'marker': 'o',
         'linestyle': '-',
@@ -82,10 +82,11 @@ class RdfComConfig(BaseConfig):
     Set parameters for the plotting rdf from com of nanoparticle
     """
     def __post_init__(self) -> None:
-        self.graph_suffix: str = 'rdf_com_gmx.png'
-        self.ycol_name: str = 'CLA'
-        self.xcol_name: str = 'r_nm'
+        self.graph_suffix: str = 'number.png'
+        self.ycol_name: str = '1st'
+        self.xcol_name: str = 'Frame index'
         self.labels['title'] = 'Rdf from COM of NP'
+        self.graph_styles['label'] = 'Decane'
 
 
 @dataclass
@@ -118,8 +119,8 @@ class CdfOutConfig(BaseConfig):
     Set parameters for the plotting cdf from outermost of nanoparticle
     """
     def __post_init__(self) -> None:
-        self.graph_suffix: str = 'cdf_out_gmx.png'
-        self.ycol_name: str = 'CLA'
+        self.graph_suffix: str = 'number.png'
+        self.ycol_name: str = 'SOL'
         self.xcol_name: str = 'r_nm'
         self.labels['title'] = 'Cdf from OUT of NP'
 
@@ -139,10 +140,10 @@ class DoubleConfig(BaseConfig):
     ax2_ylabel: str = 'number'
 
     def __post_init__(self) -> None:
-        self.graph_suffix: str = 'rcdf_gmx.png'
+        self.graph_suffix: str = 'number.png'
         self.ycol_name: str = 'CLA'
-        self.xcol_name: str = 'r_nm'
-        self.labels['title'] = 'Rdf and Cdf from '
+        self.xcol_name: str = 'index'
+        self.labels['title'] = 'Number '
         self.graph_styles['label'] = ''
         self.height_ratio = (5 ** 0.5 - 1) * 1.5
 
@@ -153,10 +154,9 @@ class FileInConfig:
     Set the names of the input files files
     """
     fnames: dict[str, dict[str, str]] = field(default_factory=lambda: {
-            'com': {'rdf': 'gmx_rdf_cla_com.xvg',
-                    'cdf': 'gmx_cdf_cla_com.xvg'},
-            'out': {'rdf': 'rdf_unwraped.xvg',
-                    'cdf': 'cdf_unwraped.xvg'}
+            'com': {'rdf': 'fit_parameters.xvg'
+                    },
+            'out': {}
         })
 
 
@@ -221,7 +221,7 @@ class PlotRdfCdf:
                     config = getattr(self.configs, f'cdf_{calc_type}_config')
                 self._plot_graph(calc_type, data_type, df_i, config)
 
-            self.plot_rdf_cdf_combined(calc_type, data)
+            # self.plot_rdf_cdf_combined(calc_type, data)
 
     def _plot_graph(self,
                     calc_type: str,
@@ -230,28 +230,53 @@ class PlotRdfCdf:
                     config: BaseConfig) -> None:
         """Plot the RDF or CDF data."""
         x_range: tuple[float, float] = \
-            (min(data[config.xcol_name]), max(data[config.xcol_name]))
+            (min(data['oda']), max(data['oda']))
 
         fig_i: plt.figure
         ax_i: plt.axes
         fig_i, ax_i = plot_tools.mk_canvas(x_range,
                                            height_ratio=config.height_ratio,
                                            num_xticks=7)
-        ax_i.plot(data[config.xcol_name],
+        graph_styles: dict[str, typing.Any] = {
+            'label': '1st',
+            'color': 'g',
+            'marker': 'o',
+            'linestyle': '--',
+            'markersize': 5}
+        ax_i.plot(data['oda'],
                   data[config.ycol_name],
-                  **config.graph_styles)
+                  **graph_styles)
+        graph_styles: dict[str, typing.Any] = {
+            'label': 'C',
+            'color': 'b',
+            'marker': 'o',
+            'linestyle': '--',
+            'markersize': 5}
+        ax_i.plot(data['oda'],
+                  data['c'],
+                  **graph_styles)
+        graph_styles: dict[str, typing.Any] = {
+            'label': '2nd',
+            'color': 'r',
+            'marker': 'o',
+            'linestyle': ':',
+            'markersize': 5}
+        ax_i.plot(data['oda'],
+                  data['2nd'],
+                  **graph_styles)
         ax_i.set_xlabel(config.labels['xlabel'])
         ax_i.set_ylabel(config.labels['ylabel'])
-        ax_i.set_title(config.labels['title'])
-
+        # ax_i.set_title(config.labels['title'])
+        xticks: list[int] = [0, 5, 15, 50]
+        ax_i.set_xticks(xticks)
         ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
 
         plot_tools.save_close_fig(fig_i,
                                   ax_i,
-                                  fname := (f'{calc_type}_{data_type}_'
+                                  fname := (f'{config.ycol_name}_'
                                             f'{config.graph_suffix}'))
-        self.info_msg += \
-            f'\tThe plot for `{calc_type}_{data_type}` is saved as `{fname}`\n'
+        self.info_msg += (f'\tThe plot for `{calc_type}_{config.ycol_name}` '
+                          f'is saved as `{fname}`\n')
 
     def plot_rdf_cdf_combined(self,
                               calc_type: str,

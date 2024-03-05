@@ -199,7 +199,7 @@ class VerticalLineConfig:
 class AllConfig(FileConfig, VerticalLineConfig):
     """Set the all the configs"""
     if_public: bool = True
-    data_sets: str = 'cdf'  # rdf or cdf
+    data_sets: str = 'rdf'  # rdf or cdf
 
     plot_configs: OverlayConfig = field(default_factory=OverlayConfig)
     plot_verticals_single: bool = True

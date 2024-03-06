@@ -719,6 +719,7 @@ class ReadForceFieldFile:
             'TIP3.itp': charge for water atoms
             'D10_charmm.itp': charge for the oil (Decane)
             'ODAp_charmm.itp': charges for the protonated ODA
+
         key: np_info:
             'APT_COR.itp': charge for the COR and APT of the NP
         Tha charge files are constant and not system dependent but the

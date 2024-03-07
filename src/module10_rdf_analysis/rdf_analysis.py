@@ -25,16 +25,32 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
+from common import logger, xvg_to_dataframe, my_tools, com_file_parser
+from common.colors_text import TextColor as bcolors
+
 
 @dataclass
-class FileConfig:
+class COMFileConfig:
     """Configuration for the RDF analysis"""
     # Input files
     residue_com_fname: str = "pickle_com"
     interface_info: str = "contact.xvg"
     box_size_fname: str = "box.xvg"
     np_com_fname: str = "coord.xvg"
-    # Output files
+
+
+@dataclass
+class TrrFileConfig:
+    """Configuration for the RDF analysis"""
+    # Input files
+    trr_fname: str = "traj.trr"
+    tpr_fname: str = "topol.tpr"
+    top_fname: str = "topol.top"
+
+
+@dataclass
+class OutFileConfig:
+    """Output files"""
     rdf_fout: str = "rdf.xvg"
     rdf_column: str = "RDF"
 
@@ -48,8 +64,22 @@ class ParameterConfig:
 
 
 @dataclass
-class AllConfig(FileConfig, ParameterConfig):
-    """All the configurations for the RDF analysis"""
+class AllConfig(ParameterConfig, OutFileConfig):
+    """All the configurations for the RDF analysis
+    compute_style: str = "COM" or "TRR"
+    """
+    compute_style: str = "COM"
+
+    file_config: typing.Union[COMFileConfig, TrrFileConfig] = field(init=False)
+
+    def __post_init__(self):
+        if self.compute_style not in ["COM", "TRR"]:
+            raise ValueError(f"compute_style should be either 'COM' or 'TRR' "
+                             f"but it is {self.compute_style}")
+        if self.compute_style == "COM":
+            file_config = TrrFileConfig()
+        if self.compute_style == "TRR":
+            file_config = COMFileConfig()
 
 
 if __name__ == "__main__":

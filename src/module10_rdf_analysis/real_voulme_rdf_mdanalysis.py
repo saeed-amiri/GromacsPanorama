@@ -115,7 +115,21 @@ class FileConfig:
 
 
 @dataclass
-class AllConfig(GroupConfig, ParamConfig, FileConfig):
+class DataConfig:
+    """Configuration for the RDF analysis"""
+    # Input files
+    interface: np.ndarray = field(init=False)
+    box_size: np.ndarray = field(init=False)
+    np_com: np.ndarray = field(init=False)
+    top: str = field(init=False)
+
+
+@dataclass
+class AllConfig(GroupConfig,
+                ParamConfig,
+                FileConfig,
+                DataConfig
+                ):
     """All the configurations for the RDF analysis
     """
 
@@ -140,11 +154,12 @@ class RealValumeRdf:
                  log: logger.logging.Logger
                  ) -> None:
         """initiate the RDF computation"""
-        self.check_files(log)
+        self.check_file_existence(log)
+        self.get_data(log)
 
-    def check_files(self,
-                    log: logger.logging.Logger
-                    ) -> None:
+    def check_file_existence(self,
+                             log: logger.logging.Logger
+                             ) -> None:
         """check the existence of the files"""
         for fname in [self.config.interface_info,
                       self.config.box_size_fname,
@@ -152,6 +167,32 @@ class RealValumeRdf:
                       self.config.trr_fname,
                       self.config.top_fname]:
             my_tools.check_file_exist(fname, log, if_exit=True)
+
+    def get_data(self,
+                 log: logger.logging.Logger
+                 ) -> None:
+        """get the data from the files"""
+        interface = xvg_to_dataframe.XvgParser(
+            self.config.interface_info, log).xvg_df
+        self.config.interface = \
+            self._df_to_numpy(interface, ['interface_z'])
+
+        box_size = xvg_to_dataframe.XvgParser(
+            self.config.box_size_fname, log).xvg_df
+        self.config.box_size = \
+            self._df_to_numpy(box_size, ['XX', 'YY', 'ZZ'])
+
+        np_com = xvg_to_dataframe.XvgParser(
+            self.config.np_com_fname, log).xvg_df
+        self.config.np_com = self._df_to_numpy(
+            np_com, ['COR_APT_X', 'COR_APT_Y', 'COR_APT_Z'])
+
+    def _df_to_numpy(self,
+                     df: pd.DataFrame,
+                     columns: list[str]
+                     ) -> np.ndarray:
+        """convert the dataframe to numpy array"""
+        return df[columns].to_numpy()
 
     def write_msg(self,
                   log: logger.logging.Logger

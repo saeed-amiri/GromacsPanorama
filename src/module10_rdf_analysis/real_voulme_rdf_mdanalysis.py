@@ -46,7 +46,6 @@ For this computation to be done, the main steps are:
         9. Save the RDF in a file
 """
 
-import os
 import sys
 import typing
 from dataclasses import dataclass, field
@@ -57,7 +56,7 @@ import pandas as pd
 import MDAnalysis as mda
 from MDAnalysis.analysis import rdf
 
-from common import logger, xvg_to_dataframe, my_tools, com_file_parser
+from common import logger, xvg_to_dataframe, my_tools
 from common.colors_text import TextColor as bcolors
 
 
@@ -122,6 +121,7 @@ class DataConfig:
     box_size: np.ndarray = field(init=False)
     np_com: np.ndarray = field(init=False)
     top: str = field(init=False)
+    u_traj: "mda.Universe" = field(init=False)
 
 
 @dataclass
@@ -155,7 +155,19 @@ class RealValumeRdf:
                  ) -> None:
         """initiate the RDF computation"""
         self.check_file_existence(log)
-        self.get_data(log)
+        self.parse_and_store_data(log)
+        self._read_trajectory(log)
+        ref_group: "mda.core.groups.AtomGroup" = self._get_ref_group()
+        target_group: "mda.core.groups.AtomGroup" = self._get_target_group()
+
+        self.compute_rdf(ref_group, target_group, log)
+
+    def compute_rdf(self,
+                    ref_group: "mda.core.groups.AtomGroup",
+                    target_group: "mda.core.groups.AtomGroup",
+                    log: logger.logging.Logger
+                    ) -> None:
+        """compute the RDF"""
 
     def check_file_existence(self,
                              log: logger.logging.Logger
@@ -168,9 +180,9 @@ class RealValumeRdf:
                       self.config.top_fname]:
             my_tools.check_file_exist(fname, log, if_exit=True)
 
-    def get_data(self,
-                 log: logger.logging.Logger
-                 ) -> None:
+    def parse_and_store_data(self,
+                             log: logger.logging.Logger
+                             ) -> None:
         """get the data from the files"""
         interface = xvg_to_dataframe.XvgParser(
             self.config.interface_info, log).xvg_df
@@ -187,12 +199,46 @@ class RealValumeRdf:
         self.config.np_com = self._df_to_numpy(
             np_com, ['COR_APT_X', 'COR_APT_Y', 'COR_APT_Z'])
 
+    def _read_trajectory(self,
+                         log: logger.logging.Logger
+                         ) -> None:
+        """read the input file"""
+        fname: str = self.config.trr_fname
+        my_tools.check_file_exist(fname, log, if_exit=True)
+        tpr_file: str = fname.split('.', -1)[0] + '.tpr'
+        my_tools.check_file_exist(tpr_file, log, if_exit=True)
+        try:
+            self.config.u_traj = mda.Universe(tpr_file, fname)
+        except ValueError as err:
+            log.error(msg := '\tThe input file is not correct!\n')
+            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}\n\t{err}\n')
+
     def _df_to_numpy(self,
-                     df: pd.DataFrame,
+                     df_i: pd.DataFrame,
                      columns: list[str]
                      ) -> np.ndarray:
         """convert the dataframe to numpy array"""
-        return df[columns].to_numpy()
+        return df_i[columns].to_numpy()
+
+    def _get_ref_group(self) -> "mda.core.groups.AtomGroup":
+        """get the reference group"""
+        ref_group: str = f'{self.config.ref_group["sel_type"]}' + " "
+        ref_group += ' '.join(self.config.ref_group["sel_names"])
+        selected_group = self.config.u_traj.select_atoms(ref_group)
+        nr_sel_group = selected_group.n_atoms
+        self.info_msg += \
+            f'\tReference group: `{ref_group}` has `{nr_sel_group}` atoms \n'
+        return selected_group
+
+    def _get_target_group(self) -> "mda.core.groups.AtomGroup":
+        """get the reference group"""
+        target_group: str = f'{self.config.target_group["sel_type"]}' + " "
+        target_group += ' '.join(self.config.target_group["sel_names"])
+        selected_group = self.config.u_traj.select_atoms(target_group)
+        nr_sel_group = selected_group.n_atoms
+        self.info_msg += \
+            f'\tTarget group: `{target_group}` has `{nr_sel_group}` atoms \n'
+        return selected_group
 
     def write_msg(self,
                   log: logger.logging.Logger

@@ -104,18 +104,18 @@ class ParamConfig:
 
 
 @dataclass
-class COMFileConfig:
+class FileConfig:
     """Configuration for the RDF analysis"""
     # Input files
     interface_info: str = "contact.xvg"
     box_size_fname: str = "box.xvg"
     np_com_fname: str = "coord.xvg"
-    trr_fname: str = field(init=False)
     top_fname: str = 'topol.top'
+    trr_fname: str = field(init=False)
 
 
 @dataclass
-class AllConfig(GroupConfig, ParamConfig, COMFileConfig):
+class AllConfig(GroupConfig, ParamConfig, FileConfig):
     """All the configurations for the RDF analysis
     """
 
@@ -127,10 +127,12 @@ class RealValumeRdf:
     config: AllConfig
 
     def __init__(self,
+                 trr_fname: str,
                  log: logger.logging.Logger,
                  config: AllConfig = AllConfig()
                  ) -> None:
         self.config = config
+        self.config.trr_fname = trr_fname
         self.write_msg(log)
         self.initiate(log)
 
@@ -138,7 +140,18 @@ class RealValumeRdf:
                  log: logger.logging.Logger
                  ) -> None:
         """initiate the RDF computation"""
-        # self.check_files(log)
+        self.check_files(log)
+
+    def check_files(self,
+                    log: logger.logging.Logger
+                    ) -> None:
+        """check the existence of the files"""
+        for fname in [self.config.interface_info,
+                      self.config.box_size_fname,
+                      self.config.np_com_fname,
+                      self.config.trr_fname,
+                      self.config.top_fname]:
+            my_tools.check_file_exist(fname, log, if_exit=True)
 
     def write_msg(self,
                   log: logger.logging.Logger
@@ -150,4 +163,4 @@ class RealValumeRdf:
 
 
 if __name__ == "__main__":
-    RealValumeRdf(logger.setup_logger('real_volume_rdf.log'))
+    RealValumeRdf(sys.argv[1], logger.setup_logger('real_volume_rdf.log'))

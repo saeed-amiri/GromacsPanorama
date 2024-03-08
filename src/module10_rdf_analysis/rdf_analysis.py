@@ -44,7 +44,6 @@ class TrrFileConfig:
     """Configuration for the RDF analysis"""
     # Input files
     trr_fname: str = "traj.trr"
-    tpr_fname: str = "topol.tpr"
     top_fname: str = "topol.top"
 
 
@@ -70,17 +69,48 @@ class AllConfig(ParameterConfig, OutFileConfig):
     """
     compute_style: str = "COM"
 
-    file_config: typing.Union[COMFileConfig, TrrFileConfig] = field(init=False)
+    com_file_config: COMFileConfig = field(init=False)
+    trr_file_config: TrrFileConfig = field(init=False)
 
     def __post_init__(self):
         if self.compute_style not in ["COM", "TRR"]:
             raise ValueError(f"compute_style should be either 'COM' or 'TRR' "
                              f"but it is {self.compute_style}")
         if self.compute_style == "COM":
-            file_config = TrrFileConfig()
+            com_file_config = COMFileConfig()
         if self.compute_style == "TRR":
-            file_config = COMFileConfig()
+            trr_file_config = TrrFileConfig()
+
+
+class RdfAnalysis:
+    """compute RDF for the system based on the configuration"""
+
+    info_msg: str = 'Message from RdfAnalysis:\n'
+    config: AllConfig
+
+    def __init__(self,
+                 log: logger.logging.Logger,
+                 config: AllConfig = AllConfig()
+                 ) -> None:
+        self.config = config
+        self.initiate(log)
+        self._write_msg(log)
+
+    def initiate(self, log: logger.logging.Logger) -> None:
+        """initiate the calculations"""
+        file_config: typing.Union[COMFileConfig, TrrFileConfig]
+        if self.config.compute_style == "COM":
+            file_config = self.config.com_file_config
+        if self.config.compute_style == "TRR":
+            file_config = self.config.trr_file_config
+
+
+    def _write_msg(self, log: logger.logging.Logger) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == "__main__":
-    pass
+    RdfAnalysis(logger.setup_logger(log_name="rdf_analysis.log"))

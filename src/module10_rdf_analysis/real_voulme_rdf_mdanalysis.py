@@ -52,11 +52,13 @@ from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
+import multiprocessing as mp
+import matplotlib.pyplot as plt
 
 import MDAnalysis as mda
 from MDAnalysis.analysis import rdf
 
-from common import logger, xvg_to_dataframe, my_tools
+from common import logger, xvg_to_dataframe, my_tools, cpuconfig
 from common.colors_text import TextColor as bcolors
 
 
@@ -139,6 +141,7 @@ class RealValumeRdf:
 
     info_msg: str = 'Message from RealValumeRdf:\n'
     config: AllConfig
+    num_cores: int   # number of cores to use for the computation
 
     def __init__(self,
                  trr_fname: str,
@@ -157,6 +160,7 @@ class RealValumeRdf:
         self.check_file_existence(log)
         self.parse_and_store_data(log)
         self.read_trajectory(log)
+        self.num_cores = self.set_number_of_cores(log)
         ref_group: "mda.core.groups.AtomGroup" = self.get_ref_group(log)
         target_group: "mda.core.groups.AtomGroup" = self.get_target_group(log)
         dist_range: np.ndarray = self.get_radius_bins()
@@ -176,7 +180,8 @@ class RealValumeRdf:
         # real volume of the system
         rdf_counts: np.ndarray = \
             self._count_numbers_in_bins(ref_group, target_group, dist_range)
-        print(np.mean(rdf_counts))
+        plt.plot(dist_range[:-1], rdf_counts)
+        plt.show()
 
     def _count_numbers_in_bins(self,
                                ref_group: "mda.core.groups.AtomGroup",
@@ -291,6 +296,15 @@ class RealValumeRdf:
         number_of_bins: int = int(max_length / self.config.bin_size)
         dist_range = np.linspace(0.0, max_length, number_of_bins)
         return dist_range
+
+    def set_number_of_cores(self,
+                            log: logger.logging.Logger
+                            ) -> int:
+        """set the number of threads for the computation"""
+        cores_nr: int = cpuconfig.ConfigCpuNr(log).cores_nr
+        n_cores: int = min(cores_nr, self.config.u_traj.trajectory.n_frames)
+        self.info_msg += f'\tThe number of cores to use: {n_cores}\n'
+        return n_cores
 
     def write_msg(self,
                   log: logger.logging.Logger

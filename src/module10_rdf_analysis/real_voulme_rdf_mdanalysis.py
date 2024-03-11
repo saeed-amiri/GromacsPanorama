@@ -156,10 +156,10 @@ class RealValumeRdf:
         """initiate the RDF computation"""
         self.check_file_existence(log)
         self.parse_and_store_data(log)
-        self._read_trajectory(log)
-        ref_group: "mda.core.groups.AtomGroup" = self._get_ref_group()
-        target_group: "mda.core.groups.AtomGroup" = self._get_target_group(log)
-        dist_range: np.ndarray = self._get_radius_bins()
+        self.read_trajectory(log)
+        ref_group: "mda.core.groups.AtomGroup" = self.get_ref_group(log)
+        target_group: "mda.core.groups.AtomGroup" = self.get_target_group(log)
+        dist_range: np.ndarray = self.get_radius_bins()
         self.compute_rdf(ref_group, target_group, dist_range, log)
 
     def compute_rdf(self,
@@ -227,9 +227,9 @@ class RealValumeRdf:
         self.config.np_com = self._df_to_numpy(
             np_com, ['COR_APT_X', 'COR_APT_Y', 'COR_APT_Z'])
 
-    def _read_trajectory(self,
-                         log: logger.logging.Logger
-                         ) -> None:
+    def read_trajectory(self,
+                        log: logger.logging.Logger
+                        ) -> None:
         """read the input file"""
         fname: str = self.config.trr_fname
         my_tools.check_file_exist(fname, log, if_exit=True)
@@ -248,19 +248,26 @@ class RealValumeRdf:
         """convert the dataframe to numpy array"""
         return df_i[columns].to_numpy()
 
-    def _get_ref_group(self) -> "mda.core.groups.AtomGroup":
+    def get_ref_group(self,
+                      log: logger.logging.Logger
+                      ) -> "mda.core.groups.AtomGroup":
         """get the reference group"""
         ref_group: str = f'{self.config.ref_group["sel_type"]}' + " "
         ref_group += ' '.join(self.config.ref_group["sel_names"])
         selected_group = self.config.u_traj.select_atoms(ref_group)
         nr_sel_group = selected_group.n_atoms
+        if nr_sel_group == 0:
+            msg = (f'\tThe reference group has 0 atoms!\n'
+                   f'\tThe reference group was set to {ref_group}!\n')
+            log.error(msg)
+            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
         self.info_msg += \
             f'\tReference group: `{ref_group}` has `{nr_sel_group}` atoms \n'
         return selected_group
 
-    def _get_target_group(self,
-                          log: logger.logging.Logger
-                          ) -> "mda.core.groups.AtomGroup":
+    def get_target_group(self,
+                         log: logger.logging.Logger
+                         ) -> "mda.core.groups.AtomGroup":
         """get the reference group"""
         target_group: str = f'{self.config.target_group["sel_type"]}' + " "
         target_group += ' '.join(self.config.target_group["sel_names"])
@@ -275,7 +282,7 @@ class RealValumeRdf:
             sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
         return selected_group
 
-    def _get_radius_bins(self) -> np.ndarray:
+    def get_radius_bins(self) -> np.ndarray:
         """get the radius bins for the RDF computation
         Angstrom to nm: 1 Angstrom = 0.1 nm
         """

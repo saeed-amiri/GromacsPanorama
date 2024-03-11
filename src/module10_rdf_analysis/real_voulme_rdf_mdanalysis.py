@@ -77,8 +77,8 @@ class GroupConfig:
     }))
 
     target_group: dict[str, typing.Any] = field(default_factory=lambda: ({
-        'sel_type': 'name',
-        'sel_names': ['CLA'],
+        'sel_type': 'resname',
+        'sel_names': ['D10'],
         'sel_pos': 'position'
     }))
 
@@ -158,7 +158,7 @@ class RealValumeRdf:
         self.parse_and_store_data(log)
         self._read_trajectory(log)
         ref_group: "mda.core.groups.AtomGroup" = self._get_ref_group()
-        target_group: "mda.core.groups.AtomGroup" = self._get_target_group()
+        target_group: "mda.core.groups.AtomGroup" = self._get_target_group(log)
         dist_range: np.ndarray = self._get_radius_bins()
         self.compute_rdf(ref_group, target_group, dist_range, log)
 
@@ -258,7 +258,9 @@ class RealValumeRdf:
             f'\tReference group: `{ref_group}` has `{nr_sel_group}` atoms \n'
         return selected_group
 
-    def _get_target_group(self) -> "mda.core.groups.AtomGroup":
+    def _get_target_group(self,
+                          log: logger.logging.Logger
+                          ) -> "mda.core.groups.AtomGroup":
         """get the reference group"""
         target_group: str = f'{self.config.target_group["sel_type"]}' + " "
         target_group += ' '.join(self.config.target_group["sel_names"])
@@ -266,11 +268,19 @@ class RealValumeRdf:
         nr_sel_group = selected_group.n_atoms
         self.info_msg += \
             f'\tTarget group: `{target_group}` has `{nr_sel_group}` atoms \n'
+        if nr_sel_group == 0:
+            msg = (f'\tThe target group has 0 atoms!\n'
+                   f'\tThe target group was set to {target_group}!\n')
+            log.error(msg)
+            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
         return selected_group
 
     def _get_radius_bins(self) -> np.ndarray:
-        """get the radius bins for the RDF computation"""
-        max_length: float = np.max(self.config.box_size)
+        """get the radius bins for the RDF computation
+        Angstrom to nm: 1 Angstrom = 0.1 nm
+        """
+        max_length: float = np.max(self.config.box_size) * 10.0
+        self.info_msg = f'\tmax_length: `{max_length} [A]`\n'
         number_of_bins: int = int(max_length / self.config.bin_size)
         dist_range = np.linspace(0.0, max_length, number_of_bins)
         return dist_range

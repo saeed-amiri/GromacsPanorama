@@ -78,7 +78,7 @@ class GroupConfig:
 
     target_group: dict[str, typing.Any] = field(default_factory=lambda: ({
         'sel_type': 'name',
-        'sel_names': ['N'],
+        'sel_names': ['CLA'],
         'sel_pos': 'position'
     }))
 
@@ -97,7 +97,7 @@ class ParamConfig:
         compare RDFs between AtomGroups that contain different numbers
         of atoms."
     """
-    n_size: float = 0.01
+    bin_size: float = 0.01
     dist_range: tuple[float, float] = field(init=False)
     density: bool = True
 
@@ -159,15 +159,43 @@ class RealValumeRdf:
         self._read_trajectory(log)
         ref_group: "mda.core.groups.AtomGroup" = self._get_ref_group()
         target_group: "mda.core.groups.AtomGroup" = self._get_target_group()
-
-        self.compute_rdf(ref_group, target_group, log)
+        dist_range: np.ndarray = self._get_radius_bins()
+        self.compute_rdf(ref_group, target_group, dist_range, log)
 
     def compute_rdf(self,
                     ref_group: "mda.core.groups.AtomGroup",
                     target_group: "mda.core.groups.AtomGroup",
+                    dist_range: np.ndarray,
                     log: logger.logging.Logger
                     ) -> None:
         """compute the RDF"""
+        # Compute the number of in each bin; return it with the bin edges,
+        # np_com, and the number of atoms in the target group
+        # The new interface will be the difference between the interface
+        # and the np_com from the z axis; based on this we should compute
+        # real volume of the system
+        rdf_counts: np.ndarray = \
+            self._count_numbers_in_bins(ref_group, target_group, dist_range)
+        print(np.mean(rdf_counts))
+
+    def _count_numbers_in_bins(self,
+                               ref_group: "mda.core.groups.AtomGroup",
+                               target_group: "mda.core.groups.AtomGroup",
+                               dist_range: np.ndarray
+                               ) -> np.ndarray:
+        """count the number of atoms in each bin"""
+        rdf_counts = np.zeros(dist_range.shape[0] - 1, dtype=int)
+        for _ in self.config.u_traj.trajectory:
+            np_com: np.ndarray = ref_group.center_of_mass()
+            distances_to_com = \
+                np.linalg.norm(target_group.positions - np_com, axis=1)
+            for i in range(len(dist_range) - 1):
+                indices = \
+                    np.where((distances_to_com > dist_range[i]) &
+                             (distances_to_com <= dist_range[i + 1]))[0]
+                rdf_counts[i] += len(indices)
+        rdf_counts = rdf_counts / self.config.u_traj.trajectory.n_frames
+        return rdf_counts
 
     def check_file_existence(self,
                              log: logger.logging.Logger
@@ -239,6 +267,13 @@ class RealValumeRdf:
         self.info_msg += \
             f'\tTarget group: `{target_group}` has `{nr_sel_group}` atoms \n'
         return selected_group
+
+    def _get_radius_bins(self) -> np.ndarray:
+        """get the radius bins for the RDF computation"""
+        max_length: float = np.max(self.config.box_size)
+        number_of_bins: int = int(max_length / self.config.bin_size)
+        dist_range = np.linspace(0.0, max_length, number_of_bins)
+        return dist_range
 
     def write_msg(self,
                   log: logger.logging.Logger

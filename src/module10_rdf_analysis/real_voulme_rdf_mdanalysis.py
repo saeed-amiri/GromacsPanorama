@@ -469,8 +469,8 @@ class ComputeRealVolume:
         shift: np.ndarray = self.np_com - actual_np_com
         interface_main: np.ndarray = actual_interface + shift
         self.info_msg += (
-            f'\tAvg of location shift is: `{np.mean(shift)}`\n'
-            f'\tAvg of the main interface is: `{np.mean(interface_main)}`\n')
+            f'\tLocation shift avg z: `{np.mean(shift[2]):.3f}`\n'
+            f'\tMain interface avg z: `{np.mean(interface_main[2]):.3f}`\n')
         return interface_main
 
     def get_interface_below(self,
@@ -488,7 +488,7 @@ class ComputeRealVolume:
             interface_i = np.max(oil_below_np)
             interface_below[tstep] = interface_i
         self.info_msg += (
-            f'\tAvg of the interface_below is: `{np.mean(interface_below)}`\n')
+            f'\tInterface_below avg z: `{np.mean(interface_below[2]):.3f}`\n')
         self._sanity_check_2nd_interface(interface_below, log)
         return interface_below
 

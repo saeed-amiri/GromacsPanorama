@@ -160,6 +160,7 @@ class RealValumeRdf:
         self.check_file_existence(log)
         self.parse_and_store_data(log)
         self.load_trajectory(log)
+        self.n_frames: int = self.config.u_traj.trajectory.n_frames
         self.num_cores = self.set_number_of_cores(log)
         ref_group: "mda.core.groups.AtomGroup" = self.get_ref_group(log)
         target_group: "mda.core.groups.AtomGroup" = self.get_target_group(log)
@@ -181,7 +182,7 @@ class RealValumeRdf:
         target_group_pos_list: list[np.ndarray] = []
         with mp.Pool(processes=self.num_cores) as pool:
             args = [(ref_group, target_group, frame) for frame in
-                    range(self.config.u_traj.trajectory.n_frames)]
+                    range(self.n_frames)]
             results = pool.starmap(self._compute_frame_np_com, args)
             np_com_list, target_group_pos_list = zip(*results)
 
@@ -217,16 +218,15 @@ class RealValumeRdf:
                                ) -> np.ndarray:
         """count the number of atoms in each bin"""
         rdf_counts = np.zeros(dist_range.shape[0] - 1, dtype=int)
-        for frame in self.config.u_traj.trajectory:
-            tstep: int = frame.frame
+        for frame, com_i in enumerate(np_com):
             distances_to_com = np.linalg.norm(
-                target_group_list[tstep] - np_com[tstep], axis=1)
+                target_group_list[frame] - com_i, axis=1)
             for i in range(len(dist_range) - 1):
                 indices = \
                     np.where((distances_to_com > dist_range[i]) &
                              (distances_to_com <= dist_range[i + 1]))[0]
                 rdf_counts[i] += len(indices)
-        rdf_counts = rdf_counts / self.config.u_traj.trajectory.n_frames
+        rdf_counts = rdf_counts / self.n_frames
         return rdf_counts
 
     def check_file_existence(self,
@@ -329,7 +329,7 @@ class RealValumeRdf:
                             ) -> int:
         """set the number of threads for the computation"""
         cores_nr: int = cpuconfig.ConfigCpuNr(log).cores_nr
-        n_cores: int = min(cores_nr, self.config.u_traj.trajectory.n_frames)
+        n_cores: int = min(cores_nr, self.n_frames)
         self.info_msg += f'\tThe number of cores to use: {n_cores}\n'
         return n_cores
 

@@ -218,15 +218,28 @@ class RealValumeRdf:
                                ) -> np.ndarray:
         """count the number of atoms in each bin"""
         rdf_counts = np.zeros(dist_range.shape[0] - 1, dtype=int)
-        for frame, com_i in enumerate(np_com):
-            distances_to_com = np.linalg.norm(
-                target_group_list[frame] - com_i, axis=1)
-            for i in range(len(dist_range) - 1):
-                indices = \
-                    np.where((distances_to_com > dist_range[i]) &
-                             (distances_to_com <= dist_range[i + 1]))[0]
-                rdf_counts[i] += len(indices)
+        with mp.Pool(processes=self.num_cores) as pool:
+            args = [(com_i, target_group_list[frame], dist_range) for
+                    frame, com_i in enumerate(np_com)]
+            results = pool.starmap(self._frame_count_in_bin, args)
+            for res in results:
+                rdf_counts += res
         rdf_counts = rdf_counts / self.n_frames
+        return rdf_counts
+
+    def _frame_count_in_bin(self,
+                            com_i: np.ndarray,
+                            target_group: np.ndarray,
+                            dist_range: np.ndarray
+                            ) -> np.ndarray:
+        """count the number of atoms in a single bin"""
+        rdf_counts = np.zeros(dist_range.shape[0] - 1, dtype=int)
+        distances_to_com = np.linalg.norm(target_group - com_i, axis=1)
+        for i in range(len(dist_range) - 1):
+            indices = \
+                np.where((distances_to_com > dist_range[i]) &
+                         (distances_to_com <= dist_range[i + 1]))[0]
+            rdf_counts[i] += len(indices)
         return rdf_counts
 
     def check_file_existence(self,

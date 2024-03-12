@@ -454,9 +454,10 @@ class ComputeRealVolume:
         phase: str = config.target_group['sel_names'][0]
         self.compute_interface_location(actual_interface, actual_np_com)
         if phase != 'D10':
-            self.info_msg += '\tThe phase is water or water-soluble!\n'
+            self.info_msg += '\tThe phase is water.\n'
+
         elif phase == 'D10':
-            self.info_msg += '\tThe phase is oil!\n'
+            self.info_msg += '\tThe phase is oil.\n'
 
     def compute_interface_location(self,
                                    actual_interface: np.ndarray,

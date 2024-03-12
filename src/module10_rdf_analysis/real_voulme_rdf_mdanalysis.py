@@ -200,8 +200,7 @@ class RealValumeRdf:
                     range(self.n_frames)]
             results = pool.starmap(self._compute_frame_np_com, args)
             np_com_list, target_group_pos_list = zip(*results)
-
-        np_com_arr: np.ndarray = np.array(list(np_com_list))
+        np_com_arr: np.ndarray = np.vstack(np_com_list)
         rdf_counts: np.ndarray = self._count_numbers_in_bins(
             np_com_arr, target_group_pos_list, dist_range)
         return rdf_counts, np_com_arr

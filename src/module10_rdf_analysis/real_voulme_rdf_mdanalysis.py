@@ -124,6 +124,7 @@ class DataConfig:
     np_com: np.ndarray = field(init=False)
     top: str = field(init=False)
     u_traj: "mda.Universe" = field(init=False)
+    d_time: float = field(init=False)  # time step of the trajectory
 
 
 @dataclass
@@ -142,6 +143,7 @@ class RealValumeRdf:
     info_msg: str = 'Message from RealValumeRdf:\n'
     config: AllConfig
     num_cores: int   # number of cores to use for the computation
+    n_frames: int    # number of frames in the trajectory
 
     def __init__(self,
                  trr_fname: str,
@@ -161,6 +163,9 @@ class RealValumeRdf:
         self.parse_and_store_data(log)
         self.load_trajectory(log)
         self.n_frames: int = self.config.u_traj.trajectory.n_frames
+        self.config.d_time = self.config.u_traj.trajectory.dt
+        self.info_msg += (f'\tNumber of frames: `{self.n_frames}`\n'
+                          f'\tTime step: `{self.config.d_time}` [ps]\n')
         self.num_cores = self.set_number_of_cores(log)
         ref_group: "mda.core.groups.AtomGroup" = self.get_ref_group(log)
         target_group: "mda.core.groups.AtomGroup" = self.get_target_group(log)

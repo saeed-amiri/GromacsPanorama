@@ -452,7 +452,9 @@ class ComputeRealVolume:
         box_size: np.ndarray = config.box_size
         actual_np_com: np.ndarray = config.np_com
         phase: str = config.target_group['sel_names'][0]
-        self.compute_interface_location(actual_interface, actual_np_com)
+        interface_main: np.ndarray = \
+            self.compute_interface_location(actual_interface, actual_np_com)
+        interface_below: np.ndarray = self.get_interface_below(config, log)
         if phase != 'D10':
             self.info_msg += '\tThe phase is water.\n'
 
@@ -465,9 +467,50 @@ class ComputeRealVolume:
                                    ) -> np.ndarray:
         """compute the interface location"""
         shift: np.ndarray = self.np_com - actual_np_com
-        interface: np.ndarray = actual_interface + shift
-        self.info_msg += f'\tThe mean location shift is: `{np.mean(shift)}`\n'
-        return interface
+        interface_main: np.ndarray = actual_interface + shift
+        self.info_msg += (
+            f'\tAvg of location shift is: `{np.mean(shift)}`\n'
+            f'\tAvg of the main interface is: `{np.mean(interface_main)}`\n')
+        return interface_main
+
+    def get_interface_below(self,
+                            config: AllConfig,
+                            log: logger.logging.Logger
+                            ) -> np.ndarray:
+        """get the interface below the NP"""
+        interface_below: np.ndarray = np.zeros(self.np_com.shape)
+        for frame in config.u_traj.trajectory:
+            tstep = int(frame.time / config.d_time)
+            oil = config.u_traj.select_atoms('resname D10')
+            oil_pos = oil.positions
+            oil_z = oil_pos[:, 2]
+            oil_below_np = oil_z[oil_z < self.np_com[tstep, 2]]
+            interface_i = np.max(oil_below_np)
+            interface_below[tstep] = interface_i
+        self.info_msg += (
+            f'\tAvg of the interface_below is: `{np.mean(interface_below)}`\n')
+        self._sanity_check_2nd_interface(interface_below, log)
+        return interface_below
+
+    def _sanity_check_2nd_interface(self,
+                                    interface_below: np.ndarray,
+                                    log: logger.logging.Logger
+                                    ) -> None:
+        """check the interface_below"""
+        average = np.mean(interface_below)
+        if average < 0:
+            msg: str = \
+                f'Error! The interface_below has negative mean: {average}!\n'
+            log.error(msg)
+            raise ValueError(msg)
+        if np.any(interface_below - average >= 2 * average):
+            msg = 'Error! There is a big shift in frame(s) shift!\n'
+            log.error(msg)
+            raise ValueError(msg)
+        if np.any(interface_below == 0):
+            msg = 'Error! The second interface at zero!\n'
+            log.error(msg)
+            raise ValueError(msg)
 
     def write_msg(self,
                   log: logger.logging.Logger

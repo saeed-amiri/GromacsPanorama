@@ -165,25 +165,28 @@ class RealValumeRdf:
         ref_group: "mda.core.groups.AtomGroup" = self.get_ref_group(log)
         target_group: "mda.core.groups.AtomGroup" = self.get_target_group(log)
         dist_range: np.ndarray = self.get_radius_bins()
-        self.compute_rdf(ref_group, target_group, dist_range)
+        self.compute_rdf(ref_group, target_group, dist_range, log)
 
     def compute_rdf(self,
                     ref_group: "mda.core.groups.AtomGroup",
                     target_group: "mda.core.groups.AtomGroup",
                     dist_range: np.ndarray,
+                    log: logger.logging.Logger,
                     ) -> None:
         """compute the RDF"""
-        rdf_counts: np.ndarray = \
+        rdf_counts: np.ndarray
+        np_com_arr: np.ndarray
+        rdf_counts, np_com_arr = \
             self._get_rdf_count(ref_group, target_group, dist_range)
         plt.plot(dist_range[:-1], rdf_counts)
         plt.show()
-        self._get_volume_of_system(dist_range)
+        self._get_volume_of_system(dist_range, np_com_arr, log)
 
     def _get_rdf_count(self,
                        ref_group: "mda.core.groups.AtomGroup",
                        target_group: "mda.core.groups.AtomGroup",
                        dist_range: np.ndarray,
-                       ) -> np.ndarray:
+                       ) -> tuple[np.ndarray, np.ndarray]:
         """count the number of atoms in each bin"""
         np_com_list: list[np.ndarray] = []
         target_group_pos_list: list[np.ndarray] = []
@@ -196,15 +199,15 @@ class RealValumeRdf:
         np_com_arr: np.ndarray = np.array(list(np_com_list))
         rdf_counts: np.ndarray = self._count_numbers_in_bins(
             np_com_arr, target_group_pos_list, dist_range)
-        return rdf_counts
+        return rdf_counts, np_com_arr
 
     def _get_volume_of_system(self,
-                              dist_range: np.ndarray
+                              dist_range: np.ndarray,
+                              np_com: np.ndarray,
+                              log: logger.logging.Logger
                               ) -> np.ndarray:
         """compute the volume of the system"""
-        # The new interface will be the difference between the interface
-        # and the np_com from the z axis; based on this we should compute
-        # real volume of the system
+        ComputeRealVolume(self.config, dist_range, np_com, log)
 
     def _compute_frame_np_com(self,
                               ref_group: "mda.core.groups.AtomGroup",
@@ -279,12 +282,12 @@ class RealValumeRdf:
         box_size = xvg_to_dataframe.XvgParser(
             self.config.box_size_fname, log).xvg_df
         self.config.box_size = \
-            self._df_to_numpy(box_size, ['XX', 'YY', 'ZZ'])
+            self._df_to_numpy(box_size, ['XX', 'YY', 'ZZ']) * 10.0
 
         np_com = xvg_to_dataframe.XvgParser(
             self.config.np_com_fname, log).xvg_df
         self.config.np_com = self._df_to_numpy(
-            np_com, ['COR_APT_X', 'COR_APT_Y', 'COR_APT_Z'])
+            np_com, ['COR_APT_X', 'COR_APT_Y', 'COR_APT_Z']) * 10.0
 
     def load_trajectory(self,
                         log: logger.logging.Logger
@@ -343,9 +346,8 @@ class RealValumeRdf:
 
     def get_radius_bins(self) -> np.ndarray:
         """get the radius bins for the RDF computation
-        Angstrom to nm: 1 Angstrom = 0.1 nm
         """
-        max_length: float = np.max(self.config.box_size) * 10.0
+        max_length: float = np.max(self.config.box_size)
         self.info_msg = f'\tmax_length: `{max_length} [A]`\n'
         number_of_bins: int = int(max_length / self.config.bin_size)
         dist_range = np.linspace(0.0, max_length, number_of_bins)
@@ -422,6 +424,53 @@ class ComputeRealVolume:
     """
 
     info_msg: str = 'Message from ComputeRealVolume:\n'
+    dist_range: np.ndarray
+    box_size: np.ndarray
+    np_com: np.ndarray
+
+    def __init__(self,
+                 config: AllConfig,
+                 dist_range: np.ndarray,
+                 np_com: np.ndarray,
+                 log: logger.logging.Logger
+                 ) -> None:
+        self.dist_range = dist_range
+        self.np_com = np_com
+        self.compute_volume(config, log)
+        self.write_msg(log)
+
+    def compute_volume(self,
+                       config: AllConfig,
+                       log: logger.logging.Logger
+                       ) -> None:
+        """compute the volume of the system"""
+        actual_interface: np.ndarray = config.interface
+        box_size: np.ndarray = config.box_size
+        actual_np_com: np.ndarray = config.np_com
+        phase: str = config.target_group['sel_names'][0]
+        self.compute_interface_location(actual_interface, actual_np_com)
+        if phase != 'D10':
+            self.info_msg += '\tThe phase is water or water-soluble!\n'
+        elif phase == 'D10':
+            self.info_msg += '\tThe phase is oil!\n'
+
+    def compute_interface_location(self,
+                                   actual_interface: np.ndarray,
+                                   actual_np_com: np.ndarray,
+                                   ) -> np.ndarray:
+        """compute the interface location"""
+        shift: np.ndarray = self.np_com - actual_np_com
+        interface: np.ndarray = actual_interface + shift
+        self.info_msg += f'\tThe mean location shift is: `{np.mean(shift)}`\n'
+        return interface
+
+    def write_msg(self,
+                  log: logger.logging.Logger
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == "__main__":

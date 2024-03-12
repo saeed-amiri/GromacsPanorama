@@ -479,18 +479,31 @@ class ComputeRealVolume:
                             ) -> np.ndarray:
         """get the interface below the NP"""
         interface_below: np.ndarray = np.zeros(self.np_com.shape)
-        for frame in config.u_traj.trajectory:
-            tstep = int(frame.time / config.d_time)
-            oil = config.u_traj.select_atoms('resname D10')
-            oil_pos = oil.positions
-            oil_z = oil_pos[:, 2]
-            oil_below_np = oil_z[oil_z < self.np_com[tstep, 2]]
-            interface_i = np.max(oil_below_np)
-            interface_below[tstep] = interface_i
+        with mp.Pool(processes=config.num_cores) as pool:
+            args = [(frame.time, config, self.np_com) for frame in
+                    config.u_traj.trajectory]
+            results = \
+                pool.starmap(self._get_interface_below_single_frame, args)
+            for tstep, interface_i in results:
+                interface_below[tstep] = interface_i
         self.info_msg += (
             f'\tInterface_below avg z: `{np.mean(interface_below[2]):.3f}`\n')
         self._sanity_check_2nd_interface(interface_below, log)
         return interface_below
+
+    def _get_interface_below_single_frame(self,
+                                          time: float,
+                                          config: AllConfig,
+                                          np_com: np.ndarray
+                                          ) -> tuple[int, float]:
+        """get the interface below the NP for a single frame"""
+        tstep = int(time / config.d_time)
+        oil = config.u_traj.select_atoms('resname D10')
+        oil_pos = oil.positions
+        oil_z = oil_pos[:, 2]
+        oil_below_np = oil_z[oil_z < np_com[tstep, 2]]
+        interface_i = np.max(oil_below_np)
+        return tstep, interface_i
 
     def _sanity_check_2nd_interface(self,
                                     interface_below: np.ndarray,

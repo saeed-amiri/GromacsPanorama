@@ -50,13 +50,13 @@ import sys
 import typing
 from dataclasses import dataclass, field
 
+import multiprocessing as mp
+
 import numpy as np
 import pandas as pd
-import multiprocessing as mp
 import matplotlib.pyplot as plt
 
 import MDAnalysis as mda
-from MDAnalysis.analysis import rdf
 
 from common import logger, xvg_to_dataframe, my_tools, cpuconfig
 from common.colors_text import TextColor as bcolors
@@ -80,7 +80,7 @@ class GroupConfig:
 
     target_group: dict[str, typing.Any] = field(default_factory=lambda: ({
         'sel_type': 'resname',
-        'sel_names': ['D10'],
+        'sel_names': ['CLA'],
         'sel_pos': 'position'
     }))
 
@@ -159,18 +159,17 @@ class RealValumeRdf:
         """initiate the RDF computation"""
         self.check_file_existence(log)
         self.parse_and_store_data(log)
-        self.read_trajectory(log)
+        self.load_trajectory(log)
         self.num_cores = self.set_number_of_cores(log)
         ref_group: "mda.core.groups.AtomGroup" = self.get_ref_group(log)
         target_group: "mda.core.groups.AtomGroup" = self.get_target_group(log)
         dist_range: np.ndarray = self.get_radius_bins()
-        self.compute_rdf(ref_group, target_group, dist_range, log)
+        self.compute_rdf(ref_group, target_group, dist_range)
 
     def compute_rdf(self,
                     ref_group: "mda.core.groups.AtomGroup",
                     target_group: "mda.core.groups.AtomGroup",
                     dist_range: np.ndarray,
-                    log: logger.logging.Logger
                     ) -> None:
         """compute the RDF"""
         # Compute the number of in each bin; return it with the bin edges,
@@ -178,22 +177,50 @@ class RealValumeRdf:
         # The new interface will be the difference between the interface
         # and the np_com from the z axis; based on this we should compute
         # real volume of the system
-        rdf_counts: np.ndarray = \
-            self._count_numbers_in_bins(ref_group, target_group, dist_range)
+        np_com_list: list[np.ndarray] = []
+        target_group_pos_list: list[np.ndarray] = []
+        with mp.Pool(processes=self.num_cores) as pool:
+            args = [(ref_group, target_group, frame) for frame in
+                    range(self.config.u_traj.trajectory.n_frames)]
+            results = pool.starmap(self._compute_frame_np_com, args)
+            np_com_list, target_group_pos_list = zip(*results)
+
+        np_com_arr: np.ndarray = np.array(list(np_com_list))
+        rdf_counts: np.ndarray = self._count_numbers_in_bins(
+            np_com_arr, target_group_pos_list, dist_range)
         plt.plot(dist_range[:-1], rdf_counts)
         plt.show()
 
+    def _compute_frame_np_com(self,
+                              ref_group: "mda.core.groups.AtomGroup",
+                              target_group: "mda.core.groups.AtomGroup",
+                              frame: int
+                              ) -> tuple[list[np.ndarray], np.ndarray]:
+        """compute the center of mass of the NP and the position of the
+        target group
+        the statement:
+            self.config.u_traj.trajectory[frame]
+        should be used to get the frame, otherwies it will give the
+        count in a histogram form!
+        """
+        # pylint: disable=pointless-statement
+        self.config.u_traj.trajectory[frame]
+        np_com: np.ndarray = ref_group.center_of_mass()
+        np_com_list: list[np.ndarray] = [np_com]
+        target_group_pos: np.ndarray = target_group.positions
+        return np_com_list, target_group_pos
+
     def _count_numbers_in_bins(self,
-                               ref_group: "mda.core.groups.AtomGroup",
-                               target_group: "mda.core.groups.AtomGroup",
+                               np_com: np.ndarray,
+                               target_group_list: list[np.ndarray],
                                dist_range: np.ndarray
                                ) -> np.ndarray:
         """count the number of atoms in each bin"""
         rdf_counts = np.zeros(dist_range.shape[0] - 1, dtype=int)
-        for _ in self.config.u_traj.trajectory:
-            np_com: np.ndarray = ref_group.center_of_mass()
-            distances_to_com = \
-                np.linalg.norm(target_group.positions - np_com, axis=1)
+        for frame in self.config.u_traj.trajectory:
+            tstep: int = frame.frame
+            distances_to_com = np.linalg.norm(
+                target_group_list[tstep] - np_com[tstep], axis=1)
             for i in range(len(dist_range) - 1):
                 indices = \
                     np.where((distances_to_com > dist_range[i]) &
@@ -232,7 +259,7 @@ class RealValumeRdf:
         self.config.np_com = self._df_to_numpy(
             np_com, ['COR_APT_X', 'COR_APT_Y', 'COR_APT_Z'])
 
-    def read_trajectory(self,
+    def load_trajectory(self,
                         log: logger.logging.Logger
                         ) -> None:
         """read the input file"""

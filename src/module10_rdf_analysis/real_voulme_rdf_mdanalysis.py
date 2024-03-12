@@ -390,9 +390,9 @@ class ComputeRealVolume:
         When we centerlized the NP, the second interface below the NP
         will be important! Because in many bins, there will be another
         phase in the bin volume.
-        For this, we should find the lowest z value of the water and
-        consider the second interface (there is no need to compute the
-        second interface like the first interface).
+        For this, we should find the higest z value of the oil below NP
+        and consider the second interface (there is no need to compute
+        the second interface like the first interface).
         This distance should be tracked for every frame.
 
     Now that we have the interface location and the box size, we should

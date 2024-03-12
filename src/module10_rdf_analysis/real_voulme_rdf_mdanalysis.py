@@ -135,6 +135,7 @@ class AllConfig(GroupConfig,
                 ):
     """All the configurations for the RDF analysis
     """
+    num_cores: int = field(init=False)   # number of cores to use
 
 
 class RealValumeRdf:
@@ -142,7 +143,6 @@ class RealValumeRdf:
 
     info_msg: str = 'Message from RealValumeRdf:\n'
     config: AllConfig
-    num_cores: int   # number of cores to use for the computation
     n_frames: int    # number of frames in the trajectory
 
     def __init__(self,
@@ -166,7 +166,7 @@ class RealValumeRdf:
         self.config.d_time = self.config.u_traj.trajectory.dt
         self.info_msg += (f'\tNumber of frames: `{self.n_frames}`\n'
                           f'\tTime step: `{self.config.d_time}` [ps]\n')
-        self.num_cores = self.set_number_of_cores(log)
+        self.config.num_cores = self.set_number_of_cores(log)
         ref_group: "mda.core.groups.AtomGroup" = self.get_ref_group(log)
         target_group: "mda.core.groups.AtomGroup" = self.get_target_group(log)
         dist_range: np.ndarray = self.get_radius_bins()
@@ -195,7 +195,7 @@ class RealValumeRdf:
         """count the number of atoms in each bin"""
         np_com_list: list[np.ndarray] = []
         target_group_pos_list: list[np.ndarray] = []
-        with mp.Pool(processes=self.num_cores) as pool:
+        with mp.Pool(processes=self.config.num_cores) as pool:
             args = [(ref_group, target_group, frame) for frame in
                     range(self.n_frames)]
             results = pool.starmap(self._compute_frame_np_com, args)
@@ -239,7 +239,7 @@ class RealValumeRdf:
                                ) -> np.ndarray:
         """count the number of atoms in each bin"""
         rdf_counts = np.zeros(dist_range.shape[0] - 1, dtype=int)
-        with mp.Pool(processes=self.num_cores) as pool:
+        with mp.Pool(processes=self.config.num_cores) as pool:
             args = [(com_i, target_group_list[frame], dist_range) for
                     frame, com_i in enumerate(np_com)]
             results = pool.starmap(self._frame_count_in_bin, args)

@@ -178,6 +178,17 @@ class RealValumeRdf:
         # The new interface will be the difference between the interface
         # and the np_com from the z axis; based on this we should compute
         # real volume of the system
+        rdf_counts: np.ndarray = \
+            self._get_rdf_count(ref_group, target_group, dist_range)
+        plt.plot(dist_range[:-1], rdf_counts)
+        plt.show()
+
+    def _get_rdf_count(self,
+                       ref_group: "mda.core.groups.AtomGroup",
+                       target_group: "mda.core.groups.AtomGroup",
+                       dist_range: np.ndarray,
+                       ) -> np.ndarray:
+        """count the number of atoms in each bin"""
         np_com_list: list[np.ndarray] = []
         target_group_pos_list: list[np.ndarray] = []
         with mp.Pool(processes=self.num_cores) as pool:
@@ -189,8 +200,7 @@ class RealValumeRdf:
         np_com_arr: np.ndarray = np.array(list(np_com_list))
         rdf_counts: np.ndarray = self._count_numbers_in_bins(
             np_com_arr, target_group_pos_list, dist_range)
-        plt.plot(dist_range[:-1], rdf_counts)
-        plt.show()
+        return rdf_counts
 
     def _compute_frame_np_com(self,
                               ref_group: "mda.core.groups.AtomGroup",

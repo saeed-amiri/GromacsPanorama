@@ -173,15 +173,11 @@ class RealValumeRdf:
                     dist_range: np.ndarray,
                     ) -> None:
         """compute the RDF"""
-        # Compute the number of in each bin; return it with the bin edges,
-        # np_com, and the number of atoms in the target group
-        # The new interface will be the difference between the interface
-        # and the np_com from the z axis; based on this we should compute
-        # real volume of the system
         rdf_counts: np.ndarray = \
             self._get_rdf_count(ref_group, target_group, dist_range)
         plt.plot(dist_range[:-1], rdf_counts)
         plt.show()
+        self._get_volume_of_system(dist_range)
 
     def _get_rdf_count(self,
                        ref_group: "mda.core.groups.AtomGroup",
@@ -201,6 +197,14 @@ class RealValumeRdf:
         rdf_counts: np.ndarray = self._count_numbers_in_bins(
             np_com_arr, target_group_pos_list, dist_range)
         return rdf_counts
+
+    def _get_volume_of_system(self,
+                              dist_range: np.ndarray
+                              ) -> np.ndarray:
+        """compute the volume of the system"""
+        # The new interface will be the difference between the interface
+        # and the np_com from the z axis; based on this we should compute
+        # real volume of the system
 
     def _compute_frame_np_com(self,
                               ref_group: "mda.core.groups.AtomGroup",
@@ -363,6 +367,61 @@ class RealValumeRdf:
         print(f'{bcolors.OKCYAN}{self.__module__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
+
+
+class ComputeRealVolume:
+    """compute the real volume of the system
+    To compute the real volume of the system, we need to consider the
+    interface's location and the NP's center of mass.
+    The interface location is computed and read from the file:
+    `contact.xvg` is the location of the interface between water and
+    oil when the Np could be anywhere in the box. Since we must use the
+    centralized NP, the interface should be updated in a new location.
+    We have the real location of the NP and its location when it's
+    centralized. The new interface location is the difference between
+    these values that are added to the interface location.
+    Here is a very important change:
+        When we centerlized the NP, the second interface below the NP
+        will be important! Because in many bins, there will be another
+        phase in the bin volume.
+        For this, we should find the lowest z value of the water and
+        consider the second interface (there is no need to compute the
+        second interface like the first interface).
+        This distance should be tracked for every frame.
+
+    Now that we have the interface location and the box size, we should
+    look at the rdf's dist_range to see what is inside every bin.
+
+    If we look at water and water-soluble residues, we should consider
+    the following:
+        Case 1: if bin's radius (r) is smaller than the distance between
+            the interface and the center of mass (COM), h, of the NP,
+            the volume of the is 4\\pi r^3/3
+        Case 2: If r is larger than the distance h but still smaller
+            than the distance between the interface and the second
+            interface, h', in this case only one cap exists and should
+            be dropped from the volume of the sphere.
+        Case 3: If r is larger than h and h', the bin's volume has to
+            be removed from two places, one at the top and one at the
+            bottom.
+
+    If we look at oil:
+        There is also some oil below the water phase (under the second
+        interface)
+        When computing the volume, we should consider the volume of
+        that cap for a big radius if it passes the second interface.
+        One way would be to compute that volume and add it while
+        removing the value of the water from the volume.
+
+    The needed data:
+        1. The interface location
+        2. The actull np_com
+        3. The box size
+        4. The NP's center of mass (centerlized)
+        5. The rdf's dist_range
+    """
+
+    info_msg: str = 'Message from ComputeRealVolume:\n'
 
 
 if __name__ == "__main__":

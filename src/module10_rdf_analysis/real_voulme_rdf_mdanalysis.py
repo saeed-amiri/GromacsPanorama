@@ -168,14 +168,18 @@ class RealValumeRdf:
                           f'\tTime step: `{self.config.d_time}` [ps]\n')
         self.config.num_cores = self.set_number_of_cores(log)
         ref_group: "mda.core.groups.AtomGroup" = self.get_ref_group(log)
-        target_group: "mda.core.groups.AtomGroup" = self.get_target_group(log)
+        target_group: "mda.core.groups.AtomGroup"
+        nr_sel_group: int
+        target_group, nr_sel_group = self.get_target_group(log)
         dist_range: np.ndarray = self.get_radius_bins()
-        self.compute_rdf(ref_group, target_group, dist_range, log)
+        self.compute_rdf(
+            ref_group, target_group, dist_range, nr_sel_group, log)
 
     def compute_rdf(self,
                     ref_group: "mda.core.groups.AtomGroup",
                     target_group: "mda.core.groups.AtomGroup",
                     dist_range: np.ndarray,
+                    nr_sel_group: int,
                     log: logger.logging.Logger,
                     ) -> None:
         """compute the RDF"""
@@ -339,7 +343,7 @@ class RealValumeRdf:
 
     def get_target_group(self,
                          log: logger.logging.Logger
-                         ) -> "mda.core.groups.AtomGroup":
+                         ) -> tuple["mda.core.groups.AtomGroup", int]:
         """get the reference group"""
         target_group: str = f'{self.config.target_group["sel_type"]}' + " "
         target_group += ' '.join(self.config.target_group["sel_names"])
@@ -352,12 +356,12 @@ class RealValumeRdf:
                    f'\tThe target group was set to {target_group}!\n')
             log.error(msg)
             sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
-        return selected_group
+        return selected_group, nr_sel_group
 
     def get_radius_bins(self) -> np.ndarray:
         """get the radius bins for the RDF computation
         """
-        max_length: float = np.max(self.config.box_size)
+        max_length: float = np.max(self.config.box_size) / 2.0
         self.info_msg = f'\tmax_length: `{max_length} [A]`\n'
         number_of_bins: int = int(max_length / self.config.bin_size)
         dist_range = np.linspace(0.0, max_length, number_of_bins)

@@ -412,11 +412,12 @@ class ComputeRealVolume:
     the following:
         Case 1: if bin's radius (r) is smaller than the distance between
             the interface and the center of mass (COM), h, of the NP,
-            the volume of the is 4\\pi r^3/3
+            the volume of the whole sphere is 4\\pi r^3/3, the volume
+            of shell than is 4\\pi r^2 dr
         Case 2: If r is larger than the distance h but still smaller
             than the distance between the interface and the second
             interface, h', in this case only one cap exists and should
-            be dropped from the volume of the sphere.
+            be dropped from the volume of the shell.
         Case 3: If r is larger than h and h', the bin's volume has to
             be removed from two places, one at the top and one at the
             bottom.

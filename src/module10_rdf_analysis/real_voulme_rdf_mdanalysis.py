@@ -152,8 +152,8 @@ class RealValumeRdf:
                  ) -> None:
         self.config = config
         self.config.trr_fname = trr_fname
-        self.write_msg(log)
         self.initiate(log)
+        self.write_msg(log)
 
     def initiate(self,
                  log: logger.logging.Logger

@@ -183,9 +183,15 @@ class RealValumeRdf:
         np_com_arr: np.ndarray
         rdf_counts, np_com_arr = \
             self._get_rdf_count(ref_group, target_group, dist_range)
+        volume: tuple[np.ndarray, np.float64, np.float64] = \
+            self._get_volume_of_system(dist_range, np_com_arr, log)
+        bin_volumes: np.ndarray = volume[0]
+        water_volume: np.float64 = volume[1]
+        number_density: np.float64 = nr_sel_group / water_volume
+        rdf: np.ndarray = rdf_counts / (number_density * bin_volumes)
         plt.plot(dist_range[:-1], rdf_counts)
+        plt.plot(dist_range[:-1], rdf)
         plt.show()
-        self._get_volume_of_system(dist_range, np_com_arr, log)
 
     def _get_rdf_count(self,
                        ref_group: "mda.core.groups.AtomGroup",
@@ -209,9 +215,9 @@ class RealValumeRdf:
                               dist_range: np.ndarray,
                               np_com: np.ndarray,
                               log: logger.logging.Logger
-                              ) -> np.ndarray:
+                              ) -> tuple[np.ndarray, np.float64, np.float64]:
         """compute the volume of the system"""
-        ComputeRealVolume(self.config, dist_range, np_com, log)
+        return ComputeRealVolume(self.config, dist_range, np_com, log).volume
 
     def _compute_frame_np_com(self,
                               ref_group: "mda.core.groups.AtomGroup",

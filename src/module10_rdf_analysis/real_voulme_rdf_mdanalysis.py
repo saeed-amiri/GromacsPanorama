@@ -136,6 +136,7 @@ class AllConfig(GroupConfig,
     """All the configurations for the RDF analysis
     """
     num_cores: int = field(init=False)   # number of cores to use
+    n_frames: int = field(init=False)   # number of frames in the trajectory
 
 
 class RealValumeRdf:
@@ -143,7 +144,6 @@ class RealValumeRdf:
 
     info_msg: str = 'Message from RealValumeRdf:\n'
     config: AllConfig
-    n_frames: int    # number of frames in the trajectory
 
     def __init__(self,
                  trr_fname: str,
@@ -162,9 +162,9 @@ class RealValumeRdf:
         self.check_file_existence(log)
         self.parse_and_store_data(log)
         self.load_trajectory(log)
-        self.n_frames: int = self.config.u_traj.trajectory.n_frames
+        self.config.n_frames = self.config.u_traj.trajectory.n_frames
         self.config.d_time = self.config.u_traj.trajectory.dt
-        self.info_msg += (f'\tNumber of frames: `{self.n_frames}`\n'
+        self.info_msg += (f'\tNumber of frames: `{self.config.n_frames}`\n'
                           f'\tTime step: `{self.config.d_time}` [ps]\n')
         self.config.num_cores = self.set_number_of_cores(log)
         ref_group: "mda.core.groups.AtomGroup" = self.get_ref_group(log)
@@ -197,7 +197,7 @@ class RealValumeRdf:
         target_group_pos_list: list[np.ndarray] = []
         with mp.Pool(processes=self.config.num_cores) as pool:
             args = [(ref_group, target_group, frame) for frame in
-                    range(self.n_frames)]
+                    range(self.config.n_frames)]
             results = pool.starmap(self._compute_frame_np_com, args)
             np_com_list, target_group_pos_list = zip(*results)
         np_com_arr: np.ndarray = np.vstack(np_com_list)
@@ -245,7 +245,7 @@ class RealValumeRdf:
             results = pool.starmap(self._frame_count_in_bin, args)
             for res in results:
                 rdf_counts += res
-        rdf_counts = rdf_counts / self.n_frames
+        rdf_counts = rdf_counts / self.config.n_frames
         return rdf_counts
 
     def _frame_count_in_bin(self,
@@ -362,7 +362,7 @@ class RealValumeRdf:
                             ) -> int:
         """set the number of threads for the computation"""
         cores_nr: int = cpuconfig.ConfigCpuNr(log).cores_nr
-        n_cores: int = min(cores_nr, self.n_frames)
+        n_cores: int = min(cores_nr, self.config.n_frames)
         self.info_msg += f'\tThe number of cores to use: {n_cores}\n'
         return n_cores
 

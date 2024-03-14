@@ -193,6 +193,7 @@ class RealValumeRdf:
         water_volume: np.float64 = volume[1]
         number_density: np.float64 = nr_sel_group / water_volume
         rdf: np.ndarray = rdf_counts / (number_density * bin_volumes)
+
         plt.plot(dist_range[:-1], rdf_counts)
         plt.show()
         plt.plot(dist_range[:-1], rdf)
@@ -505,15 +506,14 @@ class ComputeRealVolume:
             if radius == 0:
                 volume = 1.0
             else:
-                radius_up_point = np_com_mean + radius  # The top of the shell
-                radius_bot_point = np_com_mean - radius
+                radius_up_point = np_com_mean + radius  # Top of the shell
+                radius_bot_point = np_com_mean - radius  # Bottom of the shell
 
-                if (radius_up_point < h_main_mean and
-                   radius_bot_point > h_prime_mean):
+                if ((no_top_cap := radius_up_point <= h_main_mean) and
+                   (no_bot_cap := radius_bot_point >= h_prime_mean)):
                     volume = float(shell_volume)
 
-                elif (radius_up_point > h_main_mean and
-                      radius_bot_point > h_prime_mean):
+                elif (not no_top_cap and no_bot_cap):
                     h_up = radius - (h_main_mean - np_com_mean)
                     cap = self._get_cap_volume(h_up + d_r, radius + d_r) - \
                         self._get_cap_volume(h_up, radius)
@@ -529,7 +529,7 @@ class ComputeRealVolume:
                         self._get_cap_volume(h_bottom + d_r, radius + d_r) - \
                         self._get_cap_volume(h_bottom, radius)
 
-                    volume = float(shell_volume - cap_up - cap_bottom)
+                    volume = float(shell_volume - cap_up)
 
             bin_volumes[i] = volume
 

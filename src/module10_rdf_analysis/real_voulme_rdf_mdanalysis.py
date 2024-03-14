@@ -99,7 +99,7 @@ class ParamConfig:
         compare RDFs between AtomGroups that contain different numbers
         of atoms."
     """
-    bin_size: float = 0.01
+    bin_size: float = 0.05
     dist_range: tuple[float, float] = field(init=False)
     density: bool = True
 
@@ -193,11 +193,17 @@ class RealValumeRdf:
         water_volume: np.float64 = volume[1]
         number_density: np.float64 = nr_sel_group / water_volume
         rdf: np.ndarray = rdf_counts / (number_density * bin_volumes)
-
         plt.plot(dist_range[:-1], rdf_counts)
         plt.show()
         plt.plot(dist_range[:-1], rdf)
         plt.show()
+        self._write_xvg(dist_range,
+                        bin_volumes,
+                        water_volume,
+                        rdf_counts,
+                        rdf,
+                        nr_sel_group,
+                        log)
 
     def _get_rdf_count(self,
                        ref_group: "mda.core.groups.AtomGroup",
@@ -378,6 +384,45 @@ class RealValumeRdf:
         self.info_msg += f'\tThe number of cores to use: {n_cores}\n'
         return n_cores
 
+    def _write_xvg(self,
+                   dist_range: np.ndarray,
+                   bin_volumes: np.ndarray,
+                   water_volume: np.float64,
+                   rdf_counts: np.ndarray,
+                   rdf: np.ndarray,
+                   nr_sel_group: int,
+                   log: logger.logging.Logger
+                   ) -> pd.DataFrame:
+        """make the xvg dataframe
+
+        """
+        # pylint: disable=too-many-arguments
+
+        rdf_df: pd.DataFrame = pd.DataFrame({
+            'r [nm]': dist_range[:-1]/10,
+            'bin_volumes [nm3]': bin_volumes/1e3,
+            'rdf_counts': rdf_counts,
+            'rdf': rdf})
+        rdf_df.set_index('r [nm]', inplace=True)
+        title: str = f'RDF of {self.config.target_group["sel_names"][0]}'
+        x_axis_label: str = 'r [nm]'
+        y_axis_label: str = 'g(r)'
+        fname: str = f'{self.config.target_group["sel_names"][0]}_com_rdf.xvg'
+        extra_msg: list[str] = \
+            ['# Rdf from the center of mass of the NP',
+             f'# Number of frames: {self.config.n_frames}',
+             f'# Water volume: {water_volume:.3f} [A^3]',
+             f'# Number of atoms in the target group: {nr_sel_group}']
+        my_tools.write_xvg(df_i=rdf_df,
+                           log=log,
+                           extra_msg=extra_msg,
+                           fname=fname,
+                           x_axis_label=x_axis_label,
+                           y_axis_label=y_axis_label,
+                           title=title)
+
+        self.info_msg += f'\t`{fname}` is written succsssfuly\n'
+
     def write_msg(self,
                   log: logger.logging.Logger
                   ) -> None:
@@ -493,9 +538,9 @@ class ComputeRealVolume:
         np_com_mean: np.float64 = np.mean(self.np_com[:, 2])
         self.info_msg += (
             '\tUsing mean values of the interfaces to compute the volume\n'
-            f'\tMean interface z: `{h_main_mean:.3f}`\n'
-            f'\tMean interface_below z: `{h_prime_mean:.3f}`\n'
-            f'\tMean np_com z: `{np_com_mean:.3f}`\n')
+            f'\tStd of interface z: `{np.std(h_main_mean):.3f}`\n'
+            f'\tStd of interface_below z: `{np.std(h_prime_mean):.3f}`\n'
+            f'\tStd of np_com z: `{np.std(np_com_mean):.3f}`\n')
         bin_volumes: np.ndarray = np.zeros(self.dist_range.shape[0] - 1)
         bin_sizes: np.ndarray = np.diff(self.dist_range)
         for i in range(len(self.dist_range) - 1):
@@ -509,11 +554,12 @@ class ComputeRealVolume:
                 radius_up_point = np_com_mean + radius  # Top of the shell
                 radius_bot_point = np_com_mean - radius  # Bottom of the shell
 
-                if ((no_top_cap := radius_up_point <= h_main_mean) and
-                   (no_bot_cap := radius_bot_point >= h_prime_mean)):
+                if (radius_up_point <= h_main_mean and
+                   radius_bot_point >= h_prime_mean):
                     volume = float(shell_volume)
 
-                elif (not no_top_cap and no_bot_cap):
+                elif (radius_up_point > h_main_mean and
+                      radius_bot_point > h_prime_mean):
                     h_up = radius - (h_main_mean - np_com_mean)
                     cap = self._get_cap_volume(h_up + d_r, radius + d_r) - \
                         self._get_cap_volume(h_up, radius)
@@ -523,13 +569,13 @@ class ComputeRealVolume:
                     h_up = radius - (h_main_mean - np_com_mean)
                     cap_up = self._get_cap_volume(h_up + d_r, radius + d_r) - \
                         self._get_cap_volume(h_up, radius)
-                    h_bottom = radius - (np_com_mean - h_prime_mean)
 
+                    h_bottom = radius - (np_com_mean - h_prime_mean)
                     cap_bottom = \
                         self._get_cap_volume(h_bottom + d_r, radius + d_r) - \
                         self._get_cap_volume(h_bottom, radius)
 
-                    volume = float(shell_volume - cap_up)
+                    volume = float(shell_volume - cap_up - cap_bottom)
 
             bin_volumes[i] = volume
 
@@ -570,7 +616,7 @@ class ComputeRealVolume:
         interface_main: np.ndarray = actual_interface + shift
         self.info_msg += (
             f'\tLocation shift avg z: `{np.mean(shift[2]):.3f}`\n'
-            f'\tMain interface avg z: `{np.mean(interface_main[2]):.3f}`\n')
+            f'\tMain interface avg z: `{np.mean(interface_main[:, 2]):.3f}`\n')
         return interface_main
 
     def get_interface_below(self,
@@ -588,7 +634,7 @@ class ComputeRealVolume:
             interface_i = np.max(oil_below_np)
             interface_below[tstep] = interface_i
         self.info_msg += (
-            f'\tInterface_below avg z: `{np.mean(interface_below[2]):.3f}`\n')
+            f'\tInterface_below avg z: `{np.mean(interface_below):.3f}`\n')
         self._sanity_check_2nd_interface(interface_below, log)
         return interface_below
 

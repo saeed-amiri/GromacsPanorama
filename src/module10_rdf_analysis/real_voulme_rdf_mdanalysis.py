@@ -80,7 +80,7 @@ class GroupConfig:
 
     target_group: dict[str, typing.Any] = field(default_factory=lambda: ({
         'sel_type': 'resname',
-        'sel_names': ['CLA'],
+        'sel_names': ['SOL'],
         'sel_pos': 'position'
     }))
 
@@ -194,6 +194,7 @@ class RealValumeRdf:
         number_density: np.float64 = nr_sel_group / water_volume
         rdf: np.ndarray = rdf_counts / (number_density * bin_volumes)
         plt.plot(dist_range[:-1], rdf_counts)
+        plt.show()
         plt.plot(dist_range[:-1], rdf)
         plt.show()
 
@@ -362,7 +363,7 @@ class RealValumeRdf:
         """get the radius bins for the RDF computation
         """
         max_length: float = np.max(self.config.box_size) / 2.0
-        self.info_msg = f'\tmax_length: `{max_length} [A]`\n'
+        self.info_msg += f'\tmax_length: `{max_length:.3f} [A]`\n'
         number_of_bins: int = int(max_length / self.config.bin_size)
         dist_range = np.linspace(0.0, max_length, number_of_bins)
         return dist_range
@@ -519,17 +520,19 @@ class ComputeRealVolume:
                     volume = float(shell_volume - cap)
 
                 else:
-
                     h_up = radius - (h_main_mean - np_com_mean)
                     cap_up = self._get_cap_volume(h_up + d_r, radius + d_r) - \
                         self._get_cap_volume(h_up, radius)
                     h_bottom = radius - (np_com_mean - h_prime_mean)
+
                     cap_bottom = \
                         self._get_cap_volume(h_bottom + d_r, radius + d_r) - \
                         self._get_cap_volume(h_bottom, radius)
 
                     volume = float(shell_volume - cap_up - cap_bottom)
+
             bin_volumes[i] = volume
+
         water_volume, oil_volume = \
             self._get_phase_volume(h_main_mean, h_prime_mean, config)
         return bin_volumes, water_volume, oil_volume

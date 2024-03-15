@@ -298,14 +298,8 @@ class RealValumeRdf:
 
         # Apply PBC
         d_x = d_x - box_size[0] * np.round(d_x / box_size[0])
-        if d_x[0] > box_size[0] / 2:
-            print('d_x[0] > box_size[0] / 2')
         d_y = d_y - box_size[1] * np.round(d_y / box_size[1])
-        if d_y[0] > box_size[1] / 2:
-            print('d_y[0] > box_size[1] / 2')
         d_z = d_z - box_size[2] * np.round(d_z / box_size[2])
-        if d_z[0] > box_size[2] / 2:
-            print('d_z[0] > box_size[2] / 2')
 
         # Calculate the distance
         distances_to_com = np.sqrt(d_x**2 + d_y**2 + d_z**2)

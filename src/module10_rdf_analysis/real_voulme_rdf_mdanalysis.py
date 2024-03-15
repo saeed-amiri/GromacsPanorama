@@ -185,23 +185,32 @@ class RealValumeRdf:
         """compute the RDF"""
         rdf_counts: np.ndarray
         np_com_arr: np.ndarray
-        rdf_counts, np_com_arr = \
+        rdf_counts, np_com_arr, rdf_counts_dict = \
             self._get_rdf_count(ref_group, target_group, dist_range)
-        volume: tuple[np.ndarray, np.float64, np.float64] = \
+        volume_dict: dict[int, np.ndarray] = \
             self._get_volume_of_system(dist_range, np_com_arr, log)
-        bin_volumes: np.ndarray = volume[0]
-        water_volume: np.float64 = volume[1]
-        number_density: np.float64 = nr_sel_group / water_volume
-        rdf: np.ndarray = rdf_counts / (number_density * bin_volumes)
+
+        rdf_dict: dict[int, np.ndarray] = {}
+        for frame, rdf_counts in rdf_counts_dict.items():
+            water_volume: np.float64 = np.sum(volume_dict[frame])
+            print(f'frame: {frame}, water_volume: {water_volume}')
+            number_density: np.float64 = nr_sel_group / water_volume
+            bin_volumes = volume_dict[frame]
+            rdf = rdf_counts / (number_density * bin_volumes)
+            rdf_dict[frame] = rdf
+
+        avg_rdf = np.mean(np.array(list(rdf_dict.values())), axis=0)
+
         plt.plot(dist_range[:-1], rdf_counts)
         plt.show()
-        plt.plot(dist_range[:-1], rdf)
+        plt.plot(dist_range[:-1], avg_rdf)
         plt.show()
+
         self._write_xvg(dist_range,
                         bin_volumes,
-                        water_volume,
+                        np.mean(water_volume),
                         rdf_counts,
-                        rdf,
+                        avg_rdf,
                         nr_sel_group,
                         log)
 
@@ -209,7 +218,8 @@ class RealValumeRdf:
                        ref_group: "mda.core.groups.AtomGroup",
                        target_group: "mda.core.groups.AtomGroup",
                        dist_range: np.ndarray,
-                       ) -> tuple[np.ndarray, np.ndarray]:
+                       ) -> tuple[
+                           np.ndarray, np.ndarray, dict[int, np.ndarray]]:
         """count the number of atoms in each bin"""
         np_com_list: list[np.ndarray] = []
         target_group_pos_list: list[np.ndarray] = []
@@ -219,15 +229,17 @@ class RealValumeRdf:
             results = pool.starmap(self._compute_frame_np_com, args)
             np_com_list, target_group_pos_list = zip(*results)
         np_com_arr: np.ndarray = np.vstack(np_com_list)
-        rdf_counts: np.ndarray = self._count_numbers_in_bins(
+        rdf_counts: np.ndarray
+        rdf_counts_dict: dict[int, np.ndarray]
+        rdf_counts, rdf_counts_dict = self._count_numbers_in_bins(
             np_com_arr, target_group_pos_list, dist_range)
-        return rdf_counts, np_com_arr
+        return rdf_counts, np_com_arr, rdf_counts_dict
 
     def _get_volume_of_system(self,
                               dist_range: np.ndarray,
                               np_com: np.ndarray,
                               log: logger.logging.Logger
-                              ) -> tuple[np.ndarray, np.float64, np.float64]:
+                              ) -> dict[int, np.ndarray]:
         """compute the volume of the system"""
         return ComputeRealVolume(self.config, dist_range, np_com, log).volume
 
@@ -254,17 +266,19 @@ class RealValumeRdf:
                                np_com: np.ndarray,
                                target_group_list: list[np.ndarray],
                                dist_range: np.ndarray
-                               ) -> np.ndarray:
+                               ) -> tuple[np.ndarray, dict[int, np.ndarray]]:
         """count the number of atoms in each bin"""
         rdf_counts = np.zeros(dist_range.shape[0] - 1, dtype=int)
+        rdf_counts_dict: dict[int, np.ndarray] = {}
         with mp.Pool(processes=self.config.num_cores) as pool:
             args = [(com_i, target_group_list[frame], dist_range) for
                     frame, com_i in enumerate(np_com)]
             results = pool.starmap(self._frame_count_in_bin, args)
-            for res in results:
+            for i, res in enumerate(results):
                 rdf_counts += res
+                rdf_counts_dict[i] = res
         rdf_counts = rdf_counts / self.config.n_frames
-        return rdf_counts
+        return rdf_counts, rdf_counts_dict
 
     def _frame_count_in_bin(self,
                             com_i: np.ndarray,
@@ -490,7 +504,7 @@ class ComputeRealVolume:
     box_size: np.ndarray
     np_com: np.ndarray
     # the volume of the bins, water, and oil
-    volume: tuple[np.ndarray, np.float64, np.float64]
+    volume: dict[int, np.ndarray]
 
     def __init__(self,
                  config: AllConfig,
@@ -506,7 +520,7 @@ class ComputeRealVolume:
     def compute_volume(self,
                        config: AllConfig,
                        log: logger.logging.Logger
-                       ) -> tuple[np.ndarray, np.float64, np.float64]:
+                       ) -> dict[int, np.ndarray]:
         """compute the volume of the system"""
         actual_interface: np.ndarray = config.interface
         actual_np_com: np.ndarray = config.np_com
@@ -517,7 +531,7 @@ class ComputeRealVolume:
 
         if phase != 'D10':
             self.info_msg += '\tThe phase is water.\n'
-            volume: tuple[np.ndarray, np.float64, np.float64] = \
+            volume: dict[int, np.ndarray] = \
                 self.compute_water_volume(
                     interface_main, interface_below, config)
         elif phase == 'D10':
@@ -528,60 +542,61 @@ class ComputeRealVolume:
                              interface_main: np.ndarray,
                              interface_below: np.ndarray,
                              config: AllConfig
-                             ) -> tuple[np.ndarray, np.float64, np.float64]:
+                             ) -> dict[int, np.ndarray]:
         """compute the water volume
         using mean values of the interfaces to compute the volume
         For each bin radius we find a volume.
         """
-        h_main_mean: np.float64 = np.mean(interface_main[:, 2])
-        h_prime_mean: np.float64 = np.mean(interface_below)
-        np_com_mean: np.float64 = np.mean(self.np_com[:, 2])
-        self.info_msg += (
-            '\tUsing mean values of the interfaces to compute the volume\n'
-            f'\tStd of interface z: `{np.std(h_main_mean):.3f}`\n'
-            f'\tStd of interface_below z: `{np.std(h_prime_mean):.3f}`\n'
-            f'\tStd of np_com z: `{np.std(np_com_mean):.3f}`\n')
-        bin_volumes: np.ndarray = np.zeros(self.dist_range.shape[0] - 1)
+        volumes: dict[int, np.ndarray] = {}
         bin_sizes: np.ndarray = np.diff(self.dist_range)
-        for i in range(len(self.dist_range) - 1):
-            radius: np.float64 = self.dist_range[i]
-            d_r: np.float64 = bin_sizes[i]
-            shell_volume: np.float64 = \
-                4/3 * np.pi * ((radius + d_r)**3 - radius**3)
-            if radius == 0:
-                volume = 1.0
-            else:
-                radius_up_point = np_com_mean + radius  # Top of the shell
-                radius_bot_point = np_com_mean - radius  # Bottom of the shell
 
-                if (radius_up_point <= h_main_mean and
-                   radius_bot_point >= h_prime_mean):
-                    volume = float(shell_volume)
+        for frame in range(len(interface_main)):
+            h_main: np.float64 = interface_main[frame, 2]
+            h_prime: np.float64 = interface_below[frame]
+            np_com: np.float64 = self.np_com[frame, 2]
+            bin_volumes: np.ndarray = np.zeros(self.dist_range.shape[0] - 1)
 
-                elif (radius_up_point > h_main_mean and
-                      radius_bot_point > h_prime_mean):
-                    h_up = radius - (h_main_mean - np_com_mean)
-                    cap = self._get_cap_volume(h_up + d_r, radius + d_r) - \
-                        self._get_cap_volume(h_up, radius)
-                    volume = float(shell_volume - cap)
-
+            for i in range(len(self.dist_range) - 1):
+                radius: np.float64 = self.dist_range[i]
+                d_r: np.float64 = bin_sizes[i]
+                shell_volume: np.float64 = \
+                    4/3 * np.pi * ((radius + d_r)**3 - radius**3)
+                if radius == 0:
+                    volume = 1.0
                 else:
-                    h_up = radius - (h_main_mean - np_com_mean)
-                    cap_up = self._get_cap_volume(h_up + d_r, radius + d_r) - \
-                        self._get_cap_volume(h_up, radius)
+                    radius_up_point = np_com + radius  # Top of the shell
+                    radius_bot_point = np_com - radius  # Bottom of the shell
 
-                    h_bottom = radius - (np_com_mean - h_prime_mean)
-                    cap_bottom = \
-                        self._get_cap_volume(h_bottom + d_r, radius + d_r) - \
-                        self._get_cap_volume(h_bottom, radius)
+                    if (radius_up_point <= h_main and
+                       radius_bot_point >= h_prime):
+                        volume = float(shell_volume)
 
-                    volume = float(shell_volume - cap_up - cap_bottom)
+                    elif (radius_up_point > h_main and
+                          radius_bot_point > h_prime):
+                        h_up = radius - (h_main - np_com)
+                        cap = \
+                            self._get_cap_volume(h_up + d_r, radius + d_r) - \
+                            self._get_cap_volume(h_up, radius)
+                        volume = float(shell_volume - cap)
 
-            bin_volumes[i] = volume
+                    else:
+                        h_up = radius - (h_main - np_com)
+                        cap_up = \
+                            self._get_cap_volume(h_up + d_r, radius + d_r) - \
+                            self._get_cap_volume(h_up, radius)
 
-        water_volume, oil_volume = \
-            self._get_phase_volume(h_main_mean, h_prime_mean, config)
-        return bin_volumes, water_volume, oil_volume
+                        h_bottom = radius - (np_com - h_prime)
+                        cap_bottom = self._get_cap_volume(
+                            h_bottom + d_r, radius + d_r) - \
+                            self._get_cap_volume(h_bottom, radius)
+
+                        volume = float(shell_volume - cap_up - cap_bottom)
+
+                bin_volumes[i] = volume
+
+            volumes[frame] = bin_volumes
+
+        return volumes
 
     def _get_phase_volume(self,
                           h_main_mean: np.float64,
@@ -613,6 +628,9 @@ class ComputeRealVolume:
                                    ) -> np.ndarray:
         """compute the interface location"""
         shift: np.ndarray = self.np_com - actual_np_com
+        actual_np_com.tofile('actual_np_com.dat', sep='\n')
+        actual_interface.tofile('actual_interface.dat', sep='\n')
+        shift.tofile('shift.dat', sep='\n')
         interface_main: np.ndarray = actual_interface + shift
         self.info_msg += (
             f'\tLocation shift avg z: `{np.mean(shift[2]):.3f}`\n'

@@ -193,7 +193,6 @@ class RealValumeRdf:
         rdf_dict: dict[int, np.ndarray] = {}
         for frame, rdf_counts in rdf_counts_dict.items():
             water_volume: np.float64 = np.sum(volume_dict[frame])
-            print(f'frame: {frame}, water_volume: {water_volume}')
             number_density: np.float64 = nr_sel_group / water_volume
             bin_volumes = volume_dict[frame]
             rdf = rdf_counts / (number_density * bin_volumes)
@@ -553,8 +552,9 @@ class ComputeRealVolume:
         for frame in range(len(interface_main)):
             h_main: np.float64 = interface_main[frame, 2]
             h_prime: np.float64 = interface_below[frame]
-            np_com: np.float64 = self.np_com[frame, 2]
+            np_com: np.ndarray = self.np_com[frame]
             bin_volumes: np.ndarray = np.zeros(self.dist_range.shape[0] - 1)
+            box_size: np.ndarray = config.box_size[frame]
 
             for i in range(len(self.dist_range) - 1):
                 radius: np.float64 = self.dist_range[i]
@@ -564,8 +564,8 @@ class ComputeRealVolume:
                 if radius == 0:
                     volume = 1.0
                 else:
-                    radius_up_point = np_com + radius  # Top of the shell
-                    radius_bot_point = np_com - radius  # Bottom of the shell
+                    radius_up_point = np_com[2] + radius  # Top of the shell
+                    radius_bot_point = np_com[2] - radius  # Bottom of shell
 
                     if (radius_up_point <= h_main and
                        radius_bot_point >= h_prime):
@@ -573,30 +573,80 @@ class ComputeRealVolume:
 
                     elif (radius_up_point > h_main and
                           radius_bot_point > h_prime):
-                        h_up = radius - (h_main - np_com)
+                        h_up = radius - (h_main - np_com[2])
                         cap = \
                             self._get_cap_volume(h_up + d_r, radius + d_r) - \
                             self._get_cap_volume(h_up, radius)
                         volume = float(shell_volume - cap)
 
                     else:
-                        h_up = radius - (h_main - np_com)
+                        h_up = radius - (h_main - np_com[2])
                         cap_up = \
                             self._get_cap_volume(h_up + d_r, radius + d_r) - \
                             self._get_cap_volume(h_up, radius)
 
-                        h_bottom = radius - (np_com - h_prime)
+                        h_bottom = radius - (np_com[2] - h_prime)
                         cap_bottom = self._get_cap_volume(
                             h_bottom + d_r, radius + d_r) - \
                             self._get_cap_volume(h_bottom, radius)
-
                         volume = float(shell_volume - cap_up - cap_bottom)
 
-                bin_volumes[i] = volume
+                bin_volumes[i] = self._drop_cap_of_box(
+                    np_com, radius, box_size, volume, d_r)
 
             volumes[frame] = bin_volumes
 
         return volumes
+
+    def _drop_cap_of_box(self,
+                         np_com: np.ndarray,
+                         radius: np.float64,
+                         box_size: np.ndarray,
+                         volume: np.float64,
+                         d_r: np.float64,
+                         ) -> np.float64:
+        """compute the volume of the cap, if the shell is outside the box
+        volume of the cap with height in a sphere with radius r is:
+        (1/3) * pi * h^2 * (3r - h) - (1/3) * pi * h^2 * (3r - h)
+        """
+        # pylint: disable=too-many-arguments
+        if np_com[0] + radius > box_size[0]:
+            h_right = radius - (box_size[0] - np_com[0])
+            cap_right = self._get_cap_volume(
+                h_right + d_r, radius + d_r) - \
+                self._get_cap_volume(h_right, radius)
+            volume -= cap_right
+        if np_com[0] - radius < 0:
+            h_left = radius - (np_com[0])
+            cap_left = self._get_cap_volume(
+                h_left + d_r, radius + d_r) - \
+                self._get_cap_volume(h_left, radius)
+            volume -= cap_left
+        if np_com[1] + radius > box_size[1]:
+            h_right = radius - (box_size[1] - np_com[1])
+            cap_right = self._get_cap_volume(
+                h_right + d_r, radius + d_r) - \
+                self._get_cap_volume(h_right, radius)
+            volume -= cap_right
+        if np_com[1] - radius < 0:
+            h_left = radius - (np_com[1])
+            cap_left = self._get_cap_volume(
+                h_left + d_r, radius + d_r) - \
+                self._get_cap_volume(h_left, radius)
+            volume -= cap_left
+        if np_com[2] + radius > box_size[2]:
+            h_right = radius - (box_size[2] - np_com[2])
+            cap_right = self._get_cap_volume(
+                h_right + d_r, radius + d_r) - \
+                self._get_cap_volume(h_right, radius)
+            volume -= cap_right
+        if np_com[2] - radius < 0:
+            h_left = radius - (np_com[2])
+            cap_left = self._get_cap_volume(
+                h_left + d_r, radius + d_r) - \
+                self._get_cap_volume(h_left, radius)
+            volume -= cap_left
+        return volume
 
     def _get_phase_volume(self,
                           h_main_mean: np.float64,
@@ -649,7 +699,13 @@ class ComputeRealVolume:
             oil_pos = oil.positions
             oil_z = oil_pos[:, 2]
             oil_below_np = oil_z[oil_z < self.np_com[tstep, 2]]
-            interface_i = np.max(oil_below_np)
+            # Sort in descending order and take the first 100 elements
+            top_100_oil = np.sort(oil_below_np)[::-1][:100]
+
+            # Calculate the average of the top 100 elements
+            interface_i = np.mean(top_100_oil)
+
+            # interface_i = np.max(oil_below_np)
             interface_below[tstep] = interface_i
         self.info_msg += (
             f'\tInterface_below avg z: `{np.mean(interface_below):.3f}`\n')

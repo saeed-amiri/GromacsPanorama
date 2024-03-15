@@ -270,8 +270,11 @@ class RealValumeRdf:
         rdf_counts = np.zeros(dist_range.shape[0] - 1, dtype=int)
         rdf_counts_dict: dict[int, np.ndarray] = {}
         with mp.Pool(processes=self.config.num_cores) as pool:
-            args = [(com_i, target_group_list[frame], dist_range) for
-                    frame, com_i in enumerate(np_com)]
+            args = [(com_i,
+                     target_group_list[frame],
+                     dist_range,
+                     self.config.box_size[frame]
+                     ) for frame, com_i in enumerate(np_com)]
             results = pool.starmap(self._frame_count_in_bin, args)
             for i, res in enumerate(results):
                 rdf_counts += res
@@ -282,11 +285,30 @@ class RealValumeRdf:
     def _frame_count_in_bin(self,
                             com_i: np.ndarray,
                             target_group: np.ndarray,
-                            dist_range: np.ndarray
+                            dist_range: np.ndarray,
+                            box_size: np.ndarray
                             ) -> np.ndarray:
         """count the number of atoms in a single bin"""
         rdf_counts = np.zeros(dist_range.shape[0] - 1, dtype=int)
-        distances_to_com = np.linalg.norm(target_group - com_i, axis=1)
+
+        # Calculate distances in x, y, and z separately
+        d_x = target_group[:, 0] - com_i[0]
+        d_y = target_group[:, 1] - com_i[1]
+        d_z = target_group[:, 2] - com_i[2]
+
+        # Apply PBC
+        d_x = d_x - box_size[0] * np.round(d_x / box_size[0])
+        if d_x[0] > box_size[0] / 2:
+            print('d_x[0] > box_size[0] / 2')
+        d_y = d_y - box_size[1] * np.round(d_y / box_size[1])
+        if d_y[0] > box_size[1] / 2:
+            print('d_y[0] > box_size[1] / 2')
+        d_z = d_z - box_size[2] * np.round(d_z / box_size[2])
+        if d_z[0] > box_size[2] / 2:
+            print('d_z[0] > box_size[2] / 2')
+
+        # Calculate the distance
+        distances_to_com = np.sqrt(d_x**2 + d_y**2 + d_z**2)
         for i in range(len(dist_range) - 1):
             indices = \
                 np.where((distances_to_com > dist_range[i]) &
@@ -629,7 +651,7 @@ class ComputeRealVolume:
                 self._get_cap_volume(h_right, radius)
             volume -= cap_right
         if np_com[1] - radius < 0:
-            h_left = radius - (np_com[1])
+            h_left = radius - np_com[1]
             cap_left = self._get_cap_volume(
                 h_left + d_r, radius + d_r) - \
                 self._get_cap_volume(h_left, radius)
@@ -641,7 +663,7 @@ class ComputeRealVolume:
                 self._get_cap_volume(h_right, radius)
             volume -= cap_right
         if np_com[2] - radius < 0:
-            h_left = radius - (np_com[2])
+            h_left = radius - np_com[2]
             cap_left = self._get_cap_volume(
                 h_left + d_r, radius + d_r) - \
                 self._get_cap_volume(h_left, radius)

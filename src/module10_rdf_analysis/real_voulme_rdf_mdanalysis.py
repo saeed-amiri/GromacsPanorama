@@ -80,7 +80,7 @@ class GroupConfig:
 
     target_group: dict[str, typing.Any] = field(default_factory=lambda: ({
         'sel_type': 'resname',
-        'sel_names': ['ODN'],
+        'sel_names': ['SOL'],
         'sel_pos': 'position'
     }))
 
@@ -135,6 +135,7 @@ class AllConfig(GroupConfig,
                 ):
     """All the configurations for the RDF analysis
     """
+    # pylint: disable=too-many-instance-attributes
     num_cores: int = field(init=False)   # number of cores to use
     n_frames: int = field(init=False)   # number of frames in the trajectory
 
@@ -183,23 +184,28 @@ class RealValumeRdf:
                     log: logger.logging.Logger,
                     ) -> None:
         """compute the RDF"""
-        rdf_counts: np.ndarray
-        np_com_arr: np.ndarray
+        # pylint: disable=too-many-arguments
+        # pylint: disable=too-many-locals
+        rdf_counts: np.ndarray  # number of atoms in each bin
+        np_com_arr: np.ndarray  # center of mass of the NP
         np_com_arr, target_group_pos_list = \
             self._get_np_com_traget(ref_group, target_group)
-        volume_dict: dict[int, np.ndarray]
-        interface_below: np.ndarray
-        interface_main: np.ndarray
+
+        volume_dict: dict[int, np.ndarray]  # volume of the bins
+        interface_below: np.ndarray  # interface below the NP
+        interface_main: np.ndarray  # interface of the NP
         volume_dict, interface_below, interface_main = \
             self._get_volume_of_system(dist_range, np_com_arr, log)
-        rdf_counts_dict: dict[int, np.ndarray]
+
+        rdf_counts_dict: dict[int, np.ndarray]  # number of atoms in each bin
         rdf_counts, rdf_counts_dict = \
             self._count_numbers_in_bins(np_com_arr,
                                         target_group_pos_list,
                                         dist_range,
                                         interface_below,
                                         interface_main)
-        rdf_dict: dict[int, np.ndarray] = {}
+
+        rdf_dict: dict[int, np.ndarray] = {}  # the RDF for each frame
         for frame, rdf_counts in rdf_counts_dict.items():
             water_volume: np.float64 = np.sum(volume_dict[frame])
             nr_in_frame: int = np.sum(rdf_counts)
@@ -208,10 +214,9 @@ class RealValumeRdf:
             rdf = rdf_counts / (number_density * bin_volumes)
             rdf_dict[frame] = rdf
 
+        # average RDF over all frames
         avg_rdf = np.mean(np.array(list(rdf_dict.values())), axis=0)
 
-        plt.plot(dist_range[:-1], rdf_counts)
-        plt.show()
         plt.plot(dist_range[:-1], avg_rdf)
         plt.show()
 
@@ -279,6 +284,7 @@ class RealValumeRdf:
                                interface_main: np.ndarray,
                                ) -> tuple[np.ndarray, dict[int, np.ndarray]]:
         """count the number of atoms in each bin"""
+        # pylint: disable=too-many-arguments
         rdf_counts = np.zeros(dist_range.shape[0] - 1, dtype=int)
         rdf_counts_dict: dict[int, np.ndarray] = {}
         with mp.Pool(processes=self.config.num_cores) as pool:
@@ -305,6 +311,7 @@ class RealValumeRdf:
                             interface_main: np.ndarray
                             ) -> np.ndarray:
         """count the number of atoms in a single bin"""
+        # pylint: disable=too-many-arguments
         rdf_counts = np.zeros(dist_range.shape[0] - 1, dtype=int)
         target_group = target_group[(target_group[:, 2] > interface_below)]
         if self.config.target_group['sel_names'][0] != 'ODN':
@@ -650,42 +657,19 @@ class ComputeRealVolume:
         (1/3) * pi * h^2 * (3r - h) - (1/3) * pi * h^2 * (3r - h)
         """
         # pylint: disable=too-many-arguments
-        if np_com[0] + radius > box_size[0]:
-            h_right = radius - (box_size[0] - np_com[0])
-            cap_right = self._get_cap_volume(
-                h_right + d_r, radius + d_r) - \
-                self._get_cap_volume(h_right, radius)
-            volume -= cap_right
-        if np_com[0] - radius < 0:
-            h_left = radius - (np_com[0])
-            cap_left = self._get_cap_volume(
-                h_left + d_r, radius + d_r) - \
-                self._get_cap_volume(h_left, radius)
-            volume -= cap_left
-        if np_com[1] + radius > box_size[1]:
-            h_right = radius - (box_size[1] - np_com[1])
-            cap_right = self._get_cap_volume(
-                h_right + d_r, radius + d_r) - \
-                self._get_cap_volume(h_right, radius)
-            volume -= cap_right
-        if np_com[1] - radius < 0:
-            h_left = radius - np_com[1]
-            cap_left = self._get_cap_volume(
-                h_left + d_r, radius + d_r) - \
-                self._get_cap_volume(h_left, radius)
-            volume -= cap_left
-        if np_com[2] + radius > box_size[2]:
-            h_right = radius - (box_size[2] - np_com[2])
-            cap_right = self._get_cap_volume(
-                h_right + d_r, radius + d_r) - \
-                self._get_cap_volume(h_right, radius)
-            volume -= cap_right
-        if np_com[2] - radius < 0:
-            h_left = radius - np_com[2]
-            cap_left = self._get_cap_volume(
-                h_left + d_r, radius + d_r) - \
-                self._get_cap_volume(h_left, radius)
-            volume -= cap_left
+        for i in range(3):
+            if np_com[i] + radius > box_size[i]:
+                h_right = radius - (box_size[i] - np_com[i])
+                cap_right = self._get_cap_volume(
+                    h_right + d_r, radius + d_r) - \
+                    self._get_cap_volume(h_right, radius)
+                volume -= cap_right
+            if np_com[i] - radius < 0:
+                h_left = radius - np_com[i]
+                cap_left = self._get_cap_volume(
+                    h_left + d_r, radius + d_r) - \
+                    self._get_cap_volume(h_left, radius)
+                volume -= cap_left
         return volume
 
     def _get_phase_volume(self,

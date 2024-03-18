@@ -185,15 +185,25 @@ class RealValumeRdf:
         """compute the RDF"""
         rdf_counts: np.ndarray
         np_com_arr: np.ndarray
-        rdf_counts, np_com_arr, rdf_counts_dict = \
-            self._get_rdf_count(ref_group, target_group, dist_range)
-        volume_dict: dict[int, np.ndarray] = \
+        np_com_arr, target_group_pos_list = \
+            self._get_np_com_traget(ref_group, target_group)
+        volume_dict: dict[int, np.ndarray]
+        interface_below: np.ndarray
+        interface_main: np.ndarray
+        volume_dict, interface_below, interface_main = \
             self._get_volume_of_system(dist_range, np_com_arr, log)
-
+        rdf_counts_dict: dict[int, np.ndarray]
+        rdf_counts, rdf_counts_dict = \
+            self._count_numbers_in_bins(np_com_arr,
+                                        target_group_pos_list,
+                                        dist_range,
+                                        interface_below,
+                                        interface_main)
         rdf_dict: dict[int, np.ndarray] = {}
         for frame, rdf_counts in rdf_counts_dict.items():
             water_volume: np.float64 = np.sum(volume_dict[frame])
-            number_density: np.float64 = nr_sel_group / water_volume
+            nr_in_frame: int = np.sum(rdf_counts)
+            number_density: np.float64 = nr_in_frame / water_volume
             bin_volumes = volume_dict[frame]
             rdf = rdf_counts / (number_density * bin_volumes)
             rdf_dict[frame] = rdf
@@ -213,13 +223,13 @@ class RealValumeRdf:
                         nr_sel_group,
                         log)
 
-    def _get_rdf_count(self,
-                       ref_group: "mda.core.groups.AtomGroup",
-                       target_group: "mda.core.groups.AtomGroup",
-                       dist_range: np.ndarray,
-                       ) -> tuple[
-                           np.ndarray, np.ndarray, dict[int, np.ndarray]]:
-        """count the number of atoms in each bin"""
+    def _get_np_com_traget(self,
+                           ref_group: "mda.core.groups.AtomGroup",
+                           target_group: "mda.core.groups.AtomGroup",
+                           ) -> tuple[np.ndarray, list[np.ndarray]]:
+        """compute the center of mass of the NP and the position of the
+        target group
+        """
         np_com_list: list[np.ndarray] = []
         target_group_pos_list: list[np.ndarray] = []
         with mp.Pool(processes=self.config.num_cores) as pool:
@@ -228,19 +238,19 @@ class RealValumeRdf:
             results = pool.starmap(self._compute_frame_np_com, args)
             np_com_list, target_group_pos_list = zip(*results)
         np_com_arr: np.ndarray = np.vstack(np_com_list)
-        rdf_counts: np.ndarray
-        rdf_counts_dict: dict[int, np.ndarray]
-        rdf_counts, rdf_counts_dict = self._count_numbers_in_bins(
-            np_com_arr, target_group_pos_list, dist_range)
-        return rdf_counts, np_com_arr, rdf_counts_dict
+        return np_com_arr, target_group_pos_list
 
     def _get_volume_of_system(self,
                               dist_range: np.ndarray,
                               np_com: np.ndarray,
                               log: logger.logging.Logger
-                              ) -> dict[int, np.ndarray]:
+                              ) -> tuple[dict[int, np.ndarray],
+                                         np.ndarray,
+                                         np.ndarray]:
         """compute the volume of the system"""
-        return ComputeRealVolume(self.config, dist_range, np_com, log).volume
+        volume_prop = ComputeRealVolume(self.config, dist_range, np_com, log)
+        return volume_prop.volume, volume_prop.interface_below, \
+            volume_prop.interface_main
 
     def _compute_frame_np_com(self,
                               ref_group: "mda.core.groups.AtomGroup",
@@ -264,7 +274,9 @@ class RealValumeRdf:
     def _count_numbers_in_bins(self,
                                np_com: np.ndarray,
                                target_group_list: list[np.ndarray],
-                               dist_range: np.ndarray
+                               dist_range: np.ndarray,
+                               interface_below: np.ndarray,
+                               interface_main: np.ndarray,
                                ) -> tuple[np.ndarray, dict[int, np.ndarray]]:
         """count the number of atoms in each bin"""
         rdf_counts = np.zeros(dist_range.shape[0] - 1, dtype=int)
@@ -273,7 +285,9 @@ class RealValumeRdf:
             args = [(com_i,
                      target_group_list[frame],
                      dist_range,
-                     self.config.box_size[frame]
+                     self.config.box_size[frame],
+                     interface_below[frame],
+                     interface_main[frame]
                      ) for frame, com_i in enumerate(np_com)]
             results = pool.starmap(self._frame_count_in_bin, args)
             for i, res in enumerate(results):
@@ -286,11 +300,15 @@ class RealValumeRdf:
                             com_i: np.ndarray,
                             target_group: np.ndarray,
                             dist_range: np.ndarray,
-                            box_size: np.ndarray
+                            box_size: np.ndarray,
+                            interface_below: np.ndarray,
+                            interface_main: np.ndarray
                             ) -> np.ndarray:
         """count the number of atoms in a single bin"""
         rdf_counts = np.zeros(dist_range.shape[0] - 1, dtype=int)
 
+        target_group = target_group[(target_group[:, 2] > interface_below) &
+                                    (target_group[:, 2] < interface_main[2])]
         # Calculate distances in x, y, and z separately
         d_x = target_group[:, 0] - com_i[0]
         d_y = target_group[:, 1] - com_i[1]
@@ -520,6 +538,8 @@ class ComputeRealVolume:
     np_com: np.ndarray
     # the volume of the bins, water, and oil
     volume: dict[int, np.ndarray]
+    interface_below: np.ndarray
+    interface_main: np.ndarray
 
     def __init__(self,
                  config: AllConfig,
@@ -529,13 +549,16 @@ class ComputeRealVolume:
                  ) -> None:
         self.dist_range = dist_range
         self.np_com = np_com
-        self.volume = self.compute_volume(config, log)
+        self.volume, self.interface_below, self.interface_main = \
+            self.compute_volume(config, log)
         self.write_msg(log)
 
     def compute_volume(self,
                        config: AllConfig,
                        log: logger.logging.Logger
-                       ) -> dict[int, np.ndarray]:
+                       ) -> tuple[dict[int, np.ndarray],
+                                  np.ndarray,
+                                  np.ndarray]:
         """compute the volume of the system"""
         actual_interface: np.ndarray = config.interface
         actual_np_com: np.ndarray = config.np_com
@@ -551,7 +574,7 @@ class ComputeRealVolume:
                     interface_main, interface_below, config)
         elif phase == 'D10':
             self.info_msg += '\tThe phase is oil.\n'
-        return volume
+        return volume, interface_below, interface_main
 
     def compute_water_volume(self,
                              interface_main: np.ndarray,
@@ -716,10 +739,10 @@ class ComputeRealVolume:
             oil_z = oil_pos[:, 2]
             oil_below_np = oil_z[oil_z < self.np_com[tstep, 2]]
             # Sort in descending order and take the first 100 elements
-            top_100_oil = np.sort(oil_below_np)[::-1][:100]
+            top_oil = np.sort(oil_below_np)[::-1][:1000]
 
             # Calculate the average of the top 100 elements
-            interface_i = np.mean(top_100_oil)
+            interface_i = np.mean(top_oil)
 
             # interface_i = np.max(oil_below_np)
             interface_below[tstep] = interface_i

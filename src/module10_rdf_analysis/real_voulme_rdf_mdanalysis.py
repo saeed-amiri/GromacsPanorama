@@ -80,7 +80,7 @@ class GroupConfig:
 
     target_group: dict[str, typing.Any] = field(default_factory=lambda: ({
         'sel_type': 'resname',
-        'sel_names': ['SOL'],
+        'sel_names': ['ODN'],
         'sel_pos': 'position'
     }))
 
@@ -306,9 +306,10 @@ class RealValumeRdf:
                             ) -> np.ndarray:
         """count the number of atoms in a single bin"""
         rdf_counts = np.zeros(dist_range.shape[0] - 1, dtype=int)
-
-        target_group = target_group[(target_group[:, 2] > interface_below) &
-                                    (target_group[:, 2] < interface_main[2])]
+        target_group = target_group[(target_group[:, 2] > interface_below)]
+        if self.config.target_group['sel_names'][0] != 'ODN':
+            target_group = \
+                target_group[(target_group[:, 2] < interface_main[2])]
         # Calculate distances in x, y, and z separately
         d_x = target_group[:, 0] - com_i[0]
         d_y = target_group[:, 1] - com_i[1]
@@ -444,17 +445,17 @@ class RealValumeRdf:
 
         """
         # pylint: disable=too-many-arguments
-
+        target_group: str = self.config.target_group["sel_names"][0]
         rdf_df: pd.DataFrame = pd.DataFrame({
             'r [nm]': dist_range[:-1]/10,
             'bin_volumes [nm3]': bin_volumes/1e3,
             'rdf_counts': rdf_counts,
-            'rdf': rdf})
+            target_group: rdf})
         rdf_df.set_index('r [nm]', inplace=True)
-        title: str = f'RDF of {self.config.target_group["sel_names"][0]}'
+        title: str = f'RDF of {target_group}'
         x_axis_label: str = 'r [nm]'
         y_axis_label: str = 'g(r)'
-        fname: str = f'{self.config.target_group["sel_names"][0]}_com_rdf.xvg'
+        fname: str = f'rdf_{target_group}_com.xvg'
         extra_msg: list[str] = \
             ['# Rdf from the center of mass of the NP',
              f'# Number of frames: {self.config.n_frames}',

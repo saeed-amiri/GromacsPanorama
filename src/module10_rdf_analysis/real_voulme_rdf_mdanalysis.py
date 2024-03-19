@@ -191,11 +191,20 @@ class RealValumeRdf:
         np_com_arr, target_group_pos_list = \
             self._get_np_com_traget(ref_group, target_group)
 
-        volume_dict: dict[int, np.ndarray]  # volume of the bins
+        sol_volume_dict: dict[int, np.ndarray]  # volume of the bins
+        oil_volume_dict: dict[int, np.ndarray]  # volume of the bins
         interface_below: np.ndarray  # interface below the NP
         interface_main: np.ndarray  # interface of the NP
-        volume_dict, interface_below, interface_main = \
+        sol_volume_dict, oil_volume_dict, interface_below, interface_main = \
             self._get_volume_of_system(dist_range, np_com_arr, log)
+
+        phase: str = self.config.target_group['sel_names'][0]
+        if phase != 'D10':
+            volume_dict = sol_volume_dict
+            self.info_msg += '\tThe phase is water.\n'
+        elif phase == 'D10':
+            volume_dict = oil_volume_dict
+            self.info_msg += '\tThe phase is oil.\n'
 
         rdf_counts_dict: dict[int, np.ndarray]  # number of atoms in each bin
         rdf_counts, rdf_counts_dict = \
@@ -250,12 +259,13 @@ class RealValumeRdf:
                               np_com: np.ndarray,
                               log: logger.logging.Logger
                               ) -> tuple[dict[int, np.ndarray],
+                                         dict[int, np.ndarray],
                                          np.ndarray,
                                          np.ndarray]:
         """compute the volume of the system"""
         volume_prop = ComputeRealVolume(self.config, dist_range, np_com, log)
-        return volume_prop.volume, volume_prop.interface_below, \
-            volume_prop.interface_main
+        return volume_prop.sol_volume, volume_prop.oil_volume, \
+            volume_prop.interface_below, volume_prop.interface_main
 
     def _compute_frame_np_com(self,
                               ref_group: "mda.core.groups.AtomGroup",
@@ -313,10 +323,15 @@ class RealValumeRdf:
         """count the number of atoms in a single bin"""
         # pylint: disable=too-many-arguments
         rdf_counts = np.zeros(dist_range.shape[0] - 1, dtype=int)
-        target_group = target_group[(target_group[:, 2] > interface_below)]
-        if self.config.target_group['sel_names'][0] != 'ODN':
+        if self.config.target_group['sel_names'][0] != 'D10':
+            target_group = target_group[(target_group[:, 2] > interface_below)]
+            if self.config.target_group['sel_names'][0] != 'ODN':
+                target_group = \
+                    target_group[(target_group[:, 2] < interface_main[2])]
+        else:
             target_group = \
-                target_group[(target_group[:, 2] < interface_main[2])]
+                target_group[(target_group[:, 2] > interface_main[2])]
+
         # Calculate distances in x, y, and z separately
         d_x = target_group[:, 0] - com_i[0]
         d_y = target_group[:, 1] - com_i[1]
@@ -545,7 +560,8 @@ class ComputeRealVolume:
     box_size: np.ndarray
     np_com: np.ndarray
     # the volume of the bins, water, and oil
-    volume: dict[int, np.ndarray]
+    sol_volume: dict[int, np.ndarray]
+    oil_volume: dict[int, np.ndarray]
     interface_below: np.ndarray
     interface_main: np.ndarray
 
@@ -557,50 +573,52 @@ class ComputeRealVolume:
                  ) -> None:
         self.dist_range = dist_range
         self.np_com = np_com
-        self.volume, self.interface_below, self.interface_main = \
-            self.compute_volume(config, log)
+        self.sol_volume, self.oil_volume, self.interface_below, \
+            self.interface_main = self.compute_volume(config, log)
         self.write_msg(log)
 
     def compute_volume(self,
                        config: AllConfig,
                        log: logger.logging.Logger
                        ) -> tuple[dict[int, np.ndarray],
+                                  dict[int, np.ndarray],
                                   np.ndarray,
                                   np.ndarray]:
         """compute the volume of the system"""
         actual_interface: np.ndarray = config.interface
         actual_np_com: np.ndarray = config.np_com
-        phase: str = config.target_group['sel_names'][0]
         interface_main: np.ndarray = \
             self.compute_interface_location(actual_interface, actual_np_com)
         interface_below: np.ndarray = self.get_interface_below(config, log)
+        sol_volumes: dict[int, np.ndarray]
+        oil_volumes: dict[int, np.ndarray]
+        sol_volumes, oil_volumes = self.compute_pahse_volumes(
+            interface_main, interface_below, config)
 
-        if phase != 'D10':
-            self.info_msg += '\tThe phase is water.\n'
-            volume: dict[int, np.ndarray] = \
-                self.compute_water_volume(
-                    interface_main, interface_below, config)
-        elif phase == 'D10':
-            self.info_msg += '\tThe phase is oil.\n'
-        return volume, interface_below, interface_main
+        return sol_volumes, oil_volumes, interface_below, interface_main
 
-    def compute_water_volume(self,
-                             interface_main: np.ndarray,
-                             interface_below: np.ndarray,
-                             config: AllConfig
-                             ) -> dict[int, np.ndarray]:
-        """compute the water volume
+    def compute_pahse_volumes(self,
+                              interface_main: np.ndarray,
+                              interface_below: np.ndarray,
+                              config: AllConfig
+                              ) -> tuple[dict[int, np.ndarray],
+                                         dict[int, np.ndarray]]:
+        """compute the water and oil volumes
         using mean values of the interfaces to compute the volume
         For each bin radius we find a volume.
         """
-        volumes: dict[int, np.ndarray] = {}
+        sol_volumes: dict[int, np.ndarray] = {}  # Water phase volume
+        oil_volumes: dict[int, np.ndarray] = {}  # Oil phase volume
         bin_sizes: np.ndarray = np.diff(self.dist_range)
 
         for frame in range(len(interface_main)):
             h_main: np.float64 = interface_main[frame, 2]
             h_prime: np.float64 = interface_below[frame]
             np_com: np.ndarray = self.np_com[frame]
-            bin_volumes: np.ndarray = np.zeros(self.dist_range.shape[0] - 1)
+            sol_bin_volumes: np.ndarray = \
+                np.zeros(self.dist_range.shape[0] - 1)
+            oil_bin_volumes: np.ndarray = \
+                np.zeros(self.dist_range.shape[0] - 1)
             box_size: np.ndarray = config.box_size[frame]
 
             for i in range(len(self.dist_range) - 1):
@@ -609,14 +627,16 @@ class ComputeRealVolume:
                 shell_volume: np.float64 = \
                     4/3 * np.pi * ((radius + d_r)**3 - radius**3)
                 if radius == 0:
-                    volume = 1.0
+                    sol_volume = 1.0
+                    oil_volume = 1.0
                 else:
                     radius_up_point = np_com[2] + radius  # Top of the shell
                     radius_bot_point = np_com[2] - radius  # Bottom of shell
 
                     if (radius_up_point <= h_main and
                        radius_bot_point >= h_prime):
-                        volume = float(shell_volume)
+                        sol_volume = float(shell_volume)
+                        oil_volume = 1.0
 
                     elif (radius_up_point > h_main and
                           radius_bot_point > h_prime):
@@ -624,7 +644,8 @@ class ComputeRealVolume:
                         cap = \
                             self._get_cap_volume(h_up + d_r, radius + d_r) - \
                             self._get_cap_volume(h_up, radius)
-                        volume = float(shell_volume - cap)
+                        sol_volume = float(shell_volume - cap)
+                        oil_volume = float(cap)
 
                     else:
                         h_up = radius - (h_main - np_com[2])
@@ -636,41 +657,45 @@ class ComputeRealVolume:
                         cap_bottom = self._get_cap_volume(
                             h_bottom + d_r, radius + d_r) - \
                             self._get_cap_volume(h_bottom, radius)
-                        volume = float(shell_volume - cap_up - cap_bottom)
 
-                bin_volumes[i] = self._drop_cap_of_box(
-                    np_com, radius, box_size, volume, d_r)
+                        sol_volume = float(shell_volume - cap_up - cap_bottom)
+                        oil_volume = float(cap_up)
 
-            volumes[frame] = bin_volumes
+                box_caps = self._calculate_cap_of_box(
+                    np_com, radius, box_size, d_r)
+                sol_bin_volumes[i] = sol_volume - box_caps
+                oil_bin_volumes[i] = oil_volume
 
-        return volumes
+            sol_volumes[frame] = sol_bin_volumes
+            oil_volumes[frame] = oil_bin_volumes
 
-    def _drop_cap_of_box(self,
-                         np_com: np.ndarray,
-                         radius: np.float64,
-                         box_size: np.ndarray,
-                         volume: np.float64,
-                         d_r: np.float64,
-                         ) -> np.float64:
+        return sol_volumes, oil_volumes
+
+    def _calculate_cap_of_box(self,
+                              np_com: np.ndarray,
+                              radius: np.float64,
+                              box_size: np.ndarray,
+                              d_r: np.float64,
+                              ) -> np.float64:
         """compute the volume of the cap, if the shell is outside the box
         volume of the cap with height in a sphere with radius r is:
         (1/3) * pi * h^2 * (3r - h) - (1/3) * pi * h^2 * (3r - h)
         """
-        # pylint: disable=too-many-arguments
+        cap_volume: np.float64 = np.float64(0.0)
         for i in range(3):
             if np_com[i] + radius > box_size[i]:
                 h_right = radius - (box_size[i] - np_com[i])
                 cap_right = self._get_cap_volume(
                     h_right + d_r, radius + d_r) - \
                     self._get_cap_volume(h_right, radius)
-                volume -= cap_right
+                cap_volume += cap_right
             if np_com[i] - radius < 0:
                 h_left = radius - np_com[i]
                 cap_left = self._get_cap_volume(
                     h_left + d_r, radius + d_r) - \
                     self._get_cap_volume(h_left, radius)
-                volume -= cap_left
-        return volume
+                cap_volume += cap_left
+        return cap_volume
 
     def _get_phase_volume(self,
                           h_main_mean: np.float64,
@@ -723,9 +748,11 @@ class ComputeRealVolume:
             oil_pos = oil.positions
             oil_z = oil_pos[:, 2]
             oil_below_np = oil_z[oil_z < self.np_com[tstep, 2]]
-            # Sort in descending order and take the first 100 elements
-            top_oil = np.sort(oil_below_np)[::-1][:1000]
-
+            if config.target_group['sel_names'][0] != 'D10':
+                # Sort in descending order and take the first 100 elements
+                top_oil = np.sort(oil_below_np)[::-1][:1000]
+            else:
+                top_oil = np.sort(oil_below_np)[::-1][:1000]
             # Calculate the average of the top 100 elements
             interface_i = np.mean(top_oil)
 
@@ -746,15 +773,15 @@ class ComputeRealVolume:
             msg: str = \
                 f'Error! The interface_below has negative mean: {average}!\n'
             log.error(msg)
-            raise ValueError(msg)
+            raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
         if np.any(interface_below - average >= 2 * average):
             msg = 'Error! There is a big shift in frame(s) shift!\n'
             log.error(msg)
-            raise ValueError(msg)
+            raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
         if np.any(interface_below == 0):
             msg = 'Error! The second interface at zero!\n'
             log.error(msg)
-            raise ValueError(msg)
+            raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
 
     def write_msg(self,
                   log: logger.logging.Logger

@@ -71,6 +71,14 @@ class GroupConfig:
     sel_names -> list[str]: names of the selection groups
     sel_pos -> str: If use the ceter of mass (COM) of the group or their
         poistions
+    Since here the number of the residues is more intersted, for each
+    residue, one atom is seleced to compute the RDF:
+    Water: OH2
+    Oil: C5
+    ODN: NH2
+    APT: N
+    CLA: CLA
+    POT: POT
     """
     ref_group: dict[str, typing.Any] = field(default_factory=lambda: ({
         'sel_type': 'resname',

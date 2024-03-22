@@ -90,8 +90,8 @@ class GroupConfig:
     }))
 
     target_group: dict[str, typing.Any] = field(default_factory=lambda: ({
-        'sel_type': 'resname',
-        'sel_names': ['SOL'],
+        'sel_type': 'name',
+        'sel_names': ['C5'],
         'sel_pos': 'position'
     }))
 
@@ -507,10 +507,9 @@ class RealValumeRdf:
                        nr_sel_group: int,
                        log: logger.logging.Logger
                        ) -> None:
-        """make the xvg dataframe
-
-        """
+        """make the xvg dataframe for rdf and write it into a file"""
         # pylint: disable=too-many-arguments
+
         target_group: str = self.config.target_group["sel_names"][0]
         rdf_df: pd.DataFrame = pd.DataFrame({
             'r [nm]': dist_range[:-1]/10,

@@ -238,13 +238,14 @@ class RealValumeRdf:
         plt.plot(dist_range[:-1], avg_rdf)
         plt.show()
 
-        self._write_xvg(dist_range,
-                        bin_volumes,
-                        np.mean(water_volume),
-                        rdf_counts,
-                        avg_rdf,
-                        nr_sel_group,
-                        log)
+        self._write_rdf_xvg(dist_range,
+                            bin_volumes,
+                            np.mean(water_volume),
+                            rdf_counts,
+                            avg_rdf,
+                            nr_sel_group,
+                            log)
+        self.wrrite_cdf_xvg(dist_range, rdf_counts, nr_sel_group, log)
 
     def _get_np_com_traget(self,
                            ref_group: "mda.core.groups.AtomGroup",
@@ -463,15 +464,15 @@ class RealValumeRdf:
         self.info_msg += f'\tThe number of cores to use: {n_cores}\n'
         return n_cores
 
-    def _write_xvg(self,
-                   dist_range: np.ndarray,
-                   bin_volumes: np.ndarray,
-                   water_volume: np.float64,
-                   rdf_counts: np.ndarray,
-                   rdf: np.ndarray,
-                   nr_sel_group: int,
-                   log: logger.logging.Logger
-                   ) -> pd.DataFrame:
+    def _write_rdf_xvg(self,
+                       dist_range: np.ndarray,
+                       bin_volumes: np.ndarray,
+                       water_volume: np.float64,
+                       rdf_counts: np.ndarray,
+                       rdf: np.ndarray,
+                       nr_sel_group: int,
+                       log: logger.logging.Logger
+                       ) -> None:
         """make the xvg dataframe
 
         """
@@ -500,6 +501,37 @@ class RealValumeRdf:
                            y_axis_label=y_axis_label,
                            title=title)
 
+        self.info_msg += f'\t`{fname}` is written succsssfuly\n'
+
+    def wrrite_cdf_xvg(self,
+                       dist_range: np.ndarray,
+                       rdf_counts: np.ndarray,
+                       nr_sel_group: int,
+                       log: logger.logging.Logger
+                       ) -> None:
+        """write the CDF of the RDF"""
+        # pylint: disable=too-many-arguments
+        target_group: str = self.config.target_group["sel_names"][0]
+        cdf = np.cumsum(rdf_counts)
+        cdf_df: pd.DataFrame = pd.DataFrame({
+            'r [nm]': dist_range[:-1]/10,
+            f'{target_group}': cdf})
+        cdf_df.set_index('r [nm]', inplace=True)
+        title: str = f'CDF of {target_group}'
+        x_axis_label: str = 'r [nm]'
+        y_axis_label: str = 'CDF'
+        fname: str = f'cdf_{target_group}_com.xvg'
+        extra_msg: list[str] = \
+            ['# CDF of the RDF from the center of mass of the NP',
+             f'# Number of frames: {self.config.n_frames}',
+             f'# Number of atoms in the target group: {nr_sel_group}']
+        my_tools.write_xvg(df_i=cdf_df,
+                           log=log,
+                           extra_msg=extra_msg,
+                           fname=fname,
+                           x_axis_label=x_axis_label,
+                           y_axis_label=y_axis_label,
+                           title=title)
         self.info_msg += f'\t`{fname}` is written succsssfuly\n'
 
     def write_msg(self,

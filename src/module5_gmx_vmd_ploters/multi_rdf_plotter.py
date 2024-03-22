@@ -76,9 +76,11 @@ class BaseGraphConfig:
             'amino_n': 'N (APTES)',
             'N': 'N (APTES)',
             'amino_charge': r'H$^+$ (APTES)',
-            'SOL': 'O (water)',
+            'SOL': 'O (Water)',
             'D10': 'Decane',
-            'APT': 'APTES',
+            'C5': 'C5 (Decane)',
+            'APT': 'N (APTES)',
+            'NH2': 'N (ODN)',
             'POT': 'Na',
             'OH2': 'O (water)',
             'ODN': 'ODA'})
@@ -91,9 +93,11 @@ class BaseGraphConfig:
             'amino_charge': '--',
             'SOL': '-',
             'D10': '-',
+            'C5': '-',
             'APT': '-',
             'POT': '-',
             'OH2': '-',
+            'NH2': '-.',
             'ODN': '-.'})
 
     colors: dict[str, str] = \
@@ -104,10 +108,12 @@ class BaseGraphConfig:
             'amino_charge': 'blue',
             'SOL': 'red',
             'D10': 'grey',
+            'C5': 'k',
             'APT': 'k',
             'POT': 'brown',
             'OH2': 'red',
-            'ODN': 'orange'})
+            'ODN': 'magenta',
+            'NH2': 'magenta'})
 
     height_ratio: float = (5 ** 0.5 - 1) * 1.5
 
@@ -129,17 +135,18 @@ class FileConfig:
     com_files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
             'com_0': {'fname': 'mda_com_OH2.xvg', 'y_col': 'OH2'},
-            'com_1': {'fname': 'com_d10.xvg', 'y_col': 'D10'},
-            'com_2': {'fname': 'com_sol.xvg', 'y_col': 'SOL'},
-            'com_3': {'fname': 'com_odn.xvg', 'y_col': 'ODN'},
-            'com_4': {'fname': 'mda_com_POT.xvg', 'y_col': 'POT'},
-            'com_5': {'fname': 'mda_com_CLA.xvg', 'y_col': 'CLA'},
-            'com_6': {'fname': 'mda_com_N.xvg', 'y_col': 'N'},
+            'com_1': {'fname': 'OH2_com.xvg', 'y_col': 'OH2'},
+            'com_2': {'fname': 'C5_com.xvg', 'y_col': 'C5'},
+            'com_3': {'fname': 'NH2_com.xvg', 'y_col': 'NH2'},
+            'com_4': {'fname': 'N_com.xvg', 'y_col': 'N'},
+            'com_5': {'fname': 'CLA_com.xvg', 'y_col': 'CLA'},
+            'com_6': {'fname': 'POT_com.xvg', 'y_col': 'POT'},
             'com_7': {'fname': 'com_apt.xvg', 'y_col': 'APT'},
             'com_8': {'fname': 'com_amino_charge.xvg',
                       'y_col': 'amino_charge'}
             })
-    com_plot_list: list[int] = field(default_factory=lambda: [0, 5, 6])
+    com_plot_list: list[int] = \
+        field(default_factory=lambda: [1, 2, 3, 4, 5, 6])
     com_legend_loc: str = 'lower right'
     com_window_legend_loc: str = 'upper left'
     com_max_indicator: str = 'com_5'
@@ -153,7 +160,7 @@ class FileConfig:
             'shell_4': {'fname': 'shell_N.xvg', 'y_col': 'amino_n'},
             'shell_5': {'fname': 'shell_pot.xvg', 'y_col': 'POT'},
             })
-    shell_plot_list: list[int] = field(default_factory=lambda: [1, 2])
+    shell_plot_list: list[int] = field(default_factory=lambda: [])
     shell_legend_loc: str = 'upper left'
     shell_window_legend_loc: str = 'upper right'
     shell_max_indicator: str = 'shell_0'

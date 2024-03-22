@@ -334,7 +334,37 @@ class RealValumeRdf:
                             ) -> np.ndarray:
         """count the number of atoms in a single bin"""
         # pylint: disable=too-many-arguments
+
         rdf_counts = np.zeros(dist_range.shape[0] - 1, dtype=int)
+
+        # Filter the particles by the phase
+        target_group = self.filter_particles_by_phase(
+            target_group, interface_below, interface_main)
+
+        # Calculate the distances with PBC
+        d_x: np.ndarray
+        d_y: np.ndarray
+        d_z: np.ndarray
+        d_x, d_y, d_z = \
+            self.calculate_pbc_distances(target_group, com_i, box_size)
+
+        # Calculate the distance
+        distances_to_com = np.sqrt(d_x**2 + d_y**2 + d_z**2)
+
+        # count the number of atoms in each bin
+        for i in range(len(dist_range) - 1):
+            indices = \
+                np.where((distances_to_com > dist_range[i]) &
+                         (distances_to_com <= dist_range[i + 1]))[0]
+            rdf_counts[i] += len(indices)
+        return rdf_counts
+
+    def filter_particles_by_phase(self,
+                                  target_group: np.ndarray,
+                                  interface_below: np.ndarray,
+                                  interface_main: np.ndarray
+                                  ) -> np.ndarray:
+        """filter the particles by the phase"""
         if (self.config.target_group['sel_names'][0]
            not in self.config.oil_group):
             target_group = target_group[(target_group[:, 2] > interface_below)]
@@ -345,7 +375,14 @@ class RealValumeRdf:
         else:
             target_group = \
                 target_group[(target_group[:, 2] > interface_main[2])]
+        return target_group
 
+    def calculate_pbc_distances(self,
+                                target_group: np.ndarray,
+                                com_i: np.ndarray,
+                                box_size: np.ndarray
+                                ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """calculate the distances with PBC"""
         # Calculate distances in x, y, and z separately
         d_x = target_group[:, 0] - com_i[0]
         d_y = target_group[:, 1] - com_i[1]
@@ -356,14 +393,7 @@ class RealValumeRdf:
         d_y = d_y - box_size[1] * np.round(d_y / box_size[1])
         d_z = d_z - box_size[2] * np.round(d_z / box_size[2])
 
-        # Calculate the distance
-        distances_to_com = np.sqrt(d_x**2 + d_y**2 + d_z**2)
-        for i in range(len(dist_range) - 1):
-            indices = \
-                np.where((distances_to_com > dist_range[i]) &
-                         (distances_to_com <= dist_range[i + 1]))[0]
-            rdf_counts[i] += len(indices)
-        return rdf_counts
+        return d_x, d_y, d_z
 
     def check_file_existence(self,
                              log: logger.logging.Logger

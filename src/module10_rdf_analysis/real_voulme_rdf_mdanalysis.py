@@ -80,6 +80,8 @@ class GroupConfig:
     CLA: CLA
     POT: POT
     """
+    oda_group: list[str] = field(default_factory=lambda: (['ODN', 'NH2']))
+    oil_group: list[str] = field(default_factory=lambda: (['D10', 'C5', 'c9']))
 
     ref_group: dict[str, typing.Any] = field(default_factory=lambda: ({
         'sel_type': 'resname',
@@ -208,10 +210,10 @@ class RealValumeRdf:
             self._get_volume_of_system(dist_range, np_com_arr, log)
 
         phase: str = self.config.target_group['sel_names'][0]
-        if phase not in ['D10', 'C5']:
+        if phase not in self.config.oil_group:
             volume_dict = sol_volume_dict
             self.info_msg += '\tThe phase is water.\n'
-        elif phase in ['D10', 'C5']:
+        elif phase in self.config.oil_group:
             volume_dict = oil_volume_dict
             self.info_msg += '\tThe phase is oil.\n'
 
@@ -333,9 +335,11 @@ class RealValumeRdf:
         """count the number of atoms in a single bin"""
         # pylint: disable=too-many-arguments
         rdf_counts = np.zeros(dist_range.shape[0] - 1, dtype=int)
-        if self.config.target_group['sel_names'][0] not in ['D10', 'C5']:
+        if (self.config.target_group['sel_names'][0]
+           not in self.config.oil_group):
             target_group = target_group[(target_group[:, 2] > interface_below)]
-            if self.config.target_group['sel_names'][0] not in ['ODN', 'NH2']:
+            if (self.config.target_group['sel_names'][0]
+               not in self.config.oda_group):
                 target_group = \
                     target_group[(target_group[:, 2] < interface_main[2])]
         else:

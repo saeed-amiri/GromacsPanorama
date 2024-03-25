@@ -547,6 +547,7 @@ class RealValumeRdf:
         """write the CDF of the RDF"""
         # pylint: disable=too-many-arguments
         target_group: str = self.config.target_group["sel_names"][0]
+        view_point: str = self.config.ref_group["sel_pos"][0]
         cdf = np.cumsum(rdf_counts)
         cdf_df: pd.DataFrame = pd.DataFrame({
             'r [nm]': dist_range[:-1]/10,
@@ -555,7 +556,7 @@ class RealValumeRdf:
         title: str = f'CDF of {target_group}'
         x_axis_label: str = 'r [nm]'
         y_axis_label: str = 'CDF'
-        fname: str = f'cdf_{target_group}_com.xvg'
+        fname: str = f'cdf_{target_group}_{view_point}.xvg'
         extra_msg: list[str] = \
             ['# CDF of the RDF from the center of mass of the NP',
              f'# Number of frames: {self.config.n_frames}',

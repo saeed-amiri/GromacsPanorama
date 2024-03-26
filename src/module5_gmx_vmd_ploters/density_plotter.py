@@ -108,8 +108,7 @@ class FileConfig:
             'dens_4': {'fname': 'D10.xvg', 'y_col': 'D10'},
             'dens_5': {'fname': 'ODN.xvg', 'y_col': 'ODN'},
             'dens_6': {'fname': 'POT.xvg', 'y_col': 'POT'},
-            'dens_7': {'fname': 'SOL.xvg', 'y_col': 'SOL'},
-            'dens_8': {'fname': '.xvg', 'y_col': 'amino_charge'}
+            'dens_7': {'fname': 'SOL.xvg', 'y_col': 'SOL'}
             })
     plot_list: list[int] = \
         field(default_factory=lambda: [1, 2, 3, 4, 5, 6])
@@ -121,3 +120,29 @@ class FileConfig:
 @dataclass
 class AllGraphConfig(BaseGraphConfig, FileConfig):
     """all the configurations for the graph"""
+
+
+class MultiDensityPlotter:
+    """"plotting density of the residues in the system"""
+
+    info_msg: str = 'Message from MultiDensityPlotter:\n'
+    configs: AllGraphConfig
+
+    def __init__(self,
+                 log: logger.logging.Logger,
+                 configs: AllGraphConfig = AllGraphConfig()
+                 ) -> None:
+        self.configs = configs
+        self.write_msg(log)
+
+    def write_msg(self,
+                  log: logger.logging.Logger
+                  ) -> None:
+        """Write and log messages."""
+        print(f'{bcolors.OKCYAN}{MultiDensityPlotter.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
+if __name__ == '__main__':
+    AllGraphConfig(logger.setup_logger('mutli_density_plot.log'))

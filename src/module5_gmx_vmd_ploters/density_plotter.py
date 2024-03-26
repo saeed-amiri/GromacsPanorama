@@ -53,7 +53,11 @@ class BaseGraphConfig:
             'NH2': 'N (ODA)',
             'POT': 'Na',
             'OH2': 'O (water)',
-            'ODN': 'ODA'})
+            'ODN': 'ODA',
+            'COR': 'CORE',
+            'APT': 'APTES',
+            'COR_APT': 'CORE_APTES',
+            })
 
     line_styles: dict[str, str] = \
         field(default_factory=lambda: {
@@ -68,7 +72,10 @@ class BaseGraphConfig:
             'POT': '-',
             'OH2': '-',
             'NH2': '-.',
-            'ODN': '-.'})
+            'ODN': '-.',
+            'COR': '-',
+            'COR_APT': '-'
+            })
 
     colors: dict[str, str] = \
         field(default_factory=lambda: {
@@ -83,7 +90,10 @@ class BaseGraphConfig:
             'POT': 'brown',
             'OH2': 'red',
             'ODN': 'orange',
-            'NH2': 'orange'})
+            'NH2': 'orange',
+            'COR': 'purple',
+            'COR_APT': 'purple'
+            })
 
     height_ratio: float = (5 ** 0.5 - 1) * 1.5
 
@@ -111,7 +121,7 @@ class FileConfig:
             'dens_7': {'fname': 'SOL.xvg', 'y_col': 'SOL'}
             })
     plot_list: list[int] = \
-        field(default_factory=lambda: [1, 2, 3, 4, 5, 6])
+        field(default_factory=lambda: [1, 3, 4, 5, 6, 7])
     legend_loc: str = 'lower right'
     window_legend_loc: str = 'upper left'
     max_indicator: str = 'dens_5'
@@ -127,13 +137,67 @@ class MultiDensityPlotter:
 
     info_msg: str = 'Message from MultiDensityPlotter:\n'
     configs: AllGraphConfig
+    dens_data: dict[str, pd.DataFrame]
 
     def __init__(self,
                  log: logger.logging.Logger,
                  configs: AllGraphConfig = AllGraphConfig()
                  ) -> None:
         self.configs = configs
+        self.dens_data = self.initate_data(log)
+        self.initate_plot(log)
         self.write_msg(log)
+
+    def initate_data(self,
+                     log: logger.logging.Logger
+                     ) -> dict[str, pd.DataFrame]:
+        """initiate the data for the plotting"""
+        dens_data: dict[str, pd.DataFrame] = {}
+        for key, value in self.configs.files.items():
+            dens_data[key] = \
+                xvg_to_dataframe.XvgParser(value['fname'],
+                                           x_type=float,
+                                           log=log).xvg_df
+        return dens_data
+
+    def initate_plot(self,
+                     log: logger.logging.Logger
+                     ) -> None:
+        """initiate the plot for the density"""
+        self.plot_density(log)
+
+    def plot_density(self,
+                     log: logger.logging.Logger
+                     ) -> None:
+        """plot the density of the residues"""
+        first_key: str = next(iter(self.dens_data))
+        x_range: tuple[float, float] = (
+            self.dens_data[first_key]['Coordinate_nm'].iat[0],
+            self.dens_data[first_key]['Coordinate_nm'].iat[-1])
+        ax_i: plt.axes
+        fig_i: plt.figure
+        fig_i, ax_i = plot_tools.mk_canvas(
+            x_range,
+            height_ratio=self.configs.height_ratio,
+            num_xticks=7)
+        for key in self.configs.plot_list:
+            dens_data: pd.DataFrame = self.dens_data[f'dens_{key}']
+            ax_i = self.plot_single_density(ax_i, dens_data, key)
+        plt.show()
+
+    def plot_single_density(self,
+                            ax_i: plt.axes,
+                            data: pd.DataFrame,
+                            key: int
+                            ) -> plt.axes:
+        """plot a single density"""
+        column_name: str = self.configs.files[f'dens_{key}']['y_col']
+        ax_i.plot(data.iloc[:, 0],
+                  data.iloc[:, 1],
+                  label=self.configs.legends[column_name],
+                  color=self.configs.colors[column_name],
+                  linestyle=self.configs.line_styles[column_name])
+        return ax_i
 
     def write_msg(self,
                   log: logger.logging.Logger
@@ -145,4 +209,4 @@ class MultiDensityPlotter:
 
 
 if __name__ == '__main__':
-    AllGraphConfig(logger.setup_logger('mutli_density_plot.log'))
+    MultiDensityPlotter(logger.setup_logger('density_plot.log'))

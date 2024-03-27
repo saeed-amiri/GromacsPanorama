@@ -113,7 +113,8 @@ def save_close_fig(fig: plt.figure,  # The figure to save,
                    loc: str = 'upper right',  # Location of the legend
                    transparent: bool = False,
                    legend: bool = True,
-                   if_close: bool = True
+                   if_close: bool = True,
+                   legend_font_size: int = 13
                    ) -> None:
     """
     Save the figure and close it.
@@ -131,14 +132,14 @@ def save_close_fig(fig: plt.figure,  # The figure to save,
     handles, labels = axs.get_legend_handles_labels()
 
     if handles:
-        axs.legend(handles, labels, loc=loc)
+        axs.legend(handles, labels, loc=loc, fontsize=legend_font_size)
         if not legend:
             for ax_i in np.ravel(axs):
-                legend = ax_i.legend(loc=loc, bbox_to_anchor=(1.0, 1.0))
+                legend = ax_i.legend(loc=loc, bbox_to_anchor=(1.0, 1.0), fontsize=legend_font_size)
             legend.set_bbox_to_anchor((1.0, 1.0))
         else:
             for ax_j in np.ravel(axs):
-                legend = ax_j.legend(loc=loc)
+                legend = ax_j.legend(loc=loc, fontsize=legend_font_size)
 
     fig.savefig(fname,
                 dpi=300,
@@ -149,7 +150,6 @@ def save_close_fig(fig: plt.figure,  # The figure to save,
                 )
     if if_close:
         plt.close(fig)
-
 def set_x2ticks(ax_main: plt.axes,  # The axes to wrok with
                 add_xtwin: bool = True
                     ) -> plt.axes:

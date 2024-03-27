@@ -7,13 +7,9 @@ it reads the xvg output files from GRMACS and plot them
 import typing
 from dataclasses import dataclass, field
 
-import numpy as np
 import pandas as pd
 
-import matplotlib
 import matplotlib.pylab as plt
-import matplotlib.ticker as tck
-from matplotlib.ticker import FuncFormatter
 
 from common import logger, plot_tools, xvg_to_dataframe
 from common.colors_text import TextColor as bcolors
@@ -23,7 +19,7 @@ from common.colors_text import TextColor as bcolors
 class BaseGraphConfig:
     """base class for the graph configuration"""
     # pylint: disable=too-many-instance-attributes
-    graph_suffix: str = 'denisty.png'
+    graph_suffix: str = 'density.png'
     y_col_name: str = 'density'
     xcol_name: str = 'coordinate (nm)'
 
@@ -46,15 +42,14 @@ class BaseGraphConfig:
             'amino_n': 'N (APTES)',
             'N': 'N (APTES)',
             'amino_charge': r'H$^+$ (APTES)',
-            'SOL': 'O (Water)',
+            'SOL': 'Water',
             'D10': 'Decane',
             'C5': r'C$_5$ (Decane)',
-            'APT': 'N (APTES)',
             'NH2': 'N (ODA)',
             'POT': 'Na',
             'OH2': 'O (water)',
             'ODN': 'ODA',
-            'COR': 'CORE',
+            'COR': 'Silica',
             'APT': 'APTES',
             'COR_APT': 'CORE_APTES',
             })
@@ -91,7 +86,7 @@ class BaseGraphConfig:
             'OH2': 'red',
             'ODN': 'orange',
             'NH2': 'orange',
-            'COR': 'purple',
+            'COR': 'grey',
             'COR_APT': 'purple'
             })
 
@@ -99,7 +94,7 @@ class BaseGraphConfig:
 
     y_unit: str = ''
 
-    legend_loc: str = 'lower right'
+    legend_loc: str = 'center left'
 
 
 @dataclass
@@ -121,7 +116,7 @@ class FileConfig:
             'dens_7': {'fname': 'SOL.xvg', 'y_col': 'SOL'}
             })
     plot_list: list[int] = \
-        field(default_factory=lambda: [1, 3, 4, 5, 6, 7])
+        field(default_factory=lambda: [0, 1, 3, 4, 5, 6, 7])
     legend_loc: str = 'lower right'
     window_legend_loc: str = 'upper left'
     max_indicator: str = 'dens_5'
@@ -145,7 +140,7 @@ class MultiDensityPlotter:
                  ) -> None:
         self.configs = configs
         self.dens_data = self.initate_data(log)
-        self.initate_plot(log)
+        self.initate_plot()
         self.write_msg(log)
 
     def initate_data(self,
@@ -160,30 +155,55 @@ class MultiDensityPlotter:
                                            log=log).xvg_df
         return dens_data
 
-    def initate_plot(self,
-                     log: logger.logging.Logger
-                     ) -> None:
+    def initate_plot(self) -> None:
         """initiate the plot for the density"""
-        self.plot_density(log)
+        ax_i: plt.axes
+        ax_i = self.plot_density()
 
-    def plot_density(self,
-                     log: logger.logging.Logger
-                     ) -> None:
+        self._save_plot(ax_i)
+        self._save_plot_zoom(ax_i)
+
+    def _save_plot(self,
+                   ax_i: plt.axes
+                   ) -> None:
+        """save the plot"""
+        plot_tools.save_close_fig(ax_i.figure,
+                                  ax_i,
+                                  fname=self.configs.graph_suffix,
+                                  loc=self.configs.legend_loc)
+
+    def _save_plot_zoom(self,
+                        ax_i: plt.axes,
+                        ) -> None:
+        """save the zoomed plot"""
+        ax_i.set_xlim(2, 21)
+        ax_i.set_ylim(-5, 90)
+        plot_tools.save_close_fig(ax_i.figure,
+                                  ax_i,
+                                  fname='density_zoom.png',
+                                  legend_font_size=10,
+                                  if_close=False,
+                                  loc='upper left')
+
+    def plot_density(self) -> plt.axes:
         """plot the density of the residues"""
         first_key: str = next(iter(self.dens_data))
         x_range: tuple[float, float] = (
             self.dens_data[first_key]['Coordinate_nm'].iat[0],
             self.dens_data[first_key]['Coordinate_nm'].iat[-1])
         ax_i: plt.axes
-        fig_i: plt.figure
-        fig_i, ax_i = plot_tools.mk_canvas(
+        _, ax_i = plot_tools.mk_canvas(
             x_range,
             height_ratio=self.configs.height_ratio,
             num_xticks=7)
         for key in self.configs.plot_list:
             dens_data: pd.DataFrame = self.dens_data[f'dens_{key}']
             ax_i = self.plot_single_density(ax_i, dens_data, key)
-        plt.show()
+        ax_i.set_xlabel(self.configs.labels['xlabel'])
+        ax_i.set_ylabel(self.configs.labels['ylabel'])
+        ax_i.legend(loc=self.configs.legend_loc)
+        ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
+        return ax_i
 
     def plot_single_density(self,
                             ax_i: plt.axes,

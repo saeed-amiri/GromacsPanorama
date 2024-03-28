@@ -41,6 +41,7 @@ import pandas as pd
 import matplotlib
 import matplotlib.pylab as plt
 import matplotlib.ticker as tck
+from matplotlib.ticker import FuncFormatter
 
 from common import logger, plot_tools, xvg_to_dataframe
 from common.colors_text import TextColor as bcolors
@@ -68,6 +69,7 @@ class BaseGraphConfig:
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
         'marker': 'o',
         'markersize': 0,
+        'linewidth': 2,
     })
 
     legends: dict[str, str] = \
@@ -78,16 +80,16 @@ class BaseGraphConfig:
             'amino_charge': r'H$^+$ (APTES)',
             'SOL': 'O (Water)',
             'D10': 'Decane',
-            'C5': 'C5 (Decane)',
+            'C5': r'C$_5$ (Decane)',
             'APT': 'N (APTES)',
-            'NH2': 'N (ODN)',
+            'NH2': 'N (ODA)',
             'POT': 'Na',
             'OH2': 'O (water)',
             'ODN': 'ODA'})
 
     line_styles: dict[str, str] = \
         field(default_factory=lambda: {
-            'CLA': '-',
+            'CLA': ':',
             'amino_n': '--',
             'N': '--',
             'amino_charge': '--',
@@ -107,13 +109,13 @@ class BaseGraphConfig:
             'N': 'blue',
             'amino_charge': 'blue',
             'SOL': 'red',
-            'D10': 'grey',
-            'C5': 'k',
+            'D10': 'cyan',
+            'C5': 'cyan',
             'APT': 'k',
             'POT': 'brown',
             'OH2': 'red',
-            'ODN': 'magenta',
-            'NH2': 'magenta'})
+            'ODN': 'orange',
+            'NH2': 'orange'})
 
     height_ratio: float = (5 ** 0.5 - 1) * 1.5
 
@@ -299,15 +301,14 @@ class MultiRdfPlotter:
         for s_i in sources:
             rdf_df: pd.DataFrame = rdf_dict.get(s_i)
             if rdf_df is not None:
-                if (self.configs.normalize_type == 'max' and
-                   self.configs.data_sets == 'rdf'):
-                    col = sources[s_i].get('y_col')
-                    norm_factor = rdf_df[col].max()
+                norm_factor: float = \
+                    self._get_norm_factor(rdf_df, sources[s_i])
                 ax_i = self._plot_layer(
                     ax_i, rdf_df, viewpoint, s_i, norm_factor)
             if self.configs.data_sets == 'rdf':
                 if viewpoint == 'com' and \
                    s_i == self.configs.com_max_indicator:
+                    col = sources[s_i].get('y_col')
                     max_loc: int = rdf_df[col].argmax()
                     x_max = rdf_df['r_nm'][max_loc]
                 elif viewpoint == 'shell' and \
@@ -357,7 +358,20 @@ class MultiRdfPlotter:
                                 loc=legend_loc[1])
         else:
             plt.close(fig_i)
-
+    
+    def _get_norm_factor(self,
+                         rdf_df: pd.DataFrame,
+                         data_dict: dict[str, str]
+                         ) -> float:
+        if (self.configs.normalize_type == 'max' and 
+           self.configs.data_sets == 'rdf'):
+            col = data_dict.get('y_col')
+            try:
+                return rdf_df[col].max()
+            except KeyError:
+                return 1.0
+        return 1.0
+    
     def plot_single_rdf(self,
                         rdf_dict: dict[str, pd.DataFrame],
                         sources: dict[str, dict[str, str]],
@@ -482,6 +496,7 @@ class MultiRdfPlotter:
         if x_end is None:
             x_end = x_range[1]
         x_range = (x_range[0], x_end)
+        x_max = 2.80
         xticks: list[float] = \
             np.linspace(0,
                         x_range[1],
@@ -500,6 +515,8 @@ class MultiRdfPlotter:
         else:
             xticks_new = [round(tick, 2) for tick in xticks]
         ax_i.set_xticks(xticks_new)
+        formatter = FuncFormatter(lambda x, pos: f'{x:.2f}')
+        ax_i.xaxis.set_major_formatter(formatter)
         xlims: tuple[float, float] = ax_i.get_xlim()
         ax_i.set_xlim(xlims[0]/5, x_range[1])
         if norm_factor == 1.0:
@@ -566,18 +583,25 @@ class MultiRdfPlotter:
         ax_i.fill_between(x=[x_lims[0], self.configs.nominal_cor],
                           y1=y_lims[0],
                           y2=y_lims[1],
-                          color='grey',
+                          color='#DAA520', # Goldenrod
                           alpha=0.2,
                           edgecolor=None)
         ax_i.fill_between(
             x=[self.configs.nominal_cor, self.configs.nominal_np],
             y1=y_lims[0],
             y2=y_lims[1],
-            color='red',
-            alpha=0.1,
+            color='k',
+            alpha=0.5,
             edgecolor=None)
         ax_i.grid(False, axis='both')
         ax_i.set_yticks([])
+        ax_i.text(-0.0095,
+                  1,
+                  'b)',
+                  ha='right',
+                  va='top',
+                  transform=ax_i.transAxes,
+                  fontsize=20)
         return ax_i
 
     def _plot_shadow_shell(self, ax_i: plt.axes) -> plt.axis:

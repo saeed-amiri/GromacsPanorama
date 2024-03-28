@@ -114,7 +114,8 @@ def save_close_fig(fig: plt.figure,  # The figure to save,
                    transparent: bool = False,
                    legend: bool = True,
                    if_close: bool = True,
-                   legend_font_size: int = 13
+                   legend_font_size: int = 13,
+                   bbox_to_anchor=None
                    ) -> None:
     """
     Save the figure and close it.
@@ -132,14 +133,17 @@ def save_close_fig(fig: plt.figure,  # The figure to save,
     handles, labels = axs.get_legend_handles_labels()
 
     if handles:
-        axs.legend(handles, labels, loc=loc, fontsize=legend_font_size)
+        axs.legend(
+            handles, labels, loc=loc, fontsize=legend_font_size)
         if not legend:
             for ax_i in np.ravel(axs):
-                legend = ax_i.legend(loc=loc, bbox_to_anchor=(1.0, 1.0), fontsize=legend_font_size)
-            legend.set_bbox_to_anchor((1.0, 1.0))
+                legend = ax_i.legend(loc=loc, fontsize=legend_font_size)
+            legend.set_bbox_to_anchor(bbox_to_anchor)
         else:
             for ax_j in np.ravel(axs):
                 legend = ax_j.legend(loc=loc, fontsize=legend_font_size)
+            if bbox_to_anchor is not None:
+                legend.set_bbox_to_anchor(bbox_to_anchor)
 
     fig.savefig(fname,
                 dpi=300,

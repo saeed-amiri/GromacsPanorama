@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 import pandas as pd
 
 import matplotlib.pylab as plt
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from common import logger, plot_tools, xvg_to_dataframe
 from common.colors_text import TextColor as bcolors
@@ -56,11 +57,11 @@ class BaseGraphConfig:
 
     line_styles: dict[str, str] = \
         field(default_factory=lambda: {
-            'CLA': '-',
+            'CLA': ':',
             'amino_n': '--',
             'N': '--',
             'amino_charge': '--',
-            'SOL': '-',
+            'SOL': '--',
             'D10': '-',
             'C5': '-',
             'APT': '-',
@@ -81,16 +82,16 @@ class BaseGraphConfig:
             'SOL': 'red',
             'D10': 'cyan',
             'C5': 'cyan',
-            'APT': 'k',
+            'APT': 'grey',
             'POT': 'brown',
             'OH2': 'red',
             'ODN': 'orange',
             'NH2': 'orange',
-            'COR': 'grey',
+            'COR': '#DAA520',  # goldenrod
             'COR_APT': 'purple'
             })
 
-    height_ratio: float = (5 ** 0.5 - 1) * 1.5
+    height_ratio: float = (5 ** 0.5 - 1) * 1.4
 
     y_unit: str = ''
 
@@ -158,10 +159,14 @@ class MultiDensityPlotter:
     def initate_plot(self) -> None:
         """initiate the plot for the density"""
         ax_i: plt.axes
-        ax_i = self.plot_density()
+        ax_i = self.plot_density(self.dens_data)
 
         self._save_plot(ax_i)
+           # Store original limits
+        original_xlim = ax_i.get_xlim()
+        original_ylim = ax_i.get_ylim()
         self._save_plot_zoom(ax_i)
+        self._save_plot_normalized(original_xlim, original_ylim)
 
     def _save_plot(self,
                    ax_i: plt.axes
@@ -182,27 +187,72 @@ class MultiDensityPlotter:
                                   ax_i,
                                   fname='density_zoom.png',
                                   legend_font_size=10,
-                                  if_close=False,
+                                  if_close=True,
                                   loc='upper left')
 
-    def plot_density(self) -> plt.axes:
+    def _save_plot_normalized(self,
+                              xlim: tuple[float, float],
+                              ylim: tuple[float, float]
+                              ) -> None:
+        """save the normalized plot"""
+        ax_i: plt.axes
+        dens_data = self.normaliz_density(self.dens_data)
+        ax_i = self.plot_density(dens_data, grids=False)
+        yticks: list[int] = [0, 0.5, 1.0]
+        ax_i.hlines(
+            0, xlim[0], xlim[1], color='grey', ls='--', lw=1, alpha=0.5)
+        ax_i.hlines(
+            1, xlim[0], xlim[1], color='grey', ls='--', lw=1, alpha=0.5)
+        ax_i.set_yticks(yticks)
+        ax_i.set_xlim(-0.5, xlim[1])
+        ax_i.text(-0.09,
+                  1,
+                  'a)',
+                  ha='right',
+                  va='top',
+                  transform=ax_i.transAxes,
+                  fontsize=20)
+        ax_i.set_ylabel('normalized density')
+        plot_tools.save_close_fig(ax_i.figure,
+                                  ax_i,
+                                  fname='density_normalized.png',
+                                  loc='best',
+                                  bbox_to_anchor=(0.9, 0.5))
+
+    def normaliz_density(self,
+                         dens_dict: dict[str, pd.DataFrame]
+                         ) -> dict[str, pd.DataFrame]:
+        """normalize the density"""
+        for key in self.configs.plot_list:
+            dens_data: pd.DataFrame = dens_dict[f'dens_{key}']
+            max_value: float = dens_data.iloc[:, 1].max()
+            dens_data.iloc[:, 1] = dens_data.iloc[:, 1] / max_value
+            dens_dict[f'dens_{key}'] = dens_data
+
+        return dens_dict
+
+    def plot_density(self,
+                     dens_dict: dict[str, pd.DataFrame],
+                     grids: bool = True
+                     ) -> plt.axes:
         """plot the density of the residues"""
         first_key: str = next(iter(self.dens_data))
         x_range: tuple[float, float] = (
-            self.dens_data[first_key]['Coordinate_nm'].iat[0],
-            self.dens_data[first_key]['Coordinate_nm'].iat[-1])
+            dens_dict[first_key]['Coordinate_nm'].iat[0],
+            dens_dict[first_key]['Coordinate_nm'].iat[-1])
         ax_i: plt.axes
         _, ax_i = plot_tools.mk_canvas(
             x_range,
             height_ratio=self.configs.height_ratio,
             num_xticks=7)
         for key in self.configs.plot_list:
-            dens_data: pd.DataFrame = self.dens_data[f'dens_{key}']
+            dens_data: pd.DataFrame = dens_dict[f'dens_{key}']
             ax_i = self.plot_single_density(ax_i, dens_data, key)
         ax_i.set_xlabel(self.configs.labels['xlabel'])
         ax_i.set_ylabel(self.configs.labels['ylabel'])
         ax_i.legend(loc=self.configs.legend_loc)
-        ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
+        if grids:
+            ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
         return ax_i
 
     def plot_single_density(self,
@@ -216,7 +266,8 @@ class MultiDensityPlotter:
                   data.iloc[:, 1],
                   label=self.configs.legends[column_name],
                   color=self.configs.colors[column_name],
-                  linestyle=self.configs.line_styles[column_name])
+                  linestyle=self.configs.line_styles[column_name],
+                  lw=2)
         return ax_i
 
     def write_msg(self,

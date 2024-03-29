@@ -91,7 +91,7 @@ class BaseGraphConfig:
             'COR_APT': 'purple'
             })
 
-    height_ratio: float = (5 ** 0.5 - 1) * 1.4
+    height_ratio: float = (5 ** 0.5 - 1) * 1.5
 
     y_unit: str = ''
 
@@ -166,7 +166,7 @@ class MultiDensityPlotter:
         original_xlim = ax_i.get_xlim()
         original_ylim = ax_i.get_ylim()
         self._save_plot_zoom(ax_i)
-        self._save_plot_normalized(original_xlim, original_ylim)
+        self._save_plot_normalized(original_xlim, yticks=False)
 
     def _save_plot(self,
                    ax_i: plt.axes
@@ -192,20 +192,26 @@ class MultiDensityPlotter:
 
     def _save_plot_normalized(self,
                               xlim: tuple[float, float],
-                              ylim: tuple[float, float]
+                              yticks: bool = True
                               ) -> None:
         """save the normalized plot"""
         ax_i: plt.axes
         dens_data = self.normaliz_density(self.dens_data)
         ax_i = self.plot_density(dens_data, grids=False)
-        yticks: list[int] = [0, 0.5, 1.0]
-        ax_i.hlines(
-            0, xlim[0], xlim[1], color='grey', ls='--', lw=1, alpha=0.5)
-        ax_i.hlines(
-            1, xlim[0], xlim[1], color='grey', ls='--', lw=1, alpha=0.5)
-        ax_i.set_yticks(yticks)
+        label_x_loc: float = -0.0095
         ax_i.set_xlim(-0.5, xlim[1])
-        ax_i.text(-0.09,
+        ax_i.set_ylim(-0.0, 1.05)
+        ax_i.set_yticks([])
+        if yticks:
+            yticks: list[int] = [0, 0.5, 1.0]
+            ax_i.set_yticks(yticks)
+            label_x_loc: float = -0.09
+            ax_i.hlines(
+                0, xlim[0], xlim[1], color='grey', ls='--', lw=1, alpha=0.5)
+            ax_i.hlines(
+                1, xlim[0], xlim[1], color='grey', ls='--', lw=1, alpha=0.5)
+
+        ax_i.text(label_x_loc,
                   1,
                   'a)',
                   ha='right',

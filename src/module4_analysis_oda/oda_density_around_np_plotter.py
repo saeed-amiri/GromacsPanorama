@@ -55,7 +55,7 @@ class Rdf2dHeatMapConfig(BaseHeatMapConfig):
     Configuration parameters for heatmap plotting of 2d rdf.
     """
     heatmap_suffix: str = 'rdf2dheatmap.png'
-    cbar_label: str = 'g(r)'
+    cbar_label: str = 'g(r), a. u.'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'np_radius'],
         'color': ['k', 'b'],
@@ -96,7 +96,7 @@ class BaseGraphConfig:
     graph_legend: str
     title: str
     ylabel: str
-    xlabel: str = 'Distance from Nanoparticle [A]'
+    xlabel: str = 'r [nm]'
     graph_style: dict = field(default_factory=lambda: {
         'legend': 'density',
         'color': 'k',
@@ -105,7 +105,7 @@ class BaseGraphConfig:
         'markersize': 5,
         '2nd_marksize': 1
     })
-    graph_2nd_legend: str = 'g(r)'
+    graph_2nd_legend: str = 'g(r), a. u.'
 
 
 @dataclass
@@ -122,7 +122,7 @@ class Rdf2dGraphConfig(BaseGraphConfig):
     """set the parameters for the graph"""
     graph_suffix: str = 'rdf_2d.png'
     graph_legend: str = 'g(r)'
-    ylabel: str = 'g(r)'
+    ylabel: str = 'g(r), a. u.  '
     title: str = 'Rdf vs Distance from NP'
 
 
@@ -132,7 +132,7 @@ class FittedRdf2dGraphConfig(BaseGraphConfig):
     graph_suffix: str = 'fitted_rdf_2d.png'
     graph_legend: str = 'g(r)'
     graph_2nd_legend: str = r'$g_{fitted}(r)$'
-    ylabel: str = 'g(r)'
+    ylabel: str = 'g(r), a. u.'
     title: str = 'fitted Rdf vs Distance from NP'
     graph_style: dict = field(default_factory=lambda: {
         'legend': 'density',
@@ -389,7 +389,6 @@ class HeatmapPlotter:
                  residue: str = 'ODA'
                  ) -> None:
         self.angstrom_to_nm = 0.1
-
         self.residue = residue
         self.ref_density = ref_density
         self.config = config

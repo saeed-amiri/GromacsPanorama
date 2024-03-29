@@ -47,7 +47,7 @@ class DensityHeatMapConfig(BaseHeatMapConfig):
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'np_radius'],
         'color': ['k', 'b'],
-        'linestyle': ['--', ':']})
+        'linestyle': ['-', '--', ':', ':']})
 
 
 @dataclass
@@ -60,7 +60,7 @@ class Rdf2dHeatMapConfig(BaseHeatMapConfig):
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'np_radius'],
         'color': ['k', 'b'],
-        'linestyle': ['--', ':']})
+        'linestyle': ['-', '--', ':', ':']})
 
 
 @dataclass
@@ -87,7 +87,7 @@ class SmoothedRdf2dHeatMapConfig(BaseHeatMapConfig):
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'np_radius'],
         'color': ['k', 'b'],
-        'linestyle': ['--', ':']})
+        'linestyle': ['-', '--', ':', ':']})
 
 
 @dataclass
@@ -285,6 +285,9 @@ class SurfactantDensityPlotter:
                                     ) -> None:
         """plot the fitted graph alongside main data"""
         fig_i, ax_i = self._plot_graphes(self.rdf_2d, config, return_ax=True)
+        contact_radius: float = \
+            self.contact_data.loc[:, 'contact_radius'].mean() * \
+            self.angstrom_to_nm
         radii = np.array(list(rdf.keys())) * self.angstrom_to_nm
         densities = np.array(list(rdf.values()))
         ax_i.plot(radii,
@@ -296,6 +299,8 @@ class SurfactantDensityPlotter:
                   markersize=config.graph_style['2nd_marksize'],
                   zorder=1)
         if style == 'fitted':
+            ax_i = self._add_vline(
+                ax_i, contact_radius, legend=r'r$_c$', lstyle=':', color='k')
             ax_i = self._add_vline(
                 ax_i, self.first_turn, legend='1st', lstyle=':', color='g')
             ax_i = self._add_vline(ax_i, self.midpoint, lstyle='--', color='b')
@@ -320,7 +325,7 @@ class SurfactantDensityPlotter:
                     ymax=ylims[1],
                     ls=lstyle,
                     color=color,
-                    label=f'{legend}={x_loc:.1f}')
+                    label=f'{legend}={x_loc:.2f}')
         ax_i.set_ylim(ylims)
         return ax_i
 
@@ -466,7 +471,7 @@ class HeatmapPlotter:
                 ax_i,
                 contact_radius,
                 color=self.config.circles_configs['color'][0],
-                line_style=self.config.circles_configs['linestyle'][0]
+                line_style=self.config.circles_configs['linestyle'][2]
                 )
         if 'np_radius' in self.config.circles_configs['list']:
             ax_i = self._add_heatmap_circle(

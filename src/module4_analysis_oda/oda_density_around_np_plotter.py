@@ -343,7 +343,7 @@ class SurfactantDensityPlotter:
         ax_i: plt.axes
         fig_i: plt.figure
         fig_i, ax_i = plot_tools.mk_canvas((np.min(radii), np.max(radii)),
-                                           height_ratio=5**0.5-1)
+                                           height_ratio=(5 ** 0.5 - 1) * 1.5)
         ax_i.plot(radii,
                   densities,
                   marker=config.graph_style['marker'],
@@ -691,7 +691,7 @@ class TimeDependentPlotter:
         radii = np.array(list(density[steps[-1]].keys()))
         fig_i, ax_i = \
             plot_tools.mk_canvas(x_range=(np.min(radii), np.max(radii)),
-                                 height_ratio=5**0.5-1)
+                                 height_ratio=(5 ** 0.5 - 1) * 1.5)
         for i, (_, frame) in enumerate(density.items(), start=1):
             densities = np.array(list(frame.values()))
             if i == steps_nr:

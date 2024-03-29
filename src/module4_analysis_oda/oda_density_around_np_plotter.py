@@ -73,6 +73,7 @@ class FittedsRdf2dHeatMapConfig(BaseHeatMapConfig):
         'list': ['contact_radius', 'turn_points'],
         'color': ['k', 'b', 'g', 'r'],
         'linestyle': ['-', '--', ':', ':']})
+    if_title: bool = False
 
 
 @dataclass
@@ -344,7 +345,9 @@ class SurfactantDensityPlotter:
                   markersize=config.graph_style['markersize'])
         ax_i.set_xlabel(config.xlabel)
         ax_i.set_ylabel(config.ylabel)
-        ax_i.set_title(config.title)
+        if hasattr(config, 'if_title'):
+            if config.title:
+                ax_i.set_title(config.title)
         # Set grid for primary axis
         ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
 

@@ -34,6 +34,7 @@ class BaseHeatMapConfig:
     circles_configs: dict[str, list[str]]
     show_grid: bool = False
     heatmap_color: str = 'Greys'
+    if_arrow: bool = False
 
 
 @dataclass
@@ -442,7 +443,8 @@ class HeatmapPlotter:
         if self.config.show_grid:
             ax_i = self._add_heatmap_grid(ax_i)
         ax_i, contact_radius, np_radius = self._add_np_radii(ax_i)
-        ax_i = self._add_radius_arrows(ax_i, contact_radius, np_radius)
+        if self.config.if_arrow:
+            ax_i = self._add_radius_arrows(ax_i, contact_radius, np_radius)
         cbar = plt.colorbar(cbar, ax=ax_i)
         cbar.ax.tick_params(labelsize=13)  # Adjust tick label font size
         cbar.set_label(label=self.config.cbar_label, fontsize=13)
@@ -492,12 +494,20 @@ class HeatmapPlotter:
         """self explanatory"""
         self._add_polar_arrow(
             ax_i, length=contact_radius, theta=np.pi/2, color='red')
-        ax_i = \
-            self._add_radii_label(ax_i,
-                                  label=(
-                                    rf'$r_{{c, avg}}$={contact_radius:.2f}'),
-                                  location=(1, 1),
-                                  color='red')
+        ax_i = self._add_radii_label(
+            ax_i,
+            label=rf'$r_{{c, avg}}$={contact_radius:.2f}',
+            location=(1, 1),
+            color='red')
+
+        if self.config.if_label_arrow:
+            ax_i = \
+                self._add_radii_label(
+                    ax_i,
+                    label=(rf'$r_{{c, avg}}$={contact_radius:.2f}'),
+                    location=(1, 1),
+                    color='red')
+
         if 'np_radius' in self.config.circles_configs['list']:
             self._add_polar_arrow(
                 ax_i, length=np_radius, theta=0, color='blue')

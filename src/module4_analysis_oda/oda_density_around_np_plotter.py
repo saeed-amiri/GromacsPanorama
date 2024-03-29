@@ -185,6 +185,7 @@ class SurfactantDensityPlotter:
     contact_data: pd.DataFrame
     box: np.ndarray  # Size of the box at each frame (from gromacs)
 
+    angstrom_to_nm: float
     midpoint: float
     first_turn: float
     second_turn: float
@@ -196,6 +197,7 @@ class SurfactantDensityPlotter:
                  residue: str = 'ODA'
                  ) -> None:
 
+        self.angstrom_to_nm = 0.1
         self.contact_data = density_obj.contact_data
         self.box = density_obj.box
         self.residue = residue
@@ -208,9 +210,9 @@ class SurfactantDensityPlotter:
         if residue == 'AMINO_ODN':
             self.time_dependent_rdf = density_obj.time_dependent_rdf
             self.fitted_rdf = density_obj.fitted_rdf
-            self.midpoint = density_obj.midpoint
-            self.first_turn = density_obj.first_turn
-            self.second_turn = density_obj.second_turn
+            self.midpoint = density_obj.midpoint * self.angstrom_to_nm
+            self.first_turn = density_obj.first_turn * self.angstrom_to_nm
+            self.second_turn = density_obj.second_turn * self.angstrom_to_nm
             self.time_dependent_ave = density_obj.time_dependent_ave_density
 
         self.graph_configs = graphs_config
@@ -282,7 +284,7 @@ class SurfactantDensityPlotter:
                                     ) -> None:
         """plot the fitted graph alongside main data"""
         fig_i, ax_i = self._plot_graphes(self.rdf_2d, config, return_ax=True)
-        radii = np.array(list(rdf.keys()))
+        radii = np.array(list(rdf.keys())) * self.angstrom_to_nm
         densities = np.array(list(rdf.values()))
         ax_i.plot(radii,
                   densities,
@@ -330,7 +332,7 @@ class SurfactantDensityPlotter:
                       return_ax: bool = False
                       ) -> tuple[plt.figure, plt.axes]:
         """plot graphs"""
-        radii = np.array(list(data.keys()))
+        radii = np.array(list(data.keys())) * self.angstrom_to_nm
         densities = np.array(list(data.values()))
         ax_i: plt.axes
         fig_i: plt.figure
@@ -372,6 +374,7 @@ class HeatmapPlotter:
     """Class for plotting heatmap of surfactant density."""
 
     info_msg: str = "Messages from HeatmapPlotter:\n"
+    angstrom_to_nm: float
 
     def __init__(self,
                  ref_density: dict[float, float],
@@ -385,6 +388,8 @@ class HeatmapPlotter:
                  typing.Union[None, dict[str, float]] = None,
                  residue: str = 'ODA'
                  ) -> None:
+        self.angstrom_to_nm = 0.1
+
         self.residue = residue
         self.ref_density = ref_density
         self.config = config
@@ -406,7 +411,7 @@ class HeatmapPlotter:
 
     def create_density_grid(self) -> tuple[np.ndarray, ...]:
         """Create a grid in polar coordinates with interpolated densities."""
-        radii = np.array(list(self.ref_density.keys()))
+        radii = np.array(list(self.ref_density.keys())) * self.angstrom_to_nm
         densities = np.array(list(self.ref_density.values()))
         # Create a grid in polar coordinates
         radial_distances, theta = \
@@ -448,8 +453,9 @@ class HeatmapPlotter:
                       ax_i: plt.axes
                       ) -> tuple[plt.axes, float, float]:
         """attach circle denoting the np"""
-        np_radius: float = stinfo.np_info['radius']
-        contact_radius: float = self._get_avg_contact_raduis()
+        np_radius: float = stinfo.np_info['radius'] * self.angstrom_to_nm
+        contact_radius: float = self._get_avg_contact_raduis() * \
+            self.angstrom_to_nm
         self.info_msg += (
             f'\tThe radius of the nanoparticle was set to `{np_radius:.3f}`\n'
             f'\tThe average contact radius is {contact_radius:.3f}\n')

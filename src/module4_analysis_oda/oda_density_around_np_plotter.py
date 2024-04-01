@@ -306,6 +306,15 @@ class SurfactantDensityPlotter:
             ax_i = self._add_vline(ax_i, self.midpoint, lstyle='--', color='b')
             ax_i = self._add_vline(
                 ax_i, self.second_turn, legend='2nd', lstyle=':', color='r')
+            ax_i.text(-0.09,
+                  1,
+                  'a)',
+                  ha='right',
+                  va='top',
+                  transform=ax_i.transAxes,
+                  fontsize=20)
+            yticks = [0, 0.5, 1.0]
+            ax_i.set_yticks(yticks)
         fout: str = f'{self.residue}_{config.graph_suffix}'
         plot_tools.save_close_fig(fig_i, ax_i, fout, loc='lower right')
         self.info_msg += f'\tThe `{style}` graph saved: `{fout}`\n'
@@ -324,6 +333,7 @@ class SurfactantDensityPlotter:
                     ymin=ylims[0],
                     ymax=ylims[1],
                     ls=lstyle,
+                    lw=2,
                     color=color,
                     label=f'{legend}={x_loc:.2f}')
         ax_i.set_ylim(ylims)
@@ -427,8 +437,10 @@ class HeatmapPlotter:
 
     def setup_plot(self) -> tuple[plt.figure, plt.axes]:
         """Set up the polar plot."""
+        figsize = plot_tools.set_sizes(width = stinfo.plot['width'],
+                                       height_ratio=(5 ** 0.5 - 1) * 1.5)
         fig_i, ax_i = plt.subplots(
-            subplot_kw={'projection': 'polar'}, figsize=(8, 8))
+            subplot_kw={'projection': 'polar'}, figsize=figsize)
         ax_i.set_yticklabels([])
         ax_i.set_xticklabels([])
         ax_i.grid(False)
@@ -450,9 +462,16 @@ class HeatmapPlotter:
         ax_i, contact_radius, np_radius = self._add_np_radii(ax_i)
         if self.config.if_arrow:
             ax_i = self._add_radius_arrows(ax_i, contact_radius, np_radius)
-        cbar = plt.colorbar(cbar, ax=ax_i)
+        cbar = plt.colorbar(cbar, ax=ax_i, shrink=1)
         cbar.ax.tick_params(labelsize=13)  # Adjust tick label font size
         cbar.set_label(label=self.config.cbar_label, fontsize=13)
+        ax_i.text(0.05,
+                  1,
+                  'b)',
+                  ha='right',
+                  va='top',
+                  transform=ax_i.transAxes,
+                  fontsize=18)
         return ax_i
 
     def _add_np_radii(self,
@@ -574,6 +593,7 @@ class HeatmapPlotter:
                         transform=ax_i.transData._b,
                         color=color,
                         ls=line_style,
+                        lw=1.33,
                         fill=False)
         ax_i.add_patch(circle)
         return ax_i

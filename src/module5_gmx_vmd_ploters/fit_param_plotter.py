@@ -48,9 +48,9 @@ class BaseConfig:
         'markersize': 5,
     })
 
-    line_styles: list[str] = \
+    line_styles: typing.Union[list[str], dict[str, str]] = \
         field(default_factory=lambda: ['-', ':', '--', '-.'])
-    colors: list[str] = \
+    colors: typing.Union[list[str], dict[str, str]] = \
         field(default_factory=lambda: ['black', 'red', 'blue', 'green'])
 
     height_ratio: float = (5 ** 0.5 - 1) * 1.5
@@ -84,9 +84,21 @@ class FitPlotConfig(BaseConfig):
         field(default_factory=lambda: {
             'contact_radius': r'r$_{c}$',
             'first_turn': 'a',
-            'midpoint': 'm',
-            'second_turn': 'b'
+            'midpoint': 'b',
+            'second_turn': 'c'
         })
+    line_styles: dict[str, str] = \
+        field(default_factory=lambda: {
+            'contact_radius': ':',
+            'first_turn': ':',
+            'midpoint': '--',
+            'second_turn': ':'})
+    colors: dict[str, str] = \
+        field(default_factory=lambda: {
+            'contact_radius': 'black',
+            'first_turn': 'green',
+            'midpoint': 'blue',
+            'second_turn': 'red'})
     graph_max_col: str = 'second_turn'
 
 
@@ -172,12 +184,13 @@ class PlotFitted:
         fig_i, ax_i = \
             plot_tools.mk_canvas(x_range, height_ratio=config.height_ratio)
 
-        for idx, ycol in enumerate(config.ycol_name):
+        for _, ycol in enumerate(config.ycol_name):
             ax_i.plot(fit_data[config.xcol_name],
                       fit_data[ycol]/10.0,  # Convert to nm
                       label=config.legends.get(ycol),
-                      color=config.colors[idx],
-                      linestyle=config.line_styles[idx])
+                      color=config.colors.get(ycol),
+                      linestyle=config.line_styles.get(ycol),
+                      lw=2)
 
         ax_i.set_xlabel(config.labels['xlabel'])
         ax_i.set_ylabel(config.labels['ylabel'], fontsize=12)
@@ -193,7 +206,7 @@ class PlotFitted:
 
         ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
 
-        ax_i.text(-0.082,
+        ax_i.text(-0.085,
                   1,
                   'd)',
                   ha='right',
@@ -201,7 +214,8 @@ class PlotFitted:
                   transform=ax_i.transAxes,
                   fontsize=18)
 
-        plot_tools.save_close_fig(fig_i, ax_i, config.out_suffix)
+        plot_tools.save_close_fig(
+            fig_i, ax_i, config.out_suffix, loc='upper right')
         self.log.info(f"Saved plot: {config.out_suffix}")
 
     def plot_fitted_rdf(self,

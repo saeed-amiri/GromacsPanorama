@@ -67,6 +67,7 @@ class BaseConfig:
         'color': 'r',
         'marker': 'o',
         'linestyle': '--',
+        'linewidth': 2,
         'markersize': 5,
     })
 
@@ -75,11 +76,12 @@ class BaseConfig:
     colors: list[str] = \
         field(default_factory=lambda: ['black', 'red', 'blue', 'green'])
 
-    height_ratio: float = (5 ** 0.5 - 1) * 2
+    height_ratio: float = (5 ** 0.5 - 1) * 1.5
 
     y_unit: str = r'[mN/nm$^2$]'
 
     log_x_axis: bool = False
+    show_title: bool = False
 
 
 @dataclass
@@ -133,6 +135,20 @@ class DoubleDataLog(LogGraph):
 
 
 @dataclass
+class PreprintDataLog(LogGraph):
+    """plot both data"""
+    graph_suffix: str = 'log_xscale_both.png'
+    graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
+        'label': r'$\Delta\gamma$',
+        'color': 'black',
+        'marker': 'o',
+        'linestyle': '--',
+        'markersize': 5,
+    })
+    label_b: str = r'$\Delta\gamma_{np}$'
+
+
+@dataclass
 class ErrorBarGraph(BaseConfig):
     """
     Parameters for plots with error bars.
@@ -170,6 +186,7 @@ class AllConfig(FileConfig, ParameterConfig):
     log_config: LogGraph = field(default_factory=LogGraph)
     errbar_config: ErrorBarGraph = field(default_factory=ErrorBarGraph)
     double_config: DoubleDataLog = field(default_factory=DoubleDataLog)
+    preprint_config: PreprintDataLog = field(default_factory=PreprintDataLog)
     if_publish: bool = False
 
 
@@ -233,6 +250,7 @@ class PlotTension:
         if nr_files > 1:
             self.plot_all_tensions_log(converted_dict)
         self._surf_actula_log(converted_dict)
+        self._surf_preprint_log(converted_dict)
 
     def _surf_actula_log(self,
                          converted_dict: dict[str, pd.DataFrame]
@@ -252,6 +270,28 @@ class PlotTension:
                   label=r'$\Delta\gamma$ (actual)')
         plot_tools.save_close_fig(
             fig_i, ax_i, fname := 'actual.png', loc='lower left')
+
+    def _surf_preprint_log(self,
+                            converted_dict: dict[str, pd.DataFrame]
+                            ) -> None:
+        """plot all the input in a same graph"""
+        fig_i, ax_i = self.plot_graph('np_np',
+                                      converted_dict['no_np'],
+                                      self.configs.preprint_config,
+                                      ycol_name='converted_tension',
+                                      xcol_name='surf_oda_per_area',
+                                      return_ax=True,
+                                      add_key_to_title=False)
+        ax_i.text(-0.12,
+                  1,
+                  'a)',
+                  ha='right',
+                  va='top',
+                  transform=ax_i.transAxes,
+                  fontsize=18)
+        plot_tools.save_close_fig(
+            fig_i, ax_i, fname := 'interface_tension_log.png', loc='lower left')
+
 
     def plot_all_tensions_log(self,
                               converted_dict: dict[str, pd.DataFrame]

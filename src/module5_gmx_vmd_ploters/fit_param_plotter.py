@@ -31,7 +31,7 @@ class BaseConfig:
     """
     # pylint: disable=too-many-instance-attributes
     grp_suffix: str = field(init=False)
-    ycol_name: str = field(init=False)
+    ycol_name: typing.Union[str, list[str]] = field(init=False)
     xcol_name: str = field(init=False)
 
     labels: dict[str, str] = field(default_factory=lambda: {
@@ -91,11 +91,40 @@ class FitPlotConfig(BaseConfig):
 
 
 @dataclass
+class FitRdfPlotConfig(BaseConfig):
+    """
+    Configuration for the fit rdf plot
+    """
+    out_suffix: str = 'fitted_rdf.png'
+    xcol_name: str = 'regions'
+    ycol_name: list[str] = field(default_factory=lambda: ['fitted_rdf'])
+
+    labels: dict[str, str] = field(default_factory=lambda: {
+        'title': 'Fitted RDF',
+        'ylabel': 'g(r), a.u.',
+        'xlabel': 'r [nm]'
+    })
+    fit_rdf_fname: list[str] = field(default_factory=lambda: [
+        '5_oda_densities.xvg',
+        '15_oda_densities.xvg',
+        '50_oda_densities.xvg',
+        ])
+
+    legends: dict[str, str] = \
+        field(default_factory=lambda: {
+            '5_oda_densities.xvg': '5 ODA',
+            '15_oda_densities.xvg': '15 ODA',
+            '50_oda_densities.xvg': '50 ODA'
+        })
+
+
+@dataclass
 class AllConfig:
     """
     Configuration for the all plot
     """
     fit_param: FitPlotConfig = field(default_factory=FitPlotConfig)
+    fit_rdf: FitRdfPlotConfig = field(default_factory=FitRdfPlotConfig)
 
 
 class PlotFitted:
@@ -124,6 +153,7 @@ class PlotFitted:
         Plot the graphs
         """
         self.plot_turn_points(log, self.config.fit_param)
+        self.plot_fitted_rdf(log, self.config.fit_rdf)
 
     def plot_turn_points(self,
                          log: logger.logging.Logger,
@@ -157,7 +187,7 @@ class PlotFitted:
 
         y_max: float = \
             max(fit_data[config.graph_max_col].unique().tolist()) / 10.0
-        y_ticks: list[np.float64] = np.linspace(0, y_max, 4)
+        y_ticks: list[np.float64] = list(np.linspace(0, y_max, 4))
         y_ticks = [round(item, 1) for item in y_ticks]
         ax_i.set_yticks(y_ticks)
 
@@ -172,6 +202,54 @@ class PlotFitted:
                   fontsize=18)
 
         plot_tools.save_close_fig(fig_i, ax_i, config.out_suffix)
+        self.log.info(f"Saved plot: {config.out_suffix}")
+
+    def plot_fitted_rdf(self,
+                        log: logger.logging.Logger,
+                        config: FitRdfPlotConfig
+                        ) -> None:
+        """
+        Plot the fitted rdf
+        """
+        ax_i: plt.axes
+        fig_i: plt.figure
+        x_range: tuple[float, float] = (0, 12)
+
+        fig_i, ax_i = \
+            plot_tools.mk_canvas(x_range, height_ratio=config.height_ratio)
+
+        for idx, rdf_fname in enumerate(config.fit_rdf_fname):
+            rdf_data: pd.DataFrame = \
+                xvg_to_dataframe.XvgParser(rdf_fname, log).xvg_df
+            rdf = rdf_data[config.ycol_name[0]]
+            rdf_max: float = rdf.max()
+            rdf_norm = rdf / rdf_max
+            ax_i.plot(rdf_data[config.xcol_name] / 10.0,  # Convert to nm
+                      rdf_norm,
+                      label=config.legends.get(rdf_fname),
+                      color=config.colors[idx],
+                      linestyle=config.line_styles[idx])
+
+        ax_i.set_xlabel(config.labels['xlabel'])
+        ax_i.set_ylabel(config.labels['ylabel'])
+
+        xticks: list[float] = [0, 5, 10]
+        ax_i.set_xticks(xticks)
+
+        y_ticks = [0, 0.5, 1]
+        ax_i.set_yticks(y_ticks)
+
+        ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
+
+        ax_i.text(-0.09,
+                  1,
+                  'c)',
+                  ha='right',
+                  va='top',
+                  transform=ax_i.transAxes,
+                  fontsize=18)
+        plot_tools.save_close_fig(
+            fig_i, ax_i, config.out_suffix, loc='lower right')
         self.log.info(f"Saved plot: {config.out_suffix}")
 
     def write_msg(self,

@@ -302,10 +302,10 @@ class SurfactantDensityPlotter:
             ax_i = self._add_vline(
                 ax_i, contact_radius, legend=r'r$_c$', lstyle=':', color='k')
             ax_i = self._add_vline(
-                ax_i, self.first_turn, legend='1st', lstyle=':', color='g')
+                ax_i, self.first_turn, legend='a', lstyle=':', color='g')
             ax_i = self._add_vline(ax_i, self.midpoint, lstyle='--', color='b')
             ax_i = self._add_vline(
-                ax_i, self.second_turn, legend='2nd', lstyle=':', color='r')
+                ax_i, self.second_turn, legend='c', lstyle=':', color='r')
             ax_i.text(-0.09,
                   1,
                   'a)',
@@ -322,7 +322,7 @@ class SurfactantDensityPlotter:
     @staticmethod
     def _add_vline(ax_i: plt.axes,
                    x_loc: float,
-                   legend: str = 'c',
+                   legend: str = 'b',
                    lstyle: str = '--',
                    color: str = 'k'
                    ) -> plt.axes:

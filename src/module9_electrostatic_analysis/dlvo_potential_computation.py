@@ -138,6 +138,7 @@ class PlotConfig:
         'marker': 'o',
         'linestyle': '-',
         'markersize': 0,
+        'linewidth': 2,
     })
 
     line_styles: list[str] = \
@@ -153,6 +154,8 @@ class PlotConfig:
     if_stern_line: bool = True
     if_debye_line: bool = True
     if_2nd_debye: bool = False
+
+    if_title: bool = False
 
 
 @dataclass
@@ -363,8 +366,9 @@ class ElectroStaticComputation:
         kappa_r: float = self.configs.np_radius / debye_l / 10
         ax_i.set_xlabel(configs.labels.get('xlabel'))
         ax_i.set_ylabel(configs.labels.get('ylabel'))
-        ax_i.set_title(
-            rf' $\kappa a$ := $\lambda_D^{{-1}} r_{{NP}}$ = {kappa_r:.2f}')
+        if configs.if_title:
+            ax_i.set_title(
+                rf' $\kappa a$ := $\lambda_D^{{-1}} r_{{NP}}$ = {kappa_r:.2f}')
 
         y_lims: tuple[float, float] = ax_i.get_ylim()
         x_lims: tuple[float, float] = ax_i.get_xlim()
@@ -386,7 +390,13 @@ class ElectroStaticComputation:
 
         ax_i.set_xlim(x_lims)
         ax_i.set_ylim((y_lim_min, y_lims[1]))
-
+        ax_i.text(-0.08,
+                  1,
+                  'c)',
+                  ha='right',
+                  va='top',
+                  transform=ax_i.transAxes,
+                  fontsize=18)
         plot_tools.save_close_fig(
             fig_i, ax_i, fname=(fout := configs.graph_suffix))
         self.info_msg += f'\tFigure saved as `{fout}`\n'
@@ -415,6 +425,7 @@ class ElectroStaticComputation:
                     ymax=phi_value,
                     color=configs.colors[l_s1],
                     linestyle=configs.line_styles[l_s1],
+                    linewidth=2.0,
                     label=rf'${label}\lambda_D$: {debye_l:.2f} [nm]')
         # Plot horizontal line from phi_value to the graph
         ax_i.hlines(y=phi_value,
@@ -422,6 +433,7 @@ class ElectroStaticComputation:
                     xmax=debye_l,
                     color=configs.colors[l_s2],
                     linestyle=configs.line_styles[l_s2],
+                    linewidth=2.0,
                     label=rf'$\psi${h_label}: {phi_value:.2f} [mV]')
         return ax_i
 
@@ -437,12 +449,14 @@ class ElectroStaticComputation:
                     ymax=phi_mv.max(),
                     color=configs.colors[0],
                     linestyle=configs.line_styles[1],
+                    linewidth=2.0,
                     label=f'Stern layer: {x_temp:.2f} [nm]')
         ax_i.hlines(y=(phi_0 := phi_mv.max()),
                     xmin=0,
                     xmax=x_temp,
                     color=configs.colors[3],
                     linestyle=configs.line_styles[1],
+                    linewidth=2.0,
                     label=fr'$\psi_0$: {phi_0:.2f} [mV]')
         return ax_i
 

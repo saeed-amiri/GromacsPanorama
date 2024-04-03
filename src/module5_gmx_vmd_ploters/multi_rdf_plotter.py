@@ -84,7 +84,7 @@ class BaseGraphConfig:
             'APT': 'N (APTES)',
             'NH2': 'N (ODA)',
             'POT': 'Na',
-            'OH2': 'O (water)',
+            'OH2': 'O (Water)',
             'ODN': 'ODA'})
 
     line_styles: dict[str, str] = \

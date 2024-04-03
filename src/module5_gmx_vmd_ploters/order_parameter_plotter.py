@@ -49,7 +49,7 @@ class BaseConfig:
 
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'Computed order parameter',
-        'ylabel': 'S',
+        'ylabel': r'<S>$_z$',
         'xlabel': 'Nr. Oda'
     })
 
@@ -66,7 +66,7 @@ class BaseConfig:
     colors: list[str] = \
         field(default_factory=lambda: ['black', 'red', 'blue', 'green'])
 
-    height_ratio: float = (5 ** 0.5 - 1) * 2
+    height_ratio: float = (5 ** 0.5 - 1) * 1.5
 
     y_unit: str = ''
 
@@ -74,6 +74,7 @@ class BaseConfig:
     with_error: bool = False
 
     legend_loc: str = 'lower right'
+    show_title: bool = False
 
 
 @dataclass
@@ -233,6 +234,13 @@ class PlotOrderParameter:
                           data[config.ycol_name],
                           yerr=data['std'],
                           **config.graph_styles)
+            ax_i.text(-0.085,
+                      1,
+                      'b)',
+                      ha='right',
+                      va='top',
+                      transform=ax_i.transAxes,
+                      fontsize=18)
         else:
             ax_i.plot(data[config.xcol_name],
                       data[config.ycol_name],
@@ -240,7 +248,8 @@ class PlotOrderParameter:
 
         ax_i.set_xlabel(config.labels['xlabel'])
         ax_i.set_ylabel(f'{config.labels["ylabel"]} {config.y_unit}')
-        ax_i.set_title(f'{config.labels["title"]} ({key})')
+        if config.show_title:
+            ax_i.set_title(f'{config.labels["title"]} ({key})')
         ax_i.grid(True, which='both', linestyle='--', color='gray', alpha=0.5)
 
         plot_tools.save_close_fig(fig_i,

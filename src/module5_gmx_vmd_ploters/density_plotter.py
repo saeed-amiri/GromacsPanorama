@@ -61,7 +61,7 @@ class BaseGraphConfig:
             'amino_n': '--',
             'N': '--',
             'amino_charge': '--',
-            'SOL': '--',
+            'SOL': '-',
             'D10': '-',
             'C5': '-',
             'APT': '-',
@@ -107,17 +107,17 @@ class FileConfig:
 
     files: dict[str, dict[str, typing.Any]] = field(
         default_factory=lambda: {
-            'dens_0': {'fname': 'APT.xvg', 'y_col': 'APT'},
-            'dens_1': {'fname': 'CLA.xvg', 'y_col': 'CLA'},
-            'dens_2': {'fname': 'COR_APT.xvg', 'y_col': 'COR_APT'},
-            'dens_3': {'fname': 'COR.xvg', 'y_col': 'COR'},
-            'dens_4': {'fname': 'D10.xvg', 'y_col': 'D10'},
-            'dens_5': {'fname': 'ODN.xvg', 'y_col': 'ODN'},
-            'dens_6': {'fname': 'POT.xvg', 'y_col': 'POT'},
-            'dens_7': {'fname': 'SOL.xvg', 'y_col': 'SOL'}
+            'dens_0': {'fname': 'SOL.xvg', 'y_col': 'SOL'},
+            'dens_1': {'fname': 'D10.xvg', 'y_col': 'D10'},
+            'dens_2': {'fname': 'ODN.xvg', 'y_col': 'ODN'},
+            'dens_3': {'fname': 'APT.xvg', 'y_col': 'APT'},
+            'dens_4': {'fname': 'CLA.xvg', 'y_col': 'CLA'},
+            'dens_5': {'fname': 'POT.xvg', 'y_col': 'POT'},
+            'dens_6': {'fname': 'COR.xvg', 'y_col': 'COR'},
+            'dens_7': {'fname': 'COR_APT.xvg', 'y_col': 'COR_APT'},
             })
     plot_list: list[int] = \
-        field(default_factory=lambda: [0, 1, 3, 4, 5, 6, 7])
+        field(default_factory=lambda: [0, 1, 2, 3, 4, 5, 6])
     legend_loc: str = 'lower right'
     window_legend_loc: str = 'upper left'
     max_indicator: str = 'dens_5'

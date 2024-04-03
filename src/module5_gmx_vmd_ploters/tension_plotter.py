@@ -139,7 +139,7 @@ class PreprintDataLog(LogGraph):
     """plot both data"""
     graph_suffix: str = 'log_xscale_both.png'
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
-        'label': r'$\Delta\gamma$',
+        'label': r'$\Delta\gamma$ (without NP)',
         'color': 'black',
         'marker': 'o',
         'linestyle': '--',
@@ -222,7 +222,7 @@ class PlotTension:
                   ) -> pd.DataFrame:
         """read data file and return as a dataframe"""
         columns: list[str] = \
-            ['Name', 'nr.Oda', 'surf.Oda', 'tension', 'errorbar']
+            ['Name', 'nr.Oda', 'surf.Oda', 'tension', 'tension_with_np']
         df_in: pd.DataFrame = \
             pd.read_csv(fname, delim_whitespace=True, names=columns)
         return df_in
@@ -282,6 +282,10 @@ class PlotTension:
                                       xcol_name='surf_oda_per_area',
                                       return_ax=True,
                                       add_key_to_title=False)
+        ax_i.plot(converted_dict['no_np']['surf_oda_per_area'],
+                  converted_dict['no_np']['converted_tension_with_np'],
+                  c='#ff7f0e', marker='o', linestyle= '--', markersize=5,
+                  label=r'$\Delta\gamma$ (wiht NP)')
         ax_i.text(-0.12,
                   1,
                   'a)',
@@ -375,9 +379,14 @@ class PlotTension:
                         tension: pd.DataFrame
                         ) -> pd.DataFrame:
         """convert the tension and subtract the amount at zero"""
+        tension['converted_tension_with_np'] = \
+            tension['tension_with_np'] - tension['tension_with_np'][0]
+        tension['converted_tension_with_np'] /= self.configs.tension_conversion
+
         tension['converted_tension'] = \
             tension['tension'] - tension['tension'][0]
         tension['converted_tension'] /= self.configs.tension_conversion
+
         tension['oda_per_area'] = tension['nr.Oda'] / \
             (self.configs.box_dimension[0] * self.configs.box_dimension[1])
         tension['surf_oda_per_area'] = tension['surf.Oda'] / \

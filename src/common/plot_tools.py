@@ -129,8 +129,10 @@ def save_close_fig(fig: plt.figure,  # The figure to save,
         loc (str, optional): Location of the legend. Default is
         'upper right'.
     """
-    
-    handles, labels = axs.get_legend_handles_labels()
+    try:
+        handles, labels = axs.get_legend_handles_labels()
+    except AttributeError:
+        handles = None
 
     if handles:
         axs.legend(
@@ -154,6 +156,7 @@ def save_close_fig(fig: plt.figure,  # The figure to save,
                 )
     if if_close:
         plt.close(fig)
+
 def set_x2ticks(ax_main: plt.axes,  # The axes to wrok with
                 add_xtwin: bool = True
                     ) -> plt.axes:

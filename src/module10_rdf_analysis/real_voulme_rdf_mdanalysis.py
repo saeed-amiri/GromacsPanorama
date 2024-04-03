@@ -84,14 +84,14 @@ class GroupConfig:
     oil_group: list[str] = field(default_factory=lambda: (['D10', 'C5', 'c9']))
 
     ref_group: dict[str, typing.Any] = field(default_factory=lambda: ({
-        'sel_type': 'resname',
-        'sel_names': ['COR'],
-        'sel_pos': 'com'
+        'sel_type': 'name',
+        'sel_names': ['NH2'],
+        'sel_pos': 'position'
     }))
 
     target_group: dict[str, typing.Any] = field(default_factory=lambda: ({
         'sel_type': 'name',
-        'sel_names': ['C5'],
+        'sel_names': ['NH2'],
         'sel_pos': 'position'
     }))
 
@@ -512,7 +512,7 @@ class RealValumeRdf:
         # pylint: disable=too-many-locals
 
         target_group: str = self.config.target_group["sel_names"][0]
-        view_point: str = self.config.ref_group["sel_pos"][0]
+        view_point: str = self.config.ref_group["sel_pos"]
         rdf_df: pd.DataFrame = pd.DataFrame({
             'r [nm]': dist_range[:-1]/10,
             'bin_volumes [nm3]': bin_volumes/1e3,
@@ -547,7 +547,7 @@ class RealValumeRdf:
         """write the CDF of the RDF"""
         # pylint: disable=too-many-arguments
         target_group: str = self.config.target_group["sel_names"][0]
-        view_point: str = self.config.ref_group["sel_pos"][0]
+        view_point: str = self.config.ref_group["sel_pos"]
         cdf = np.cumsum(rdf_counts)
         cdf_df: pd.DataFrame = pd.DataFrame({
             'r [nm]': dist_range[:-1]/10,

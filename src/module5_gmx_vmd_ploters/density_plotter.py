@@ -154,7 +154,25 @@ class MultiDensityPlotter:
                 xvg_to_dataframe.XvgParser(value['fname'],
                                            x_type=float,
                                            log=log).xvg_df
+            self._get_bulk_density(key, dens_data[key].copy())
         return dens_data
+
+    def _get_bulk_density(self,
+                          key: str,
+                          data: pd.DataFrame
+                          ) -> None:
+        """get the bulk density
+        sorting the data, then get the bulk density of the  20 max
+        values
+        """
+        data.sort_values(by=data.iloc[:, 1].name,
+                         ascending=False,
+                         inplace=True)
+        bulk_density: float = data.iloc[:10, 1].mean()
+        file_data = self.configs.files.get(key)
+        residue_name: str = file_data.get('y_col')
+        self.info_msg += \
+            f'\tThe bulk density of {residue_name} is: {bulk_density:.3f}\n'
 
     def initate_plot(self) -> None:
         """initiate the plot for the density"""

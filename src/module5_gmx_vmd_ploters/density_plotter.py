@@ -168,7 +168,7 @@ class MultiDensityPlotter:
         data.sort_values(by=data.iloc[:, 1].name,
                          ascending=False,
                          inplace=True)
-        bulk_density: float = data.iloc[:10, 1].mean()
+        bulk_density: float = data.iloc[:20, 1].mean()
         file_data = self.configs.files.get(key)
         residue_name: str = file_data.get('y_col')
         self.info_msg += \

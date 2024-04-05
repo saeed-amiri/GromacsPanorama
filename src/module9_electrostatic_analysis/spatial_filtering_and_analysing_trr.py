@@ -103,7 +103,8 @@ class FFTypeConfig:
             "D10": 'D10_charmm',
             "ODN": 'ODAp_charmm',
             'APT': 'np_info',
-            'COR': 'np_info'
+            'COR': 'np_info',
+            'POT': 'POT'
         })
 
 

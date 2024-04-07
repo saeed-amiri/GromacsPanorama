@@ -464,8 +464,10 @@ class MultiRdfPlotter:
         """set labels"""
         if not self.configs.if_public:
             ax_i.set_title(self.configs.plot_configs.titles.get(viewpoint))
-        ax_i.set_xlabel(self.configs.plot_configs.labels['xlabel'])
-        ax_i.set_ylabel(self.configs.plot_configs.labels['ylabel'])
+        ax_i.set_xlabel(
+            self.configs.plot_configs.labels['xlabel'], fontsize=18)
+        ax_i.set_ylabel(
+            self.configs.plot_configs.labels['ylabel'], fontsize=18)
         ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
         return ax_i
 
@@ -595,13 +597,13 @@ class MultiRdfPlotter:
             edgecolor=None)
         ax_i.grid(False, axis='both')
         ax_i.set_yticks([])
-        ax_i.text(-0.0095,
+        ax_i.text(-0.008,
                   1,
                   'b)',
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,
-                  fontsize=20)
+                  fontsize=22)
         return ax_i
 
     def _plot_shadow_shell(self, ax_i: plt.axes) -> plt.axis:

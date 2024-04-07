@@ -139,7 +139,7 @@ class PreprintDataLog(LogGraph):
     """plot both data"""
     graph_suffix: str = 'log_xscale_both.png'
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
-        'label': r'$\Delta\gamma$ (without NP)',
+        'label': 'without NP',
         'color': 'black',
         'marker': 'o',
         'linestyle': '--',
@@ -285,14 +285,14 @@ class PlotTension:
         ax_i.plot(converted_dict['no_np']['surf_oda_per_area'],
                   converted_dict['no_np']['converted_tension_with_np'],
                   c='#ff7f0e', marker='o', linestyle= '--', markersize=5,
-                  label=r'$\Delta\gamma$ (wiht NP)')
+                  label='wiht NP')
         ax_i.text(-0.12,
                   1,
                   'a)',
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,
-                  fontsize=18)
+                  fontsize=22)
         plot_tools.save_close_fig(
             fig_i, ax_i, fname := 'interface_tension_log.png', loc='lower left')
 
@@ -355,8 +355,9 @@ class PlotTension:
                       tension[ycol_name],
                       **configs.graph_styles2)
 
-        ax_i.set_xlabel(configs.labels['xlabel'])
-        ax_i.set_ylabel(f'{configs.labels["ylabel"]} {configs.y_unit}')
+        ax_i.set_xlabel(configs.labels['xlabel'], fontsize=18)
+        ax_i.set_ylabel(
+            f'{configs.labels["ylabel"]} {configs.y_unit}', fontsize=18)
         if self.configs.if_publish:
             if add_key_to_title:
                 ax_i.set_title(f'{configs.labels["title"]} ({key})')

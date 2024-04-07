@@ -49,7 +49,7 @@ class BaseConfig:
 
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'Computed order parameter',
-        'ylabel': r'<S>$_z$',
+        'ylabel': r'$S_z$',
         'xlabel': 'Nr. Oda'
     })
 
@@ -240,14 +240,15 @@ class PlotOrderParameter:
                       ha='right',
                       va='top',
                       transform=ax_i.transAxes,
-                      fontsize=18)
+                      fontsize=22)
         else:
             ax_i.plot(data[config.xcol_name],
                       data[config.ycol_name],
                       **config.graph_styles)
 
-        ax_i.set_xlabel(config.labels['xlabel'])
-        ax_i.set_ylabel(f'{config.labels["ylabel"]} {config.y_unit}')
+        ax_i.set_xlabel(config.labels['xlabel'], fontsize=18)
+        ax_i.set_ylabel(
+            f'{config.labels["ylabel"]} {config.y_unit}', fontsize=18)
         if config.show_title:
             ax_i.set_title(f'{config.labels["title"]} ({key})')
         ax_i.grid(True, which='both', linestyle='--', color='gray', alpha=0.5)
@@ -300,8 +301,8 @@ class PlotOrderParameter:
                          label='Actual Oda',
                          zorder=3)
 
-        ax_i.set_xlabel(config.labels['xlabel'])
-        ax_i.set_ylabel(config.labels['ylabel'])
+        ax_i.set_xlabel(config.labels['xlabel'], fontsize=18)
+        ax_i.set_ylabel(config.labels['ylabel'], fontsize=18)
         ax_i.set_title(config.labels['title'])
 
         ax_i.set_xticks(x_data)

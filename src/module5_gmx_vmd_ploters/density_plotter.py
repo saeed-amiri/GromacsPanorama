@@ -216,7 +216,7 @@ class MultiDensityPlotter:
         ax_i: plt.axes
         dens_data = self.normaliz_density(self.dens_data)
         ax_i = self.plot_density(dens_data, grids=False)
-        label_x_loc: float = -0.0095
+        label_x_loc: float = -0.008
         ax_i.set_xlim(-0.5, xlim[1])
         ax_i.set_ylim(-0.0, 1.05)
         ax_i.set_yticks([])
@@ -235,8 +235,8 @@ class MultiDensityPlotter:
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,
-                  fontsize=20)
-        ax_i.set_ylabel('normalized density')
+                  fontsize=22)
+        ax_i.set_ylabel('normalized density', fontsize=18)
         plot_tools.save_close_fig(ax_i.figure,
                                   ax_i,
                                   fname='density_normalized.png',
@@ -272,8 +272,8 @@ class MultiDensityPlotter:
         for key in self.configs.plot_list:
             dens_data: pd.DataFrame = dens_dict[f'dens_{key}']
             ax_i = self.plot_single_density(ax_i, dens_data, key)
-        ax_i.set_xlabel(self.configs.labels['xlabel'])
-        ax_i.set_ylabel(self.configs.labels['ylabel'])
+        ax_i.set_xlabel(self.configs.labels['xlabel'], fontsize=18)
+        ax_i.set_ylabel(self.configs.labels['ylabel'], fontsize=18)
         ax_i.legend(loc=self.configs.legend_loc)
         if grids:
             ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)

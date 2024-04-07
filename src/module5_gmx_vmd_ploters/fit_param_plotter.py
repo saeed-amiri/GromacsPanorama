@@ -75,7 +75,7 @@ class FitPlotConfig(BaseConfig):
 
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'Fitted parameters',
-        'ylabel': 'Distance from NP COM [nm]',
+        'ylabel': 'Distance [nm]',
         'xlabel': 'Nr. ODA'
     })
     fit_param_fname: str = 'fit_parameters.xvg'
@@ -124,9 +124,9 @@ class FitRdfPlotConfig(BaseConfig):
 
     legends: dict[str, str] = \
         field(default_factory=lambda: {
-            '5_oda_densities.xvg': '5 ODA',
-            '15_oda_densities.xvg': '15 ODA',
-            '50_oda_densities.xvg': '50 ODA'
+            '5_oda_densities.xvg': '5ODA',
+            '15_oda_densities.xvg': '15ODA',
+            '50_oda_densities.xvg': '50ODA'
         })
 
 
@@ -192,8 +192,8 @@ class PlotFitted:
                       linestyle=config.line_styles.get(ycol),
                       lw=2)
 
-        ax_i.set_xlabel(config.labels['xlabel'])
-        ax_i.set_ylabel(config.labels['ylabel'], fontsize=12)
+        ax_i.set_xlabel(config.labels['xlabel'], fontsize=18)
+        ax_i.set_ylabel(config.labels['ylabel'], fontsize=18)
 
         xticks: list[float] = fit_data[config.xcol_name].unique().tolist()
         ax_i.set_xticks(xticks)
@@ -206,13 +206,13 @@ class PlotFitted:
 
         ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
 
-        ax_i.text(-0.085,
+        ax_i.text(-0.09,
                   1,
                   'd)',
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,
-                  fontsize=18)
+                  fontsize=22)
 
         plot_tools.save_close_fig(
             fig_i, ax_i, config.out_suffix, loc='upper right')
@@ -244,8 +244,8 @@ class PlotFitted:
                       color=config.colors[idx],
                       linestyle=config.line_styles[idx])
 
-        ax_i.set_xlabel(config.labels['xlabel'])
-        ax_i.set_ylabel(config.labels['ylabel'])
+        ax_i.set_xlabel(config.labels['xlabel'], fontsize=18)
+        ax_i.set_ylabel(config.labels['ylabel'], fontsize=18)
 
         xticks: list[float] = [0, 5, 10]
         ax_i.set_xticks(xticks)
@@ -261,7 +261,7 @@ class PlotFitted:
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,
-                  fontsize=18)
+                  fontsize=22)
         plot_tools.save_close_fig(
             fig_i, ax_i, config.out_suffix, loc='lower right')
         self.log.info(f"Saved plot: {config.out_suffix}")

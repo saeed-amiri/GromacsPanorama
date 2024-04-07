@@ -364,8 +364,8 @@ class ElectroStaticComputation:
 
         # kappa * radius of the np
         kappa_r: float = self.configs.np_radius / debye_l / 10
-        ax_i.set_xlabel(configs.labels.get('xlabel'))
-        ax_i.set_ylabel(configs.labels.get('ylabel'))
+        ax_i.set_xlabel(configs.labels.get('xlabel'), fontsize=18)
+        ax_i.set_ylabel(configs.labels.get('ylabel'), fontsize=18)
         if configs.if_title:
             ax_i.set_title(
                 rf' $\kappa a$ := $\lambda_D^{{-1}} r_{{NP}}$ = {kappa_r:.2f}')
@@ -396,7 +396,7 @@ class ElectroStaticComputation:
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,
-                  fontsize=18)
+                  fontsize=22)
         plot_tools.save_close_fig(
             fig_i, ax_i, fname=(fout := configs.graph_suffix))
         self.info_msg += f'\tFigure saved as `{fout}`\n'

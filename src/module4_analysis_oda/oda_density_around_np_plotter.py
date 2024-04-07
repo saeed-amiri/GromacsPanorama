@@ -361,8 +361,8 @@ class SurfactantDensityPlotter:
                   color=config.graph_style['color'],
                   label=config.graph_legend,
                   markersize=config.graph_style['markersize'])
-        ax_i.set_xlabel(config.xlabel)
-        ax_i.set_ylabel(config.ylabel)
+        ax_i.set_xlabel(config.xlabel, fontsize=18)
+        ax_i.set_ylabel(config.ylabel, fontsize=18)
         if hasattr(config, 'if_title'):
             if config.title:
                 ax_i.set_title(config.title)
@@ -692,8 +692,8 @@ class TimeDependentPlotter:
                         ax_i: plt.axes
                         ) -> None:
         """modify and save the rdf figure"""
-        ax_i.set_xlabel(self.config.xlabel)
-        ax_i.set_ylabel(self.config.ylabel)
+        ax_i.set_xlabel(self.config.xlabel, fontsize=18)
+        ax_i.set_ylabel(self.config.ylabel, fontsize=18)
         ax_i.set_title(self.config.title)
         plot_tools.save_close_fig(
             fig_i, ax_i, fname=self.config.graph_suffix, loc='lower right')

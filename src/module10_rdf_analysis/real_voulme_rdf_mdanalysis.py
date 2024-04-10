@@ -49,6 +49,7 @@ For this computation to be done, the main steps are:
 import os
 import sys
 import typing
+from enum import Enum
 from dataclasses import dataclass, field
 
 import multiprocessing as mp
@@ -170,6 +171,12 @@ class RdfData:
     avg_rdf: np.ndarray
 
 
+class Phase(Enum):
+    """The phase of the system"""
+    WATER = 'water'
+    OIL = 'oil'
+
+
 class RealValumeRdf:
     """compute RDF for the system based on the configuration"""
 
@@ -231,13 +238,11 @@ class RealValumeRdf:
         volume_data: "VolumeData" = \
             self._get_volume_of_system(dist_range, np_com_arr, log)
 
-        phase: str = self.config.target_group['sel_names'][0]
-        if phase not in self.config.oil_group:
-            volume_dict = volume_data.sol_volume_dict
-            self.info_msg += '\tThe phase is water.\n'
-        elif phase in self.config.oil_group:
-            volume_dict = volume_data.oil_volume_dict
-            self.info_msg += '\tThe phase is oil.\n'
+        phase: Phase = self._get_phase()
+
+        volume_dict = self._get_volume_dict(phase,
+                                            volume_data.sol_volume_dict,
+                                            volume_data.oil_volume_dict)
 
         rdf_counts_dict: dict[int, np.ndarray]  # number of atoms in each bin
         rdf_counts, rdf_counts_dict = \
@@ -247,7 +252,8 @@ class RealValumeRdf:
                                         volume_data.interface_below,
                                         volume_data.interface_main)
 
-        rdf_dict = self._calculate_rdf(rdf_counts_dict, volume_dict)
+        rdf_dict,  bin_volumes, water_volume = \
+            self._calculate_rdf(rdf_counts_dict, volume_dict)
         # average RDF over all frames
         avg_rdf = np.mean(np.array(list(rdf_dict.values())), axis=0)
 
@@ -255,8 +261,8 @@ class RealValumeRdf:
         plt.show()
 
         self._write_rdf_xvg(dist_range,
-                            1,  # bin_volumes,
-                            1,  # np.mean(water_volume),
+                            bin_volumes,
+                            np.mean(water_volume),
                             rdf_counts,
                             avg_rdf,
                             nr_sel_group,
@@ -266,7 +272,9 @@ class RealValumeRdf:
     def _calculate_rdf(self,
                        rdf_counts_dict: dict[int, np.ndarray],
                        volume_dict: dict[int, np.ndarray]
-                       ) -> dict[int, np.ndarray]:
+                       ) -> tuple[dict[int, np.ndarray],
+                                  np.ndarray,
+                                  np.float64]:
         rdf_dict: dict[int, np.ndarray] = {}  # the RDF for each frame
         for frame, rdf_counts in rdf_counts_dict.items():
             water_volume: np.float64 = np.sum(volume_dict[frame])
@@ -275,7 +283,25 @@ class RealValumeRdf:
             bin_volumes = volume_dict[frame]
             rdf = rdf_counts / (number_density * bin_volumes)
             rdf_dict[frame] = rdf
-        return rdf_dict
+        return rdf_dict, bin_volumes, water_volume
+
+    def _get_phase(self):
+        phase_name = self.config.target_group['sel_names'][0]
+        if phase_name in self.config.oil_group:
+            self.info_msg += '\tThe phase is oil.\n'
+            return Phase.OIL
+        self.info_msg += '\tThe phase is water.\n'
+        return Phase.WATER
+
+    def _get_volume_dict(self,
+                         phase: Phase,
+                         sol_volume_dict: dict[int, np.ndarray],
+                         oil_volume_dict: dict[int, np.ndarray]
+                         ) -> dict[int, np.ndarray]:
+        """get the volume of the system"""
+        if phase == Phase.WATER:
+            return sol_volume_dict
+        return oil_volume_dict
 
     def _get_np_com_traget(self,
                            ref_group: "mda.core.groups.AtomGroup",

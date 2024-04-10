@@ -247,6 +247,26 @@ class RealValumeRdf:
                                         volume_data.interface_below,
                                         volume_data.interface_main)
 
+        rdf_dict = self._calculate_rdf(rdf_counts_dict, volume_dict)
+        # average RDF over all frames
+        avg_rdf = np.mean(np.array(list(rdf_dict.values())), axis=0)
+
+        plt.plot(dist_range[:-1], avg_rdf)
+        plt.show()
+
+        self._write_rdf_xvg(dist_range,
+                            1,  # bin_volumes,
+                            1,  # np.mean(water_volume),
+                            rdf_counts,
+                            avg_rdf,
+                            nr_sel_group,
+                            log)
+        self.wrrite_cdf_xvg(dist_range, rdf_counts, nr_sel_group, log)
+
+    def _calculate_rdf(self,
+                       rdf_counts_dict: dict[int, np.ndarray],
+                       volume_dict: dict[int, np.ndarray]
+                       ) -> dict[int, np.ndarray]:
         rdf_dict: dict[int, np.ndarray] = {}  # the RDF for each frame
         for frame, rdf_counts in rdf_counts_dict.items():
             water_volume: np.float64 = np.sum(volume_dict[frame])
@@ -255,21 +275,7 @@ class RealValumeRdf:
             bin_volumes = volume_dict[frame]
             rdf = rdf_counts / (number_density * bin_volumes)
             rdf_dict[frame] = rdf
-
-        # average RDF over all frames
-        avg_rdf = np.mean(np.array(list(rdf_dict.values())), axis=0)
-
-        plt.plot(dist_range[:-1], avg_rdf)
-        plt.show()
-
-        self._write_rdf_xvg(dist_range,
-                            bin_volumes,
-                            np.mean(water_volume),
-                            rdf_counts,
-                            avg_rdf,
-                            nr_sel_group,
-                            log)
-        self.wrrite_cdf_xvg(dist_range, rdf_counts, nr_sel_group, log)
+        return rdf_dict
 
     def _get_np_com_traget(self,
                            ref_group: "mda.core.groups.AtomGroup",

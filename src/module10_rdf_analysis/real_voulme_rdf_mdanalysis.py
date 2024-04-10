@@ -151,6 +151,24 @@ class AllConfig(GroupConfig,
     n_frames: int = field(init=False)   # number of frames in the trajectory
 
 
+@dataclass
+class VolumeData:
+    """store the volume of the system"""
+    sol_volume: np.ndarray
+    oil_volume: np.ndarray
+    interface_below: np.ndarray
+    interface_main: np.ndarray
+
+
+@dataclass
+class RdfData:
+    """store the RDF data"""
+    rdf_counts: np.ndarray
+    rdf_counts_dict: dict[int, np.ndarray]
+    rdf_dict: dict[int, np.ndarray]
+    avg_rdf: np.ndarray
+
+
 class RealValumeRdf:
     """compute RDF for the system based on the configuration"""
 
@@ -174,16 +192,23 @@ class RealValumeRdf:
         self.check_file_existence(log)
         self.parse_and_store_data(log)
         self.load_trajectory(log)
+
         self.config.n_frames = self.config.u_traj.trajectory.n_frames
         self.config.d_time = self.config.u_traj.trajectory.dt
+
         self.info_msg += (f'\tNumber of frames: `{self.config.n_frames}`\n'
                           f'\tTime step: `{self.config.d_time}` [ps]\n')
+
         self.config.num_cores = self.set_number_of_cores(log)
+
         ref_group: "mda.core.groups.AtomGroup" = self.get_ref_group(log)
+
         target_group: "mda.core.groups.AtomGroup"
         nr_sel_group: int
         target_group, nr_sel_group = self.get_target_group(log)
+
         dist_range: np.ndarray = self.get_radius_bins()
+
         self.compute_rdf(
             ref_group, target_group, dist_range, nr_sel_group, log)
 

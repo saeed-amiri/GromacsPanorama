@@ -46,6 +46,7 @@ For this computation to be done, the main steps are:
         9. Save the RDF in a file
 """
 
+import os
 import sys
 import typing
 from dataclasses import dataclass, field
@@ -154,8 +155,8 @@ class AllConfig(GroupConfig,
 @dataclass
 class VolumeData:
     """store the volume of the system"""
-    sol_volume: np.ndarray
-    oil_volume: np.ndarray
+    sol_volume_dict: dict[int, np.ndarray]
+    oil_volume_dict: dict[int, np.ndarray]
     interface_below: np.ndarray
     interface_main: np.ndarray
 
@@ -227,19 +228,15 @@ class RealValumeRdf:
         np_com_arr, target_group_pos_list = \
             self._get_np_com_traget(ref_group, target_group)
 
-        sol_volume_dict: dict[int, np.ndarray]  # volume of the bins
-        oil_volume_dict: dict[int, np.ndarray]  # volume of the bins
-        interface_below: np.ndarray  # interface below the NP
-        interface_main: np.ndarray  # interface of the NP
-        sol_volume_dict, oil_volume_dict, interface_below, interface_main = \
+        volume_data: "VolumeData" = \
             self._get_volume_of_system(dist_range, np_com_arr, log)
 
         phase: str = self.config.target_group['sel_names'][0]
         if phase not in self.config.oil_group:
-            volume_dict = sol_volume_dict
+            volume_dict = volume_data.sol_volume_dict
             self.info_msg += '\tThe phase is water.\n'
         elif phase in self.config.oil_group:
-            volume_dict = oil_volume_dict
+            volume_dict = volume_data.oil_volume_dict
             self.info_msg += '\tThe phase is oil.\n'
 
         rdf_counts_dict: dict[int, np.ndarray]  # number of atoms in each bin
@@ -247,8 +244,8 @@ class RealValumeRdf:
             self._count_numbers_in_bins(np_com_arr,
                                         target_group_pos_list,
                                         dist_range,
-                                        interface_below,
-                                        interface_main)
+                                        volume_data.interface_below,
+                                        volume_data.interface_main)
 
         rdf_dict: dict[int, np.ndarray] = {}  # the RDF for each frame
         for frame, rdf_counts in rdf_counts_dict.items():
@@ -295,14 +292,13 @@ class RealValumeRdf:
                               dist_range: np.ndarray,
                               np_com: np.ndarray,
                               log: logger.logging.Logger
-                              ) -> tuple[dict[int, np.ndarray],
-                                         dict[int, np.ndarray],
-                                         np.ndarray,
-                                         np.ndarray]:
+                              ) -> "VolumeData":
         """compute the volume of the system"""
         volume_prop = ComputeRealVolume(self.config, dist_range, np_com, log)
-        return volume_prop.sol_volume, volume_prop.oil_volume, \
-            volume_prop.interface_below, volume_prop.interface_main
+        return VolumeData(sol_volume_dict=volume_prop.sol_volume_dict,
+                          oil_volume_dict=volume_prop.oil_volume_dict,
+                          interface_below=volume_prop.interface_below,
+                          interface_main=volume_prop.interface_main)
 
     def _compute_frame_np_com(self,
                               ref_group: "mda.core.groups.AtomGroup",
@@ -456,7 +452,8 @@ class RealValumeRdf:
         """read the input file"""
         fname: str = self.config.trr_fname
         my_tools.check_file_exist(fname, log, if_exit=True)
-        tpr_file: str = fname.split('.', -1)[0] + '.tpr'
+        base_name: str = os.path.splitext(fname)[0]
+        tpr_file: str = base_name + '.tpr'
         my_tools.check_file_exist(tpr_file, log, if_exit=True)
         try:
             self.config.u_traj = mda.Universe(tpr_file, fname)
@@ -662,8 +659,8 @@ class ComputeRealVolume:
     box_size: np.ndarray
     np_com: np.ndarray
     # the volume of the bins, water, and oil
-    sol_volume: dict[int, np.ndarray]
-    oil_volume: dict[int, np.ndarray]
+    sol_volume_dict: dict[int, np.ndarray]
+    oil_volume_dict: dict[int, np.ndarray]
     interface_below: np.ndarray
     interface_main: np.ndarray
 
@@ -675,7 +672,7 @@ class ComputeRealVolume:
                  ) -> None:
         self.dist_range = dist_range
         self.np_com = np_com
-        self.sol_volume, self.oil_volume, self.interface_below, \
+        self.sol_volume_dict, self.oil_volume_dict, self.interface_below, \
             self.interface_main = self.compute_volume(config, log)
         self.write_msg(log)
 
@@ -831,7 +828,6 @@ class ComputeRealVolume:
         shift: np.ndarray = self.np_com - actual_np_com
         actual_np_com.tofile('actual_np_com.dat', sep='\n')
         actual_interface.tofile('actual_interface.dat', sep='\n')
-        shift.tofile('shift.dat', sep='\n')
         interface_main: np.ndarray = actual_interface + shift
         self.info_msg += (
             f'\tLocation shift avg z: `{np.mean(shift[2]):.3f}`\n'

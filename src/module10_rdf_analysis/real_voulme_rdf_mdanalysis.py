@@ -86,14 +86,14 @@ class GroupConfig:
     oil_group: list[str] = field(default_factory=lambda: (['D10', 'C5', 'c9']))
 
     ref_group: dict[str, typing.Any] = field(default_factory=lambda: ({
-        'sel_type': 'name',
-        'sel_names': ['NH2'],
+        'sel_type': 'resname',
+        'sel_names': ['COR'],
         'sel_pos': 'position'
     }))
 
     target_group: dict[str, typing.Any] = field(default_factory=lambda: ({
         'sel_type': 'name',
-        'sel_names': ['NH2'],
+        'sel_names': ['POT'],
         'sel_pos': 'position'
     }))
 
@@ -257,8 +257,7 @@ class RealValumeRdf:
         # average RDF over all frames
         avg_rdf = np.mean(np.array(list(rdf_dict.values())), axis=0)
 
-        plt.plot(dist_range[:-1], avg_rdf)
-        plt.show()
+        self._plot_rdf(dist_range, avg_rdf)
 
         self._write_rdf_xvg(dist_range,
                             bin_volumes,
@@ -302,6 +301,14 @@ class RealValumeRdf:
         if phase == Phase.WATER:
             return sol_volume_dict
         return oil_volume_dict
+
+    def _plot_rdf(self,
+                  dist_range: np.ndarray,
+                  avg_rdf: np.ndarray
+                  ) -> None:
+        """plot the RDF"""
+        plt.plot(dist_range[:-1], avg_rdf)
+        plt.show()
 
     def _get_np_com_traget(self,
                            ref_group: "mda.core.groups.AtomGroup",

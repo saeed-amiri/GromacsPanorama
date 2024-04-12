@@ -132,6 +132,7 @@ class OrderParameter:
 
     info_msg: str = 'Message from OrderParameter:\n'
     configs: AllConfig
+    box: np.ndarray
 
     def __init__(self,
                  fname: str,  # trajectory file,
@@ -153,11 +154,12 @@ class OrderParameter:
                        log: logger.logging.Logger
                        ) -> None:
         """Read the xvg files"""
-        self.read_interface_location(log)
+        self._read_interface_location(log)
+        self._read_box_file(log)
 
-    def read_interface_location(self,
-                                log: logger.logging.Logger
-                                ) -> None:
+    def _read_interface_location(self,
+                                 log: logger.logging.Logger
+                                 ) -> None:
         """Read the interface location file"""
         self.configs.interface.interface_location_data = \
             xvg_to_dataframe.XvgParser(
@@ -171,6 +173,16 @@ class OrderParameter:
             (f'\tInterface location:'
              f'`{self.configs.interface.interface_location:.3f}` '
              f'+/- `{self.configs.interface.interface_location_std:.3f}`\n')
+
+    def _read_box_file(self,
+                       log: logger.logging.Logger
+                       ) -> None:
+        """Read the box file"""
+        box_data = xvg_to_dataframe.XvgParser(
+            self.configs.input_files.box_file, log).xvg_df
+        self.box = np.array([box_data['XX'].to_numpy(),
+                             box_data['YY'].to_numpy(),
+                             box_data['ZZ'].to_numpy()])
 
     def write_msg(self,
                   log: logger.logging.Logger

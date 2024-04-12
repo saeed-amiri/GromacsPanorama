@@ -91,10 +91,10 @@ class InterfaceConfig:
 @dataclass
 class InputFiles:
     """Input files dataclass"""
-    trajectory_file: str = field(init=False)
-    topology_file: str = 'topol.top'
-    interface_location_file: str = 'contact.xvg'
     box_file: str = 'box.xvg'
+    topology_file: str = 'topol.top'
+    trajectory_file: str = field(init=False)
+    interface_location_file: str = 'contact.xvg'
     path_name: str = '/scratch/saeed/GÖHBP/PRE_DFG_7May24/single_np/15Oda/data'
 
     def __post_init__(self) -> None:

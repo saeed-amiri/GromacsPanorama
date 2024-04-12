@@ -63,7 +63,7 @@ from common.colors_text import TextColor as bcolors
 
 
 class ResidueName(Enum):
-    """Residue names for the molecules in the trajectory"""
+    """Residue names for the residues in the trajectory"""
     # pylint: disable=invalid-name
     SOL = 'WATER'
     D10 = 'OIL'
@@ -71,30 +71,39 @@ class ResidueName(Enum):
 
 
 @dataclass
-class OrderParameter:
+class OrderParameterConfig:
     """Order parameter dataclass"""
-    resideu_name: ResidueName
-    atom_selection: str
-    order_parameter_avg: float
-    order_parameter_std: float
-    order_parameter_data: np.ndarray
+    resideu_name: ResidueName = field(init=False)
+    atom_selection: str = field(init=False)
+    order_parameter_avg: float = field(init=False)
+    order_parameter_std: float = field(init=False)
+    order_parameter_data: np.ndarray = field(init=False)
 
 
 @dataclass
-class Interface:
-    """Interface dataclass"""
-    interface_location: float
-    interface_location_std: float
-    interface_location_data: np.ndarray
+class InterfaceConfig:
+    """Interface configuration dataclass"""
+    interface_location: float = 0.0
+    interface_location_std: float = 0.0
+    interface_location_data: np.ndarray = np.array([])
 
 
 @dataclass
 class InputFiles:
     """Input files dataclass"""
-    trajectory_file: str
-    topology_file: str
+    trajectory_file: str = field(init=False)
+    topology_file: str = 'topol.top'
     interface_location_file: str = 'contact.xvg'
     box_file: str = 'box.xvg'
+    path_name: str = '/scratch/saeed/GÖHBP/PRE_DFG_7May24/single_np/'
+
+    def post_init(self) -> None:
+        """Post init function"""
+        self.topology_file = os.path.join(self.path_name,
+                                          self.topology_file)
+        self.interface_location_file = \
+            os.path.join(self.path_name, self.interface_location_file)
+        self.box_file = os.path.join(self.path_name, self.box_file)
 
 
 @dataclass
@@ -106,3 +115,42 @@ class ResiduesTails:
     SOL: list[str] = field(default_factory=lambda: (['OH2', 'H1', 'H2']))
     D10: list[str] = field(default_factory=lambda: (['C1', 'C9']))
     SURFACTANT: list[str] = field(default_factory=lambda: (['C1', 'NH2']))
+
+
+@dataclass
+class AllConfig:
+    """Order parameter options dataclass"""
+    residues_tails: ResiduesTails = field(default_factory=ResiduesTails)
+    interface: InterfaceConfig = field(default_factory=InterfaceConfig)
+    order_parameter: OrderParameterConfig = \
+        field(default_factory=OrderParameterConfig)
+    input_files: InputFiles = field(default_factory=InputFiles)
+
+
+class OrderParameter:
+    """Order parameter computation"""
+
+    info_msg: str = 'Message from OrderParameter:\n'
+    configs: AllConfig
+
+    def __init__(self,
+                 fname: str,  # trajectory file,
+                 log: logger.logging.Logger,
+                 configs: AllConfig = AllConfig()
+                 ) -> None:
+        self.configs = configs
+        self.configs.input_files.trajectory_file = fname
+        self.write_msg(log)
+
+    def write_msg(self,
+                  log: logger.logging.Logger
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
+if __name__ == '__main__':
+    OrderParameter(sys.argv[1],
+                   logger.setup_logger('order_parameter_mda.log'))

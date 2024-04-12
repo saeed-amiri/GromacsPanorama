@@ -95,9 +95,9 @@ class InputFiles:
     topology_file: str = 'topol.top'
     interface_location_file: str = 'contact.xvg'
     box_file: str = 'box.xvg'
-    path_name: str = '/scratch/saeed/GÖHBP/PRE_DFG_7May24/single_np/'
+    path_name: str = '/scratch/saeed/GÖHBP/PRE_DFG_7May24/single_np/15Oda/data'
 
-    def post_init(self) -> None:
+    def __post_init__(self) -> None:
         """Post init function"""
         self.topology_file = os.path.join(self.path_name,
                                           self.topology_file)
@@ -140,7 +140,37 @@ class OrderParameter:
                  ) -> None:
         self.configs = configs
         self.configs.input_files.trajectory_file = fname
+        self.initate(log)
         self.write_msg(log)
+
+    def initate(self,
+                log: logger.logging.Logger
+                ) -> None:
+        """Initiate the order parameter computation"""
+        self.read_xvg_files(log)
+
+    def read_xvg_files(self,
+                       log: logger.logging.Logger
+                       ) -> None:
+        """Read the xvg files"""
+        self.read_interface_location(log)
+
+    def read_interface_location(self,
+                                log: logger.logging.Logger
+                                ) -> None:
+        """Read the interface location file"""
+        self.configs.interface.interface_location_data = \
+            xvg_to_dataframe.XvgParser(
+                self.configs.input_files.interface_location_file,
+                log).xvg_df['interface_z'].to_numpy()
+        self.configs.interface.interface_location = \
+            np.mean(self.configs.interface.interface_location_data)
+        self.configs.interface.interface_location_std = \
+            np.std(self.configs.interface.interface_location_data)
+        self.info_msg += \
+            (f'\tInterface location:'
+             f'`{self.configs.interface.interface_location:.3f}` '
+             f'+/- `{self.configs.interface.interface_location_std:.3f}`\n')
 
     def write_msg(self,
                   log: logger.logging.Logger

@@ -146,6 +146,7 @@ class OrderParameter:
         self.configs = configs
         self.configs.input_files.trajectory_file = fname
         self.initate(log)
+        self.compute_order_parameter(log)
         self.write_msg(log)
 
     def initate(self,
@@ -155,6 +156,12 @@ class OrderParameter:
         self.read_xvg_files(log)
         self.set_tpr_fname(log)
         self.load_trajectory(log)
+
+    def compute_order_parameter(self,
+                                log: logger.logging.Logger
+                                ) -> None:
+        """Compute the order parameter"""
+        OrderParameterComputation(log, self.configs)
 
     def read_xvg_files(self,
                        log: logger.logging.Logger
@@ -210,6 +217,28 @@ class OrderParameter:
         except ValueError as err:
             log.error(msg := '\tThe input file is not correct!\n')
             sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}\n\t{err}\n')
+
+    def write_msg(self,
+                  log: logger.logging.Logger
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
+class OrderParameterComputation:
+    """doing the math here"""
+
+    info_msg: str = 'Message from OrderParameterComputation:\n'
+    configs: AllConfig
+
+    def __init__(self,
+                 log: logger.logging.Logger,
+                 configs: AllConfig = AllConfig()
+                 ) -> None:
+        self.configs = configs
+        self.write_msg(log)
 
     def write_msg(self,
                   log: logger.logging.Logger

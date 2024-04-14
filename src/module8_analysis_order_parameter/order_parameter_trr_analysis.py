@@ -133,6 +133,8 @@ class AllConfig(ResiduesTails):
     # The residue names to compute the order parameter
     # use the ResidueName enum names
     selected_res: ResidueName = ResidueName.SURFACTANT
+    # number of the cores for multiprocessing computation
+    n_cores: int = field(init=False)
 
 
 class OrderParameter:
@@ -151,6 +153,7 @@ class OrderParameter:
         self.configs = configs
         self.configs.input_files.trajectory_file = fname
         self.initate(log)
+        self.get_number_of_cores(log)
         self.compute_order_parameter(log)
         self.write_msg(log)
 
@@ -162,6 +165,12 @@ class OrderParameter:
         self.set_tpr_fname(log)
         self.intiate_order_parameter()
         self.universe = self.load_trajectory(log)
+
+    def get_number_of_cores(self,
+                            log: logger.logging.Logger
+                            ) -> None:
+        """Get the number of cores for multiprocessing"""
+        self.configs.n_cores = cpuconfig.ConfigCpuNr(log)
 
     def compute_order_parameter(self,
                                 log: logger.logging.Logger

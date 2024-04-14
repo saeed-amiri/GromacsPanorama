@@ -117,7 +117,7 @@ class ResiduesTails:
         field(default_factory=lambda: ({'head': 'OH2',
                                         'tail': ['H1', 'H2']}))
     SURFACTANT: dict[str, typing.Union[str, list[str]]] = \
-        field(default_factory=lambda: ({'head': 'C1',
+        field(default_factory=lambda: ({'head': 'CT3',
                                         'tail': 'NH2'}))
 
 
@@ -268,6 +268,42 @@ class OrderParameterComputation:
         heads_positions: dict[int, np.ndarray]
         tails_positions, heads_positions = \
             self.get_atoms(tail_atoms, head_atoms)
+        self.compute_head_tail_vectors(tails_positions, heads_positions, log)
+
+    def compute_head_tail_vectors(self,
+                                  tails_positions: dict[int, np.ndarray],
+                                  heads_positions: dict[int, np.ndarray],
+                                  log: logger.logging.Logger
+                                  ) -> None:
+        """Compute the head and tail vectors
+        The vectors are a vector from the tail to the head
+        for each frame there are N vector, where N is the number of
+        molecules in the system or the length of the tail_ or
+        head_positions
+        """
+        for frame in tails_positions:
+            tail_positions: np.ndarray = tails_positions[frame]
+            head_positions: np.ndarray = heads_positions[frame]
+            unit_vector: np.ndarray = self.compute_head_tail_vector(
+                tail_positions, head_positions, log)
+
+    def compute_head_tail_vector(self,
+                                 tail_positions: np.ndarray,
+                                 head_positions: np.ndarray,
+                                 log: logger.logging.Logger
+                                 ) -> np.ndarray:
+        """
+        Compute the head and tail vectors and return the unit vector
+        """
+        if tail_positions.shape != head_positions.shape:
+            log.error(msg :=
+                      'head_ and tail_positions must have the same shape')
+            raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
+        head_tail_vector: np.ndarray = head_positions - tail_positions
+        head_tail_vector_unit: np.ndarray = \
+            head_tail_vector / np.linalg.norm(head_tail_vector)
+        return head_tail_vector_unit
 
     def get_atoms(self,
                   tail_atoms: "mda.core.groups.AtomGroup",

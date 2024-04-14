@@ -261,20 +261,61 @@ class OrderParameterComputation:
                                 log: logger.logging.Logger
                                 ) -> None:
         """Compute the order parameter"""
-        self.get_tail_atoms()
+        tail_atoms: "mda.core.groups.AtomGroup" = self.get_tail_indices()
+        head_atoms: "mda.core.groups.AtomGroup" = self.get_head_indices()
 
-    def get_tail_atoms(self) -> None:
+        tails_positions: dict[int, np.ndarray]
+        heads_positions: dict[int, np.ndarray]
+        tails_positions, heads_positions = \
+            self.get_atoms(tail_atoms, head_atoms)
+
+    def get_atoms(self,
+                  tail_atoms: "mda.core.groups.AtomGroup",
+                  head_atoms: "mda.core.groups.AtomGroup"
+                  ) -> tuple[dict[int, np.ndarray], dict[int, np.ndarray]]:
+        """Get the atoms positions"""
+        # Initialize a dictionary to store positions for all frames
+        tails_positions: dict[int, np.ndarray] = {}
+        heads_positions: dict[int, np.ndarray] = {}
+
+        # Loop over all frames
+        for tstep in self.universe.trajectory:
+            # Store positions for the current frame
+            tails_positions[tstep.frame] = tail_atoms.positions
+            heads_positions[tstep.frame] = head_atoms.positions
+
+        return tails_positions, heads_positions
+
+    def get_tail_indices(self) -> "mda.core.groups.AtomGroup":
         """Get the tail atoms"""
         selection_str: str = self._get_tail_atoms_selection_str()
+        return self.universe.select_atoms(selection_str)
 
     def _get_tail_atoms_selection_str(self) -> str:
         """Get the tail atoms selection string"""
         resname: str = self.configs.selected_res.value
         selected_res: str = self.configs.selected_res.name
-        tails_atoms: str = \
-            self.configs.residues_tails.getattr(selected_res)['tail']
+        tails_atoms: str = getattr(self.configs.residues_tails,
+                                   selected_res,
+                                   {'tail': None})['tail']
         selection_str: str = f'resname {resname} and name {tails_atoms}'
         self.info_msg += f'\tTail selection string: `{selection_str}`\n'
+        return selection_str
+
+    def get_head_indices(self) -> "mda.core.groups.AtomGroup":
+        """Get the head atoms"""
+        selection_str: str = self._get_head_atoms_selection_str()
+        return self.universe.select_atoms(selection_str)
+
+    def _get_head_atoms_selection_str(self) -> str:
+        """Get the head atoms selection string"""
+        resname: str = self.configs.selected_res.value
+        selected_res: str = self.configs.selected_res.name
+        head_atoms: str = getattr(self.configs.residues_tails,
+                                  selected_res,
+                                  {'head': 0})['head']
+        selection_str: str = f'resname {resname} and name {head_atoms}'
+        self.info_msg += f'\tHead selection string: `{selection_str}`\n'
         return selection_str
 
     def write_msg(self,

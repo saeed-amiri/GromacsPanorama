@@ -122,7 +122,7 @@ class ResiduesTails:
 
 
 @dataclass
-class AllConfig:
+class AllConfig(ResiduesTails):
     """Order parameter options dataclass"""
     residues_tails: ResiduesTails = field(default_factory=ResiduesTails)
     interface: InterfaceConfig = field(default_factory=InterfaceConfig)
@@ -130,10 +130,9 @@ class AllConfig:
         field(default_factory=OrderParameterConfig)
     input_files: InputFiles = field(default_factory=InputFiles)
 
-    # add or remove the residue names to compute the order parameter
-    # Use the names in the trajectory file, it will be set by ResidueName
-    selction_list: list[str] = \
-        field(default_factory=['SOL', 'D10', 'ODN'])
+    # The residue names to compute the order parameter
+    # use the ResidueName enum names
+    selected_res: ResidueName = ResidueName.SURFACTANT
 
 
 class OrderParameter:

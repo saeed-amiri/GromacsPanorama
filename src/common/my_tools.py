@@ -175,3 +175,13 @@ def read_topol_resnr(fname: str,
     print(f'{bcolors.OKBLUE}my_tools:\n\t{msg}{bcolors.ENDC}\n')
     return residue_nr
         
+def get_tpr_fname(fname: str,
+                  log: logger.logging.Logger
+                  ) -> str:
+    """get the tpr file name"""
+    trr_fname: str = drop_string(fname, '.trr')
+    tpr_fname: str = trr_fname + '.tpr'
+    check_file_exist(tpr_fname, log)
+    log.info(msg := f'`{__name__}`: tpr file is `{tpr_fname}` .\n')
+    print(f'{bcolors.OKBLUE}my_tools:\n\t{msg}{bcolors.ENDC}\n')
+    return tpr_fname

@@ -65,16 +65,16 @@ from common.colors_text import TextColor as bcolors
 class ResidueName(Enum):
     """Residue names for the residues in the trajectory"""
     # pylint: disable=invalid-name
-    SOL = 'WATER'
-    D10 = 'OIL'
+    OIL = 'D10'
+    WATER = 'SOL'
     SURFACTANT = 'ODN'
 
 
 @dataclass
 class OrderParameterConfig:
     """Order parameter dataclass"""
-    resideu_name: typing.Union[ResidueName, None] = field(init=False)
-    atom_selection: typing.Union[str, list[str], None] = field(init=False)
+    resideu_name: typing.Union[None, ResidueName] = field(init=False)
+    atom_selection: typing.Union[None, str, list[str]] = field(init=False)
     order_parameter_avg: float = field(init=False)
     order_parameter_std: float = field(init=False)
     order_parameter_data: np.ndarray = field(init=False)
@@ -110,12 +110,12 @@ class ResiduesTails:
     For water use average location of the hydrogen atoms as one tail
     """
     # pylint: disable=invalid-name
-    SOL: dict[str, typing.Union[str, list[str]]] = \
-        field(default_factory=lambda: ({'head': 'OH2',
-                                        'tail': ['H1', 'H2']}))
-    D10: dict[str, typing.Union[str, list[str]]] = \
+    OIL: dict[str, typing.Union[str, list[str]]] = \
         field(default_factory=lambda: ({'head': 'C1',
                                         'tail': 'C9'}))
+    WATER: dict[str, typing.Union[str, list[str]]] = \
+        field(default_factory=lambda: ({'head': 'OH2',
+                                        'tail': ['H1', 'H2']}))
     SURFACTANT: dict[str, typing.Union[str, list[str]]] = \
         field(default_factory=lambda: ({'head': 'C1',
                                         'tail': 'NH2'}))
@@ -129,6 +129,11 @@ class AllConfig:
     order_parameter: OrderParameterConfig = \
         field(default_factory=OrderParameterConfig)
     input_files: InputFiles = field(default_factory=InputFiles)
+
+    # add or remove the residue names to compute the order parameter
+    # Use the names in the trajectory file, it will be set by ResidueName
+    selction_list: list[str] = \
+        field(default_factory=['SOL', 'D10', 'ODN'])
 
 
 class OrderParameter:

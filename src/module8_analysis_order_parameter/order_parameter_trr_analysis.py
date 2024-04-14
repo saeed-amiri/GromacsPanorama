@@ -110,9 +110,15 @@ class ResiduesTails:
     For water use average location of the hydrogen atoms as one tail
     """
     # pylint: disable=invalid-name
-    SOL: list[str] = field(default_factory=lambda: (['OH2', 'H1', 'H2']))
-    D10: list[str] = field(default_factory=lambda: (['C1', 'C9']))
-    SURFACTANT: list[str] = field(default_factory=lambda: (['C1', 'NH2']))
+    SOL: dict[str, typing.Union[str, list[str]]] = \
+        field(default_factory=lambda: ({'head': 'OH2',
+                                        'tail': ['H1', 'H2']}))
+    D10: dict[str, typing.Union[str, list[str]]] = \
+        field(default_factory=lambda: ({'head': 'C1',
+                                        'tail': 'C9'}))
+    SURFACTANT: dict[str, typing.Union[str, list[str]]] = \
+        field(default_factory=lambda: ({'head': 'C1',
+                                        'tail': 'NH2'}))
 
 
 @dataclass
@@ -193,7 +199,7 @@ class OrderParameter:
 
     def load_trajectory(self,
                         log: logger.logging.Logger
-                        ) ->  "mda.coordinates.TRR.TRRReader":
+                        ) -> "mda.coordinates.TRR.TRRReader":
         """read the input file"""
         my_tools.check_file_exist(self.configs.input_files.trajectory_file,
                                   log,

@@ -92,15 +92,13 @@ class InterfaceConfig:
 class InputFiles:
     """Input files dataclass"""
     box_file: str = 'box.xvg'
-    topology_file: str = 'topol.top'
+    tpr_file: str = field(init=False)
     trajectory_file: str = field(init=False)
     interface_location_file: str = 'contact.xvg'
     path_name: str = '/scratch/saeed/GÖHBP/PRE_DFG_7May24/single_np/15Oda/data'
 
     def __post_init__(self) -> None:
         """Post init function"""
-        self.topology_file = os.path.join(self.path_name,
-                                          self.topology_file)
         self.interface_location_file = \
             os.path.join(self.path_name, self.interface_location_file)
         self.box_file = os.path.join(self.path_name, self.box_file)
@@ -156,6 +154,8 @@ class OrderParameter:
         """Read the xvg files"""
         self._read_interface_location(log)
         self._read_box_file(log)
+        self._set_tpr_fname(log)
+        self._load_trajectory(log)
 
     def _read_interface_location(self,
                                  log: logger.logging.Logger
@@ -183,6 +183,27 @@ class OrderParameter:
         self.box = np.array([box_data['XX'].to_numpy(),
                              box_data['YY'].to_numpy(),
                              box_data['ZZ'].to_numpy()])
+
+    def _set_tpr_fname(self,
+                       log: logger.logging.Logger
+                       ) -> None:
+        """Read the trajectory file"""
+        self.configs.input_files.tpr_file = my_tools.get_tpr_fname(
+            self.configs.input_files.trajectory_file, log)
+
+    def _load_trajectory(self,
+                         log: logger.logging.Logger
+                         ) ->  "mda.coordinates.TRR.TRRReader":
+        """read the input file"""
+        my_tools.check_file_exist(self.configs.input_files.trajectory_file,
+                                  log,
+                                  if_exit=True)
+        try:
+            return mda.Universe(self.configs.input_files.tpr_file,
+                                self.configs.input_files.trajectory_file)
+        except ValueError as err:
+            log.error(msg := '\tThe input file is not correct!\n')
+            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}\n\t{err}\n')
 
     def write_msg(self,
                   log: logger.logging.Logger

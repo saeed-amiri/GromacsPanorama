@@ -141,6 +141,7 @@ class OrderParameter:
     info_msg: str = 'Message from OrderParameter:\n'
     configs: AllConfig
     box: np.ndarray
+    universe: "mda.coordinates.TRR.TRRReader"
 
     def __init__(self,
                  fname: str,  # trajectory file,
@@ -159,14 +160,14 @@ class OrderParameter:
         """Initiate the order parameter computation"""
         self.read_xvg_files(log)
         self.set_tpr_fname(log)
-        self.load_trajectory(log)
         self.intiate_order_parameter()
+        self.universe = self.load_trajectory(log)
 
     def compute_order_parameter(self,
                                 log: logger.logging.Logger
                                 ) -> None:
         """Compute the order parameter"""
-        OrderParameterComputation(log, self.configs)
+        OrderParameterComputation(log, self.universe, self.configs)
 
     def read_xvg_files(self,
                        log: logger.logging.Logger

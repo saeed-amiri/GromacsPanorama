@@ -73,8 +73,8 @@ class ResidueName(Enum):
 @dataclass
 class OrderParameterConfig:
     """Order parameter dataclass"""
-    resideu_name: ResidueName = field(init=False)
-    atom_selection: str = field(init=False)
+    resideu_name: typing.Union[ResidueName, None] = field(init=False)
+    atom_selection: typing.Union[str, list[str], None] = field(init=False)
     order_parameter_avg: float = field(init=False)
     order_parameter_std: float = field(init=False)
     order_parameter_data: np.ndarray = field(init=False)
@@ -156,6 +156,7 @@ class OrderParameter:
         self.read_xvg_files(log)
         self.set_tpr_fname(log)
         self.load_trajectory(log)
+        self.intiate_order_parameter()
 
     def compute_order_parameter(self,
                                 log: logger.logging.Logger
@@ -217,6 +218,14 @@ class OrderParameter:
         except ValueError as err:
             log.error(msg := '\tThe input file is not correct!\n')
             sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}\n\t{err}\n')
+
+    def intiate_order_parameter(self) -> None:
+        """Initiate the order parameter"""
+        self.configs.order_parameter.resideu_name = None
+        self.configs.order_parameter.atom_selection = None
+        self.configs.order_parameter.order_parameter_avg = 0.0
+        self.configs.order_parameter.order_parameter_std = 0.0
+        self.configs.order_parameter.order_parameter_data = np.array([])
 
     def write_msg(self,
                   log: logger.logging.Logger

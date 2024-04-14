@@ -249,10 +249,33 @@ class OrderParameterComputation:
 
     def __init__(self,
                  log: logger.logging.Logger,
-                 configs: AllConfig = AllConfig()
+                 universe: "mda.coordinates.TRR.TRRReader",
+                 configs: AllConfig
                  ) -> None:
         self.configs = configs
+        self.universe = universe
         self.write_msg(log)
+        self.compute_order_parameter(log)
+
+    def compute_order_parameter(self,
+                                log: logger.logging.Logger
+                                ) -> None:
+        """Compute the order parameter"""
+        self.get_tail_atoms()
+
+    def get_tail_atoms(self) -> None:
+        """Get the tail atoms"""
+        selection_str: str = self._get_tail_atoms_selection_str()
+
+    def _get_tail_atoms_selection_str(self) -> str:
+        """Get the tail atoms selection string"""
+        resname: str = self.configs.selected_res.value
+        selected_res: str = self.configs.selected_res.name
+        tails_atoms: str = \
+            self.configs.residues_tails.getattr(selected_res)['tail']
+        selection_str: str = f'resname {resname} and name {tails_atoms}'
+        self.info_msg += f'\tTail selection string: `{selection_str}`\n'
+        return selection_str
 
     def write_msg(self,
                   log: logger.logging.Logger

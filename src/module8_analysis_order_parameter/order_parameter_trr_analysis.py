@@ -147,6 +147,8 @@ class OrderParameter:
                 ) -> None:
         """Initiate the order parameter computation"""
         self.read_xvg_files(log)
+        self.set_tpr_fname(log)
+        self.load_trajectory(log)
 
     def read_xvg_files(self,
                        log: logger.logging.Logger
@@ -154,8 +156,6 @@ class OrderParameter:
         """Read the xvg files"""
         self._read_interface_location(log)
         self._read_box_file(log)
-        self._set_tpr_fname(log)
-        self._load_trajectory(log)
 
     def _read_interface_location(self,
                                  log: logger.logging.Logger
@@ -184,16 +184,16 @@ class OrderParameter:
                              box_data['YY'].to_numpy(),
                              box_data['ZZ'].to_numpy()])
 
-    def _set_tpr_fname(self,
-                       log: logger.logging.Logger
-                       ) -> None:
+    def set_tpr_fname(self,
+                      log: logger.logging.Logger
+                      ) -> None:
         """Read the trajectory file"""
         self.configs.input_files.tpr_file = my_tools.get_tpr_fname(
             self.configs.input_files.trajectory_file, log)
 
-    def _load_trajectory(self,
-                         log: logger.logging.Logger
-                         ) ->  "mda.coordinates.TRR.TRRReader":
+    def load_trajectory(self,
+                        log: logger.logging.Logger
+                        ) ->  "mda.coordinates.TRR.TRRReader":
         """read the input file"""
         my_tools.check_file_exist(self.configs.input_files.trajectory_file,
                                   log,

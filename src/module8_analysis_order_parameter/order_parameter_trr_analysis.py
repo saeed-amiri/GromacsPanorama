@@ -550,6 +550,7 @@ class AnalysisSurfactantOrderParameter:
             self.compute_order_parameter_frames()
         avg_order_parameter_frames: dict[int, np.ndarray] = \
             self.compute_frame_avg_order_parameter(order_parameter_frames)
+        self.write_avg_xvg(avg_order_parameter_frames, log)
 
     def compute_order_parameter_frames(self) -> dict[int, np.ndarray]:
         """Compute the order parameter for each frame"""
@@ -587,6 +588,41 @@ class AnalysisSurfactantOrderParameter:
             avg_order_parameter_frames[frame] = \
                 np.mean(order_parameter_frame, axis=0)
         return avg_order_parameter_frames
+
+    def write_avg_xvg(self,
+                      avg_order_parameter_frames: dict[int, np.ndarray],
+                      log
+                      ) -> None:
+        """Write the average order parameter to the xvg file"""
+        avg_df: pd.DataFrame = self.make_avg_df(avg_order_parameter_frames)
+        extra_msg: list[str] = [
+            f'# Interface location: '
+            f'{self.configs.interface.interface_location:.3f} +/- '
+            f'{self.configs.interface.interface_location_std:.3f}',
+            f'# Order parameter: '
+            f'{self.configs.order_parameter.order_parameter_avg:.3f} +/- '
+            f'{self.configs.order_parameter.order_parameter_std:.3f}',
+        ]
+        residue_name: str = self.configs.selected_res.name
+        my_tools.write_xvg(df_i=avg_df,
+                           log=log,
+                           extra_msg=extra_msg,
+                           fname=f'order_parameter_{residue_name}.xvg',
+                           write_index=True,
+                           x_axis_label='Frame index',
+                           y_axis_label='Order parameter',
+                           title='Order parameter')
+
+    def make_avg_df(self,
+                    avg_order_parameter_frames: dict[int, np.ndarray]
+                    ) -> pd.DataFrame:
+        """Make the average dataframe"""
+        columns: list[str] = ['order_parameter_x',
+                              'order_parameter_y',
+                              'order_parameter_z']
+        avg_df: pd.DataFrame = pd.DataFrame.from_dict(
+            avg_order_parameter_frames, columns=columns, orient='index')
+        return avg_df
 
 
 if __name__ == '__main__':

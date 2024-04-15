@@ -310,24 +310,29 @@ class OrderParameterComputation:
         heads_positions: dict[int, np.ndarray]
         tails_positions, heads_positions = \
             self.get_atoms(tail_atoms, head_atoms)
-        self.compute_head_tail_vectors(tails_positions, heads_positions, log)
+        unit_vec_dict: dict[int, np.ndarray] = \
+            self.compute_head_tail_vectors(tails_positions,
+                                           heads_positions,
+                                           log)
 
     def compute_head_tail_vectors(self,
                                   tails_positions: dict[int, np.ndarray],
                                   heads_positions: dict[int, np.ndarray],
                                   log: logger.logging.Logger
-                                  ) -> None:
+                                  ) -> dict[int, np.ndarray]:
         """Compute the head and tail vectors
         The vectors are a vector from the tail to the head
         for each frame there are N vector, where N is the number of
         molecules in the system or the length of the tail_ or
         head_positions
         """
-        for frame in tails_positions:
+        unit_vec_dict: dict[int, np.ndarray] = {}
+        for frame in tails_positions.keys():
             tail_positions: np.ndarray = tails_positions[frame]
             head_positions: np.ndarray = heads_positions[frame]
-            unit_vector: np.ndarray = self.compute_head_tail_vector(
+            unit_vec_dict[frame] = self.compute_head_tail_vector(
                 tail_positions, head_positions, log)
+        return unit_vec_dict
 
     def compute_head_tail_vector(self,
                                  tail_positions: np.ndarray,

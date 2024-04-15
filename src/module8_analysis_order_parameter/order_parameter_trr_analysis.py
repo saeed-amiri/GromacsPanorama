@@ -209,7 +209,8 @@ class OrderParameter:
                                 log: logger.logging.Logger
                                 ) -> None:
         """Compute the order parameter"""
-        AngleProjectionComputation(log, self.universe, self.configs)
+        tail_with_angle: list[np.ndarray] = AngleProjectionComputation(
+            log, self.universe, self.configs).tail_with_angle
 
     def read_xvg_files(self,
                        log: logger.logging.Logger
@@ -452,7 +453,7 @@ class AngleProjectionComputation:
                   log: logger.logging.Logger
                   ) -> None:
         """write and log messages"""
-        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+        print(f'{bcolors.OKCYAN}{AngleProjectionComputation.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
 

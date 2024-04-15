@@ -302,8 +302,9 @@ class AngleProjectionComputation:
                  ) -> None:
         self.configs = configs
         self.universe = universe
-        self.write_msg(log)
         self.tail_with_angle = self.compute_angle_projection(log)
+        self.info_msg += f'\tThe angle along all the axes are computed\n'
+        self.write_msg(log)
 
     def compute_angle_projection(self,
                                  log: logger.logging.Logger

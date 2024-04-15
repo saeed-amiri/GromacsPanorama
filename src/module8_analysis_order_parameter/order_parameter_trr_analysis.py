@@ -526,6 +526,7 @@ class OrderParameterAnalaysis:
                                             log: logger.logging.Logger
                                             ) -> None:
         """Analysis the order parameter for the surfactant molecules"""
+        AnalysisSurfactantOrderParameter(tail_with_angle, self.configs, log)
 
 
 class AnalysisSurfactantOrderParameter:
@@ -539,6 +540,53 @@ class AnalysisSurfactantOrderParameter:
                  ) -> None:
         self.configs = configs
         self.tail_with_angle = tail_with_angle
+        self._compute_order_parameter(log)
+
+    def _compute_order_parameter(self,
+                                 log: logger.logging.Logger
+                                 ) -> None:
+        """Compute the order parameter"""
+        order_parameter_frames: dict[int, np.ndarray] = \
+            self.compute_order_parameter_frames()
+        avg_order_parameter_frames: dict[int, np.ndarray] = \
+            self.compute_frame_avg_order_parameter(order_parameter_frames)
+
+    def compute_order_parameter_frames(self) -> dict[int, np.ndarray]:
+        """Compute the order parameter for each frame"""
+        # Compute the order parameter for each frame
+        order_parameter_frames: dict[int, np.ndarray] = {}
+        for frame, tail_angle in enumerate(self.tail_with_angle):
+            angle_frame: np.ndarray = tail_angle[:, -3:]
+            order_parameter_frames[frame] = \
+                self.compute_order_parameter(angle_frame)
+        return order_parameter_frames
+
+    def compute_order_parameter(self,
+                                angle_frame: np.ndarray
+                                ) -> np.ndarray:
+        """Compute the order parameter"""
+        order_parameter: np.ndarray = np.zeros(angle_frame.shape)
+        for i, angle_res_i in enumerate(angle_frame):
+            order_parameter[i] += \
+                self.compute_order_parameter_for_a_residue(angle_res_i)
+        return order_parameter
+
+    def compute_order_parameter_for_a_residue(self,
+                                              angle_res_i: np.ndarray
+                                              ) -> np.ndarray:
+        """Compute the order parameter for a single angle"""
+        return 0.5 * (3 * np.cos(angle_res_i)**2 - 1)
+
+    def compute_frame_avg_order_parameter(self,
+                                          order_parameter_frames:
+                                          dict[int, np.ndarray]
+                                          ) -> dict[int, np.ndarray]:
+        """Compute the average order parameter for each frame"""
+        avg_order_parameter_frames: dict[int, np.ndarray] = {}
+        for frame, order_parameter_frame in order_parameter_frames.items():
+            avg_order_parameter_frames[frame] = \
+                np.mean(order_parameter_frame, axis=0)
+        return avg_order_parameter_frames
 
 
 if __name__ == '__main__':

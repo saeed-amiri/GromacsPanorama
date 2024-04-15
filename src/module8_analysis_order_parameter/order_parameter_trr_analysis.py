@@ -211,6 +211,7 @@ class OrderParameter:
         """Compute the order parameter"""
         tail_with_angle: list[np.ndarray] = AngleProjectionComputation(
             log, self.universe, self.configs).tail_with_angle
+        OrderParameterAnalaysis(tail_with_angle, self.configs, log)
 
     def read_xvg_files(self,
                        log: logger.logging.Logger
@@ -487,6 +488,57 @@ class AtomSelection:
         print(f'{bcolors.OKCYAN}{AtomSelection.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
+
+
+class OrderParameterAnalaysis:
+    """ Analysis the order parameter with tails_with_angles
+    computed from the AngleProjectionComputation
+    """
+    info_msg: str = 'Message from OrderParameterAnalaysis:\n'
+    configs: AllConfig
+
+    def __init__(self,
+                 tail_with_angle: list[np.ndarray],
+                 configs: AllConfig,
+                 log: logger.logging.Logger
+                 ) -> None:
+        self.configs = configs
+        self.analyze_order_parameter(tail_with_angle, log)
+
+    def analyze_order_parameter(self,
+                                tail_with_angle: list[np.ndarray],
+                                log: logger.logging.Logger
+                                ) -> None:
+        """Analyze the order parameter based on the residue
+        For the surfactant molecules, the order parameter of interest
+        is along the z-axis, and the interface location
+        For Oil and water molecules, the order parameter of interest
+        is along the z-axis, but the changes from bulk to interface
+        is more important and desireabel.
+        """
+        # get the type of the residue
+        selected_res: str = self.configs.selected_res.name
+        if selected_res == 'SURFACTANT':
+            self.analysis_order_parameter_surfactant(tail_with_angle, log)
+
+    def analysis_order_parameter_surfactant(self,
+                                            tail_with_angle: list[np.ndarray],
+                                            log: logger.logging.Logger
+                                            ) -> None:
+        """Analysis the order parameter for the surfactant molecules"""
+
+
+class AnalysisSurfactantOrderParameter:
+    """Analysis the surfactant order parameter"""
+    info_msg: str = 'Message from AnalysisSurfactantOrderParameter:\n'
+
+    def __init__(self,
+                 tail_with_angle: list[np.ndarray],
+                 configs: AllConfig,
+                 log: logger.logging.Logger
+                 ) -> None:
+        self.configs = configs
+        self.tail_with_angle = tail_with_angle
 
 
 if __name__ == '__main__':

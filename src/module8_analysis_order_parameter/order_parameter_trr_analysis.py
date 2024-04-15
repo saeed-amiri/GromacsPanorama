@@ -312,7 +312,7 @@ class AngleProjectionComputation:
         """Compute the anlge projection of the vectors along all the axes"""
 
         atoms_selection: AtomSelection = AtomSelection(
-            self.universe, self.configs)
+            self.universe, self.configs, log)
         tails_position: dict[int, np.ndarray] = atoms_selection.tails_position
         heads_position: dict[int, np.ndarray] = atoms_selection.heads_position
         unit_vec_dict: dict[int, np.ndarray] = \
@@ -419,7 +419,8 @@ class AtomSelection:
 
     def __init__(self,
                  universe: "mda.coordinates.TRR.TRRReader",
-                 configs: AllConfig
+                 configs: AllConfig,
+                 log: logger.logging.Logger
                  ) -> None:
         self.universe = universe
         self.configs = configs
@@ -428,6 +429,7 @@ class AtomSelection:
 
         self.tails_position, self.heads_position = \
             self.get_atoms(tail_atoms, head_atoms)
+        self.write_msg(log)
 
     def get_atoms(self,
                   tail_atoms: "mda.core.groups.AtomGroup",

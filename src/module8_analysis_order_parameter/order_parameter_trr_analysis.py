@@ -314,6 +314,8 @@ class OrderParameterComputation:
             self.compute_head_tail_vectors(tails_positions,
                                            heads_positions,
                                            log)
+        angels_dict: dict[int, np.ndarray] = \
+            self.compute_angles(unit_vec_dict)
 
     def compute_head_tail_vectors(self,
                                   tails_positions: dict[int, np.ndarray],
@@ -333,6 +335,33 @@ class OrderParameterComputation:
             unit_vec_dict[frame] = self.compute_head_tail_vector(
                 tail_positions, head_positions, log)
         return unit_vec_dict
+
+    def compute_angles(self,
+                       unit_vec_dict: dict[int, np.ndarray],
+                       ) -> dict[int, np.ndarray]:
+        """Compute the angles between the vectors and the all axes"""
+        angles_dict: dict[int, np.ndarray] = {}
+        for frame, vec in unit_vec_dict.items():
+            angles_dict[frame] = self.compute_angles_for_frame(vec)
+        return angles_dict
+
+    def compute_angles_for_frame(self,
+                                 vec: np.ndarray
+                                 ) -> np.ndarray:
+        """Compute the angles for a frame"""
+        angles_vec: np.ndarray = np.zeros((vec.shape[0], 3))
+        for i, vec_i in enumerate(vec):
+            angles_vec[i] = self.compute_angles_for_vector(vec_i)
+        return angles_vec
+
+    def compute_angles_for_vector(self,
+                                  vec: np.ndarray
+                                  ) -> np.ndarray:
+        """Compute the angles of the vector with the all axes"""
+        angles: np.ndarray = np.zeros(3)
+        for i in range(3):
+            angles[i] = np.arccos(np.dot(vec, np.eye(3)[i]))
+        return angles
 
     def compute_head_tail_vector(self,
                                  tail_positions: np.ndarray,

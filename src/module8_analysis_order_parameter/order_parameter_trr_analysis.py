@@ -303,28 +303,26 @@ class AngleProjectionComputation:
         self.configs = configs
         self.universe = universe
         self.tail_with_angle = self.compute_angle_projection(log)
-        self.info_msg += f'\tThe angle along all the axes are computed\n'
+        self.info_msg += '\tThe angle along all the axes are computed\n'
         self.write_msg(log)
 
     def compute_angle_projection(self,
                                  log: logger.logging.Logger
                                  ) -> list[np.ndarray]:
         """Compute the anlge projection of the vectors along all the axes"""
-        tail_atoms: "mda.core.groups.AtomGroup" = self.get_tail_indices()
-        head_atoms: "mda.core.groups.AtomGroup" = self.get_head_indices()
 
-        tails_positions: dict[int, np.ndarray]
-        heads_positions: dict[int, np.ndarray]
-        tails_positions, heads_positions = \
-            self.get_atoms(tail_atoms, head_atoms)
+        atoms_selection: AtomSelection = AtomSelection(
+            self.universe, self.configs)
+        tails_position: dict[int, np.ndarray] = atoms_selection.tails_position
+        heads_position: dict[int, np.ndarray] = atoms_selection.heads_position
         unit_vec_dict: dict[int, np.ndarray] = \
-            self.compute_head_tail_vectors(tails_positions,
-                                           heads_positions,
+            self.compute_head_tail_vectors(tails_position,
+                                           heads_position,
                                            log)
         angels_dict: dict[int, np.ndarray] = \
             self.compute_angles(unit_vec_dict)
         tail_with_angle: list[np.ndarray] = \
-            self.appned_angles_to_tails(tails_positions, angels_dict)
+            self.appned_angles_to_tails(tails_position, angels_dict)
         return tail_with_angle
 
     def compute_head_tail_vectors(self,
@@ -401,6 +399,36 @@ class AngleProjectionComputation:
             head_tail_vector / np.linalg.norm(head_tail_vector)
         return head_tail_vector_unit
 
+    def write_msg(self,
+                  log: logger.logging.Logger
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{AngleProjectionComputation.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
+class AtomSelection:
+    """Atom selection for the copmuting the angles"""
+
+    configs: AllConfig
+    universe: "mda.coordinates.TRR.TRRReader"
+    tails_position: dict[int, np.ndarray]
+    heads_position: dict[int, np.ndarray]
+    info_msg: str = 'Message from AtomSelection:\n'
+
+    def __init__(self,
+                 universe: "mda.coordinates.TRR.TRRReader",
+                 configs: AllConfig
+                 ) -> None:
+        self.universe = universe
+        self.configs = configs
+        tail_atoms: "mda.core.groups.AtomGroup" = self.get_tail_indices()
+        head_atoms: "mda.core.groups.AtomGroup" = self.get_head_indices()
+
+        self.tails_position, self.heads_position = \
+            self.get_atoms(tail_atoms, head_atoms)
+
     def get_atoms(self,
                   tail_atoms: "mda.core.groups.AtomGroup",
                   head_atoms: "mda.core.groups.AtomGroup"
@@ -454,7 +482,7 @@ class AngleProjectionComputation:
                   log: logger.logging.Logger
                   ) -> None:
         """write and log messages"""
-        print(f'{bcolors.OKCYAN}{AngleProjectionComputation.__name__}:\n'
+        print(f'{bcolors.OKCYAN}{AtomSelection.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
 

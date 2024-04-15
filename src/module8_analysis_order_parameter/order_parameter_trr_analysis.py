@@ -59,7 +59,7 @@ where a and b are two unit vectors, and theta is the angle between them.
 The angles between the vectors and all the three axes will be computed
 and save into the array with the coordintated of the head atoms, thus,
 the the final array will be a 2D array with index of the residues and
-their head coordinates and the angles along each axis:
+their tail coordinates and the angles along each axis:
     [residue_index, x, y, z, angle_x, angle_y, angle_z]
 this array will be computed for each frame and saved as a list.
 
@@ -209,7 +209,7 @@ class OrderParameter:
                                 log: logger.logging.Logger
                                 ) -> None:
         """Compute the order parameter"""
-        OrderParameterComputation(log, self.universe, self.configs)
+        AngleProjectionComputation(log, self.universe, self.configs)
 
     def read_xvg_files(self,
                        log: logger.logging.Logger
@@ -283,11 +283,16 @@ class OrderParameter:
         log.info(self.info_msg)
 
 
-class OrderParameterComputation:
-    """doing the math here"""
+class AngleProjectionComputation:
+    """doing the math for computing the angle projection of the vectors
+    along all the axes and return a list of head cordinated with angle
+    projections along all the axes in the form of:
+        list[[x, y, z, angle_x, angle_y, angle_z], ...]
+    """
 
-    info_msg: str = 'Message from OrderParameterComputation:\n'
+    info_msg: str = 'Message from AngleProjectionComputation:\n'
     configs: AllConfig
+    tail_with_angle: list[np.ndarray]
 
     def __init__(self,
                  log: logger.logging.Logger,
@@ -297,12 +302,12 @@ class OrderParameterComputation:
         self.configs = configs
         self.universe = universe
         self.write_msg(log)
-        self.compute_order_parameter(log)
+        self.tail_with_angle = self.compute_angle_projection(log)
 
-    def compute_order_parameter(self,
-                                log: logger.logging.Logger
-                                ) -> None:
-        """Compute the order parameter"""
+    def compute_angle_projection(self,
+                                 log: logger.logging.Logger
+                                 ) -> list[np.ndarray]:
+        """Compute the anlge projection of the vectors along all the axes"""
         tail_atoms: "mda.core.groups.AtomGroup" = self.get_tail_indices()
         head_atoms: "mda.core.groups.AtomGroup" = self.get_head_indices()
 
@@ -316,6 +321,9 @@ class OrderParameterComputation:
                                            log)
         angels_dict: dict[int, np.ndarray] = \
             self.compute_angles(unit_vec_dict)
+        tail_with_angle: list[np.ndarray] = \
+            self.appned_angles_to_tails(tails_positions, angels_dict)
+        return tail_with_angle
 
     def compute_head_tail_vectors(self,
                                   tails_positions: dict[int, np.ndarray],
@@ -344,6 +352,16 @@ class OrderParameterComputation:
         for frame, vec in unit_vec_dict.items():
             angles_dict[frame] = self.compute_angles_for_frame(vec)
         return angles_dict
+
+    def appned_angles_to_tails(self,
+                               tails_positions: dict[int, np.ndarray],
+                               angels_dict: dict[int, np.ndarray]
+                               ) -> list[np.ndarray]:
+        """Append the angles to the tail positions"""
+        tail_angles: list[np.ndarray] = []
+        for frame, tails in tails_positions.items():
+            tail_angles.append(np.hstack((tails, angels_dict[frame])))
+        return tail_angles
 
     def compute_angles_for_frame(self,
                                  vec: np.ndarray

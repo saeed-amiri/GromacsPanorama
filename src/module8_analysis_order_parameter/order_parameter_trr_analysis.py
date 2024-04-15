@@ -42,6 +42,39 @@ with cosidering the actual volume in:
 12 April 2024
 Saeed
 Opt by VSCode CoPilot
+___________________________________________
+The equation for the order parameter is:
+    S = 1/2 * <3cos^2(theta) - 1>
+where theta is the angle between the vector and the z-axis.
+it also can be computed along the other axis, for example, the y-axis.
+The angle between the vector and the z-axis can be computed by the dot
+product of the two vectors.
+The dot product of two vectors is:
+    a.b = |a| |b| cos(theta)
+where a and b are two vectors, and theta is the angle between them.
+The dot product of two unit vectors is:
+    a.b = cos(theta)
+where a and b are two unit vectors, and theta is the angle between them.
+
+The angles between the vectors and all the three axes will be computed
+and save into the array with the coordintated of the head atoms, thus,
+the the final array will be a 2D array with index of the residues and
+their head coordinates and the angles along each axis:
+    [residue_index, x, y, z, angle_x, angle_y, angle_z]
+this array will be computed for each frame and saved as a list.
+
+Afterwards, the further analysis will be done on the list of the angles
+to compute the order parameter:
+    - Compute the average order parameter for each frame
+    - Compute the average order parameter for the whole trajectory
+    - Compute the oreder parameter along one axis in different bins to
+        see the distribution of the order parameter along the axis.
+also plot:
+    - The distribution of the order parameter along the axis
+    - The superposion of all the order parameter along the axis in a
+        contour plot of x-y plane and order parameter as the c-bar.
+and save the data to the xvg file.
+15 April 2024
 """
 
 import os

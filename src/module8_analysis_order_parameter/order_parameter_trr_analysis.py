@@ -595,14 +595,13 @@ class AnalysisSurfactantOrderParameter:
                       ) -> None:
         """Write the average order parameter to the xvg file"""
         avg_df: pd.DataFrame = self.make_avg_df(avg_order_parameter_frames)
+        avg_df_mean: np.ndarray = avg_df.mean(axis=0)
         extra_msg: list[str] = [
             f'# Interface location: '
             f'{self.configs.interface.interface_location:.3f} +/- '
             f'{self.configs.interface.interface_location_std:.3f}',
-            f'# Order parameter: '
-            f'{self.configs.order_parameter.order_parameter_avg:.3f} +/- '
-            f'{self.configs.order_parameter.order_parameter_std:.3f}',
-        ]
+            f'# Mean order parameter: (x, y, z) = ',
+            f'# {avg_df_mean}']
         residue_name: str = self.configs.selected_res.name
         my_tools.write_xvg(df_i=avg_df,
                            log=log,

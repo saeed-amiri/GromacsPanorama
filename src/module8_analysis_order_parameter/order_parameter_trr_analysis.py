@@ -519,7 +519,7 @@ class AnalysisSurfactantOrderParameter:
             f'# Interface location: '
             f'{self.configs.interface.interface_location:.3f} +/- '
             f'{self.configs.interface.interface_location_std:.3f}',
-            f'# Mean order parameter: (x, y, z) = ',
+            '# Mean order parameter: (x, y, z) = ',
             f'# {avg_df_mean}']
         residue_name: str = self.configs.selected_res.name
         my_tools.write_xvg(df_i=avg_df,

@@ -156,12 +156,12 @@ class AnalysisSurfactantOrderParameter:
         add # at the beginning of each line
         """
         avg_df_mean = avg_df.mean(axis=0)
-        avg_msg: str = '\t'.join([f'# {avg}' for avg in avg_df_mean])
+        avg_msg: str = '\t'.join([f'{avg}' for avg in avg_df_mean])
         extra_msg: list[str] = [
             f'# Interface location: '
             f'{self.configs.interface.interface_location:.3f} +/- '
             f'{self.configs.interface.interface_location_std:.3f}',
-            f'# Mean order parameter: (x, y, z) = \n{avg_msg}']
+            f'# Mean order parameter: (x, y, z) = \n# {avg_msg}']
         return extra_msg
 
     def write_msg(self,

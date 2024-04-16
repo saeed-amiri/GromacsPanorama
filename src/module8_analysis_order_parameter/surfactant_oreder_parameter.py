@@ -50,6 +50,7 @@ import pandas as pd
 
 from common import logger
 from common import my_tools
+from common.colors_text import TextColor as bcolors
 
 from module8_analysis_order_parameter.config_classes_trr import AllConfig
 
@@ -66,6 +67,7 @@ class AnalysisSurfactantOrderParameter:
         self.configs = configs
         self.tail_with_angle = tail_with_angle
         self._compute_order_parameter(log)
+        self.write_msg(log)
 
     def _compute_order_parameter(self,
                                  log: logger.logging.Logger
@@ -120,22 +122,21 @@ class AnalysisSurfactantOrderParameter:
                       ) -> None:
         """Write the average order parameter to the xvg file"""
         avg_df: pd.DataFrame = self.make_avg_df(avg_order_parameter_frames)
-        avg_df_mean: np.ndarray = avg_df.mean(axis=0)
-        extra_msg: list[str] = [
-            f'# Interface location: '
-            f'{self.configs.interface.interface_location:.3f} +/- '
-            f'{self.configs.interface.interface_location_std:.3f}',
-            '# Mean order parameter: (x, y, z) = ',
-            f'# {avg_df_mean}']
+        extra_msg: list[str] = self.make_extra_msg(avg_df)
+
         residue_name: str = self.configs.selected_res.name
+        fname: str = f'order_parameter_{residue_name}.xvg'
+
         my_tools.write_xvg(df_i=avg_df,
                            log=log,
                            extra_msg=extra_msg,
-                           fname=f'order_parameter_{residue_name}.xvg',
+                           fname=fname,
                            write_index=True,
                            x_axis_label='Frame index',
                            y_axis_label='Order parameter',
                            title='Order parameter')
+        self.info_msg += \
+            f'\tThe average order parameter is written to {fname}\n'
 
     def make_avg_df(self,
                     avg_order_parameter_frames: dict[int, np.ndarray]
@@ -147,3 +148,26 @@ class AnalysisSurfactantOrderParameter:
         avg_df: pd.DataFrame = pd.DataFrame.from_dict(
             avg_order_parameter_frames, columns=columns, orient='index')
         return avg_df
+
+    def make_extra_msg(self,
+                       avg_df: pd.DataFrame
+                       ) -> list[str]:
+        """Make the extra message
+        add # at the beginning of each line
+        """
+        avg_df_mean = avg_df.mean(axis=0)
+        avg_msg: str = '\t'.join([f'# {avg}' for avg in avg_df_mean])
+        extra_msg: list[str] = [
+            f'# Interface location: '
+            f'{self.configs.interface.interface_location:.3f} +/- '
+            f'{self.configs.interface.interface_location_std:.3f}',
+            f'# Mean order parameter: (x, y, z) = \n{avg_msg}']
+        return extra_msg
+
+    def write_msg(self,
+                  log: logger.logging.Logger
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)

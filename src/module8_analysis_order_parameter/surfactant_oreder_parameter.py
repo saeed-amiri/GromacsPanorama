@@ -53,7 +53,8 @@ from common import my_tools
 from common.colors_text import TextColor as bcolors
 
 from module8_analysis_order_parameter.config_classes_trr import AllConfig
-
+from module8_analysis_order_parameter.order_parameter_heat_map import \
+    OrderParameterHeatMap
 
 class AnalysisSurfactantOrderParameter:
     """Analysis the surfactant order parameter"""
@@ -78,6 +79,10 @@ class AnalysisSurfactantOrderParameter:
         avg_order_parameter_frames: dict[int, np.ndarray] = \
             self.compute_frame_avg_order_parameter(order_parameter_frames)
         self.write_avg_xvg(avg_order_parameter_frames, log)
+        OrderParameterHeatMap(self.tail_with_angle,
+                              order_parameter_frames,
+                              self.configs,
+                              log)
 
     def compute_order_parameter_frames(self) -> dict[int, np.ndarray]:
         """Compute the order parameter for each frame"""

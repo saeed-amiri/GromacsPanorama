@@ -70,3 +70,28 @@ SUB_SUPER_FONT_SIZE_PT = 6
 DPI_HALFTONE = 300
 DPI_COMBINATION = 500
 DPI_LINE_ART = 1000
+GOLDEN_RATIO = (1 + 5 ** 0.5) / 2
+
+
+def set_figure_height(width: int,
+                      aspect_ratio: float = GOLDEN_RATIO
+                      ) -> int:
+    """Set the figure height based on the width and aspect ratio"""
+    return int(width / aspect_ratio)
+
+
+def set_figure_size(size_type: str
+                    ) -> tuple[int, int]:
+    """Set the size of the figure based on the size type"""
+    sizes: dict[str, tuple[int, int]] = {
+        "minimal": (MINIMAL_SIZE_PT,
+                    set_figure_height(MINIMAL_SIZE_PT)),
+        "single_column": (SINGLE_COLUMN_PT,
+                          set_figure_height(SINGLE_COLUMN_PT)),
+        "one_half_column": (ONE_AND_HALF_COLUMN_PT,
+                            set_figure_height(ONE_AND_HALF_COLUMN_PT)),
+        "double_column": (DOUBLE_COLUMN_PT,
+                          set_figure_height(DOUBLE_COLUMN_PT))
+    }
+    return sizes.get(size_type, (SINGLE_COLUMN_PT,
+                     set_figure_height(SINGLE_COLUMN_PT)))

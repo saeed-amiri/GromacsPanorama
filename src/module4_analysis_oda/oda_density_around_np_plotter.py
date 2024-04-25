@@ -56,7 +56,7 @@ class Rdf2dHeatMapConfig(BaseHeatMapConfig):
     Configuration parameters for heatmap plotting of 2d rdf.
     """
     heatmap_suffix: str = 'rdf2dheatmap.png'
-    cbar_label: str = 'g^\star(r^\star), a. u.'
+    cbar_label: str = r'$g^\star(r^\star)$, a. u.'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'np_radius'],
         'color': ['k', 'b'],
@@ -93,6 +93,7 @@ class SmoothedRdf2dHeatMapConfig(BaseHeatMapConfig):
 @dataclass
 class BaseGraphConfig:
     """Configurations for the simple graphs"""
+    # pylint: disable=too-many-instance-attributes
     graph_suffix: str
     graph_legend: str
     title: str
@@ -170,6 +171,7 @@ class GraphsConfigs:
 
 class SurfactantDensityPlotter:
     """plot the desinty of the oda around the NP"""
+    # pylint: disable=too-many-instance-attributes
 
     info_msg: str = 'Message from SurfactantDensityPlotter:\n'
     residue: str  # Name of the residue
@@ -427,6 +429,7 @@ class HeatmapPlotter:
                  typing.Union[None, dict[str, float]] = None,
                  residue: str = 'ODA'
                  ) -> None:
+        # pylint: disable=too-many-arguments
         self.angstrom_to_nm = 0.1
         self.residue = residue
         self.ref_density = ref_density
@@ -611,6 +614,7 @@ class HeatmapPlotter:
                             line_style: str = '--'
                             ) -> plt.axes:
         """add circle for representing the nanoparticle"""
+        # pylint: disable=protected-access
         circle = Circle(origin,
                         radius,
                         transform=ax_i.transData._b,
@@ -652,6 +656,7 @@ class HeatmapPlotter:
 
         This method saves the given figure and closes it after saving.
         """
+        # pylint: disable=too-many-arguments
         if legend:
             for ax_j in np.ravel(axs):
                 legend = ax_j.legend(loc=loc)
@@ -675,6 +680,7 @@ class HeatmapPlotter:
 
 @dataclass
 class TimeDependentPlotterConfig(BaseGraphConfig):
+    # pylint: disable=too-many-instance-attributes
     """configurations for the time dependents plots"""
     graph_suffix: str = 'ODA_rdf_2d_time.png'
     graph_suffix2: str = 'ODA_ave_density_time.png'
@@ -700,6 +706,7 @@ class TimeDependentPlotter:
                  config: "TimeDependentPlotterConfig" =
                  TimeDependentPlotterConfig()
                  ) -> None:
+        # pylint: disable=unused-argument
         self.config = config
         self.rdf = time_dependent_rdf
         self.ave_density = time_dependent_ave_density
@@ -726,6 +733,7 @@ class TimeDependentPlotter:
                     label_prefix: str
                     ) -> tuple[plt.figure, plt.axes]:
         """plot over time"""
+        # pylint: disable=too-many-locals
         fig_i: plt.figure
         ax_i: plt.axes
         steps: list[int] = list(density.keys())

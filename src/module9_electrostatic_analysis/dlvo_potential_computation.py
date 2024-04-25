@@ -133,7 +133,7 @@ class PlotConfig:
     })
 
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
-        'label': '15Oda',
+        'label': '5Oda',
         'color': 'black',
         'marker': 'o',
         'linestyle': '-',

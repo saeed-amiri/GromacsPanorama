@@ -12,7 +12,7 @@ import matplotlib.pylab as plt
 from matplotlib.patches import Circle
 
 from common import logger
-from common import plot_tools
+from common import plot_tools, elsevier_plot_tools
 from common import static_info as stinfo
 from common.colors_text import TextColor as bcolors
 
@@ -56,7 +56,7 @@ class Rdf2dHeatMapConfig(BaseHeatMapConfig):
     Configuration parameters for heatmap plotting of 2d rdf.
     """
     heatmap_suffix: str = 'rdf2dheatmap.png'
-    cbar_label: str = 'g(r), a. u.'
+    cbar_label: str = 'g^\star(r^\star), a. u.'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'np_radius'],
         'color': ['k', 'b'],
@@ -69,7 +69,7 @@ class FittedsRdf2dHeatMapConfig(BaseHeatMapConfig):
     Configuration parameters for heatmap plotting of fitted 2d rdf.
     """
     heatmap_suffix: str = 'fittedRdf2dheatmap.png'
-    cbar_label: str = r'$g_{fitted}(r)$'
+    cbar_label: str = r'$g^\star_{fitted}(r^\star)$'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'turn_points'],
         'color': ['k', 'b', 'g', 'r'],
@@ -83,7 +83,7 @@ class SmoothedRdf2dHeatMapConfig(BaseHeatMapConfig):
     Configuration parameters for heatmap plotting of smoothed 2d rdf.
     """
     heatmap_suffix: str = 'smoothedRdf2dheatmap.png'
-    cbar_label: str = r'$g_{smoothed}(r)$'
+    cbar_label: str = r'$g^\star_{smoothed}(r^\star)$'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'np_radius'],
         'color': ['k', 'b'],
@@ -97,16 +97,17 @@ class BaseGraphConfig:
     graph_legend: str
     title: str
     ylabel: str
-    xlabel: str = 'r [nm]'
+    xlabel: str = r'$r^\star$ [nm]'
     graph_style: dict = field(default_factory=lambda: {
         'legend': 'density',
         'color': 'k',
         'marker': 'o',
         'linestyle': '-',
-        'markersize': 5,
+        'markersize': 2,
         '2nd_marksize': 1
     })
-    graph_2nd_legend: str = 'g(r), a. u.'
+    graph_2nd_legend: str = r'$g^\star(r^\star)$, a. u.'
+    if_elsevier: bool = True
 
 
 @dataclass
@@ -122,8 +123,8 @@ class DensityGraphConfig(BaseGraphConfig):
 class Rdf2dGraphConfig(BaseGraphConfig):
     """set the parameters for the graph"""
     graph_suffix: str = 'rdf_2d.png'
-    graph_legend: str = 'g(r)'
-    ylabel: str = 'g(r), a. u.  '
+    graph_legend: str = r'$g^\star(r^\star)$'
+    ylabel: str = r'$g^\star(r^\star)$, a. u.  '
     title: str = 'Rdf vs Distance from NP'
 
 
@@ -131,16 +132,16 @@ class Rdf2dGraphConfig(BaseGraphConfig):
 class FittedRdf2dGraphConfig(BaseGraphConfig):
     """set the parameters for the graph"""
     graph_suffix: str = 'fitted_rdf_2d.png'
-    graph_legend: str = 'g(r)'
-    graph_2nd_legend: str = r'$g_{fitted}(r)$'
-    ylabel: str = 'g(r), a. u.'
+    graph_legend: str = r'$g^\star(r^\star)$'
+    graph_2nd_legend: str = r'$g^\star_{fitted}(r^\star)$'
+    ylabel: str = r'$g^\star(r^\star)$, a. u.'
     title: str = 'fitted Rdf vs Distance from NP'
     graph_style: dict = field(default_factory=lambda: {
         'legend': 'density',
         'color': 'k',
         'marker': 'o',
         'linestyle': '-',
-        'markersize': 4,
+        'markersize': 2,
         '2nd_marksize': 1
     })
 
@@ -149,9 +150,9 @@ class FittedRdf2dGraphConfig(BaseGraphConfig):
 class SmoothedRdf2dGraphConfig(BaseGraphConfig):
     """set the parameters for the graph"""
     graph_suffix: str = 'smoothed_rdf_2d.png'
-    graph_legend: str = 'g(r)'
-    graph_2nd_legend: str = r'$g_{smoothed}(r)$'
-    ylabel: str = 'g(r)'
+    graph_legend: str = r'$g^\star(r^\star)$'
+    graph_2nd_legend: str = r'$g^\star_{smoothed}(r^\star)$'
+    ylabel: str = r'$g^\star(r^\star)$'
     title: str = 'smoothed Rdf vs Distance from NP'
 
 
@@ -165,7 +166,7 @@ class GraphsConfigs:
         field(default_factory=FittedRdf2dGraphConfig)
     smoothed_rdf_config: "SmoothedRdf2dGraphConfig" = \
         field(default_factory=SmoothedRdf2dGraphConfig)
-
+    if_elsevier: bool = True
 
 class SurfactantDensityPlotter:
     """plot the desinty of the oda around the NP"""
@@ -292,18 +293,26 @@ class SurfactantDensityPlotter:
         densities = np.array(list(rdf.values()))
         ax_i.plot(radii,
                   densities,
-                  marker=config.graph_style['marker'],
                   linestyle=config.graph_style['linestyle'],
+                  linewidth=1,
                   color='r',
                   label=config.graph_2nd_legend,
-                  markersize=config.graph_style['2nd_marksize'],
                   zorder=1)
         if style == 'fitted':
-            ax_i = self._add_vline(
-                ax_i, contact_radius, legend=r'r$_c$', lstyle=':', color='k')
-            ax_i = self._add_vline(
-                ax_i, self.first_turn, legend='a', lstyle=':', color='g')
-            ax_i = self._add_vline(ax_i, self.midpoint, lstyle='--', color='b')
+            ax_i = self._add_vline(ax_i,
+                                   contact_radius,
+                                   legend=r'r$^\star_c$',
+                                   lstyle=':',
+                                   color='k')
+            ax_i = self._add_vline(ax_i,
+                                   self.first_turn,
+                                   legend='a',
+                                   lstyle='--',
+                                   color='r')
+            ax_i = self._add_vline(ax_i,
+                                   self.midpoint,
+                                   lstyle='-.',
+                                   color='r')
             ax_i = self._add_vline(
                 ax_i, self.second_turn, legend='c', lstyle=':', color='r')
             ax_i.text(-0.09,
@@ -312,7 +321,7 @@ class SurfactantDensityPlotter:
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,
-                  fontsize=20)
+                  fontsize=elsevier_plot_tools.FONT_SIZE_PT)
             yticks = [0, 0.5, 1.0]
             ax_i.set_yticks(yticks)
         fout: str = f'{self.residue}_{config.graph_suffix}'
@@ -333,7 +342,7 @@ class SurfactantDensityPlotter:
                     ymin=ylims[0],
                     ymax=ylims[1],
                     ls=lstyle,
-                    lw=2,
+                    lw=1,
                     color=color,
                     label=f'{legend}={x_loc:.2f}')
         ax_i.set_ylim(ylims)
@@ -352,17 +361,31 @@ class SurfactantDensityPlotter:
         densities = np.array(list(data.values()))
         ax_i: plt.axes
         fig_i: plt.figure
-        fig_i, ax_i = plot_tools.mk_canvas((np.min(radii), np.max(radii)),
-                                           height_ratio=(5 ** 0.5 - 1) * 1.5)
-        ax_i.plot(radii,
-                  densities,
-                  marker=config.graph_style['marker'],
-                  linestyle=config.graph_style['linestyle'],
-                  color=config.graph_style['color'],
-                  label=config.graph_legend,
-                  markersize=config.graph_style['markersize'])
-        ax_i.set_xlabel(config.xlabel, fontsize=18)
-        ax_i.set_ylabel(config.ylabel, fontsize=18)
+        if config.if_elsevier:
+            fig_i, ax_i = elsevier_plot_tools.mk_canvas(
+                size_type='single_column')
+            font_size: int = elsevier_plot_tools.FONT_SIZE_PT
+        else:
+            fig_i, ax_i = plot_tools.mk_canvas(
+                (np.min(radii), np.max(radii)),
+                height_ratio=(5 ** 0.5 - 1) * 1.5)
+            font_size: int = 18
+        if not config.if_elsevier:
+            ax_i.plot(radii,
+                      densities,
+                      marker=config.graph_style['marker'],
+                      linestyle=config.graph_style['linestyle'],
+                      color=config.graph_style['color'],
+                      label=config.graph_legend,
+                      markersize=config.graph_style['markersize'])
+        else:
+            ax_i.scatter(radii,
+                         densities,
+                         color='k',
+                         s=2,
+                         label=config.graph_legend)
+        ax_i.set_xlabel(config.xlabel, fontsize=font_size)
+        ax_i.set_ylabel(config.ylabel, fontsize=font_size)
         if hasattr(config, 'if_title'):
             if config.title:
                 ax_i.set_title(config.title)
@@ -471,7 +494,7 @@ class HeatmapPlotter:
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,
-                  fontsize=18)
+                  fontsize=7)
         return ax_i
 
     def _add_np_radii(self,
@@ -657,7 +680,7 @@ class TimeDependentPlotterConfig(BaseGraphConfig):
     graph_suffix2: str = 'ODA_ave_density_time.png'
     graph_legend: str = 'g(r,t)'
     graph_legend2: str = 'density(r,t)'
-    ylabel: str = 'g(r)'
+    ylabel: str = r'$g^\star(r^\star)$'
     ylabel2: str = 'density(r)'
     title: str = 'Fitted Rdf(t) vs Distance from NP'
     title2: str = 'Density vs Distance from NP'

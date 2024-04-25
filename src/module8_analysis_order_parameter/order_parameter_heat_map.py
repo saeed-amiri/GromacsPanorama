@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from common import logger
+from common.colors_text import TextColor as bcolors
 
 from module8_analysis_order_parameter.config_classes_trr import AllConfig
 
@@ -43,10 +44,12 @@ class OrderParameterHeatMap:
         interface_oda: np.ndarray = self.get_interface_oda(positions)
         _, axs = plt.subplots(1, 3, figsize=(15, 5))
         for i, ax_i in enumerate(axs):
-            data: np.ndarray = np.hstack((interface_oda,
-                                          order_parameters[:, i, np.newaxis]))
-            self.plot_heat_map_axis(ax_i, data)
+            data: np.ndarray = np.hstack(
+                (interface_oda, order_parameters[:, i, np.newaxis]*i))
+            ax_i.scatter(data[:, 0], data[:, 1], c=data[:, 2], cmap='hot')
             ax_i.set_title(f'Order Parameter for Axis {i}')
+            del data
+
         plt.xlabel('X')
         plt.ylabel('Y')
         plt.tight_layout()
@@ -72,10 +75,13 @@ class OrderParameterHeatMap:
                            data: np.ndarray
                            ) -> None:
         """Plot the heat map of order parameters for a given axis"""
+        print(ax_i, data)
         ax_i.scatter(data[:, 0], data[:, 1], c=data[:, 2], cmap='hot')
 
     def write_msg(self,
                   log: logger.logging.Logger
                   ) -> None:
-        """Write the info message to the log"""
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{OrderParameterHeatMap.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)

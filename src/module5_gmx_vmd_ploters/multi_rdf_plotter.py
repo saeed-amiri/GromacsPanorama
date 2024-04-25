@@ -43,7 +43,7 @@ import matplotlib.pylab as plt
 import matplotlib.ticker as tck
 from matplotlib.ticker import FuncFormatter
 
-from common import logger, plot_tools, xvg_to_dataframe
+from common import logger, plot_tools, xvg_to_dataframe, elsevier_plot_tools
 from common.colors_text import TextColor as bcolors
 
 
@@ -69,7 +69,7 @@ class BaseGraphConfig:
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
         'marker': 'o',
         'markersize': 0,
-        'linewidth': 2,
+        'linewidth': 1,
     })
 
     legends: dict[str, str] = \
@@ -109,8 +109,8 @@ class BaseGraphConfig:
             'N': 'blue',
             'amino_charge': 'blue',
             'SOL': 'red',
-            'D10': 'cyan',
-            'C5': 'cyan',
+            'D10': (1/255, 210/255, 255/255),
+            'C5': (1/255, 210/255, 255/255),
             'APT': 'k',
             'POT': 'brown',
             'OH2': 'red',
@@ -208,6 +208,7 @@ class VerticalLineConfig:
 class AllConfig(FileConfig, VerticalLineConfig):
     """Set the all the configs"""
     if_public: bool = True
+    if_multi_label: bool = False
     data_sets: str = 'rdf'  # rdf or cdf
 
     plot_configs: OverlayConfig = field(default_factory=OverlayConfig)
@@ -293,10 +294,11 @@ class MultiRdfPlotter:
                                         rdf_dict[first_key]['r_nm'].iat[-1])
         ax_i: plt.axes
         fig_i: plt.figure
-        fig_i, ax_i = plot_tools.mk_canvas(
-            x_range,
-            height_ratio=self.configs.plot_configs.height_ratio,
-            num_xticks=7)
+        # fig_i, ax_i = plot_tools.mk_canvas(
+            # x_range,
+            # height_ratio=self.configs.plot_configs.height_ratio,
+            # num_xticks=7)
+        fig_i, ax_i = elsevier_plot_tools.mk_canvas('single_column')
         norm_factor: float = 1.0
         for s_i in sources:
             rdf_df: pd.DataFrame = rdf_dict.get(s_i)
@@ -337,27 +339,30 @@ class MultiRdfPlotter:
         fout = f'window_{fout}'
         self._save_plot(
             fig_i, ax_i, fout, viewpoint, close_fig=False, loc=legend_loc[1])
-        if self.configs.data_sets == 'rdf':
-            if viewpoint == 'com':
-                ax_i = self._plot_shadow_com(ax_i, vlines)
-                fout = f'shadow_{fout}'
-                self._save_plot(fig_i,
-                                ax_i,
-                                fout,
-                                viewpoint,
-                                close_fig=True,
-                                loc=legend_loc[1])
-            elif viewpoint == 'shell':
-                ax_i = self._plot_shadow_shell(ax_i)
-                fout = f'shadow_{fout}'
-                self._save_plot(fig_i,
-                                ax_i,
-                                fout,
-                                viewpoint,
-                                close_fig=True,
-                                loc=legend_loc[1])
-        else:
+        if self.configs.data_sets != 'rdf':
             plt.close(fig_i)
+        if viewpoint == 'com':
+            ax_i = self._plot_shadow_com(ax_i, vlines)
+            fout = f'shadow_{fout}'
+            elsevier_plot_tools.save_close_fig(
+                fig_i, fname=fout, loc=legend_loc[1])
+            # self._save_plot(fig_i,
+                            # ax_i,
+                            # fout,
+                            # viewpoint,
+                            # close_fig=True,
+                            # loc=legend_loc[1])
+        elif viewpoint == 'shell':
+            ax_i = self._plot_shadow_shell(ax_i)
+            fout = f'shadow_{fout}'
+            elsevier_plot_tools.save_close_fig(
+                fig_i, fname=fout, loc=legend_loc[1])
+            # self._save_plot(fig_i,
+                            # ax_i,
+                            # fout,
+                            # viewpoint,
+                            # close_fig=True,
+                            # loc=legend_loc[1])
     
     def _get_norm_factor(self,
                          rdf_df: pd.DataFrame,
@@ -465,9 +470,9 @@ class MultiRdfPlotter:
         if not self.configs.if_public:
             ax_i.set_title(self.configs.plot_configs.titles.get(viewpoint))
         ax_i.set_xlabel(
-            self.configs.plot_configs.labels['xlabel'], fontsize=18)
+            self.configs.plot_configs.labels['xlabel'], fontsize=7)
         ax_i.set_ylabel(
-            self.configs.plot_configs.labels['ylabel'], fontsize=18)
+            self.configs.plot_configs.labels['ylabel'], fontsize=7)
         ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
         return ax_i
 
@@ -586,24 +591,25 @@ class MultiRdfPlotter:
                           y1=y_lims[0],
                           y2=y_lims[1],
                           color='#DAA520', # Goldenrod
-                          alpha=0.2,
+                          alpha=0.1,
                           edgecolor=None)
         ax_i.fill_between(
             x=[self.configs.nominal_cor, self.configs.nominal_np],
             y1=y_lims[0],
             y2=y_lims[1],
             color='k',
-            alpha=0.5,
+            alpha=0.2,
             edgecolor=None)
         ax_i.grid(False, axis='both')
         ax_i.set_yticks([])
-        ax_i.text(-0.008,
-                  1,
-                  'b)',
-                  ha='right',
-                  va='top',
-                  transform=ax_i.transAxes,
-                  fontsize=22)
+        if self.configs.if_multi_label:
+            ax_i.text(-0.008,
+                      1,
+                      'b)',
+                      ha='right',
+                      va='top',
+                      transform=ax_i.transAxes,
+                      fontsize=7)
         return ax_i
 
     def _plot_shadow_shell(self, ax_i: plt.axes) -> plt.axis:
@@ -618,7 +624,7 @@ class MultiRdfPlotter:
                           y1=y_lims[0],
                           y2=y_lims[1],
                           color='grey',
-                          alpha=0.2,
+                          alpha=0.1,
                           edgecolor=None)
         ax_i.fill_between(
             x=[self.configs.shell_cor_n_first_pick,

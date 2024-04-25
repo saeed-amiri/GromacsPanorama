@@ -114,7 +114,7 @@ def save_close_fig(fig: plt.figure,  # The figure to save,
                    transparent: bool = False,
                    legend: bool = True,
                    if_close: bool = True,
-                   legend_font_size: int = 13,
+                   legend_font_size: int = 7,
                    bbox_to_anchor=None
                    ) -> None:
     """

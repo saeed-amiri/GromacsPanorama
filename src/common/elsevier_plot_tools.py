@@ -67,6 +67,7 @@ MINIMAL_SIZE_PT = 85
 SINGLE_COLUMN_PT = 255
 ONE_AND_HALF_COLUMN_PT = 397
 DOUBLE_COLUMN_PT = 539
+POINT_PER_INCH = 72
 # Font sizes in points
 FONT_SIZE_PT = 7
 SUB_SUPER_FONT_SIZE_PT = 6
@@ -88,14 +89,22 @@ def set_figure_size(size_type: str
                     ) -> tuple[int, int]:
     """Set the size of the figure based on the size type"""
     sizes: dict[str, tuple[int, int]] = {
-        "minimal": (MINIMAL_SIZE_PT,
-                    set_figure_height(MINIMAL_SIZE_PT)),
-        "single_column": (SINGLE_COLUMN_PT,
-                          set_figure_height(SINGLE_COLUMN_PT)),
-        "one_half_column": (ONE_AND_HALF_COLUMN_PT,
-                            set_figure_height(ONE_AND_HALF_COLUMN_PT)),
-        "double_column": (DOUBLE_COLUMN_PT,
-                          set_figure_height(DOUBLE_COLUMN_PT))
+        "minimal": (
+            MINIMAL_SIZE_PT / POINT_PER_INCH,
+            set_figure_height(MINIMAL_SIZE_PT / POINT_PER_INCH)
+            ),
+        "single_column": (
+            SINGLE_COLUMN_PT / POINT_PER_INCH,
+            set_figure_height(SINGLE_COLUMN_PT / POINT_PER_INCH)
+            ),
+        "one_half_column": (
+            ONE_AND_HALF_COLUMN_PT / POINT_PER_INCH,
+            set_figure_height(ONE_AND_HALF_COLUMN_PT / POINT_PER_INCH)
+            ),
+        "double_column": (
+            DOUBLE_COLUMN_PT / POINT_PER_INCH,
+            set_figure_height(DOUBLE_COLUMN_PT / POINT_PER_INCH)
+            )
     }
     return sizes.get(size_type, (SINGLE_COLUMN_PT,
                      set_figure_height(SINGLE_COLUMN_PT)))
@@ -135,9 +144,10 @@ def save_close_fig(fig: plt.Figure,
                    loc: str = 'upper right'
                    ) -> None:
     """Save and close the figure"""
-    fig.axes[0].legend(loc=loc)
+    fig.axes[0].legend(loc=loc, fontsize=FONT_SIZE_PT)
     fig.savefig(fname,
                 dpi=dpi,
+                pad_inches=0.1,
                 bbox_inches='tight'
                 )
     plt.close(fig)

@@ -127,3 +127,17 @@ def mk_canvas(size_type: str,
     set_dpi(dpi)
     ax_i = set_font_size(ax_i)
     return fig_i, ax_i
+
+
+def save_close_fig(fig: plt.Figure,
+                   fname: str,
+                   dpi: int = DPI_HALFTONE,
+                   loc: str = 'upper right'
+                   ) -> None:
+    """Save and close the figure"""
+    fig.axes[0].legend(loc=loc)
+    fig.savefig(fname,
+                dpi=dpi,
+                bbox_inches='tight'
+                )
+    plt.close(fig)

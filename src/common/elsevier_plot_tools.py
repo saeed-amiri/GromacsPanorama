@@ -59,17 +59,21 @@ for combination art; 1000 DPI for line art.
 
 """
 
+import matplotlib.pyplot as plt
 
 # Constants for Elsevier's guidelines
+# Fig sizes in points
 MINIMAL_SIZE_PT = 85
 SINGLE_COLUMN_PT = 255
 ONE_AND_HALF_COLUMN_PT = 397
 DOUBLE_COLUMN_PT = 539
+# Font sizes in points
 FONT_SIZE_PT = 7
 SUB_SUPER_FONT_SIZE_PT = 6
 DPI_HALFTONE = 300
 DPI_COMBINATION = 500
 DPI_LINE_ART = 1000
+# Golden ratio
 GOLDEN_RATIO = (1 + 5 ** 0.5) / 2
 
 
@@ -95,3 +99,31 @@ def set_figure_size(size_type: str
     }
     return sizes.get(size_type, (SINGLE_COLUMN_PT,
                      set_figure_height(SINGLE_COLUMN_PT)))
+
+
+def set_font_size(ax_i: plt.Axes,
+                  font_size: int = FONT_SIZE_PT,
+                  sub_super_font_size: int = SUB_SUPER_FONT_SIZE_PT
+                  ) -> plt.Axes:
+    """Set the font size for the axes"""
+    for item in ([ax_i.title, ax_i.xaxis.label, ax_i.yaxis.label] +
+                 ax_i.get_xticklabels() + ax_i.get_yticklabels()):
+        item.set_fontsize(font_size)
+    for item in ax_i.get_xticklabels() + ax_i.get_yticklabels():
+        item.set_fontsize(sub_super_font_size)
+    return ax_i
+
+
+def set_dpi(dpi: int) -> None:
+    """Set the DPI for the figure"""
+    plt.rcParams['figure.dpi'] = dpi
+
+
+def mk_canvas(size_type: str,
+              dpi: int = DPI_HALFTONE
+              ) -> tuple[plt.Figure, plt.Axes]:
+    """Create a canvas for the figure"""
+    fig_i, ax_i = plt.subplots(figsize=set_figure_size(size_type))
+    set_dpi(dpi)
+    ax_i = set_font_size(ax_i)
+    return fig_i, ax_i

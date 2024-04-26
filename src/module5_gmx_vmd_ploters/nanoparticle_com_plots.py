@@ -35,7 +35,7 @@ class BasePlotConfig:
         'black', 'blue', 'green', 'red'])
     line_styles: list[str] = field(default_factory=lambda: [
         '-', ':', '--', '-.'])
-    xlabel: str = 'Time (ns)'
+    xlabel: str = 'Time [ns]'
     ylabel: str = r'$\Delta$' + ' '  # The axis will be add later
 
 
@@ -61,7 +61,7 @@ class Direction(Enum):
 @dataclass
 class AllConfig(BasePlotConfig, DataConfig):
     """All configurations"""
-    direction: Direction = Direction.X
+    direction: Direction = Direction.Z
     output_file: str = 'np_com.png'
 
     def __post_init__(self) -> None:
@@ -80,33 +80,63 @@ class PlotNpCom:
                  configs: AllConfig = AllConfig()
                  ) -> None:
         self.configs = configs
-        self.plot_com(log)
+        self.generate_com_plot(log)
         self.write_msg(log)
 
-    def plot_com(self,
-                 log: logger.logging.Logger
-                 ) -> None:
+    def generate_com_plot(self,
+                          log: logger.logging.Logger
+                          ) -> None:
         """Plot the nanoparticle COM"""
-        data: dict[str, np.ndarray] = self._load_data(log)
+        time: np.ndarray
+        data: dict[str, np.ndarray]
+        data, time = self._load_data(log)
         self._log_avg_std(data)
+        self._plot_com(data, time)
 
     def _load_data(self,
                    log: logger.logging.Logger
-                   ) -> dict[str, np.ndarray]:
+                   ) -> tuple[dict[str, np.ndarray], np.ndarray]:
         """Load the data"""
         data: dict[str, np.ndarray] = {}
-        for file, label in self.configs.xvg_files.items():
+        for i, (file, label) in enumerate(self.configs.xvg_files.items()):
             df_i: pd.DataFrame = xvg_to_dataframe.XvgParser(file, log).xvg_df
+            if i == 0:
+                time: np.ndarray = df_i.iloc[:, 0].values / 1000.0
             data[label] = \
                 df_i.iloc[:, self.configs.direction.value].values
-        return data
+        return data, time
+
+    def _plot_com(self,
+                  data: dict[str, np.ndarray],
+                  time: np.ndarray
+                  ) -> None:
+        """Plot the nanoparticle COM"""
+        fig_i: plt.Figure
+        ax_i: plt.Axes
+
+        fig_i, ax_i = elsevier_plot_tools.mk_canvas(size_type='single_column')
+        for i, (label, data_i) in enumerate(data.items()):
+            ax_i.plot(time,
+                      data_i - data_i[0],
+                      label=label,
+                      linewidth=self.configs.linewidth,
+                      color=self.configs.linecolotrs[i],
+                      linestyle=self.configs.line_styles[i])
+
+        ax_i.set_xlabel(self.configs.xlabel)
+        ax_i.set_ylabel(self.configs.ylabel)
+        ax_i.legend()
+        elsevier_plot_tools.save_close_fig(fig_i,
+                                           fname  := self.configs.output_file,
+                                           loc='lower left')
+        self.info_msg += f'\tThe plot is saved as `{fname}`\n'
 
     def _log_avg_std(self,
                      data: dict[str, np.ndarray]
                      ) -> None:
         """Log the average and standard deviation"""
         for label, data_i in data.items():
-            self.info_msg += (f'{label}:\n'
+            self.info_msg += (f'\t{label}:\n'
                               f'\t\tAverage: {np.mean(data_i):.2f}\n'
                               f'\t\tStandard Deviation: {np.std(data_i):.2f}\n'
                               )

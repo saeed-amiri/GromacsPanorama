@@ -331,7 +331,7 @@ class SurfactantDensityPlotter:
                       ha='right',
                       va='top',
                       transform=ax_i.transAxes,
-                      fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+                      fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
             yticks = [0, 0.5, 1.0]
             ax_i.set_yticks(yticks)
         fout: str = f'{self.residue}_{config.graph_suffix}'
@@ -509,7 +509,7 @@ class HeatmapPlotter:
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,
-                  fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
         return ax_i
 
     def _add_np_radii(self,

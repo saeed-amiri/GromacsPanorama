@@ -102,7 +102,7 @@ class BaseGraphConfig:
             'NH2': '-.',
             'ODN': '-.'})
 
-    colors: dict[str, str] = \
+    colors: dict[str, typing.Any] = \
         field(default_factory=lambda: {
             'CLA': 'green',
             'amino_n': 'blue',
@@ -294,17 +294,12 @@ class MultiRdfPlotter:
                                         rdf_dict[first_key]['r_nm'].iat[-1])
         ax_i: plt.axes
         fig_i: plt.figure
-        # fig_i, ax_i = plot_tools.mk_canvas(
-            # x_range,
-            # height_ratio=self.configs.plot_configs.height_ratio,
-            # num_xticks=7)
         fig_i, ax_i = elsevier_plot_tools.mk_canvas('single_column')
         norm_factor: float = 1.0
         for s_i in sources:
             rdf_df: pd.DataFrame = rdf_dict.get(s_i)
             if rdf_df is not None:
-                norm_factor: float = \
-                    self._get_norm_factor(rdf_df, sources[s_i])
+                norm_factor = self._get_norm_factor(rdf_df, sources[s_i])
                 ax_i = self._plot_layer(
                     ax_i, rdf_df, viewpoint, s_i, norm_factor)
             if self.configs.data_sets == 'rdf':
@@ -346,29 +341,17 @@ class MultiRdfPlotter:
             fout = f'shadow_{fout}'
             elsevier_plot_tools.save_close_fig(
                 fig_i, fname=fout, loc=legend_loc[1])
-            # self._save_plot(fig_i,
-                            # ax_i,
-                            # fout,
-                            # viewpoint,
-                            # close_fig=True,
-                            # loc=legend_loc[1])
         elif viewpoint == 'shell':
             ax_i = self._plot_shadow_shell(ax_i)
             fout = f'shadow_{fout}'
             elsevier_plot_tools.save_close_fig(
                 fig_i, fname=fout, loc=legend_loc[1])
-            # self._save_plot(fig_i,
-                            # ax_i,
-                            # fout,
-                            # viewpoint,
-                            # close_fig=True,
-                            # loc=legend_loc[1])
-    
+
     def _get_norm_factor(self,
                          rdf_df: pd.DataFrame,
                          data_dict: dict[str, str]
                          ) -> float:
-        if (self.configs.normalize_type == 'max' and 
+        if (self.configs.normalize_type == 'max' and
            self.configs.data_sets == 'rdf'):
             col = data_dict.get('y_col')
             try:
@@ -376,7 +359,7 @@ class MultiRdfPlotter:
             except KeyError:
                 return 1.0
         return 1.0
-    
+
     def plot_single_rdf(self,
                         rdf_dict: dict[str, pd.DataFrame],
                         sources: dict[str, dict[str, str]],
@@ -590,7 +573,7 @@ class MultiRdfPlotter:
         ax_i.fill_between(x=[x_lims[0], self.configs.nominal_cor],
                           y1=y_lims[0],
                           y2=y_lims[1],
-                          color='#DAA520', # Goldenrod
+                          color='#DAA520',  # Goldenrod
                           alpha=0.1,
                           edgecolor=None)
         ax_i.fill_between(
@@ -609,7 +592,7 @@ class MultiRdfPlotter:
                       ha='right',
                       va='top',
                       transform=ax_i.transAxes,
-                      fontsize=7)
+                      fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
         return ax_i
 
     def _plot_shadow_shell(self, ax_i: plt.axes) -> plt.axis:

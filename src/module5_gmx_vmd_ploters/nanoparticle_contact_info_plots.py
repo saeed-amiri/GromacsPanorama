@@ -38,7 +38,7 @@ class BasePlotConfig:
         '-', '--', ':', '-.'])
     line_labels: list[str] = field(init=False)
     xlabel: str = 'Time [ns]'
-    ylabel: str = 'X'
+    ylabel: str = ''
 
 
 @dataclass
@@ -137,7 +137,7 @@ class PlotNpContactInfo:
                          ) -> None:
         """Add a label to the plot"""
         if self.configs.if_multi_label:
-            ax_i.text(-0.075,
+            ax_i.text(-0.085,
                       1,
                       'b)',
                       ha='right',

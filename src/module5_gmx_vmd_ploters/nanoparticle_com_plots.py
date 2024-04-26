@@ -63,7 +63,7 @@ class AllConfig(BasePlotConfig, DataConfig):
     """All configurations"""
     direction: Direction = Direction.Z
     output_file: str = 'np_com.png'
-
+    if_multi_label: bool = True
     def __post_init__(self) -> None:
         """Post init function"""
         self.ylabel += f'{self.direction.name} [nm]'
@@ -125,11 +125,26 @@ class PlotNpCom:
 
         ax_i.set_xlabel(self.configs.xlabel)
         ax_i.set_ylabel(self.configs.ylabel)
+        self._add_multi_label(ax_i)
+
         ax_i.legend()
         elsevier_plot_tools.save_close_fig(fig_i,
                                            fname  := self.configs.output_file,
                                            loc='lower left')
         self.info_msg += f'\tThe plot is saved as `{fname}`\n'
+
+    def _add_multi_label(self,
+                            ax_i: plt.Axes
+                            ) -> None:
+        """Add a label to the plot"""
+        if self.configs.if_multi_label:
+            ax_i.text(-0.085,
+                      1,
+                      'a)',
+                      ha='right',
+                      va='top',
+                      transform=ax_i.transAxes,
+                      fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
 
     def _log_avg_std(self,
                      data: dict[str, np.ndarray]

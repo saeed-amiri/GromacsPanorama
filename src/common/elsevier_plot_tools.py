@@ -71,6 +71,8 @@ POINT_PER_INCH = 72
 # Font sizes in points
 FONT_SIZE_PT = 7
 SUB_SUPER_FONT_SIZE_PT = 6
+LABEL_FONT_SIZE_PT = 10
+# DPI for different types of images
 DPI_HALFTONE = 300
 DPI_COMBINATION = 500
 DPI_LINE_ART = 1000

@@ -33,7 +33,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from common import logger, plot_tools, my_tools
+from common import logger, my_tools, elsevier_plot_tools
 from common.colors_text import TextColor as bcolors
 
 
@@ -54,19 +54,18 @@ class BaseConfig:
     })
 
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
-        'label': 'Order Parameter',
+        'label': 'Without NP',
         'color': 'black',
         'marker': 'o',
         'linestyle': '--',
-        'markersize': 5,
+        'linewidth': 1,
+        'markersize': 2,
     })
 
     line_styles: list[str] = \
         field(default_factory=lambda: ['-', ':', '--', '-.'])
     colors: list[str] = \
         field(default_factory=lambda: ['black', 'red', 'blue', 'green'])
-
-    height_ratio: float = (5 ** 0.5 - 1) * 1.5
 
     y_unit: str = ''
 
@@ -121,7 +120,6 @@ class BarPlotConfig(BaseConfig):
     bar_label: bool = False
     legend_loc: str = 'upper left'
     bar_width: float = 0.35
-    height_ratio: float = (5 ** 0.5 - 1) * 1.5
 
     def __post_init__(self) -> None:
         self.labels['title'] = 'Nr. Oda at the interface'
@@ -219,13 +217,10 @@ class PlotOrderParameter:
                     config: BaseConfig
                     ) -> None:
         """Plot the order parameter data."""
-        x_range: tuple[float, float] = \
-            (min(data[config.xcol_name]), max(data[config.xcol_name]))
-
         fig_i: plt.figure
         ax_i: plt.axes
-        fig_i, ax_i = \
-            plot_tools.mk_canvas(x_range, height_ratio=config.height_ratio)
+        fig_i, ax_i = elsevier_plot_tools.mk_canvas(size_type='single_column')
+
         if config.log_x_axis:
             ax_i.set_xscale('log')
 
@@ -240,23 +235,22 @@ class PlotOrderParameter:
                       ha='right',
                       va='top',
                       transform=ax_i.transAxes,
-                      fontsize=22)
+                      fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
         else:
             ax_i.plot(data[config.xcol_name],
                       data[config.ycol_name],
                       **config.graph_styles)
 
-        ax_i.set_xlabel(config.labels['xlabel'], fontsize=18)
-        ax_i.set_ylabel(
-            f'{config.labels["ylabel"]} {config.y_unit}', fontsize=18)
+        ax_i.set_xlabel(config.labels['xlabel'],
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        ax_i.set_ylabel(f'{config.labels["ylabel"]} {config.y_unit}',
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
         if config.show_title:
             ax_i.set_title(f'{config.labels["title"]} ({key})')
         ax_i.grid(True, which='both', linestyle='--', color='gray', alpha=0.5)
 
-        plot_tools.save_close_fig(fig_i,
-                                  ax_i,
-                                  fname := f'{key}_{config.graph_suffix}',
-                                  loc=config.legend_loc)
+        elsevier_plot_tools.save_close_fig(
+            fig_i, fname := f'{key}_{config.graph_suffix}', loc='lower right')
         self.info_msg += f'\tThe plot for `{key}` is saved as `{fname}`\n'
 
     def _convert_nr_to_ratio(self,
@@ -279,13 +273,12 @@ class PlotOrderParameter:
         """Plot a bar graph for nominal and actual Oda numbers."""
         # Set the positions of the bars on the x-axis
         x_data = np.arange(len(data))
-        x_range: tuple[float, float] = (min(x_data), max(x_data))
 
         fig_i: plt.figure
         ax_i: plt.axes
 
         fig_i, ax_i = \
-            plot_tools.mk_canvas(x_range, height_ratio=config.height_ratio)
+            elsevier_plot_tools.mk_canvas(size_type='single_column')
 
         if config.log_x_axis:
             ax_i.set_xscale('log')
@@ -301,8 +294,10 @@ class PlotOrderParameter:
                          label='Actual Oda',
                          zorder=3)
 
-        ax_i.set_xlabel(config.labels['xlabel'], fontsize=18)
-        ax_i.set_ylabel(config.labels['ylabel'], fontsize=18)
+        ax_i.set_xlabel(config.labels['xlabel'],
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        ax_i.set_ylabel(config.labels['ylabel'],
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
         ax_i.set_title(config.labels['title'])
 
         ax_i.set_xticks(x_data)
@@ -315,10 +310,8 @@ class PlotOrderParameter:
             self.add_value_labels(ax_i, bars1)
             self.add_value_labels(ax_i, bars2)
 
-        plot_tools.save_close_fig(fig_i,
-                                  ax_i,
-                                  fname := config.graph_suffix,
-                                  loc=config.legend_loc)
+        elsevier_plot_tools.save_close_fig(
+            fig_i, fname := config.graph_suffix, loc=config.legend_loc)
         self.info_msg += f'\tThe plot for `{key}` is saved as `{fname}`\n'
 
     @staticmethod
@@ -338,7 +331,7 @@ class PlotOrderParameter:
                           ha='center',
                           va='bottom',
                           rotation=rotation,
-                          fontsize=10)
+                          fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
     def write_msg(self,
                   log: logger.logging.Logger

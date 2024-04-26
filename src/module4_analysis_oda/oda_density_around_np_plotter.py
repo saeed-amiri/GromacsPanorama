@@ -72,7 +72,7 @@ class FittedsRdf2dHeatMapConfig(BaseHeatMapConfig):
     Configuration parameters for heatmap plotting of fitted 2d rdf.
     """
     heatmap_suffix: str = 'fittedRdf2dheatmap.png'
-    cbar_label: str = r'$g^\star_{fitted}(r^\star)$'
+    cbar_label: str = r'$g^\star_{fitted}(r^\star)$, a.u.'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'turn_points'],
         'color': ['k', 'r', 'g', 'b'],
@@ -380,6 +380,7 @@ class SurfactantDensityPlotter:
                 (np.min(radii), np.max(radii)),
                 height_ratio=(5 ** 0.5 - 1) * 1.5)
             font_size: int = 18
+            ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
         if not config.if_elsevier:
             ax_i.plot(radii,
                       densities,
@@ -400,7 +401,6 @@ class SurfactantDensityPlotter:
             if config.title:
                 ax_i.set_title(config.title)
         # Set grid for primary axis
-        ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
 
         if not return_ax:
             fout: str = f'{self.residue}_{config.graph_suffix}'

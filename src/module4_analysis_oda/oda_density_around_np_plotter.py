@@ -29,12 +29,15 @@ HeatMapPlottingData = namedtuple(
 @dataclass
 class BaseHeatMapConfig:
     """base configuration for the heatmap plots"""
+    # pylint: disable=too-many-instance-attributes
     cbar_label: str
     heatmap_suffix: str
     circles_configs: dict[str, list[str]]
     show_grid: bool = False
     heatmap_color: str = 'Greys'
     if_arrow: bool = False
+    if_title: bool = False
+    if_elsevier: bool = True
 
 
 @dataclass
@@ -46,8 +49,8 @@ class DensityHeatMapConfig(BaseHeatMapConfig):
     cbar_label: str = 'Average Density'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'np_radius'],
-        'color': ['k', 'b'],
-        'linestyle': ['-', '--', ':', ':']})
+        'color': ['k', 'r'],
+        'linestyle': ['-', '--', '-.', ':']})
 
 
 @dataclass
@@ -59,8 +62,8 @@ class Rdf2dHeatMapConfig(BaseHeatMapConfig):
     cbar_label: str = r'$g^\star(r^\star)$, a. u.'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'np_radius'],
-        'color': ['k', 'b'],
-        'linestyle': ['-', '--', ':', ':']})
+        'color': ['k', 'r'],
+        'linestyle': ['-', '--', '-.', ':']})
 
 
 @dataclass
@@ -72,9 +75,9 @@ class FittedsRdf2dHeatMapConfig(BaseHeatMapConfig):
     cbar_label: str = r'$g^\star_{fitted}(r^\star)$'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'turn_points'],
-        'color': ['k', 'b', 'g', 'r'],
-        'linestyle': ['-', '--', ':', ':']})
-    if_title: bool = False
+        'color': ['k', 'r', 'g', 'b'],
+        'linestyle': [':', '--', '-.', ':'],
+        'turn_style': ['--', ':', '-.']})
 
 
 @dataclass
@@ -169,6 +172,7 @@ class GraphsConfigs:
         field(default_factory=SmoothedRdf2dGraphConfig)
     if_elsevier: bool = True
 
+
 class SurfactantDensityPlotter:
     """plot the desinty of the oda around the NP"""
     # pylint: disable=too-many-instance-attributes
@@ -257,8 +261,8 @@ class SurfactantDensityPlotter:
                 self.fitted_rdf,
                 'fitted',
                 self.graph_configs.fitted_rdf_config)
-            TimeDependentPlotter(
-                self.time_dependent_rdf, self.time_dependent_ave, log)
+            # TimeDependentPlotter(
+                # self.time_dependent_rdf, self.time_dependent_ave, log)
         # DensityTimePlotter(density=self.density, log=log)
         self.plot_density_graph(self.graph_configs.graph_config)
         self.plot_2d_rdf(self.graph_configs.rdf_config)
@@ -309,21 +313,25 @@ class SurfactantDensityPlotter:
             ax_i = self._add_vline(ax_i,
                                    self.first_turn,
                                    legend='a',
-                                   lstyle='--',
+                                   lstyle=':',
                                    color='r')
             ax_i = self._add_vline(ax_i,
                                    self.midpoint,
+                                   legend='b',
+                                   lstyle='--',
+                                   color='r')
+            ax_i = self._add_vline(ax_i,
+                                   self.second_turn,
+                                   legend='c',
                                    lstyle='-.',
                                    color='r')
-            ax_i = self._add_vline(
-                ax_i, self.second_turn, legend='c', lstyle=':', color='r')
             ax_i.text(-0.09,
-                  1,
-                  'a)',
-                  ha='right',
-                  va='top',
-                  transform=ax_i.transAxes,
-                  fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+                      1,
+                      'a)',
+                      ha='right',
+                      va='top',
+                      transform=ax_i.transAxes,
+                      fontsize=elsevier_plot_tools.FONT_SIZE_PT)
             yticks = [0, 0.5, 1.0]
             ax_i.set_yticks(yticks)
         fout: str = f'{self.residue}_{config.graph_suffix}'
@@ -463,8 +471,11 @@ class HeatmapPlotter:
 
     def setup_plot(self) -> tuple[plt.figure, plt.axes]:
         """Set up the polar plot."""
-        figsize = plot_tools.set_sizes(width = stinfo.plot['width'],
-                                       height_ratio=(5 ** 0.5 - 1) * 1.5)
+        if self.config.if_elsevier:
+            figsize = elsevier_plot_tools.set_figure_size('single_column')
+        else:
+            figsize = plot_tools.set_sizes(width=stinfo.plot['width'],
+                                           height_ratio=(5 ** 0.5 - 1) * 1.5)
         fig_i, ax_i = plt.subplots(
             subplot_kw={'projection': 'polar'}, figsize=figsize)
         ax_i.set_yticklabels([])
@@ -489,15 +500,16 @@ class HeatmapPlotter:
         if self.config.if_arrow:
             ax_i = self._add_radius_arrows(ax_i, contact_radius, np_radius)
         cbar = plt.colorbar(cbar, ax=ax_i, shrink=1)
-        cbar.ax.tick_params(labelsize=13)  # Adjust tick label font size
-        cbar.set_label(label=self.config.cbar_label, fontsize=13)
+        cbar.ax.tick_params(labelsize=elsevier_plot_tools.FONT_SIZE_PT)
+        cbar.set_label(label=self.config.cbar_label,
+                       fontsize=elsevier_plot_tools.FONT_SIZE_PT)
         ax_i.text(0.05,
                   1,
                   'b)',
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,
-                  fontsize=7)
+                  fontsize=elsevier_plot_tools.FONT_SIZE_PT)
         return ax_i
 
     def _add_np_radii(self,
@@ -516,7 +528,7 @@ class HeatmapPlotter:
                 ax_i,
                 contact_radius,
                 color=self.config.circles_configs['color'][0],
-                line_style=self.config.circles_configs['linestyle'][2]
+                line_style=self.config.circles_configs['linestyle'][0]
                 )
         if 'np_radius' in self.config.circles_configs['list']:
             ax_i = self._add_heatmap_circle(
@@ -530,9 +542,9 @@ class HeatmapPlotter:
                     ax_i = self._add_heatmap_circle(
                         ax_i,
                         point_i,
-                        color=self.config.circles_configs['color'][i+1],
+                        color=self.config.circles_configs['color'][1],
                         line_style=self.config.circles_configs[
-                            'linestyle'][i+1])
+                            'turn_style'][i])
 
         return ax_i, contact_radius, np_radius
 
@@ -620,7 +632,7 @@ class HeatmapPlotter:
                         transform=ax_i.transData._b,
                         color=color,
                         ls=line_style,
-                        lw=1.33,
+                        lw=0.75,
                         fill=False)
         ax_i.add_patch(circle)
         return ax_i

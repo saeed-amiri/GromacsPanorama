@@ -14,7 +14,6 @@ inputs:
 Saeed
 """
 
-import typing
 from enum import Enum
 from dataclasses import dataclass, field
 
@@ -81,7 +80,36 @@ class PlotNpCom:
                  configs: AllConfig = AllConfig()
                  ) -> None:
         self.configs = configs
+        self.plot_com(log)
         self.write_msg(log)
+
+    def plot_com(self,
+                 log: logger.logging.Logger
+                 ) -> None:
+        """Plot the nanoparticle COM"""
+        data: dict[str, np.ndarray] = self._load_data(log)
+        self._log_avg_std(data)
+
+    def _load_data(self,
+                   log: logger.logging.Logger
+                   ) -> dict[str, np.ndarray]:
+        """Load the data"""
+        data: dict[str, np.ndarray] = {}
+        for file, label in self.configs.xvg_files.items():
+            df_i: pd.DataFrame = xvg_to_dataframe.XvgParser(file, log).xvg_df
+            data[label] = \
+                df_i.iloc[:, self.configs.direction.value].values
+        return data
+
+    def _log_avg_std(self,
+                     data: dict[str, np.ndarray]
+                     ) -> None:
+        """Log the average and standard deviation"""
+        for label, data_i in data.items():
+            self.info_msg += (f'{label}:\n'
+                              f'\t\tAverage: {np.mean(data_i):.2f}\n'
+                              f'\t\tStandard Deviation: {np.std(data_i):.2f}\n'
+                              )
 
     def write_msg(self,
                   log: logger.logging.Logger

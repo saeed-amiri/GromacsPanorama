@@ -64,9 +64,10 @@ class AllConfig(BasePlotConfig, DataConfig):
     direction: Direction = Direction.Z
     output_file: str = 'np_com.png'
     if_multi_label: bool = True
+
     def __post_init__(self) -> None:
         """Post init function"""
-        self.ylabel += f'{self.direction.name} [nm]'
+        self.ylabel += f'{self.direction.name.lower()} [nm]'
 
 
 class PlotNpCom:
@@ -131,7 +132,7 @@ class PlotNpCom:
         elsevier_plot_tools.save_close_fig(fig_i,
                                            fname  := self.configs.output_file,
                                            loc='lower left')
-        self.info_msg += f'\tThe plot is saved as `{fname}`\n'
+        self.info_msg += f'The plot is saved as `{fname}`\n'
 
     def _add_multi_label(self,
                             ax_i: plt.Axes

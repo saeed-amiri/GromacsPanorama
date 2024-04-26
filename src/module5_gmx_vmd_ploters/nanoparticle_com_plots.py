@@ -58,6 +58,7 @@ class Direction(Enum):
     Y = 2
     Z = 3
 
+
 @dataclass
 class AllConfig(BasePlotConfig, DataConfig):
     """All configurations"""
@@ -69,5 +70,27 @@ class AllConfig(BasePlotConfig, DataConfig):
         self.ylabel += f'{self.direction.name} [nm]'
 
 
+class PlotNpCom:
+    """Plot the nanoparticle COM in the selected dimension"""
+
+    info_msg: str = 'Message from PlotNpCom:\n'
+    configs: AllConfig
+
+    def __init__(self,
+                 log: logger.logging.Logger,
+                 configs: AllConfig = AllConfig()
+                 ) -> None:
+        self.configs = configs
+        self.write_msg(log)
+
+    def write_msg(self,
+                  log: logger.logging.Logger
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
 if __name__ == '__main__':
-    pass
+    PlotNpCom(log=logger.setup_logger(log_name='np_com.log'))

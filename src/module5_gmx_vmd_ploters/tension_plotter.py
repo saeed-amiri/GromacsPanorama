@@ -35,7 +35,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from common import logger
-from common import plot_tools
+from common import elsevier_plot_tools
 from common import my_tools
 from common.colors_text import TextColor as bcolors
 
@@ -59,7 +59,8 @@ class BaseConfig:
         'color': 'black',
         'marker': 'o',
         'linestyle': '--',
-        'markersize': 5,
+        'linewidth': elsevier_plot_tools.LINE_WIDTH,
+        'markersize': elsevier_plot_tools.MARKER_SIZE,
     })
 
     graph_styles2: dict[str, typing.Any] = field(default_factory=lambda: {
@@ -67,16 +68,14 @@ class BaseConfig:
         'color': 'r',
         'marker': 'o',
         'linestyle': '--',
-        'linewidth': 2,
-        'markersize': 5,
+        'linewidth': elsevier_plot_tools.LINE_WIDTH,
+        'markersize': elsevier_plot_tools.MARKER_SIZE,
     })
 
     line_styles: list[str] = \
         field(default_factory=lambda: ['-', ':', '--', '-.'])
     colors: list[str] = \
         field(default_factory=lambda: ['black', 'red', 'blue', 'green'])
-
-    height_ratio: float = (5 ** 0.5 - 1) * 1.5
 
     y_unit: str = r'[mN/nm$^2$]'
 
@@ -129,7 +128,8 @@ class DoubleDataLog(LogGraph):
         'color': 'black',
         'marker': 'o',
         'linestyle': '--',
-        'markersize': 5,
+        'linewidth': elsevier_plot_tools.LINE_WIDTH,
+        'markersize': elsevier_plot_tools.MARKER_SIZE,
     })
     label_b: str = r'$\Delta\gamma_{np}$'
 
@@ -143,7 +143,8 @@ class PreprintDataLog(LogGraph):
         'color': 'black',
         'marker': 'o',
         'linestyle': '--',
-        'markersize': 5,
+        'linewidth': elsevier_plot_tools.LINE_WIDTH,
+        'markersize': elsevier_plot_tools.MARKER_SIZE,
     })
     label_b: str = r'$\Delta\gamma_{np}$'
 
@@ -181,6 +182,7 @@ class AllConfig(FileConfig, ParameterConfig):
     """
     Consolidates all configurations for different graph types.
     """
+    # pylint: disable=too-many-instance-attributes
     simple_config: SimpleGraph = field(default_factory=SimpleGraph)
     raw_config: RawGraph = field(default_factory=RawGraph)
     log_config: LogGraph = field(default_factory=LogGraph)
@@ -188,6 +190,7 @@ class AllConfig(FileConfig, ParameterConfig):
     double_config: DoubleDataLog = field(default_factory=DoubleDataLog)
     preprint_config: PreprintDataLog = field(default_factory=PreprintDataLog)
     if_publish: bool = False
+    if_label: bool = False
 
 
 class PlotTension:
@@ -254,7 +257,7 @@ class PlotTension:
 
     def _surf_actula_log(self,
                          converted_dict: dict[str, pd.DataFrame]
-                              ) -> None:
+                         ) -> None:
         """plot all the input in a same graph"""
         returned_fig = self.plot_graph('np_np',
                                        converted_dict['no_np'],
@@ -263,45 +266,60 @@ class PlotTension:
                                        xcol_name='oda_per_area',
                                        return_ax=True,
                                        add_key_to_title=False)
-        fig_i, ax_i = returned_fig
-        ax_i.plot(converted_dict['no_np']['surf_oda_per_area'],
-                  converted_dict['no_np']['converted_tension'],
-                  c='#ff7f0e', marker='o', linestyle= '--', markersize=5,
-                  label=r'$\Delta\gamma$ (actual)')
-        plot_tools.save_close_fig(
-            fig_i, ax_i, fname := 'actual.png', loc='lower left')
+        if returned_fig is not None:
+            fig_i, ax_i = returned_fig
+            ax_i.plot(converted_dict['no_np']['surf_oda_per_area'],
+                      converted_dict['no_np']['converted_tension'],
+                      c='#ff7f0e',
+                      marker='o',
+                      linestyle='--',
+                      markersize=elsevier_plot_tools.MARKER_SIZE,
+                      label=r'$\Delta\gamma$ (actual)')
+            elsevier_plot_tools.save_close_fig(
+                fig_i, fname := 'actual.png', loc='lower left')
+            self.info_msg += \
+                f'\tThe raw tension plot for both data is saved as `{fname}`\n'
 
     def _surf_preprint_log(self,
-                            converted_dict: dict[str, pd.DataFrame]
-                            ) -> None:
+                           converted_dict: dict[str, pd.DataFrame]
+                           ) -> None:
         """plot all the input in a same graph"""
-        fig_i, ax_i = self.plot_graph('np_np',
-                                      converted_dict['no_np'],
-                                      self.configs.preprint_config,
-                                      ycol_name='converted_tension',
-                                      xcol_name='surf_oda_per_area',
-                                      return_ax=True,
-                                      add_key_to_title=False)
-        ax_i.plot(converted_dict['no_np']['surf_oda_per_area'],
-                  converted_dict['no_np']['converted_tension_with_np'],
-                  c='#ff7f0e', marker='o', linestyle= '--', markersize=5,
-                  label='wiht NP')
-        ax_i.text(-0.12,
-                  1,
-                  'a)',
-                  ha='right',
-                  va='top',
-                  transform=ax_i.transAxes,
-                  fontsize=22)
-        plot_tools.save_close_fig(
-            fig_i, ax_i, fname := 'interface_tension_log.png', loc='lower left')
-
+        returned_fig = self.plot_graph('no_np',
+                                       converted_dict['no_np'],
+                                       self.configs.preprint_config,
+                                       ycol_name='converted_tension',
+                                       xcol_name='surf_oda_per_area',
+                                       return_ax=True,
+                                       add_key_to_title=False)
+        if returned_fig is not None:
+            fig_i, ax_i = returned_fig
+            ax_i.plot(converted_dict['no_np']['surf_oda_per_area'],
+                      converted_dict['no_np']['converted_tension_with_np'],
+                      c='#ff7f0e',
+                      marker='o',
+                      linestyle='--',
+                      markersize=elsevier_plot_tools.MARKER_SIZE,
+                      linewidth=elsevier_plot_tools.LINE_WIDTH,
+                      label='wiht NP')
+            if self.configs.if_label:
+                ax_i.text(-0.11,
+                          1,
+                          'a)',
+                          ha='right',
+                          va='top',
+                          transform=ax_i.transAxes,
+                          fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+            elsevier_plot_tools.save_close_fig(
+                fig_i, fname := 'interface_tension_log.png', loc='lower left')
+            self.info_msg += \
+                f'\tThe raw tension plot for both data is saved as `{fname}`\n'
 
     def plot_all_tensions_log(self,
                               converted_dict: dict[str, pd.DataFrame]
                               ) -> None:
         """plot all the input in a same graph"""
-        returned_fig = self.plot_graph('np_np',
+        double_config: DoubleDataLog = self.configs.double_config
+        returned_fig = self.plot_graph('no_np',
                                        converted_dict['no_np'],
                                        self.configs.double_config,
                                        ycol_name='converted_tension',
@@ -313,13 +331,14 @@ class PlotTension:
 
             ax_i.plot(converted_dict['with_np']['oda_per_area'],
                       converted_dict['with_np']['converted_tension'],
-                      c=self.configs.double_config.colors[1],
-                      ls=self.configs.double_config.graph_styles['linestyle'],
-                      ms=self.configs.double_config.graph_styles['markersize'],
-                      marker=self.configs.double_config.graph_styles['marker'],
-                      label=self.configs.double_config.label_b
+                      c=double_config.colors[1],
+                      ls=double_config.graph_styles['linestyle'],
+                      ms=double_config.graph_styles['markersize'],
+                      marker=double_config.graph_styles['marker'],
+                      linewidth=double_config.graph_styles['linewidth'],
+                      label=double_config.label_b
                       )
-            plot_tools.save_close_fig(fig_i, ax_i, fname := 'double.png')
+            elsevier_plot_tools.save_close_fig(fig_i, fname := 'double.png')
         self.info_msg += \
             f'\tThe raw tension plot for both data is saved as `{fname}`\n'
 
@@ -336,13 +355,10 @@ class PlotTension:
                    ) -> typing.Union[tuple[plt.figure, plt.axis], None]:
         """plot the raw data for later conviniance"""
         # pylint: disable=too-many-arguments
-        x_range: tuple[float, float] = (min(tension[xcol_name]),
-                                        max(tension[xcol_name]))
+
         fig_i: plt.figure
         ax_i: plt.axes
-
-        fig_i, ax_i = \
-            plot_tools.mk_canvas(x_range, height_ratio=configs.height_ratio)
+        fig_i, ax_i = elsevier_plot_tools.mk_canvas(size_type='single_column')
 
         if configs.log_x_axis:
             ax_i.set_xscale('log')
@@ -355,9 +371,10 @@ class PlotTension:
                       tension[ycol_name],
                       **configs.graph_styles2)
 
-        ax_i.set_xlabel(configs.labels['xlabel'], fontsize=18)
-        ax_i.set_ylabel(
-            f'{configs.labels["ylabel"]} {configs.y_unit}', fontsize=18)
+        ax_i.set_xlabel(configs.labels['xlabel'],
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        ax_i.set_ylabel(f'{configs.labels["ylabel"]} {configs.y_unit}',
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
         if self.configs.if_publish:
             if add_key_to_title:
                 ax_i.set_title(f'{configs.labels["title"]} ({key})')
@@ -368,8 +385,8 @@ class PlotTension:
         if return_ax:
             return fig_i, ax_i
 
-        plot_tools.save_close_fig(
-            fig_i, ax_i, fname := f'{key}_{configs.graph_suffix}')
+        elsevier_plot_tools.save_close_fig(
+            fig_i, fname := f'{key}_{configs.graph_suffix}')
 
         self.info_msg += \
             f'\tThe raw tension plot for `{key}` is saved as `{fname}`\n'

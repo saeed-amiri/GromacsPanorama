@@ -64,7 +64,7 @@ import pandas as pd
 
 import matplotlib.pylab as plt
 
-from common import logger, xvg_to_dataframe, my_tools, plot_tools
+from common import logger, xvg_to_dataframe, my_tools, elsevier_plot_tools
 from common.colors_text import TextColor as bcolors
 
 
@@ -133,20 +133,18 @@ class PlotConfig:
     })
 
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
-        'label': '5Oda',
+        'label': '15Oda',
         'color': 'black',
         'marker': 'o',
         'linestyle': '-',
         'markersize': 0,
-        'linewidth': 2,
+        'linewidth': elsevier_plot_tools.LINE_WIDTH,
     })
 
     line_styles: list[str] = \
         field(default_factory=lambda: ['-', ':', '--', '-.'])
     colors: list[str] = \
         field(default_factory=lambda: ['black', 'red', 'blue', 'green'])
-
-    height_ratio: float = (5 ** 0.5 - 1) * 1.5
 
     y_unit: str = ''
 
@@ -356,16 +354,16 @@ class ElectroStaticComputation:
         phi_mv: np.ndarray = phi_r * 100
         ax_i: plt.axes
         fig_i: plt.figure
-        fig_i, ax_i = plot_tools.mk_canvas(x_range=(0, radii.max()),
-                                           height_ratio=configs.height_ratio,
-                                           num_xticks=20)
+        fig_i, ax_i = elsevier_plot_tools.mk_canvas(size_type='single_column')
         ax_i.plot(radii, phi_mv, **configs.graph_styles)
         ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
 
         # kappa * radius of the np
         kappa_r: float = self.configs.np_radius / debye_l / 10
-        ax_i.set_xlabel(configs.labels.get('xlabel'), fontsize=18)
-        ax_i.set_ylabel(configs.labels.get('ylabel'), fontsize=18)
+        ax_i.set_xlabel(configs.labels.get('xlabel'),
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        ax_i.set_ylabel(configs.labels.get('ylabel'),
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
         if configs.if_title:
             ax_i.set_title(
                 rf' $\kappa a$ := $\lambda_D^{{-1}} r_{{NP}}$ = {kappa_r:.2f}')
@@ -390,15 +388,15 @@ class ElectroStaticComputation:
 
         ax_i.set_xlim(x_lims)
         ax_i.set_ylim((y_lim_min, y_lims[1]))
-        ax_i.text(-0.08,
+        ax_i.text(-0.085,
                   1,
                   'c)',
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,
-                  fontsize=22)
-        plot_tools.save_close_fig(
-            fig_i, ax_i, fname=(fout := configs.graph_suffix))
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+        elsevier_plot_tools.save_close_fig(
+            fig_i, fname=(fout := configs.graph_suffix))
         self.info_msg += f'\tFigure saved as `{fout}`\n'
 
     def _plot_debye_lines(self,
@@ -425,7 +423,7 @@ class ElectroStaticComputation:
                     ymax=phi_value,
                     color=configs.colors[l_s1],
                     linestyle=configs.line_styles[l_s1],
-                    linewidth=2.0,
+                    linewidth=elsevier_plot_tools.LINE_WIDTH,
                     label=rf'${label}\lambda_D$: {debye_l:.2f} [nm]')
         # Plot horizontal line from phi_value to the graph
         ax_i.hlines(y=phi_value,
@@ -433,7 +431,7 @@ class ElectroStaticComputation:
                     xmax=debye_l,
                     color=configs.colors[l_s2],
                     linestyle=configs.line_styles[l_s2],
-                    linewidth=2.0,
+                    linewidth=elsevier_plot_tools.LINE_WIDTH,
                     label=rf'$\psi${h_label}: {phi_value:.2f} [mV]')
         return ax_i
 
@@ -449,14 +447,14 @@ class ElectroStaticComputation:
                     ymax=phi_mv.max(),
                     color=configs.colors[0],
                     linestyle=configs.line_styles[1],
-                    linewidth=2.0,
+                    linewidth=elsevier_plot_tools.LINE_WIDTH,
                     label=f'Stern layer: {x_temp:.2f} [nm]')
         ax_i.hlines(y=(phi_0 := phi_mv.max()),
                     xmin=0,
                     xmax=x_temp,
                     color=configs.colors[3],
                     linestyle=configs.line_styles[1],
-                    linewidth=2.0,
+                    linewidth=elsevier_plot_tools.LINE_WIDTH,
                     label=fr'$\psi_0$: {phi_0:.2f} [mV]')
         return ax_i
 

@@ -390,7 +390,7 @@ class ElectroStaticComputation:
         ax_i.set_ylim((y_lim_min, y_lims[1]))
         ax_i.text(-0.085,
                   1,
-                  'c)',
+                  'a)',
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,

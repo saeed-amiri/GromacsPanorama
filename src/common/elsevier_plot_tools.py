@@ -78,6 +78,9 @@ DPI_COMBINATION = 500
 DPI_LINE_ART = 1000
 # Golden ratio
 GOLDEN_RATIO = (1 + 5 ** 0.5) / 2
+# Line sizes
+LINE_WIDTH = 1.0
+MARKER_SIZE = 2.0
 
 
 def set_figure_height(width: int,

@@ -63,24 +63,26 @@ import matplotlib.pyplot as plt
 
 # Constants for Elsevier's guidelines
 # Fig sizes in points
-MINIMAL_SIZE_PT = 85
-SINGLE_COLUMN_PT = 255
-ONE_AND_HALF_COLUMN_PT = 397
-DOUBLE_COLUMN_PT = 539
-POINT_PER_INCH = 72
+MINIMAL_SIZE_PT: int = 85
+SINGLE_COLUMN_PT: int = 255
+ONE_AND_HALF_COLUMN_PT: int = 397
+DOUBLE_COLUMN_PT: int = 539
+POINT_PER_INCH: int = 72
 # Font sizes in points
-FONT_SIZE_PT = 7
-SUB_SUPER_FONT_SIZE_PT = 6
-LABEL_FONT_SIZE_PT = 10
+FONT_SIZE_PT: int = 7
+SUB_SUPER_FONT_SIZE_PT: int = 6
+LABEL_FONT_SIZE_PT: int = 10
 # DPI for different types of images
-DPI_HALFTONE = 300
-DPI_COMBINATION = 500
-DPI_LINE_ART = 1000
+DPI_HALFTONE: int = 300
+DPI_COMBINATION: int = 500
+DPI_LINE_ART: int = 1000
 # Golden ratio
-GOLDEN_RATIO = (1 + 5 ** 0.5) / 2
-# Line sizes
-LINE_WIDTH = 1.0
-MARKER_SIZE = 2.0
+GOLDEN_RATIO: float = (1 + 5 ** 0.5) / 2
+# Lines and markers
+LINE_WIDTH: float = 1.0
+MARKER_SIZE: float = 2.0
+LINE_STYLES: list[str] = ['-', '--', '-.', ':']
+LINE_COLORS: list[str] = ['black', 'red', 'blue', 'green', 'orange', 'purple']
 
 
 def set_figure_height(width: int,

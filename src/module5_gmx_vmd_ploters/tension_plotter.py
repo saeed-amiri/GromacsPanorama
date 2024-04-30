@@ -310,7 +310,7 @@ class PlotTension:
                           transform=ax_i.transAxes,
                           fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
             elsevier_plot_tools.save_close_fig(
-                fig_i, fname := 'interface_tension_log.png', loc='lower left')
+                fig_i, fname := 'interface_tension_log.jpg', loc='lower left')
             self.info_msg += \
                 f'\tThe raw tension plot for both data is saved as `{fname}`\n'
 

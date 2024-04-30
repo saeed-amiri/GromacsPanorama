@@ -52,7 +52,7 @@ class BaseGraphConfig:
     """Basic setups for graphs"""
 
     # pylint: disable=too-many-instance-attributes
-    graph_suffix: str = 'mda.png'
+    graph_suffix: str = 'mda.jpg'
     y_col_name: str = 'density'
     xcol_name: str = 'r_nm'
 
@@ -110,7 +110,7 @@ class BaseGraphConfig:
             'amino_charge': 'blue',
             'SOL': 'red',
             'D10': (1/255, 210/255, 255/255),
-            'C5': (1/255, 210/255, 255/255),
+            'C5': (0.2, 0.2, 0.2),
             'APT': 'k',
             'POT': 'brown',
             'OH2': 'red',

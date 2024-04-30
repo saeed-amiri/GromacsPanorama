@@ -503,7 +503,7 @@ class HeatmapPlotter:
         cbar.ax.tick_params(labelsize=elsevier_plot_tools.FONT_SIZE_PT)
         cbar.set_label(label=self.config.cbar_label,
                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
-        ax_i.text(0.05,
+        ax_i.text(-0.44860,
                   1,
                   'b)',
                   ha='right',

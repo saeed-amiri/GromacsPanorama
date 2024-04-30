@@ -52,7 +52,7 @@ class BaseGraphConfig:
     """Basic setups for graphs"""
 
     # pylint: disable=too-many-instance-attributes
-    graph_suffix: str = 'mda.jpg'
+    graph_suffix: str = f'mda.{elsevier_plot_tools.IMG_FORMAT}'
     y_col_name: str = 'density'
     xcol_name: str = 'r_nm'
 
@@ -405,7 +405,7 @@ class MultiRdfPlotter:
     def _get_fout_tag(self,
                       viewpoint: str
                       ) -> str:
-        """set the tag for the ouput png based on the plot_list"""
+        """set the tag for the ouput based on the plot_list"""
         config_files: dict[str, dict[str, str]] = \
             getattr(self.configs, f'{viewpoint}_files')
         plot_list: list[int] = getattr(self.configs, f'{viewpoint}_plot_list')

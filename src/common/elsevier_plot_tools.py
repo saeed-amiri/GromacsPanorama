@@ -83,6 +83,8 @@ LINE_WIDTH: float = 1.0
 MARKER_SIZE: float = 2.0
 LINE_STYLES: list[str] = ['-', '--', '-.', ':']
 LINE_COLORS: list[str] = ['black', 'red', 'blue', 'green', 'orange', 'purple']
+# Output file format
+IMG_FORMAT: str = 'jpg'
 
 
 def set_figure_height(width: int,

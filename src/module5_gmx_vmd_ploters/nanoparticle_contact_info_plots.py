@@ -71,8 +71,10 @@ class AllConfig(BasePlotConfig, DataConfig):
     selection: list[Selection] = field(default_factory=lambda: [
         Selection.CONTACT_RADIUS,
         Selection.CONTACT_ANGLES])
-    if_multi_label: bool = True
-    output_file: str = 'np_contact_info.png'
+    show_multi_label: bool = True
+    show_nr_oda_label: bool = True
+
+    output_file: str = f'np_contact_info.{elsevier_plot_tools.IMG_FORMAT}'
 
     def __post_init__(self) -> None:
         """Post init function"""
@@ -108,15 +110,19 @@ class PlotNpContactInfo:
         """plot the data"""
         fig_i: plt.Figure
         ax_i: plt.Axes
-        fig_i, ax_i = elsevier_plot_tools.mk_canvas(size_type='single_column')
+        fig_i, ax_i = self._make_canvas()
         for i, selection in enumerate(self.configs.selection):
             self._plot_data_label(selection.value, data, ax_i, i)
         self._add_multi_label(ax_i)
-        ax_i.set_xlabel(self.configs.xlabel)
-        ax_i.set_ylabel(self.configs.ylabel)
-        elsevier_plot_tools.save_close_fig(
-            fig_i, fname := self.configs.output_file, loc='lower left')
-        self.info_msg += f'The plot is saved to {fname}\n'
+        self._add_axis_labels(ax_i)
+        self._add_nr_oda_label(ax_i)
+        self._save_fig(fig_i)
+
+    def _make_canvas(self) -> tuple[plt.Figure, plt.Axes]:
+        fig_i: plt.Figure
+        ax_i: plt.Axes
+        fig_i, ax_i = elsevier_plot_tools.mk_canvas(size_type='single_column')
+        return fig_i, ax_i
 
     def _plot_data_label(self,
                          selection: str,
@@ -132,11 +138,18 @@ class PlotNpContactInfo:
                       color=self.configs.linecolotrs[i],
                       linewidth=self.configs.linewidth)
 
+    def _add_axis_labels(self,
+                         ax_i: plt.Axes
+                         ) -> None:
+        """Add the axis labels to the plot"""
+        ax_i.set_xlabel(self.configs.xlabel)
+        ax_i.set_ylabel(self.configs.ylabel)
+
     def _add_multi_label(self,
                          ax_i: plt.Axes
                          ) -> None:
         """Add a label to the plot"""
-        if self.configs.if_multi_label:
+        if self.configs.show_multi_label:
             ax_i.text(-0.085,
                       1,
                       'b)',
@@ -144,6 +157,18 @@ class PlotNpContactInfo:
                       va='top',
                       transform=ax_i.transAxes,
                       fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+
+    def _add_nr_oda_label(self,
+                          ax_i: plt.Axes
+                          ) -> None:
+        if self.configs.show_nr_oda_label:
+            ax_i.text(0.4,
+                      0.1,
+                      r'Nr. Oda: 0.03 [1/nm$^2$]',
+                      ha='right',
+                      va='top',
+                      transform=ax_i.transAxes,
+                      fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
     def _load_data(self,
                    log: logger.logging.Logger
@@ -170,6 +195,14 @@ class PlotNpContactInfo:
         self.info_msg += (f'\t{selection}:\n'
                           f'\t\tAverage: {df_i.mean():.3f}\n'
                           f'\t\tStd: {df_i.std():.3f}\n')
+
+    def _save_fig(self,
+                  fig_i: plt.Figure
+                  ) -> None:
+        """save the figure"""
+        elsevier_plot_tools.save_close_fig(
+            fig_i, fname := self.configs.output_file, loc='lower right')
+        self.info_msg += f'The plot is saved to {fname}\n'
 
     def write_msg(self,
                   log: logger.logging.Logger

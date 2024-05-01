@@ -43,8 +43,8 @@ class BasePlotConfig:
 class DataConfig:
     """set the name of the files and labels"""
     xvg_files: dict[str, str] = field(default_factory=lambda: {
-        'coord_15Oda.xvg': '15Oda',
-        'coord_200Oda.xvg': '200Oda',
+        'coord_15Oda.xvg': r'Nr.Oda: 0.03 [1/nm$^2$]',
+        'coord_200Oda.xvg': r'Nr.Oda: 0.42 [1/nm$^2$]',
     })
 
 

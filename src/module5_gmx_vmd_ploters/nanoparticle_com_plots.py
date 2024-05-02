@@ -43,8 +43,8 @@ class BasePlotConfig:
 class DataConfig:
     """set the name of the files and labels"""
     xvg_files: dict[str, str] = field(default_factory=lambda: {
-        'coord_15Oda.xvg': r'Nr.Oda: 0.03 [1/nm$^2$]',
-        'coord_200Oda.xvg': r'Nr.Oda: 0.42 [1/nm$^2$]',
+        'coord_15Oda.xvg': r'0.03 ODA/nm$^2$',
+        'coord_200Oda.xvg': r'0.42 ODA/nm$^2$',
     })
 
 
@@ -62,7 +62,7 @@ class Direction(Enum):
 class AllConfig(BasePlotConfig, DataConfig):
     """All configurations"""
     direction: Direction = Direction.Z
-    output_file: str = 'np_com.png'
+    output_file: str = f'np_com.{elsevier_plot_tools.IMG_FORMAT}'
     if_multi_label: bool = True
 
     def __post_init__(self) -> None:
@@ -135,8 +135,8 @@ class PlotNpCom:
         self.info_msg += f'The plot is saved as `{fname}`\n'
 
     def _add_multi_label(self,
-                            ax_i: plt.Axes
-                            ) -> None:
+                         ax_i: plt.Axes
+                         ) -> None:
         """Add a label to the plot"""
         if self.configs.if_multi_label:
             ax_i.text(-0.085,

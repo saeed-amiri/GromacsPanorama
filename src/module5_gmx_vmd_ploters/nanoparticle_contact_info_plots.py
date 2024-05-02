@@ -162,9 +162,9 @@ class PlotNpContactInfo:
                           ax_i: plt.Axes
                           ) -> None:
         if self.configs.show_nr_oda_label:
-            ax_i.text(0.4,
+            ax_i.text(0.28,
                       0.1,
-                      r'Nr. Oda: 0.03 [1/nm$^2$]',
+                      r'0.03 ODA/nm$^2$',
                       ha='right',
                       va='top',
                       transform=ax_i.transAxes,

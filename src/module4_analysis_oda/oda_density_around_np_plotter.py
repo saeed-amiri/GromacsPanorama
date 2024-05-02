@@ -38,6 +38,7 @@ class BaseHeatMapConfig:
     if_arrow: bool = False
     if_title: bool = False
     if_elsevier: bool = True
+    show_oda_label: bool = True
 
 
 @dataclass
@@ -45,7 +46,7 @@ class DensityHeatMapConfig(BaseHeatMapConfig):
     """
     Configuration parameters for heatmap plotting of density.
     """
-    heatmap_suffix: str = 'heatmap.png'
+    heatmap_suffix: str = f'heatmap.{elsevier_plot_tools.IMG_FORMAT}'
     cbar_label: str = 'Average Density'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'np_radius'],
@@ -58,7 +59,7 @@ class Rdf2dHeatMapConfig(BaseHeatMapConfig):
     """
     Configuration parameters for heatmap plotting of 2d rdf.
     """
-    heatmap_suffix: str = 'rdf2dheatmap.png'
+    heatmap_suffix: str = f'rdf2dheatmap.{elsevier_plot_tools.IMG_FORMAT}'
     cbar_label: str = r'$g^\star(r^\star)$, a. u.'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'np_radius'],
@@ -71,7 +72,8 @@ class FittedsRdf2dHeatMapConfig(BaseHeatMapConfig):
     """
     Configuration parameters for heatmap plotting of fitted 2d rdf.
     """
-    heatmap_suffix: str = 'fittedRdf2dheatmap.png'
+    heatmap_suffix: str = \
+        f'fittedRdf2dheatmap.{elsevier_plot_tools.IMG_FORMAT}'
     cbar_label: str = r'$g^\star_{fitted}(r^\star)$, a.u.'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'turn_points'],
@@ -85,7 +87,8 @@ class SmoothedRdf2dHeatMapConfig(BaseHeatMapConfig):
     """
     Configuration parameters for heatmap plotting of smoothed 2d rdf.
     """
-    heatmap_suffix: str = 'smoothedRdf2dheatmap.png'
+    heatmap_suffix: str = \
+        f'smoothedRdf2dheatmap.{elsevier_plot_tools.IMG_FORMAT}'
     cbar_label: str = r'$g^\star_{smoothed}(r^\star)$'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'np_radius'],
@@ -112,12 +115,13 @@ class BaseGraphConfig:
     })
     graph_2nd_legend: str = r'$g^\star(r^\star)$, a. u.'
     if_elsevier: bool = True
+    show_oda_label: bool = True
 
 
 @dataclass
 class DensityGraphConfig(BaseGraphConfig):
     """set the parameters for the graph"""
-    graph_suffix: str = 'desnty.png'
+    graph_suffix: str = f'desnty.{elsevier_plot_tools.IMG_FORMAT}'
     graph_legend: str = 'density'
     ylabel: str = 'Average Density'
     title: str = 'ODA Density vs Distance from NP'
@@ -126,7 +130,7 @@ class DensityGraphConfig(BaseGraphConfig):
 @dataclass
 class Rdf2dGraphConfig(BaseGraphConfig):
     """set the parameters for the graph"""
-    graph_suffix: str = 'rdf_2d.png'
+    graph_suffix: str = f'rdf_2d.{elsevier_plot_tools.IMG_FORMAT}'
     graph_legend: str = r'$g^\star(r^\star)$'
     ylabel: str = r'$g^\star(r^\star)$, a. u.  '
     title: str = 'Rdf vs Distance from NP'
@@ -135,7 +139,7 @@ class Rdf2dGraphConfig(BaseGraphConfig):
 @dataclass
 class FittedRdf2dGraphConfig(BaseGraphConfig):
     """set the parameters for the graph"""
-    graph_suffix: str = 'fitted_rdf_2d.png'
+    graph_suffix: str = f'fitted_rdf_2d.{elsevier_plot_tools.IMG_FORMAT}'
     graph_legend: str = r'$g^\star(r^\star)$'
     graph_2nd_legend: str = r'$g^\star_{fitted}(r^\star)$'
     ylabel: str = r'$g^\star(r^\star)$, a. u.'
@@ -153,7 +157,7 @@ class FittedRdf2dGraphConfig(BaseGraphConfig):
 @dataclass
 class SmoothedRdf2dGraphConfig(BaseGraphConfig):
     """set the parameters for the graph"""
-    graph_suffix: str = 'smoothed_rdf_2d.png'
+    graph_suffix: str = f'smoothed_rdf_2d.{elsevier_plot_tools.IMG_FORMAT}'
     graph_legend: str = r'$g^\star(r^\star)$'
     graph_2nd_legend: str = r'$g^\star_{smoothed}(r^\star)$'
     ylabel: str = r'$g^\star(r^\star)$'
@@ -262,7 +266,7 @@ class SurfactantDensityPlotter:
                 'fitted',
                 self.graph_configs.fitted_rdf_config)
             # TimeDependentPlotter(
-                # self.time_dependent_rdf, self.time_dependent_ave, log)
+            #    # self.time_dependent_rdf, self.time_dependent_ave, log)
         # DensityTimePlotter(density=self.density, log=log)
         self.plot_density_graph(self.graph_configs.graph_config)
         self.plot_2d_rdf(self.graph_configs.rdf_config)
@@ -305,16 +309,19 @@ class SurfactantDensityPlotter:
                   label=config.graph_2nd_legend,
                   zorder=1)
         if style == 'fitted':
+            ymax = ax_i.get_ylim()[1]
             ax_i = self._add_vline(ax_i,
                                    contact_radius,
                                    legend=r'r$^\star_c$',
                                    lstyle=':',
-                                   color='k')
+                                   color='k',
+                                   y_cut=1.05)
             ax_i = self._add_vline(ax_i,
                                    self.first_turn,
                                    legend='a',
                                    lstyle=':',
-                                   color='r')
+                                   color='r',
+                                   y_cut=ymax)
             ax_i = self._add_vline(ax_i,
                                    self.midpoint,
                                    legend='b',
@@ -334,6 +341,15 @@ class SurfactantDensityPlotter:
                       fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
             yticks = [0, 0.5, 1.0]
             ax_i.set_yticks(yticks)
+        if config.show_oda_label:
+            ax_i.text(0.28,
+                      0.98,
+                      r'0.03 ODA/nm$^2$',
+                      ha='right',
+                      va='top',
+                      transform=ax_i.transAxes,
+                      fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+
         fout: str = f'{self.residue}_{config.graph_suffix}'
         plot_tools.save_close_fig(fig_i, ax_i, fout, loc='lower right')
         self.info_msg += f'\tThe `{style}` graph saved: `{fout}`\n'
@@ -343,11 +359,14 @@ class SurfactantDensityPlotter:
                    x_loc: float,
                    legend: str = 'b',
                    lstyle: str = '--',
-                   color: str = 'k'
+                   color: str = 'k',
+                   y_cut: typing.Union[float, None] = None
                    ) -> plt.axes:
         """add vline to the axes"""
 
         ylims: tuple[float, float] = ax_i.get_ylim()
+        if y_cut is not None:
+            ylims = (ylims[0], y_cut)
         ax_i.vlines(x=x_loc,
                     ymin=ylims[0],
                     ymax=ylims[1],
@@ -500,9 +519,10 @@ class HeatmapPlotter:
         if self.config.if_arrow:
             ax_i = self._add_radius_arrows(ax_i, contact_radius, np_radius)
         cbar = plt.colorbar(cbar, ax=ax_i, shrink=1)
+        cbar.set_ticks([0, 0.5, 1])
         cbar.ax.tick_params(labelsize=elsevier_plot_tools.FONT_SIZE_PT)
         cbar.set_label(label=self.config.cbar_label,
-                       fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+                       fontsize=elsevier_plot_tools.FONT_SIZE_PT-1)
         ax_i.text(-0.44860,
                   1,
                   'b)',
@@ -510,6 +530,14 @@ class HeatmapPlotter:
                   va='top',
                   transform=ax_i.transAxes,
                   fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+        if self.config.show_oda_label:
+            ax_i.text(0.08,
+                      0.98,
+                      r'0.03 ODA/nm$^2$',
+                      ha='right',
+                      va='top',
+                      transform=ax_i.transAxes,
+                      fontsize=elsevier_plot_tools.FONT_SIZE_PT)
         return ax_i
 
     def _add_np_radii(self,
@@ -694,8 +722,9 @@ class HeatmapPlotter:
 class TimeDependentPlotterConfig(BaseGraphConfig):
     # pylint: disable=too-many-instance-attributes
     """configurations for the time dependents plots"""
-    graph_suffix: str = 'ODA_rdf_2d_time.png'
-    graph_suffix2: str = 'ODA_ave_density_time.png'
+    graph_suffix: str = f'ODA_rdf_2d_time.{elsevier_plot_tools.IMG_FORMAT}'
+    graph_suffix2: str = \
+        f'ODA_ave_density_time.{elsevier_plot_tools.IMG_FORMAT}'
     graph_legend: str = 'g(r,t)'
     graph_legend2: str = 'density(r,t)'
     ylabel: str = r'$g^\star(r^\star)$'

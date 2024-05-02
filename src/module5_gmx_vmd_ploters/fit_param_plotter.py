@@ -60,6 +60,7 @@ class BaseConfig:
     legend_loc: str = 'lower right'
 
     show_grid: bool = False
+    plot_contact_radius: bool = False
 
 
 @dataclass
@@ -68,10 +69,9 @@ class FitPlotConfig(BaseConfig):
     Configuration for the fit plot
     """
     # pylint: disable=too-many-instance-attributes
-    out_suffix: str = 'turn_points.png'
+    out_suffix: str = f'turn_points.{elsevier_plot_tools.IMG_FORMAT}'
     xcol_name: str = 'nr_oda'
-    ycol_name: list[str] = field(default_factory=lambda: ['contact_radius',
-                                                          'first_turn',
+    ycol_name: list[str] = field(default_factory=lambda: ['first_turn',
                                                           'midpoint',
                                                           'second_turn'
                                                           ])
@@ -79,30 +79,35 @@ class FitPlotConfig(BaseConfig):
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'Fitted parameters',
         'ylabel': r'$r^\star$ [nm]',
-        'xlabel': 'Nr. ODA'
+        'xlabel': r'ODA/nm$^2$'
     })
     fit_param_fname: str = 'fit_parameters.xvg'
 
     legends: dict[str, str] = \
         field(default_factory=lambda: {
-            'contact_radius': r'$r^\star_{c}$',
             'first_turn': 'a',
             'midpoint': 'b',
             'second_turn': 'c'
         })
     line_styles: dict[str, str] = \
         field(default_factory=lambda: {
-            'contact_radius': ':',
             'first_turn': ':',
             'midpoint': '--',
             'second_turn': '-.'})
     colors: dict[str, str] = \
         field(default_factory=lambda: {
-            'contact_radius': 'black',
             'first_turn': 'red',
             'midpoint': 'red',
             'second_turn': 'red'})
     graph_max_col: str = 'second_turn'
+
+    def __post_init__(self) -> None:
+        """Post init function"""
+        if self.plot_contact_radius:
+            self.ycol_name.insert(0, 'contact_radius')
+            self.legends['contact_radius'] = r'$r^\star_{c}$'
+            self.line_styles['contact_radius'] = ':'
+            self.colors['contact_radius'] = 'black'
 
 
 @dataclass
@@ -110,7 +115,7 @@ class FitRdfPlotConfig(BaseConfig):
     """
     Configuration for the fit rdf plot
     """
-    out_suffix: str = 'fitted_rdf.png'
+    out_suffix: str = f'fitted_rdf.{elsevier_plot_tools.IMG_FORMAT}'
     xcol_name: str = 'regions'
     ycol_name: list[str] = field(default_factory=lambda: ['fitted_rdf'])
 
@@ -127,9 +132,9 @@ class FitRdfPlotConfig(BaseConfig):
 
     legends: dict[str, str] = \
         field(default_factory=lambda: {
-            '5_oda_densities.xvg': '5ODA',
-            '15_oda_densities.xvg': '15ODA',
-            '50_oda_densities.xvg': '50ODA'
+            '5_oda_densities.xvg': r'0.01 ODA/$nm^2$',  # 5ODA
+            '15_oda_densities.xvg': r'0.03 ODA/$nm^2$',  # 15ODA
+            '50_oda_densities.xvg': r'0.11 ODA/$nm^2$'  # 50ODA
         })
 
 
@@ -199,7 +204,9 @@ class PlotFitted:
 
         xticks: list[float] = fit_data[config.xcol_name].unique().tolist()
         ax_i.set_xticks(xticks)
-
+        xticklabels: list[np.float64] = \
+            [np.round(item/(21.7*21.7), 2) for item in ax_i.get_xticks()]
+        ax_i.set_xticklabels(xticklabels)
         y_max: float = \
             max(fit_data[config.graph_max_col].unique().tolist()) / 10.0
         y_ticks: list[np.float64] = list(np.linspace(0, y_max, 4))

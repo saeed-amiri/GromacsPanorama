@@ -209,6 +209,7 @@ class AllConfig(FileConfig, VerticalLineConfig):
     """Set the all the configs"""
     if_public: bool = True
     if_multi_label: bool = False
+    if_oda_label: bool = True
     data_sets: str = 'rdf'  # rdf or cdf
 
     plot_configs: OverlayConfig = field(default_factory=OverlayConfig)
@@ -593,6 +594,15 @@ class MultiRdfPlotter:
                       va='top',
                       transform=ax_i.transAxes,
                       fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+        if self.configs.if_oda_label:
+            ax_i.text(0.28,
+                      0.2,
+                      r'0.03 ODA/nm$^2$',
+                      ha='right',
+                      va='top',
+                      transform=ax_i.transAxes,
+                      fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+
         return ax_i
 
     def _plot_shadow_shell(self, ax_i: plt.axes) -> plt.axis:

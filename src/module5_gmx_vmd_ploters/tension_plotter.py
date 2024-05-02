@@ -114,7 +114,7 @@ class LogGraph(BaseConfig):
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'Computed Tension',
         'ylabel': r'$\Delta\gamma$',
-        'xlabel': r'Nr. Oda [1/$nm^2$]'
+        'xlabel': r'ODA/$nm^2$'
     })
     log_x_axis: bool = True
 

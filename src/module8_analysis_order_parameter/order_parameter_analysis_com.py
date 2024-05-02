@@ -59,7 +59,7 @@ from common.com_file_parser import GetCom
 from common.colors_text import TextColor as bcolors
 from module8_analysis_order_parameter.order_parameter_pickle_parser import \
     GetOorderParameter
-from module8_analysis_order_parameter.order_parameter_distribution import \
+from module8_analysis_order_parameter.order_parameter_distribution_com import \
     ComputeOPDistribution
 
 

@@ -96,7 +96,7 @@ class ErrorBarGraph(BaseConfig):
     def __post_init__(self) -> None:
         self.graph_styles['ecolor'] = 'red'
         self.graph_styles['linestyle'] = self.line_styles[1]
-        self.labels['xlabel'] = r'Nr. Oda [1/nm$^2$]'
+        self.labels['xlabel'] = r'ODA/nm$^2$'
 
 
 @dataclass

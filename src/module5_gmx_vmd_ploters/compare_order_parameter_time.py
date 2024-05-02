@@ -143,9 +143,9 @@ class OrderParameterComparison:
                           ax_i: plt.Axes
                           ) -> None:
         if self.configs.show_nr_oda_label:
-            ax_i.text(0.4,
+            ax_i.text(0.28,
                       0.98,
-                      r'Nr. Oda: 0.11 [1/nm$^2$]',
+                      r'0.11 ODA/nm$^{2}$',
                       ha='right',
                       va='top',
                       transform=ax_i.transAxes,

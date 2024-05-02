@@ -124,16 +124,16 @@ class PlotConfig:
     Basic configurations and setup for the plots.
     """
     # pylint: disable=too-many-instance-attributes
-    graph_suffix: str = 'els_potential.png'
+    graph_suffix: str = f'els_potential.{elsevier_plot_tools.IMG_FORMAT}'
 
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'potential',
         'ylabel': r'potential $\psi$ [mV]',
-        'xlabel': 'distance x [nm]'
+        'xlabel': 'distance X [nm]'
     })
 
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
-        'label': '15Oda',
+        'label': r'0.03 ODA/$nm^2$',  # 15Oda
         'color': 'black',
         'marker': 'o',
         'linestyle': '-',

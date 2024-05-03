@@ -605,7 +605,9 @@ class MultiRdfPlotter:
 
         return ax_i
 
-    def _plot_shadow_shell(self, ax_i: plt.axes) -> plt.axis:
+    def _plot_shadow_shell(self,
+                           ax_i: plt.axes
+                           ) -> plt.axis:
         """
         Plot the shadow shell region on the given axes.
         Returns:

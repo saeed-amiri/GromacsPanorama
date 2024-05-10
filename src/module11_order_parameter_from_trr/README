@@ -31,3 +31,119 @@ This class is used to analyze the order parameter. It calls the `AnalysisSurfact
 
 ```python
 OrderParameter(sys.argv[1], logger.setup_logger('order_parameter_mda.log'))
+
+# config_classes_trr.py
+
+This file contains several dataclasses and an Enum used for configuration and data storage in a molecular dynamics simulation analysis.
+
+## Classes
+
+### ResidueName
+
+This Enum represents the names of the residues in the trajectory. It has three members: `OIL`, `WATER`, and `SURFACTANT`.
+
+### OrderParameterConfig
+
+This dataclass stores configuration and results for the order parameter computation.
+
+### InterfaceConfig
+
+This dataclass stores configuration and results for the interface location computation.
+
+### InputFiles
+
+This dataclass stores the names and paths of the input files for the simulation.
+
+### ResiduesTails
+
+This dataclass stores the atom names for the head and tail of each residue type.
+
+## Usage
+
+This module is used to store and manage configuration data and results for a molecular dynamics simulation analysis.
+
+# angle_computation_trr.py
+
+This file contains the `AngleProjectionComputation` class which is used for computing the angle projection of vectors along all axes in a molecular dynamics simulation.
+
+## Classes
+
+### AngleProjectionComputation
+
+This class computes the angle projection of vectors along all axes in a molecular dynamics simulation. It uses the `AllConfig` class for configuration data and the `AtomSelection` class for selecting atoms in the simulation.
+
+The `AngleProjectionComputation` class calls the following methods in order:
+
+1. `__init__(self, log, universe, configs)`: Initializes the `AngleProjectionComputation` class with a logger, a universe, and configurations.
+2. `compute_angle_projection(self, log)`: Computes the angle projection of the vectors along all axes and returns a list of tail coordinates with their angle projections.
+3. `compute_head_tail_vectors(self, tails_positions, heads_positions, log)`: Computes the head and tail vectors for each frame.
+4. `compute_angles(self, unit_vec_dict)`: Computes the angles for each unit vector.
+
+## Usage
+
+This module is used for computing the angle projection of vectors along all axes in a molecular dynamics simulation.
+
+# atom_selection_trr.py
+
+This file contains the `AtomSelection` class which is used for selecting specific atoms in a molecular dynamics simulation for the purpose of computing angles.
+
+## Classes
+
+### AtomSelection
+
+This class is used for selecting specific atoms in a molecular dynamics simulation. It uses the `AllConfig` class for configuration data and the `mda.coordinates.TRR.TRRReader` class for representing the molecular dynamics universe.
+
+The `AtomSelection` class calls the following methods in order:
+
+1. `__init__(self, universe, configs, log)`: Initializes the `AtomSelection` class with a universe, configurations, and a logger.
+2. `get_atoms(self, tail_atoms, head_atoms)`: Returns the positions of the tail and head atoms for all frames.
+3. `get_tail_indices(self)`: Returns the tail atoms from the universe based on the selection string.
+4. `_get_tail_atoms_selection_str(self)`: Returns the selection string for tail atoms.
+5. `get_head_indices(self)`: Returns the head atoms from the universe based on the selection string.
+6. `_get_head_atoms_selection_str(self)`: Returns the selection string for head atoms.
+
+## Usage
+
+This module is used for selecting specific atoms in a molecular dynamics simulation. The `AtomSelection` class is initialized with a universe, configurations, and a logger. The positions of the tail and head atoms for all frames can be obtained using the `get_atoms` method. The tail and head atoms can be selected from the universe using the `get_tail_indices` and `get_head_indices` methods respectively.
+
+# surfactant_order_parameter.py
+
+This file contains the `AnalysisSurfactantOrderParameter` class which is used for analyzing the order parameter of surfactant molecules in a molecular dynamics simulation.
+
+## Classes
+
+### AnalysisSurfactantOrderParameter
+
+This class is used for analyzing the order parameter of surfactant molecules. It uses the `AllConfig` class for configuration data and the `OrderParameterHeatMap` class for visualizing the order parameter.
+
+The `AnalysisSurfactantOrderParameter` class calls the following methods in order:
+
+1. `__init__(self, tail_with_angle, configs, log)`: Initializes the `AnalysisSurfactantOrderParameter` class with tail coordinates with angle projections, configurations, and a logger.
+2. `_compute_order_parameter(self, log)`: Computes the order parameter and writes the average order parameter to an xvg file.
+3. `compute_order_parameter_frames(self)`: Computes the order parameter for each frame and returns a dictionary where the keys are the frame numbers and the values are the order parameters.
+4. `compute_order_parameter(self, angle_frame)`: Computes the order parameter for a given angle frame and returns a numpy array of order parameters.
+5. `compute_order_parameter_for_a_residue(self, angle_res_i)`: Computes the order parameter for a single angle and returns the order parameter.
+6. `compute_frame_avg_order_parameter(self, order_parameter_frames)`: Computes the average order parameter for each frame and returns a dictionary where the keys are the frame numbers and the values are the average order parameters.
+
+## Usage
+
+This module is used for analyzing the order parameter of surfactant molecules in a molecular dynamics simulation. The `AnalysisSurfactantOrderParameter` class is initialized with tail coordinates with angle projections, configurations, and a logger. The order parameter is computed using the `_compute_order_parameter` method. The order parameter for each frame is computed using the `compute_order_parameter_frames` method, and the average order parameter for each frame is computed using the `compute_frame_avg_order_parameter` method.
+
+# order_parameter_heat_map.py
+
+This file contains the `OrderParameterHeatMap` class which is used for visualizing the order parameter of surfactant molecules in a molecular dynamics simulation.
+
+## Classes
+
+### OrderParameterHeatMap
+
+This class is used for visualizing the order parameter. It uses the `AllConfig` class for configuration data and the `matplotlib.pyplot` library for creating the heat map.
+
+The `OrderParameterHeatMap` class calls the following methods in order:
+
+1. `__init__(self, configs, log)`: Initializes the `OrderParameterHeatMap` class with configurations and a logger.
+2. `plot_heat_map(self, order_parameter_frames)`: Plots a heat map of the order parameter for each frame and saves the plot as a png file.
+
+## Usage
+
+This module is used for visualizing the order parameter of surfactant molecules in a molecular dynamics simulation. The `OrderParameterHeatMap` class is initialized with configurations and a logger. The heat map of the order parameter for each frame is plotted using the `plot_heat_map` method.

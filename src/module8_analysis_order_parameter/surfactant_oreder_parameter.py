@@ -56,6 +56,7 @@ from module8_analysis_order_parameter.config_classes_trr import AllConfig
 from module8_analysis_order_parameter.order_parameter_heat_map import \
     OrderParameterHeatMap
 
+
 class AnalysisSurfactantOrderParameter:
     """Analysis the surfactant order parameter"""
     info_msg: str = 'Message from AnalysisSurfactantOrderParameter:\n'

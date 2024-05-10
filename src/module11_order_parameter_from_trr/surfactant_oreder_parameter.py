@@ -52,8 +52,8 @@ from common import logger
 from common import my_tools
 from common.colors_text import TextColor as bcolors
 
-from module8_analysis_order_parameter.config_classes_trr import AllConfig
-from module8_analysis_order_parameter.order_parameter_heat_map import \
+from module11_order_parameter_from_trr.config_classes_trr import AllConfig
+from module11_order_parameter_from_trr.order_parameter_heat_map import \
     OrderParameterHeatMap
 
 

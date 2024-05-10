@@ -43,8 +43,8 @@ import numpy as np
 from common import logger
 from common.colors_text import TextColor as bcolors
 
-from module8_analysis_order_parameter.config_classes_trr import AllConfig
-from module8_analysis_order_parameter.atom_selection_trr import AtomSelection
+from module11_order_parameter_from_trr.config_classes_trr import AllConfig
+from module11_order_parameter_from_trr.atom_selection_trr import AtomSelection
 
 if typing.TYPE_CHECKING:
     import MDAnalysis as mda

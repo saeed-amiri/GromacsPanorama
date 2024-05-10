@@ -51,7 +51,7 @@ import MDAnalysis as mda
 from common import logger
 from common.colors_text import TextColor as bcolors
 
-from module8_analysis_order_parameter.config_classes_trr import AllConfig
+from module11_order_parameter_from_trr.config_classes_trr import AllConfig
 
 
 class AtomSelection:

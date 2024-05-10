@@ -86,10 +86,10 @@ import MDAnalysis as mda
 from common.colors_text import TextColor as bcolors
 from common import logger, xvg_to_dataframe, my_tools, cpuconfig
 
-from module8_analysis_order_parameter.config_classes_trr import AllConfig
-from module8_analysis_order_parameter.angle_computation_trr import \
+from module11_order_parameter_from_trr.config_classes_trr import AllConfig
+from module11_order_parameter_from_trr.angle_computation_trr import \
     AngleProjectionComputation
-from module8_analysis_order_parameter.surfactant_oreder_parameter import \
+from module11_order_parameter_from_trr.surfactant_oreder_parameter import \
     AnalysisSurfactantOrderParameter
 
 

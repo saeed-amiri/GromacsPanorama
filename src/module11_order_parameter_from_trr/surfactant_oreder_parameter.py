@@ -108,7 +108,7 @@ class AnalysisSurfactantOrderParameter:
     def compute_order_parameter_for_a_residue(self,
                                               angle_res_i: np.ndarray
                                               ) -> np.ndarray:
-        """Compute the order parameter for a single angle"""
+        """Compute the order parameter for a single residue"""
         return 0.5 * (3 * np.cos(angle_res_i)**2 - 1)
 
     def compute_frame_avg_order_parameter(self,

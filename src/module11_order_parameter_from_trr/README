@@ -1,0 +1,33 @@
+# order_parameter_trr_analysis.py
+
+This file contains the main classes and methods for computing the order parameter of a system based on a given trajectory file.
+If there is a nanoparticle (NP), the traj should be centered with com of the NP
+It needs:
+    trr file
+    tpr file
+    
+    contact.xvg -> interface information
+    coord.xvg file -> COM of the NP  if there is an NP
+
+
+## Classes
+
+### OrderParameter
+
+This is the main class in the file. It initiates the order parameter computation, gets the number of cores for multiprocessing, computes the order parameter, and logs messages.
+
+The `OrderParameter` class calls the following classes in order:
+
+1. `AllConfig`: This class is used to set the configurations for the order parameter computation.
+2. `cpuconfig.ConfigCpuNr`: This class is used to get the number of cores for multiprocessing.
+3. `AngleProjectionComputation`: This class is used to compute the angle projection.
+4. `OrderParameterAnalaysis`: This class is used to analyze the order parameter.
+
+### OrderParameterAnalaysis
+
+This class is used to analyze the order parameter. It calls the `AnalysisSurfactantOrderParameter` class to analyze the order parameter for surfactant molecules.
+
+## Usage
+
+```python
+OrderParameter(sys.argv[1], logger.setup_logger('order_parameter_mda.log'))

@@ -97,9 +97,9 @@ class FitPlotConfig(BaseConfig):
             'second_turn': '-.'})
     colors: dict[str, str] = \
         field(default_factory=lambda: {
-            'first_turn': 'red',
-            'midpoint': 'red',
-            'second_turn': 'red'})
+            'first_turn': 'darkred',
+            'midpoint': 'darkred',
+            'second_turn': 'darkred'})
     graph_max_col: str = 'second_turn'
 
     def __post_init__(self) -> None:

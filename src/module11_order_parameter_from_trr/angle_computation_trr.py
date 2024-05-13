@@ -106,7 +106,7 @@ class AngleProjectionComputation:
         for frame in tails_positions.keys():
             tail_positions: np.ndarray = tails_positions[frame]
             head_positions: np.ndarray = heads_positions[frame]
-            unit_vec_dict[frame] = self.compute_head_tail_vector(
+            unit_vec_dict[frame] = self.get_head_tail_vector(
                 tail_positions, head_positions, log)
         return unit_vec_dict
 
@@ -141,29 +141,27 @@ class AngleProjectionComputation:
     def compute_angles_for_vector(self,
                                   vec: np.ndarray
                                   ) -> np.ndarray:
-        """Compute the angles of the vector with the all axes"""
+        """Compute the angles of the normelaized vector with the all axes"""
+        vec = vec / np.linalg.norm(vec)
         angles: np.ndarray = np.zeros(3)
         for i in range(3):
             angles[i] = np.arccos(np.dot(vec, np.eye(3)[i]))
         return angles
 
-    def compute_head_tail_vector(self,
-                                 tail_positions: np.ndarray,
-                                 head_positions: np.ndarray,
-                                 log: logger.logging.Logger
-                                 ) -> np.ndarray:
+    def get_head_tail_vector(self,
+                             tail_positions: np.ndarray,
+                             head_positions: np.ndarray,
+                             log: logger.logging.Logger
+                             ) -> np.ndarray:
         """
-        Compute the head and tail vectors and return the unit vector
+        Compute the head and tail vectors and return the vector
         """
         if tail_positions.shape != head_positions.shape:
             log.error(msg :=
                       'head_ and tail_positions must have the same shape')
             raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
 
-        head_tail_vector: np.ndarray = head_positions - tail_positions
-        head_tail_vector_unit: np.ndarray = \
-            head_tail_vector / np.linalg.norm(head_tail_vector)
-        return head_tail_vector_unit
+        return head_positions - tail_positions
 
     def write_msg(self,
                   log: logger.logging.Logger

@@ -61,6 +61,7 @@ class BaseConfig:
 
     show_grid: bool = False
     plot_contact_radius: bool = False
+    show_mirror_axes: bool = True
 
 
 @dataclass
@@ -274,11 +275,21 @@ class PlotFitted:
                   va='top',
                   transform=ax_i.transAxes,
                   fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
-
+        if not config.show_mirror_axes:
+            self.remove_mirror_axes(ax_i)
         elsevier_plot_tools.save_close_fig(
             fig_i, config.out_suffix, loc='lower right')
 
         self.info_msg += f"\tSaved plot: {config.out_suffix}\n"
+
+    def remove_mirror_axes(self,
+                           ax: plt.axes
+                           ) -> None:
+        """Remove the top and right spines and ticks from a matplotlib Axes"""
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.xaxis.set_ticks_position('bottom')
+        ax.yaxis.set_ticks_position('left')
 
     def write_msg(self,
                   log: logger.logging.Logger

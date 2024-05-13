@@ -49,9 +49,9 @@ class BaseConfig:
     })
 
     line_styles: typing.Union[list[str], dict[str, str]] = \
-        field(default_factory=lambda: ['-', ':', '--', '-.'])
+        field(default_factory=lambda: [':', '-', '--', '-.'])
     colors: typing.Union[list[str], dict[str, str]] = \
-        field(default_factory=lambda: ['black', 'blue', 'green', 'red'])
+        field(default_factory=lambda: ['black', 'dimgrey', 'darkgrey', 'red'])
 
     height_ratio: float = (5 ** 0.5 - 1) * 1.5
 

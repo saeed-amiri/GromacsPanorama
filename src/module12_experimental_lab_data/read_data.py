@@ -2,6 +2,7 @@
 Reading data from a file
 """
 
+import numpy as np
 import pandas as pd
 
 from module12_experimental_lab_data.config_classes import AllConfig
@@ -21,7 +22,8 @@ class ReadData:
                  config: AllConfig = AllConfig()
                  ) -> None:
         self.config = config
-        self.data = self.read_data(log)
+        data = self.read_data(log)
+        self.data = self.add_log_x_scale_column(data)
         self.write_msg(log)
 
     def read_data(self,
@@ -30,6 +32,19 @@ class ReadData:
         """Read lines from the data file"""
         data: pd.DataFrame = \
             xvg_to_dataframe.XvgParser(self.config.data_file, log=log).xvg_df
+        return data
+
+    def add_log_x_scale_column(self,
+                               data: pd.DataFrame
+                               ) -> pd.DataFrame:
+        """Add a column to the data"""
+
+        log_values = np.log10(data['surfactant_concentration_mM_L'])
+        log_values[np.isinf(log_values)] = self.config.inf_replacement
+        data['log_surfactant_concentration_mM_L'] = log_values
+        self.info_msg += \
+            ('\tlog_surfactant_concentration_mM_L column added\n'
+             f'\tinf replaced with {self.config.inf_replacement}\n')
         return data
 
     def write_msg(self,

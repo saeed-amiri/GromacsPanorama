@@ -300,7 +300,7 @@ class PlotTension:
                       linestyle='--',
                       markersize=elsevier_plot_tools.MARKER_SIZE,
                       linewidth=elsevier_plot_tools.LINE_WIDTH,
-                      label='wiht NP')
+                      label='with NP')
             if self.configs.if_label:
                 ax_i.text(-0.11,
                           1,

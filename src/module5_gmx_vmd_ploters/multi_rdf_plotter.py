@@ -104,16 +104,16 @@ class BaseGraphConfig:
 
     colors: dict[str, typing.Any] = \
         field(default_factory=lambda: {
-            'CLA': 'green',
-            'amino_n': 'blue',
-            'N': 'blue',
-            'amino_charge': 'blue',
-            'SOL': 'red',
+            'CLA': 'darkgreen',
+            'amino_n': 'royalblue',
+            'N': 'royalblue',
+            'amino_charge': 'royalblue',
+            'SOL': 'darkred',
             'D10': (1/255, 210/255, 255/255),
             'C5': (0.2, 0.2, 0.2),
             'APT': 'k',
             'POT': 'brown',
-            'OH2': 'red',
+            'OH2': 'darkred',
             'ODN': 'orange',
             'NH2': 'orange'})
 
@@ -341,7 +341,7 @@ class MultiRdfPlotter:
             ax_i = self._plot_shadow_com(ax_i, vlines)
             fout = f'shadow_{fout}'
             elsevier_plot_tools.save_close_fig(
-                fig_i, fname=fout, loc=legend_loc[1])
+                fig_i, fname=fout, loc='center left')
         elif viewpoint == 'shell':
             ax_i = self._plot_shadow_shell(ax_i)
             fout = f'shadow_{fout}'
@@ -529,12 +529,14 @@ class MultiRdfPlotter:
 
         y_column: str = \
             getattr(self.configs, f'{viewpoint}_files')[s_i]['y_col']
-        ax_i.plot(rdf_df['r_nm'],
+        line, = ax_i.plot(rdf_df['r_nm'],
                   rdf_df[y_column] / norm_factor,
                   c=self.configs.plot_configs.colors[y_column],
                   ls=self.configs.plot_configs.line_styles[y_column],
                   label=self.configs.plot_configs.legends[y_column],
                   **self.configs.plot_configs.graph_styles)
+        if self.configs.plot_configs.legends[y_column] == 'Na':
+            line.set_dashes((4, 1, 1, 1, 1, 1))
         return ax_i
 
     def _plot_vlines(self,
@@ -596,7 +598,7 @@ class MultiRdfPlotter:
                       fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
         if self.configs.if_oda_label:
             ax_i.text(0.28,
-                      0.2,
+                      0.95,
                       r'0.03 ODA/nm$^2$',
                       ha='right',
                       va='top',
@@ -626,7 +628,7 @@ class MultiRdfPlotter:
                self.configs.shell_cor_n_2nd_pick],
             y1=y_lims[0],
             y2=y_lims[1],
-            color='red',
+            color='darkred',
             alpha=0.1,
             edgecolor=None)
         ax_i.xaxis.set_minor_locator(tck.AutoMinorLocator())

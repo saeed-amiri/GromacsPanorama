@@ -32,9 +32,9 @@ class BasePlotConfig:
     """
     linewidth: float = 1.0
     linecolotrs: list[str] = field(default_factory=lambda: [
-        'dimgrey', 'blue', 'darkgreen', 'darkred'])
+        'black', 'royalblue', 'darkgreen', 'darkred'])
     line_styles: list[str] = field(default_factory=lambda: [
-        '-', ':', '--', '-.'])
+        ':', '-', '--', '-.'])
     xlabel: str = 'Time [ns]'
     ylabel: str = r'$\Delta$' + ' '  # The axis will be add later
     show_mirror_axis: bool = False

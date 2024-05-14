@@ -156,7 +156,8 @@ class OrderParameterComparison:
                   ) -> None:
         fname: str = self.configs.output_file
         elsevier_plot_tools.save_close_fig(fig=fig_i,
-                                           fname=fname)
+                                           fname=fname,
+                                           horizontal_legend=True)
         self.info_msg += f'\tThe figure is saved as `{fname}`\n'
 
     def write_msg(self,

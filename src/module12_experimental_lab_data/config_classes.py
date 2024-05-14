@@ -12,6 +12,8 @@ import sys
 
 from dataclasses import dataclass, field
 
+from common import elsevier_plot_tools
+
 
 @dataclass
 class InputFiles:
@@ -24,10 +26,34 @@ class InputFiles:
 
 
 @dataclass
-class PlotConfig:
-    """Plot configuration dataclass"""
+class CaCovConfig:
+    """Contact angle and coverage dataclass"""
+    # pylint: disable=too-many-instance-attributes
+    fout: str = f'ca_coverage.{elsevier_plot_tools.IMG_FORMAT}'
+    show_mirror_axis: bool = False
+
+    ytick_labels: list[float] = \
+        field(default_factory=lambda: [30, 40, 50, 60, 70])
+    marker_size: int = field(default_factory=lambda:
+                             elsevier_plot_tools.MARKER_SIZE)
+    colors: list[str] = field(default_factory=lambda:
+                              elsevier_plot_tools.MARKER_COLORS)
+    marker_shape: list[str] = field(default_factory=lambda:
+                                    elsevier_plot_tools.MARKER_SHAPES)
+    line_style: list[str] = field(default_factory=lambda:
+                                  elsevier_plot_tools.LINE_STYLES)
+    line_width: int = elsevier_plot_tools.LINE_WIDTH
+
+    x_label: str = r'c$_{ODA}$ [mM/L]'
+    y_label: str = 'Contact angle and coverage'
+
+    y_lims: tuple[int, int] = field(default_factory=lambda: (30, 71))
+
+    show_guid_lines: bool = True
 
 
 @dataclass
-class AllConfig(PlotConfig, InputFiles):
+class AllConfig(InputFiles):
     """Analysis configuration dataclass"""
+    inf_replacement: float = -3.0
+    ca_cov: CaCovConfig = field(default_factory=CaCovConfig)

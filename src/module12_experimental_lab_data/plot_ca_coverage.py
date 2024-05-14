@@ -79,12 +79,14 @@ class PlotCaCoverage:
                      marker=self.config.marker_shape[2],
                      s=self.config.marker_size,
                      color=self.config.colors[0],
+                     labek='CA [deg]'
                      )
         ax_i.scatter(group['log_surfactant_concentration_mM_L'],
                      group['particle_coverage'],
                      marker=self.config.marker_shape[3],
                      s=self.config.marker_size,
                      color=self.config.colors[1],
+                     label='Coverage [%]'
                      )
 
     def _ax_guid_lines(self,

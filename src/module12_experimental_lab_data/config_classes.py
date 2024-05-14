@@ -31,6 +31,7 @@ class CaCovConfig:
     # pylint: disable=too-many-instance-attributes
     fout: str = f'ca_coverage.{elsevier_plot_tools.IMG_FORMAT}'
     show_mirror_axis: bool = False
+    show_y_label: bool = False
 
     ytick_labels: list[float] = \
         field(default_factory=lambda: [30, 40, 50, 60, 70])

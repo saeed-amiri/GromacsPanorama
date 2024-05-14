@@ -178,21 +178,23 @@ def save_close_fig(fig: plt.Figure,
                    fname: str,
                    dpi: int = DPI_HALFTONE,
                    loc: str = 'upper right',
-                   horizontal_legend: bool = False
+                   horizontal_legend: bool = False,
+                   show_legend: bool = True
                    ) -> None:
     """Save and close the figure"""
-    if horizontal_legend:
-        ncol = len(fig.axes[0].get_legend_handles_labels()[0])
-        y_loc = 0.89
-        fig.legend(bbox_to_anchor=(0.9, y_loc),
-                   fontsize=FONT_SIZE_PT,
-                   ncol=ncol)
-    else:
-        ncol = 1
-        y_loc = 1
-        fig.axes[0].legend(loc=loc,
-                           fontsize=FONT_SIZE_PT,
-                           ncol=ncol)
+    if show_legend:
+        if horizontal_legend:
+            ncol = len(fig.axes[0].get_legend_handles_labels()[0])
+            y_loc = 0.89
+            fig.legend(bbox_to_anchor=(0.9, y_loc),
+                       fontsize=FONT_SIZE_PT,
+                       ncol=ncol)
+        else:
+            ncol = 1
+            y_loc = 1
+            fig.axes[0].legend(loc=loc,
+                               fontsize=FONT_SIZE_PT,
+                               ncol=ncol)
     fig.savefig(fname,
                 dpi=dpi,
                 pad_inches=0.1,

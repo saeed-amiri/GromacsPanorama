@@ -29,5 +29,5 @@ class PlotConfig:
 
 
 @dataclass
-class AnalysisConfig(PlotConfig, InputFiles):
+class AllConfig(PlotConfig, InputFiles):
     """Analysis configuration dataclass"""

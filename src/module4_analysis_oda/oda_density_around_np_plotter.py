@@ -50,7 +50,7 @@ class DensityHeatMapConfig(BaseHeatMapConfig):
     cbar_label: str = 'Average Density'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'np_radius'],
-        'color': ['k', 'r'],
+        'color': ['k', 'darkred'],
         'linestyle': ['-', '--', '-.', ':']})
 
 
@@ -63,7 +63,7 @@ class Rdf2dHeatMapConfig(BaseHeatMapConfig):
     cbar_label: str = r'$g^\star(r^\star)$, a. u.'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'np_radius'],
-        'color': ['k', 'r'],
+        'color': ['k', 'darkred'],
         'linestyle': ['-', '--', '-.', ':']})
 
 
@@ -77,7 +77,7 @@ class FittedsRdf2dHeatMapConfig(BaseHeatMapConfig):
     cbar_label: str = r'$g^\star_{fitted}(r^\star)$, a.u.'
     circles_configs: dict[str, list[str]] = field(default_factory=lambda: {
         'list': ['contact_radius', 'turn_points'],
-        'color': ['k', 'r', 'g', 'b'],
+        'color': ['k', 'darkred', 'g', 'b'],
         'linestyle': [':', '--', '-.', ':'],
         'turn_style': ['--', ':', '-.']})
 
@@ -116,6 +116,7 @@ class BaseGraphConfig:
     graph_2nd_legend: str = r'$g^\star(r^\star)$, a. u.'
     if_elsevier: bool = True
     show_oda_label: bool = True
+    show_mirror_axis: bool = False
 
 
 @dataclass
@@ -305,7 +306,7 @@ class SurfactantDensityPlotter:
                   densities,
                   linestyle=config.graph_style['linestyle'],
                   linewidth=1,
-                  color='r',
+                  color='darkred',
                   label=config.graph_2nd_legend,
                   zorder=1)
         if style == 'fitted':
@@ -320,18 +321,18 @@ class SurfactantDensityPlotter:
                                    self.first_turn,
                                    legend='a',
                                    lstyle=':',
-                                   color='r',
+                                   color='darkred',
                                    y_cut=ymax)
             ax_i = self._add_vline(ax_i,
                                    self.midpoint,
                                    legend='b',
                                    lstyle='--',
-                                   color='r')
+                                   color='darkred')
             ax_i = self._add_vline(ax_i,
                                    self.second_turn,
                                    legend='c',
                                    lstyle='-.',
-                                   color='r')
+                                   color='darkred')
             ax_i.text(-0.09,
                       1,
                       'a)',
@@ -342,8 +343,12 @@ class SurfactantDensityPlotter:
             yticks = [0, 0.5, 1.0]
             ax_i.set_yticks(yticks)
         if config.show_oda_label:
+            if not config.show_mirror_axis:
+                height: float = 1.0
+            else:
+                height = 0.98
             ax_i.text(0.28,
-                      0.98,
+                      height,
                       r'0.03 ODA/nm$^2$',
                       ha='right',
                       va='top',
@@ -351,6 +356,8 @@ class SurfactantDensityPlotter:
                       fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
         fout: str = f'{self.residue}_{config.graph_suffix}'
+        if not config.show_mirror_axis:
+            elsevier_plot_tools.remove_mirror_axes(ax_i)
         plot_tools.save_close_fig(fig_i, ax_i, fout, loc='lower right')
         self.info_msg += f'\tThe `{style}` graph saved: `{fout}`\n'
 
@@ -583,12 +590,12 @@ class HeatmapPlotter:
                            ) -> plt.axes:
         """self explanatory"""
         self._add_polar_arrow(
-            ax_i, length=contact_radius, theta=np.pi/2, color='red')
+            ax_i, length=contact_radius, theta=np.pi/2, color='darkred')
         ax_i = self._add_radii_label(
             ax_i,
             label=rf'$r_{{c, avg}}$={contact_radius:.2f}',
             location=(1, 1),
-            color='red')
+            color='darkred')
 
         if self.config.if_label_arrow:
             ax_i = \
@@ -596,7 +603,7 @@ class HeatmapPlotter:
                     ax_i,
                     label=(rf'$r_{{c, avg}}$={contact_radius:.2f}'),
                     location=(1, 1),
-                    color='red')
+                    color='darkred')
 
         if 'np_radius' in self.config.circles_configs['list']:
             self._add_polar_arrow(
@@ -612,7 +619,7 @@ class HeatmapPlotter:
                          length: float,  # Radial direction of the arrow
                          theta: float,  # Angle of the arrow's location
                          dtheta: float = 0,  # Angular direction of the arrow
-                         color: str = 'red'
+                         color: str = 'darkred'
                          ) -> None:
         """Add an arrow to the polar plot."""
         # The quiver function adds the arrow to the plot
@@ -650,7 +657,7 @@ class HeatmapPlotter:
     def _add_heatmap_circle(ax_i: plt.axes,
                             radius: float,
                             origin: tuple[float, float] = (0, 0),
-                            color: str = 'red',
+                            color: str = 'darkred',
                             line_style: str = '--'
                             ) -> plt.axes:
         """add circle for representing the nanoparticle"""
@@ -787,7 +794,7 @@ class TimeDependentPlotter:
         for i, (_, frame) in enumerate(density.items(), start=1):
             densities = np.array(list(frame.values()))
             if i == steps_nr:
-                color = 'r'
+                color = 'darkred'
                 alpha = 1.0
                 label = label_prefix
                 lwidth = 1.0

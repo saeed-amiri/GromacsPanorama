@@ -81,8 +81,9 @@ GOLDEN_RATIO: float = (1 + 5 ** 0.5) / 2
 # Lines and markers
 LINE_WIDTH: float = 1.0
 MARKER_SIZE: float = 2.0
-LINE_STYLES: list[str] = ['-', '--', '-.', ':']
-LINE_COLORS: list[str] = ['black', 'red', 'blue', 'green', 'orange', 'purple']
+LINE_STYLES: list[str] = ['--', '-', '-.', ':']
+LINE_COLORS: list[str] = \
+    ['black', 'darkred', 'royalblue', 'green', 'orange', 'purple']
 # Output file format
 IMG_FORMAT: str = 'jpg'
 
@@ -147,13 +148,34 @@ def mk_canvas(size_type: str,
     return fig_i, ax_i
 
 
+def remove_mirror_axes(ax: plt.axes
+                       ) -> None:
+    """Remove the top and right spines and ticks from a matplotlib Axes"""
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.xaxis.set_ticks_position('bottom')
+    ax.yaxis.set_ticks_position('left')
+
+
 def save_close_fig(fig: plt.Figure,
                    fname: str,
                    dpi: int = DPI_HALFTONE,
-                   loc: str = 'upper right'
+                   loc: str = 'upper right',
+                   horizontal_legend: bool = False
                    ) -> None:
     """Save and close the figure"""
-    fig.axes[0].legend(loc=loc, fontsize=FONT_SIZE_PT)
+    if horizontal_legend:
+        ncol = len(fig.axes[0].get_legend_handles_labels()[0])
+        y_loc = 0.89
+        fig.legend(bbox_to_anchor=(0.9, y_loc),
+                   fontsize=FONT_SIZE_PT,
+                   ncol=ncol)
+    else:
+        ncol = 1
+        y_loc = 1
+        fig.axes[0].legend(loc=loc,
+                           fontsize=FONT_SIZE_PT,
+                           ncol=ncol)
     fig.savefig(fname,
                 dpi=dpi,
                 pad_inches=0.1,

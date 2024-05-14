@@ -75,17 +75,17 @@ class PlotCaCoverage:
                     ) -> None:
         """Scatter plot"""
         ax_i.scatter(group['log_surfactant_concentration_mM_L'],
-                   group['contact_angle_deg'],
-                   marker=self.config.marker_shape[2],
-                   s=self.config.marker_size,
-                   color=self.config.colors[0],
-                   )
+                     group['contact_angle_deg'],
+                     marker=self.config.marker_shape[2],
+                     s=self.config.marker_size,
+                     color=self.config.colors[0],
+                     )
         ax_i.scatter(group['log_surfactant_concentration_mM_L'],
-                   group['particle_coverage'],
-                   marker=self.config.marker_shape[3],
-                   s=self.config.marker_size,
-                   color=self.config.colors[1],
-                   )
+                     group['particle_coverage'],
+                     marker=self.config.marker_shape[3],
+                     s=self.config.marker_size,
+                     color=self.config.colors[1],
+                     )
 
     def _ax_guid_lines(self,
                        ax_i: plt.Axes,
@@ -93,23 +93,23 @@ class PlotCaCoverage:
                        ) -> None:
         """Scatter plot"""
         ax_i.plot(group['log_surfactant_concentration_mM_L'],
-                group['contact_angle_deg'],
-                linestyle=self.config.line_style[3],
-                marker=self.config.marker_shape[2],
-                ms=self.config.marker_size,
-                lw=self.config.line_width / 2,
-                color=self.config.colors[0],
-                label='CA [deg]'
-                )
+                  group['contact_angle_deg'],
+                  linestyle=self.config.line_style[3],
+                  marker=self.config.marker_shape[2],
+                  ms=self.config.marker_size,
+                  lw=self.config.line_width / 2,
+                  color=self.config.colors[0],
+                  label='CA [deg]'
+                  )
         ax_i.plot(group['log_surfactant_concentration_mM_L'],
-                group['particle_coverage'],
-                linestyle=self.config.line_style[3],
-                lw=self.config.line_width / 2,
-                marker=self.config.marker_shape[3],
-                ms=self.config.marker_size,
-                color=self.config.colors[1],
-                label='Coverage [%]'
-                )
+                  group['particle_coverage'],
+                  linestyle=self.config.line_style[3],
+                  lw=self.config.line_width / 2,
+                  marker=self.config.marker_shape[3],
+                  ms=self.config.marker_size,
+                  color=self.config.colors[1],
+                  label='Coverage [%]'
+                  )
 
     def _set_x_ticks(self,
                      ax_i: plt.Axes,
@@ -134,10 +134,10 @@ class PlotCaCoverage:
                          ) -> None:
         """Set the axis labels"""
         ax_i.set_xlabel(self.config.x_label,
-                      fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
         if ax_index == 0 and self.config.show_y_label:
             ax_i.set_ylabel(self.config.y_label,
-                          fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+                            fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
     def _ax_add_fig_labels(self,
                            ax_i: plt.Axes,
@@ -147,14 +147,14 @@ class PlotCaCoverage:
         """Add figure labels"""
         alphabet = chr(97 + ax_index)  # 97 is the Unicode code point for 'a'
         ax_i.text(0.05,
-                0.98,
-                f'{alphabet}) {name} [mM]',
-                horizontalalignment='left',
-                verticalalignment='top',
-                transform=ax_i.transAxes,
-                fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT-2,
-                bbox={"facecolor": 'white', "alpha": 0.}
-                )
+                  0.98,
+                  f'{alphabet}) {name} [mM]',
+                  horizontalalignment='left',
+                  verticalalignment='top',
+                  transform=ax_i.transAxes,
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT-2,
+                  bbox={"facecolor": 'white', "alpha": 0.}
+                  )
 
     def _ax_add_fig_legend(self,
                            ax_i: plt.Axes,
@@ -163,11 +163,11 @@ class PlotCaCoverage:
         """Add a legend to the figure"""
         if ax_index == 0:
             ax_i.legend(loc='upper right',
-                      fontsize=elsevier_plot_tools.FONT_SIZE_PT,
-                      frameon=True,
-                      bbox_to_anchor=(0.9, .90),
-                      ncol=1
-                      )
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT,
+                        frameon=True,
+                        bbox_to_anchor=(0.9, .90),
+                        ncol=1
+                        )
 
     def _mirror_axes(self,
                      ax_i: plt.Axes

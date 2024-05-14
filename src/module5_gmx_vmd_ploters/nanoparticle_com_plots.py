@@ -32,11 +32,12 @@ class BasePlotConfig:
     """
     linewidth: float = 1.0
     linecolotrs: list[str] = field(default_factory=lambda: [
-        'black', 'blue', 'green', 'red'])
+        'dimgrey', 'blue', 'darkgreen', 'darkred'])
     line_styles: list[str] = field(default_factory=lambda: [
         '-', ':', '--', '-.'])
     xlabel: str = 'Time [ns]'
     ylabel: str = r'$\Delta$' + ' '  # The axis will be add later
+    show_mirror_axis: bool = False
 
 
 @dataclass
@@ -128,10 +129,12 @@ class PlotNpCom:
         ax_i.set_ylabel(self.configs.ylabel)
         self._add_multi_label(ax_i)
 
-        ax_i.legend()
+        if not self.configs.show_mirror_axis:
+            elsevier_plot_tools.remove_mirror_axes(ax_i)
         elsevier_plot_tools.save_close_fig(fig_i,
                                            fname  := self.configs.output_file,
-                                           loc='lower left')
+                                           loc='lower left',
+                                           horizontal_legend=True)
         self.info_msg += f'The plot is saved as `{fname}`\n'
 
     def _add_multi_label(self,

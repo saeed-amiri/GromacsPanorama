@@ -33,7 +33,7 @@ class BasePlotConfig:
     """
     linewidth: float = 1.0
     linecolotrs: list[str] = field(default_factory=lambda: [
-        'red', 'green', 'black', 'blue'])
+        'darkred', 'darkgreen', 'black', 'blue'])
     line_styles: list[str] = field(default_factory=lambda: [
         '-', '--', ':', '-.'])
     line_labels: list[str] = field(init=False)
@@ -73,6 +73,7 @@ class AllConfig(BasePlotConfig, DataConfig):
         Selection.CONTACT_ANGLES])
     show_multi_label: bool = True
     show_nr_oda_label: bool = True
+    show_mirror_axis: bool = False
 
     output_file: str = f'np_contact_info.{elsevier_plot_tools.IMG_FORMAT}'
 
@@ -162,8 +163,12 @@ class PlotNpContactInfo:
                           ax_i: plt.Axes
                           ) -> None:
         if self.configs.show_nr_oda_label:
+            if self.configs.show_mirror_axis:
+                height: float = 0.1
+            else:
+                height = 1.0
             ax_i.text(0.28,
-                      0.1,
+                      height,
                       r'0.03 ODA/nm$^2$',
                       ha='right',
                       va='top',
@@ -200,8 +205,14 @@ class PlotNpContactInfo:
                   fig_i: plt.Figure
                   ) -> None:
         """save the figure"""
+        if not self.configs.show_mirror_axis:
+            elsevier_plot_tools.remove_mirror_axes(fig_i.axes[0])
         elsevier_plot_tools.save_close_fig(
-            fig_i, fname := self.configs.output_file, loc='lower right')
+            fig_i,
+            fname := self.configs.output_file,
+            loc='upper right',
+            horizontal_legend=True
+            )
         self.info_msg += f'The plot is saved to {fname}\n'
 
     def write_msg(self,

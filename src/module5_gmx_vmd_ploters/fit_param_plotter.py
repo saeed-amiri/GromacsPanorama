@@ -61,7 +61,7 @@ class BaseConfig:
 
     show_grid: bool = False
     plot_contact_radius: bool = False
-    show_mirror_axes: bool = True
+    show_mirror_axes: bool = False
 
 
 @dataclass
@@ -214,7 +214,8 @@ class PlotFitted:
         y_ticks = [round(item, 1) for item in y_ticks]
         ax_i.set_yticks(y_ticks)
 
-        ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
+        if config.show_grid:
+            ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
 
         ax_i.text(-0.09,
                   1,
@@ -223,7 +224,8 @@ class PlotFitted:
                   va='top',
                   transform=ax_i.transAxes,
                   fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
-
+        if not config.show_mirror_axes:
+            self.remove_mirror_axes(ax_i)
         elsevier_plot_tools.save_close_fig(
             fig_i, config.out_suffix, loc='lower right')
         self.info_msg += f"\tSaved plot: {config.out_suffix}\n"

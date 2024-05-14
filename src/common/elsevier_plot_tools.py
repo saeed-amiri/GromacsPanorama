@@ -80,10 +80,13 @@ DPI_LINE_ART: int = 1000
 GOLDEN_RATIO: float = (1 + 5 ** 0.5) / 2
 # Lines and markers
 LINE_WIDTH: float = 1.0
-MARKER_SIZE: float = 2.0
 LINE_STYLES: list[str] = ['--', '-', '-.', ':']
 LINE_COLORS: list[str] = \
     ['black', 'darkred', 'royalblue', 'green', 'orange', 'purple']
+MARKER_SIZE: float = 2.0
+MARKER_COLORS: list[str] = \
+    ['black', 'darkred', 'royalblue', 'green', 'orange', 'purple']
+MARKER_SHAPES: list[str] = ['o', 's', 'D', '^', 'v', 'x']
 # Output file format
 IMG_FORMAT: str = 'jpg'
 

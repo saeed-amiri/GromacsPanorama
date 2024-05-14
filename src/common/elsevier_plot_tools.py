@@ -151,6 +151,20 @@ def mk_canvas(size_type: str,
     return fig_i, ax_i
 
 
+def mk_canvas_multi(size_type: str,
+                    n_rows: int = 1,
+                    n_cols: int = 1,
+                    dpi: int = DPI_HALFTONE
+                    ) -> tuple[plt.Figure, plt.Axes]:
+    """Create a canvas for a multi-panel figure"""
+    fig_i, axs_i = plt.subplots(n_rows, n_cols,
+                                figsize=set_figure_size(size_type))
+    set_dpi(dpi)
+    for ax_i in axs_i:
+        ax_i = set_font_size(ax_i)
+    return fig_i, axs_i
+
+
 def remove_mirror_axes(ax: plt.axes
                        ) -> None:
     """Remove the top and right spines and ticks from a matplotlib Axes"""

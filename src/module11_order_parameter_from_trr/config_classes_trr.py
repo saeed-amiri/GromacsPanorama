@@ -78,7 +78,7 @@ class InputFiles:
     tpr_file: str = field(init=False)
     trajectory_file: str = field(init=False)
     interface_location_file: str = 'contact.xvg'
-    path_name: str = '/scratch/saeed/GÖHBP/PRE_DFG_7May24/single_np/15Oda/data'
+    path_name: str = '/scratch/saeed/GÖHBP/PRE_DFG_7May24/single_np/50Oda/data'
 
     def __post_init__(self) -> None:
         """Post init function"""

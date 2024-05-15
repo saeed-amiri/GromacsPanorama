@@ -86,5 +86,6 @@ class ToroidalConfig:
 class AllConfig(InputFiles):
     """Analysis configuration dataclass"""
     inf_replacement: float = -3.0
+    nan_replacement: float = 0.0
     ca_cov: CaCovConfig = field(default_factory=CaCovConfig)
     toroidal: ToroidalConfig = field(default_factory=ToroidalConfig)

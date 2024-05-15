@@ -150,7 +150,7 @@ class PlotCaCoverage:
         alphabet = chr(97 + ax_index)  # 97 is the Unicode code point for 'a'
         ax_i.text(0.05,
                   0.98,
-                  f'{alphabet}) {name} [mM]',
+                  f'{alphabet}) {name} [mM] NaCl',
                   horizontalalignment='left',
                   verticalalignment='top',
                   transform=ax_i.transAxes,

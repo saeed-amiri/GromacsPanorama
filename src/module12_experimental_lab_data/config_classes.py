@@ -73,11 +73,11 @@ class ToroidalConfig:
                                   elsevier_plot_tools.LINE_STYLES)
     line_width: int = elsevier_plot_tools.LINE_WIDTH
 
-    y_label: str = 'Toroidal radius'
+    y_label: str = r'S$_{ex}$ [nm]'
     x_label_surfactant: str = r'c$_{ODA}$ [mM/L]'
     x_label_salt: str = r'c$_{NaCl}$ [mM/L]'
 
-    y_lims: tuple[int, int] = field(default_factory=lambda: (30, 71))
+    y_lims: tuple[int, int] = field(default_factory=lambda: (-3, 15))
 
     show_guid_lines: bool = True
 

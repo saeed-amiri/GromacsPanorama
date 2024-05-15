@@ -97,6 +97,7 @@ class ToroidalRadiusPlot:
         """Plot the toroidal radius scheme"""
         self._ax_add_fig_labels(ax_i, 2, 'Exclusion zone')
         ax_i.imshow(plt.imread(self.config.schem_fig))
+        self.info_msg += f'\tThe scheme figure is `{self.config.schem_fig}`\n'
         ax_i.axis('off')
 
     def _plot_toroidal_radius(self,

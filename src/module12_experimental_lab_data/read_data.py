@@ -24,6 +24,7 @@ class ReadData:
         self.config = config
         data = self.read_data(log)
         self.data = self.add_log_x_scale_column(data)
+        self._replace_nan()
         self.write_msg(log)
 
     def read_data(self,
@@ -48,6 +49,12 @@ class ReadData:
                 ('\tlog_surfactant_concentration_mM_L column added\n'
                  f'\tinf replaced with {self.config.inf_replacement}\n')
         return data
+
+    def _replace_nan(self) -> None:
+        """Replace NaN values in the data"""
+        self.data.fillna(self.config.nan_replacement, inplace=True)
+        self.info_msg += \
+            (f'\tNaN values replaced with {self.config.nan_replacement}\n')
 
     def write_msg(self,
                   log: logger.logging.Logger

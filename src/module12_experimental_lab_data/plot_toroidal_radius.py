@@ -68,6 +68,10 @@ class ToroidalRadiusPlot:
         self._set_x_ticks(ax_i,
                           grouped,
                           'surfactant_concentration_mM_L')
+        self._set_axis_labels(ax_i, 0, self.config.x_label_surfactant)
+        self._set_y_ax(ax_i, self.config.y_lims)
+        self._ax_add_fig_labels(ax_i, 0, r'c$_{NaCl}$ [mM/L]')
+        self._mirror_axes(ax_i)
 
     def _plot_panel_b(self,
                       ax_i: plt.Axes,
@@ -81,6 +85,10 @@ class ToroidalRadiusPlot:
         self._set_x_ticks(ax_i,
                           grouped,
                           'salt_concentration_mM_L')
+        self._set_axis_labels(ax_i, 1, self.config.x_label_salt)
+        self._set_y_ax(ax_i, self.config.y_lims)
+        self._ax_add_fig_labels(ax_i, 1, r'c$_{ODA}$ [mM/L]')
+        self._mirror_axes(ax_i)
 
     def _plot_toroidal_radius(self,
                               ax_i: plt.Axes,
@@ -93,14 +101,18 @@ class ToroidalRadiusPlot:
             i_index: int = 0
             if x_column != 'salt_concentration_mM_L':
                 i_index = 1
+            elif i == 0:
+                continue
             ax_i.plot(group[x_column][i_index:],
                       group['toroidal_radius_nm'][i_index:],
-                      label=f'{name} mM/L',
+                      label=f'{name}',
                       linestyle=self.config.line_style[3],
                       marker=self.config.marker_shape[i],
                       ms=self.config.marker_size,
                       lw=self.config.line_width / 2,
                       color=self.config.colors[i])
+            ax_i.legend(loc='upper right',
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
     def _set_x_ticks(self,
                      ax_i: plt.Axes,
@@ -118,14 +130,55 @@ class ToroidalRadiusPlot:
         ax_i.set_xticks(xticks)
         ax_i.set_xticklabels(xticks_labels)
 
+    def _set_axis_labels(self,
+                         ax_i: plt.Axes,
+                         ax_index: int,
+                         x_label: str
+                         ) -> None:
+        """Set the axis labels"""
+        if ax_index == 0:
+            ax_i.set_ylabel(self.config.y_label)
+        ax_i.set_xlabel(x_label)
+
+    def _set_y_ax(self,
+                  ax_i: plt.Axes,
+                  y_lims: tuple[int, int]
+                  ) -> None:
+        """Set the y axis"""
+        ax_i.set_ylim(y_lims)
+
+    def _mirror_axes(self,
+                     ax_i: plt.Axes
+                     ) -> None:
+        """Mirror the axes"""
+        if not self.config.show_mirror_axis:
+            elsevier_plot_tools.remove_mirror_axes(ax_i)
+
+    def _ax_add_fig_labels(self,
+                           ax_i: plt.Axes,
+                           ax_index: int,
+                           name: str
+                           ) -> None:
+        """Add figure labels"""
+        alphabet = chr(97 + ax_index)  # 97 is the Unicode code point for 'a'
+        ax_i.text(0.05,
+                  0.98,
+                  f'{alphabet}) {name}',
+                  horizontalalignment='left',
+                  verticalalignment='top',
+                  transform=ax_i.transAxes,
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT-2,
+                  bbox={"facecolor": 'white', "alpha": 0.}
+                  )
+
     def _save_fig(self,
                   fig_i: plt.Figure
                   ) -> None:
         """Save the figure"""
         elsevier_plot_tools.save_close_fig(fig_i,
                                            self.config.fout,
-                                           loc='lower right',
-                                           show_legend=False)
+                                           loc='upper right',
+                                           show_legend=True)
         self.info_msg += f'\tA figure saved as `{self.config.fout}`\n'
 
     def _split_data(self,

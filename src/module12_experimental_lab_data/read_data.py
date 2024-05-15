@@ -38,13 +38,15 @@ class ReadData:
                                data: pd.DataFrame
                                ) -> pd.DataFrame:
         """Add a column to the data"""
-
-        log_values = np.log10(data['surfactant_concentration_mM_L'])
-        log_values[np.isinf(log_values)] = self.config.inf_replacement
-        data['log_surfactant_concentration_mM_L'] = log_values
-        self.info_msg += \
-            ('\tlog_surfactant_concentration_mM_L column added\n'
-             f'\tinf replaced with {self.config.inf_replacement}\n')
+        add_columns_based: list[str] = ['surfactant_concentration_mM_L',
+                                        'salt_concentration_mM_L']
+        for column in add_columns_based:
+            log_values = np.log10(data[column])
+            log_values[np.isinf(log_values)] = self.config.inf_replacement
+            data[f'log_{column}'] = log_values
+            self.info_msg += \
+                ('\tlog_surfactant_concentration_mM_L column added\n'
+                 f'\tinf replaced with {self.config.inf_replacement}\n')
         return data
 
     def write_msg(self,

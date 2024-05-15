@@ -81,6 +81,11 @@ class ToroidalConfig:
 
     show_guid_lines: bool = True
 
+    schem_fig_path: str = \
+        '/scratch/saeed/GÖHBP/PRE_DFG_7May24/experiment_data/'
+    schem_fig_name: str = 'exclusion_zone_schem.png'
+    schem_fig: str = f'{schem_fig_path}{schem_fig_name}'
+
 
 @dataclass
 class AllConfig(InputFiles):

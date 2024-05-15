@@ -54,6 +54,7 @@ class ToroidalRadiusPlot:
                                                          n_cols=3)
         self._plot_panel_a(axs[0], grouped_over_salt)
         self._plot_panel_b(axs[1], grouped_over_surfactant)
+        self._plot_panel_c(axs[2])
 
         self._save_fig(fig_i)
 
@@ -89,6 +90,14 @@ class ToroidalRadiusPlot:
         self._set_y_ax(ax_i, self.config.y_lims)
         self._ax_add_fig_labels(ax_i, 1, r'c$_{ODA}$ [mM/L]')
         self._mirror_axes(ax_i)
+
+    def _plot_panel_c(self,
+                      ax_i: plt.Axes
+                      ) -> None:
+        """Plot the toroidal radius scheme"""
+        self._ax_add_fig_labels(ax_i, 2, 'Exclusion zone')
+        ax_i.imshow(plt.imread(self.config.schem_fig))
+        ax_i.axis('off')
 
     def _plot_toroidal_radius(self,
                               ax_i: plt.Axes,
@@ -161,8 +170,13 @@ class ToroidalRadiusPlot:
                            ) -> None:
         """Add figure labels"""
         alphabet = chr(97 + ax_index)  # 97 is the Unicode code point for 'a'
-        ax_i.text(0.05,
-                  0.98,
+        x_pos = 0.05
+        y_pos = 0.98
+        if ax_index == 2:
+            x_pos = -0.05
+            y_pos = 1.0
+        ax_i.text(x_pos,
+                  y_pos,
                   f'{alphabet}) {name}',
                   horizontalalignment='left',
                   verticalalignment='top',

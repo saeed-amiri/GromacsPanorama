@@ -16,6 +16,8 @@ The first figure:
 import pandas as pd
 
 from module12_experimental_lab_data.plot_ca_coverage import PlotCaCoverage
+from module12_experimental_lab_data.plot_toroidal_radius import \
+    ToroidalRadiusPlot
 from module12_experimental_lab_data.config_classes import AllConfig
 from module12_experimental_lab_data.read_data import ReadData
 from common.colors_text import TextColor as bcolors
@@ -43,6 +45,7 @@ class PlotLabData:
                   ) -> None:
         """plot the data"""
         PlotCaCoverage(log, data, self.config)
+        ToroidalRadiusPlot(log, data, self.config)
 
     def write_msg(self,
                   log: logger.logging.Logger

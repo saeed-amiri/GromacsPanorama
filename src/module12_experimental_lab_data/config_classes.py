@@ -26,52 +26,53 @@ class InputFiles:
 
 
 @dataclass
-class CaCovConfig:
-    """Contact angle and coverage dataclass"""
+class BasePlotConfig:
+    """Base plot configuration dataclass"""
     # pylint: disable=too-many-instance-attributes
-    fout: str = f'ca_coverage.{elsevier_plot_tools.IMG_FORMAT}'
-    show_mirror_axis: bool = False
-    show_y_label: bool = False
+    fout: str = f'plot.{elsevier_plot_tools.IMG_FORMAT}'
 
     ytick_labels: list[float] = \
         field(default_factory=lambda: [30, 40, 50, 60, 70])
-    marker_size: int = field(default_factory=lambda:
-                             elsevier_plot_tools.MARKER_SIZE)
-    colors: list[str] = field(default_factory=lambda:
-                              elsevier_plot_tools.MARKER_COLORS)
-    marker_shape: list[str] = field(default_factory=lambda:
-                                    elsevier_plot_tools.MARKER_SHAPES)
-    line_style: list[str] = field(default_factory=lambda:
-                                  elsevier_plot_tools.LINE_STYLES)
+    marker_size: int = \
+        field(default_factory=lambda: elsevier_plot_tools.MARKER_SIZE)
+    colors: list[str] = \
+        field(default_factory=lambda: elsevier_plot_tools.MARKER_COLORS)
+    marker_shape: list[str] = \
+        field(default_factory=lambda: elsevier_plot_tools.MARKER_SHAPES)
+    line_style: list[str] = \
+        field(default_factory=lambda: elsevier_plot_tools.LINE_STYLES)
     line_width: int = elsevier_plot_tools.LINE_WIDTH
+
+    y_label: str = ''
+    x_label: str = ''
+
+    y_lims: tuple[int, int] = field(default_factory=lambda: (30, 71))
+
+    show_mirror_axis: bool = False
+    show_guid_lines: bool = True
+    show_y_label: bool = False
+
+
+@dataclass
+class CaCovConfig(BasePlotConfig):
+    """Contact angle and coverage dataclass"""
+    fout: str = f'ca_coverage.{elsevier_plot_tools.IMG_FORMAT}'
 
     x_label: str = r'c$_{ODA}$ [mM/L]'
     y_label: str = 'Contact angle and coverage'
 
     y_lims: tuple[int, int] = field(default_factory=lambda: (30, 71))
 
+    show_mirror_axis: bool = False
     show_guid_lines: bool = True
+    show_y_label: bool = False
 
 
 @dataclass
-class ToroidalConfig:
+class ToroidalConfig(BasePlotConfig):
     """toroidal radius dataclass"""
     # pylint: disable=too-many-instance-attributes
     fout: str = f'toroidal_radius.{elsevier_plot_tools.IMG_FORMAT}'
-    show_mirror_axis: bool = False
-    show_y_label: bool = False
-
-    ytick_labels: list[float] = \
-        field(default_factory=lambda: [30, 40, 50, 60, 70])
-    marker_size: int = field(default_factory=lambda:
-                             elsevier_plot_tools.MARKER_SIZE)
-    colors: list[str] = field(default_factory=lambda:
-                              elsevier_plot_tools.MARKER_COLORS)
-    marker_shape: list[str] = field(default_factory=lambda:
-                                    elsevier_plot_tools.MARKER_SHAPES)
-    line_style: list[str] = field(default_factory=lambda:
-                                  elsevier_plot_tools.LINE_STYLES)
-    line_width: int = elsevier_plot_tools.LINE_WIDTH
 
     y_label: str = r'S$_{ex}$ [nm]'
     x_label_surfactant: str = r'c$_{ODA}$ [mM/L]'
@@ -79,7 +80,9 @@ class ToroidalConfig:
 
     y_lims: tuple[int, int] = field(default_factory=lambda: (-3, 15))
 
+    show_mirror_axis: bool = False
     show_guid_lines: bool = True
+    show_y_label: bool = False
 
     schem_fig_path: str = \
         '/scratch/saeed/GÖHBP/PRE_DFG_7May24/experiment_data/'

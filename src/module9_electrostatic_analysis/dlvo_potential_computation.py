@@ -147,6 +147,8 @@ class PlotConfig:
         field(default_factory=lambda: ['black', 'red', 'blue', 'green'])
 
     y_unit: str = ''
+    y_lims: tuple[float, float] = (-0.85, 18)
+    x_lims: tuple[float, float] = (2, 12)
 
     legend_loc: str = 'lower right'
     if_stern_line: bool = True
@@ -393,7 +395,6 @@ class PlotPotential:
         phi_mv: np.ndarray = phi_r * 100
         # kappa * radius of the np
         kappa_r: float = self.configs.np_radius / debye_l / 10
-        y_lim_min: float = -0.85
 
         ax_i: plt.axes
         fig_i: plt.figure
@@ -401,18 +402,11 @@ class PlotPotential:
 
         ax_i.plot(radii, phi_mv, **configs.graph_styles)
 
-        y_lims: tuple[float, float] = ax_i.get_ylim()
-        x_lims: tuple[float, float] = ax_i.get_xlim()
-
         self._set_grids(ax_i)
         self._set_axis_labels(ax_i, configs)
         self._set_title(ax_i, kappa_r, configs)
-
-        self._plot_vertical_lines(
-            ax_i, configs, y_lim_min, phi_mv, radii, debye_l)
-
-        ax_i.set_xlim(x_lims)
-        ax_i.set_ylim((y_lim_min, y_lims[1]))
+        self._plot_vertical_lines(ax_i, configs, phi_mv, radii, debye_l)
+        self._set_axis_lims(ax_i, configs)
         self._set_fig_labels(ax_i)
         self._save_fig(fig_i, configs)
 
@@ -446,7 +440,6 @@ class PlotPotential:
     def _plot_vertical_lines(self,
                              ax_i: plt.axes,
                              configs: PlotConfig,
-                             y_lim_min: float,
                              phi_mv: np.ndarray,
                              radii: np.ndarray,
                              debye_l: float
@@ -455,17 +448,27 @@ class PlotPotential:
         # pylint: disable=too-many-arguments
         if configs.if_stern_line:
             ax_i = self._plot_stern_layer_lines(
-                ax_i, phi_mv, configs, y_lim_min)
+                ax_i, phi_mv, configs)
         if configs.if_debye_line:
             idx_closest = np.abs(radii - debye_l).argmin()
             phi_value = phi_mv[idx_closest]
             ax_i = self._plot_debye_lines(
-                ax_i, phi_value, debye_l, y_lim_min, configs)
+                ax_i, phi_value, debye_l, configs)
         if configs.if_2nd_debye:
             idx_closest = np.abs(radii - debye_l*2).argmin()
             phi_value = phi_mv[idx_closest]
             ax_i = self._plot_debye_lines(
-                ax_i, phi_value, debye_l*2, y_lim_min, configs, label='2')
+                ax_i, phi_value, debye_l*2, configs, label='2')
+
+    def _set_axis_lims(self,
+                       ax_i: plt.axes,
+                       configs: PlotConfig
+                       ) -> None:
+        """set the axis limits"""
+        y_lims: tuple[float, float] = ax_i.get_ylim()
+        x_lims: tuple[float, float] = ax_i.get_xlim()
+        ax_i.set_xlim(x_lims)
+        ax_i.set_ylim((configs.y_lims[0], y_lims[1]))
 
     def _set_fig_labels(self,
                         ax_i: plt.axes
@@ -492,7 +495,6 @@ class PlotPotential:
                           ax_i: plt.axes,
                           phi_value: float,
                           debye_l: float,
-                          y_lim_min: float,
                           configs: PlotConfig,
                           label: str = ''
                           ) -> plt.axes:
@@ -508,7 +510,7 @@ class PlotPotential:
             h_label = rf'$_{{{label}\lambda_D}}$'
 
         ax_i.vlines(x=debye_l,
-                    ymin=y_lim_min,
+                    ymin=configs.y_lims[0],
                     ymax=phi_value,
                     color=configs.colors[l_s1],
                     linestyle=configs.line_styles[l_s1],
@@ -528,11 +530,10 @@ class PlotPotential:
                                 ax_i: plt.axes,
                                 phi_mv: np.ndarray,
                                 configs: PlotConfig,
-                                y_lim_min: float
                                 ) -> plt.axes:
         """plot the stern layer lines"""
         ax_i.vlines(x=(x_temp := self.configs.stern_layer/10),
-                    ymin=y_lim_min,
+                    ymin=configs.y_lims[0],
                     ymax=phi_mv.max(),
                     color=configs.colors[0],
                     linestyle=configs.line_styles[1],

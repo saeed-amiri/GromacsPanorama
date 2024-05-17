@@ -37,7 +37,7 @@ class BasePlotConfig:
         ':', '-', '--', '-.'])
     xlabel: str = 'Time [ns]'
     ylabel: str = r'$\Delta$' + ' '  # The axis will be add later
-    show_mirror_axis: bool = False
+    show_mirror_axis: bool = True
 
 
 @dataclass

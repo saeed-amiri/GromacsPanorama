@@ -212,7 +212,7 @@ class ElectroStaticComputation:
         radii: np.ndarray
         phi_r: np.ndarray
         radii, phi_r = self.compute_potential(debye_l)
-        self.plot_save_phi(radii, phi_r, debye_l)
+        self.plot_save_phi(radii, phi_r, debye_l, log)
 
     def get_debye(self,
                   ionic_strength: float
@@ -347,8 +347,46 @@ class ElectroStaticComputation:
     def plot_save_phi(self,
                       radii: np.ndarray,
                       phi_r: np.ndarray,
-                      debye_l: float
+                      debye_l: float,
+                      log: logger.logging.Logger
                       ) -> None:
+        """plot and save the electostatic potential"""
+        PlotPotential(radii, phi_r, debye_l, self.configs, log)
+
+    def write_msg(self,
+                  log: logger.logging.Logger  # To log
+                  ) -> None:
+        """write and log messages"""
+        now = datetime.now()
+        self.info_msg += \
+            f'\tTime: {now.strftime("%Y-%m-%d %H:%M:%S")}\n'
+        print(f'{bcolors.OKCYAN}{ElectroStaticComputation.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
+class PlotPotential:
+    """Plot the electrostatic potential"""
+
+    info_msg: str = 'Message from PlotPotential:\n'
+
+    def __init__(self,
+                 radii: np.ndarray,
+                 phi_r: np.ndarray,
+                 debye_l: float,
+                 configs: AllConfig,
+                 log: logger.logging.Logger
+                 ) -> None:
+        # pylint: disable=too-many-arguments
+        self.configs = configs
+        self.plot_potential(radii, phi_r, debye_l)
+        self.write_msg(log)
+
+    def plot_potential(self,
+                       radii: np.ndarray,
+                       phi_r: np.ndarray,
+                       debye_l: float
+                       ) -> None:
         """plot and save the electostatic potential"""
         configs: PlotConfig = self.configs.plot_config
         phi_mv: np.ndarray = phi_r * 100

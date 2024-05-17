@@ -31,6 +31,7 @@ class BasePlotConfig:
     """
     Base class for the graph configuration
     """
+    # pylint: disable=too-many-instance-attributes
     linewidth: float = 1.0
     linecolotrs: list[str] = field(default_factory=lambda: [
         'darkred', 'darkgreen', 'black', 'blue'])
@@ -39,6 +40,8 @@ class BasePlotConfig:
     line_labels: list[str] = field(init=False)
     xlabel: str = 'Time [ns]'
     ylabel: str = ''
+    y_lims: tuple[float, float] = field(default_factory=lambda: (0, 50))
+    y_ticks: list[float] = field(default_factory=lambda: [10, 20, 30, 40, 50])
 
 
 @dataclass
@@ -114,6 +117,8 @@ class PlotNpContactInfo:
         fig_i, ax_i = self._make_canvas()
         for i, selection in enumerate(self.configs.selection):
             self._plot_data_label(selection.value, data, ax_i, i)
+        self._set_axis_limits(ax_i)
+        self._set_axis_ticks(ax_i)
         self._add_multi_label(ax_i)
         self._add_axis_labels(ax_i)
         self._add_nr_oda_label(ax_i)
@@ -138,6 +143,19 @@ class PlotNpContactInfo:
                       linestyle=self.configs.line_styles[i],
                       color=self.configs.linecolotrs[i],
                       linewidth=self.configs.linewidth)
+
+    def _set_axis_limits(self,
+                         ax_i: plt.Axes
+                         ) -> None:
+        """set the axis limits"""
+        ylims_cur: tuple[float, float] = ax_i.get_ylim()
+        ax_i.set_ylim(self.configs.y_lims[0], ylims_cur[1])
+
+    def _set_axis_ticks(self,
+                        ax_i: plt.Axes
+                        ) -> None:
+        """set the axis ticks"""
+        ax_i.set_yticks(self.configs.y_ticks)
 
     def _add_axis_labels(self,
                          ax_i: plt.Axes
@@ -166,7 +184,7 @@ class PlotNpContactInfo:
             if self.configs.show_mirror_axis:
                 height: float = 0.1
             else:
-                height = 1.0
+                height = 0.1
             ax_i.text(0.28,
                       height,
                       r'0.03 ODA/nm$^2$',
@@ -210,7 +228,7 @@ class PlotNpContactInfo:
         elsevier_plot_tools.save_close_fig(
             fig_i,
             fname := self.configs.output_file,
-            loc='upper right',
+            loc='lower right',
             horizontal_legend=True
             )
         self.info_msg += f'The plot is saved to {fname}\n'

@@ -41,7 +41,7 @@ class BasePlotConfig:
     xlabel: str = 'Time [ns]'
     ylabel: str = ''
     y_lims: tuple[float, float] = field(default_factory=lambda: (0, 50))
-    y_ticks: list[float] = field(default_factory=lambda: [10, 20, 30, 40, 50])
+    y_ticks: list[float] = field(default_factory=lambda: [0, 10, 20, 30, 40])
 
 
 @dataclass
@@ -76,7 +76,7 @@ class AllConfig(BasePlotConfig, DataConfig):
         Selection.CONTACT_ANGLES])
     show_multi_label: bool = True
     show_nr_oda_label: bool = True
-    show_mirror_axis: bool = False
+    show_mirror_axis: bool = True
 
     output_file: str = f'np_contact_info.{elsevier_plot_tools.IMG_FORMAT}'
 
@@ -149,7 +149,7 @@ class PlotNpContactInfo:
                          ) -> None:
         """set the axis limits"""
         ylims_cur: tuple[float, float] = ax_i.get_ylim()
-        ax_i.set_ylim(self.configs.y_lims[0], ylims_cur[1])
+        ax_i.set_ylim(self.configs.y_lims[0], ylims_cur[1]-1)
 
     def _set_axis_ticks(self,
                         ax_i: plt.Axes

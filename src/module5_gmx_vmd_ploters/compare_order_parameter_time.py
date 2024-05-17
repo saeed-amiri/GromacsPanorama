@@ -42,6 +42,8 @@ class BasePlotConfig:
     show_multi_label: bool = True
     multi_label: typing.Union[str, None] = 'a)'
     show_nr_oda_label: bool = True
+    y_lims: tuple[float, float] = field(default_factory=lambda: (0.02, 0.53))
+    y_ticks: list[float] = field(default_factory=lambda: [0.1, 0.3, 0.5])
 
     def __post_init__(self) -> None:
         """Post init function"""
@@ -98,6 +100,8 @@ class OrderParameterComparison:
         ax_i: plt.Axes
         fig_i, ax_i = self._make_canvas()
         self._plot_data_on_ax(ax_i, data)
+        self._set_axis_limits(ax_i)
+        self._set_axis_ticks(ax_i)
         self._set_labels(ax_i)
         self._set_multi_label(ax_i)
         self._add_nr_oda_label(ax_i)
@@ -120,6 +124,18 @@ class OrderParameterComparison:
                       linestyle=self.configs.line_styles[i],
                       color=self.configs.linecolors[i],
                       linewidth=self.configs.linewidth)
+
+    def _set_axis_limits(self,
+                         ax_i: plt.Axes
+                         ) -> None:
+        """set the axis limits"""
+        ax_i.set_ylim(self.configs.y_lims)
+
+    def _set_axis_ticks(self,
+                        ax_i: plt.Axes
+                        ) -> None:
+        """set the axis ticks"""
+        ax_i.set_yticks(self.configs.y_ticks)
 
     def _set_labels(self,
                     ax_i: plt.Axes
@@ -144,7 +160,7 @@ class OrderParameterComparison:
                           ) -> None:
         if self.configs.show_nr_oda_label:
             ax_i.text(0.28,
-                      0.98,
+                      0.1,
                       r'0.11 ODA/nm$^{2}$',
                       ha='right',
                       va='top',

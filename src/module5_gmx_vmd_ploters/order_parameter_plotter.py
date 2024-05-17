@@ -65,7 +65,7 @@ class BaseConfig:
     line_styles: list[str] = \
         field(default_factory=lambda: ['-', ':', '--', '-.'])
     colors: list[str] = \
-        field(default_factory=lambda: ['black', 'red', 'blue', 'green'])
+        field(default_factory=lambda: ['black', 'darkred', 'blue', 'green'])
 
     y_unit: str = ''
 
@@ -94,7 +94,7 @@ class ErrorBarGraph(BaseConfig):
     with_error: bool = True
 
     def __post_init__(self) -> None:
-        self.graph_styles['ecolor'] = 'red'
+        self.graph_styles['ecolor'] = 'darkred'
         self.graph_styles['linestyle'] = self.line_styles[1]
         self.labels['xlabel'] = r'ODA/nm$^2$'
 
@@ -248,6 +248,7 @@ class PlotOrderParameter:
         if config.show_title:
             ax_i.set_title(f'{config.labels["title"]} ({key})')
         ax_i.grid(True, which='both', linestyle='--', color='gray', alpha=0.5)
+        ax_i.set_yticks([0.1, 0.3, 0.5])
 
         elsevier_plot_tools.save_close_fig(
             fig_i, fname := f'{key}_{config.graph_suffix}', loc='lower right')

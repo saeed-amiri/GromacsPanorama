@@ -154,6 +154,7 @@ class PlotConfig:
     if_2nd_debye: bool = False
 
     if_title: bool = False
+    if_grid: bool = True
 
 
 @dataclass
@@ -390,26 +391,68 @@ class PlotPotential:
         """plot and save the electostatic potential"""
         configs: PlotConfig = self.configs.plot_config
         phi_mv: np.ndarray = phi_r * 100
+        # kappa * radius of the np
+        kappa_r: float = self.configs.np_radius / debye_l / 10
+        y_lim_min: float = -0.85
+
         ax_i: plt.axes
         fig_i: plt.figure
         fig_i, ax_i = elsevier_plot_tools.mk_canvas(size_type='single_column')
-        ax_i.plot(radii, phi_mv, **configs.graph_styles)
-        ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
 
-        # kappa * radius of the np
-        kappa_r: float = self.configs.np_radius / debye_l / 10
+        ax_i.plot(radii, phi_mv, **configs.graph_styles)
+
+        y_lims: tuple[float, float] = ax_i.get_ylim()
+        x_lims: tuple[float, float] = ax_i.get_xlim()
+
+        self._set_grids(ax_i)
+        self._set_axis_labels(ax_i, configs)
+        self._set_title(ax_i, kappa_r, configs)
+
+        self._plot_vertical_lines(
+            ax_i, configs, y_lim_min, phi_mv, radii, debye_l)
+
+        ax_i.set_xlim(x_lims)
+        ax_i.set_ylim((y_lim_min, y_lims[1]))
+        self._set_fig_labels(ax_i)
+        self._save_fig(fig_i, configs)
+
+    def _set_grids(self,
+                   ax_i: plt.axes
+                   ) -> None:
+        """set the grid"""
+        if self.configs.plot_config.if_grid:
+            ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
+
+    def _set_axis_labels(self,
+                         ax_i: plt.axes,
+                         configs: PlotConfig
+                         ) -> None:
+        """set the axis labels"""
         ax_i.set_xlabel(configs.labels.get('xlabel'),
                         fontsize=elsevier_plot_tools.FONT_SIZE_PT)
         ax_i.set_ylabel(configs.labels.get('ylabel'),
                         fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+
+    def _set_title(self,
+                   ax_i: plt.axes,
+                   kappa_r: float,
+                   configs: PlotConfig
+                   ) -> None:
+        """set the title"""
         if configs.if_title:
             ax_i.set_title(
                 rf' $\kappa a$ := $\lambda_D^{{-1}} r_{{NP}}$ = {kappa_r:.2f}')
 
-        y_lims: tuple[float, float] = ax_i.get_ylim()
-        x_lims: tuple[float, float] = ax_i.get_xlim()
-        y_lim_min: float = -0.85
-
+    def _plot_vertical_lines(self,
+                             ax_i: plt.axes,
+                             configs: PlotConfig,
+                             y_lim_min: float,
+                             phi_mv: np.ndarray,
+                             radii: np.ndarray,
+                             debye_l: float
+                             ) -> None:
+        """plot vertical lines"""
+        # pylint: disable=too-many-arguments
         if configs.if_stern_line:
             ax_i = self._plot_stern_layer_lines(
                 ax_i, phi_mv, configs, y_lim_min)
@@ -424,8 +467,10 @@ class PlotPotential:
             ax_i = self._plot_debye_lines(
                 ax_i, phi_value, debye_l*2, y_lim_min, configs, label='2')
 
-        ax_i.set_xlim(x_lims)
-        ax_i.set_ylim((y_lim_min, y_lims[1]))
+    def _set_fig_labels(self,
+                        ax_i: plt.axes
+                        ) -> None:
+        """set the figure labels"""
         ax_i.text(-0.085,
                   1,
                   'a)',
@@ -433,6 +478,12 @@ class PlotPotential:
                   va='top',
                   transform=ax_i.transAxes,
                   fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+
+    def _save_fig(self,
+                  fig_i: plt.Figure,
+                  configs: PlotConfig
+                  ) -> None:
+        """save the figure"""
         elsevier_plot_tools.save_close_fig(
             fig_i, fname=(fout := configs.graph_suffix))
         self.info_msg += f'\tFigure saved as `{fout}`\n'

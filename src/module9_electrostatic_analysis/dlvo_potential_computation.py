@@ -540,7 +540,7 @@ class PlotPotential:
                     linestyle=configs.line_styles[2],
                     linewidth=elsevier_plot_tools.LINE_WIDTH)
         ax_i.text(debye_l-0.05,
-                  phi_value+2.4,
+                  phi_value+2.6,
                   h_label,
                   fontsize=elsevier_plot_tools.FONT_SIZE_PT+2)
         # Plot horizontal line from phi_value to the graph

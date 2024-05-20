@@ -63,6 +63,7 @@ import numpy as np
 import pandas as pd
 
 import matplotlib.pylab as plt
+from matplotlib import gridspec
 
 from common import logger, xvg_to_dataframe, my_tools, elsevier_plot_tools
 from common.colors_text import TextColor as bcolors
@@ -400,10 +401,20 @@ class PlotPotential:
         """plot and save the electostatic potential"""
         configs: PlotConfig = self.configs.plot_config
 
-        ax_i: plt.axes
+        axs: plt.axes
         fig_i: plt.figure
-        fig_i, ax_i = elsevier_plot_tools.mk_canvas(size_type='single_column')
-        self.plot_panel_a(ax_i, radii, phi_r, debye_l, configs)
+        fig_i, axs = elsevier_plot_tools.mk_canvas_multi('double_column',
+                                                         n_rows=1,
+                                                         n_cols=4)
+        for ax_i in axs:
+            ax_i.axis('off')
+        grid_panel = gridspec.GridSpec(1, 4, figure=fig_i)
+
+        axs[0] = fig_i.add_subplot(grid_panel[0, :2])
+        axs[1] = fig_i.add_subplot(grid_panel[0, 2])
+        axs[2] = fig_i.add_subplot(grid_panel[0, 3])
+        self.plot_panel_a(axs[0], radii, phi_r, debye_l, configs)
+
         self._save_fig(fig_i, configs)
 
     def plot_panel_a(self,

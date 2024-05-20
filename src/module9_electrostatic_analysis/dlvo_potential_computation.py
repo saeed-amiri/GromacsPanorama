@@ -415,16 +415,17 @@ class PlotPotential:
         fig_i: plt.figure
         fig_i, axs = elsevier_plot_tools.mk_canvas_multi('double_column',
                                                          n_rows=1,
-                                                         n_cols=4)
+                                                         n_cols=7)
         for ax_i in axs:
             ax_i.axis('off')
-        grid_panel = gridspec.GridSpec(1, 4, figure=fig_i)
+        grid_panel = gridspec.GridSpec(1, 7, figure=fig_i)
 
-        axs[0] = fig_i.add_subplot(grid_panel[0, :2])
-        axs[1] = fig_i.add_subplot(grid_panel[0, 2])
-        axs[2] = fig_i.add_subplot(grid_panel[0, 3])
+        axs[0] = fig_i.add_subplot(grid_panel[0, :3])
+        axs[1] = fig_i.add_subplot(grid_panel[0, 3:5])
+        axs[2] = fig_i.add_subplot(grid_panel[0, 5:])
         self.plot_panel_a(axs[0], radii, phi_r, debye_l, configs)
-
+        self.plot_panel_b(axs[1], configs)
+        self.plot_panel_c(axs[2], configs)
         self._save_fig(fig_i, configs)
 
     def plot_panel_a(self,
@@ -448,6 +449,23 @@ class PlotPotential:
         self._set_axis_lims(ax_i, configs)
         self._set_axis_ticks(ax_i, debye_l, configs)
         self._set_fig_labels(ax_i)
+        self._set_mirror_axes(ax_i, configs)
+
+    def plot_panel_b(self,
+                     ax_i: plt.axes,
+                     configs: PlotConfig
+                     ) -> None:
+        """add shcem of the dlvo model for a sphere"""
+        ax_i.axis('off')
+        ax_i.imshow(plt.imread(configs.scheme_fig_path))
+
+    def plot_panel_c(self,
+                     ax_i: plt.axes,
+                     configs: PlotConfig
+                     ) -> None:
+        """add shcem of the dlvo model for a sphere"""
+        ax_i.axis('off')
+        ax_i.imshow(plt.imread(configs.isosurface_fig))
 
     def _plot_data(self,
                    ax_i: plt.axes,

@@ -405,16 +405,26 @@ class PlotPotential:
         ax_i: plt.axes
         fig_i: plt.figure
         fig_i, ax_i = elsevier_plot_tools.mk_canvas(size_type='single_column')
-
-        ax_i.plot(radii, phi_mv, **configs.graph_styles)
+        self._plot_data(ax_i, radii, phi_mv, configs)
 
         self._set_grids(ax_i)
         self._set_axis_labels(ax_i, configs)
         self._set_title(ax_i, kappa_r, configs)
         self._plot_vertical_lines(ax_i, configs, phi_mv, radii, debye_l)
         self._set_axis_lims(ax_i, configs)
+        self._set_axis_ticks(ax_i, configs)
         self._set_fig_labels(ax_i)
         self._save_fig(fig_i, configs)
+
+    def _plot_data(self,
+                   ax_i: plt.axes,
+                   radii: np.ndarray,
+                   phi_mv: np.ndarray,
+                   configs: PlotConfig
+                   ) -> None:
+        """plot the data"""
+        line, = ax_i.plot(radii, phi_mv, **configs.graph_styles)
+        line.set_dashes((4, 0, 0, 0, 0, 0))
 
     def _set_grids(self,
                    ax_i: plt.axes
@@ -473,8 +483,15 @@ class PlotPotential:
         """set the axis limits"""
         y_lims: tuple[float, float] = ax_i.get_ylim()
         x_lims: tuple[float, float] = ax_i.get_xlim()
-        ax_i.set_xlim(x_lims)
+        ax_i.set_xlim(configs.x_lims[0], x_lims[1])
         ax_i.set_ylim((configs.y_lims[0], y_lims[1]))
+
+    def _set_axis_ticks(self,
+                        ax_i: plt.axes,
+                        configs: PlotConfig
+                        ) -> None:
+        """set the axis ticks"""
+        ax_i.set_xticks(configs.x_ticks)
 
     def _set_fig_labels(self,
                         ax_i: plt.axes
@@ -507,7 +524,7 @@ class PlotPotential:
         """plot lines for the debye length"""
         # pylint: disable=too-many-arguments
         if not label:
-            l_s1: int = 1
+            l_s1: int = 3
             l_s2: int = 2
             h_label: str = r'$_{\lambda_D}$'
         else:
@@ -542,7 +559,7 @@ class PlotPotential:
                     ymin=configs.y_lims[0],
                     ymax=phi_mv.max(),
                     color=configs.colors[0],
-                    linestyle=configs.line_styles[1],
+                    linestyle=configs.line_styles[2],
                     linewidth=elsevier_plot_tools.LINE_WIDTH,
                     label=f'Stern layer: {x_temp:.2f} [nm]')
         ax_i.hlines(y=(phi_0 := phi_mv.max()),

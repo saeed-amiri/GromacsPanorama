@@ -134,7 +134,7 @@ class PlotConfig:
 
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
         'label': r'0.03 ODA/$nm^2$',  # 15Oda
-        'color': 'dimgrey',
+        'color': 'black',
         'marker': 'o',
         'linestyle': '--',
         'markersize': 0,
@@ -399,13 +399,22 @@ class PlotPotential:
                        ) -> None:
         """plot and save the electostatic potential"""
         configs: PlotConfig = self.configs.plot_config
-        phi_mv: np.ndarray = phi_r * 100
-        # kappa * radius of the np
-        kappa_r: float = self.configs.np_radius / debye_l / 10
 
         ax_i: plt.axes
         fig_i: plt.figure
         fig_i, ax_i = elsevier_plot_tools.mk_canvas(size_type='single_column')
+
+    def plot_panel_ax(self,
+                        ax_i: plt.axes,
+                        radii: np.ndarray,
+                        phi_r: np.ndarray,
+                        debye_l: float,
+                        configs: PlotConfig
+                        ) -> None:
+        """plot the data"""
+        phi_mv: np.ndarray = phi_r * 100
+        # kappa * radius of the np
+        kappa_r: float = self.configs.np_radius / debye_l / 10
         self._plot_data(ax_i, radii, phi_mv, configs)
 
         self._set_grids(ax_i)

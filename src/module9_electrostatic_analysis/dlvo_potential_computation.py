@@ -414,6 +414,7 @@ class PlotPotential:
                      configs: PlotConfig
                      ) -> None:
         """plot the data"""
+        # pylint: disable=too-many-arguments
         phi_mv: np.ndarray = phi_r * 100
         # kappa * radius of the np
         kappa_r: float = self.configs.np_radius / debye_l / 10
@@ -474,25 +475,21 @@ class PlotPotential:
         """plot vertical lines"""
         # pylint: disable=too-many-arguments
         if configs.if_stern_line:
-            ax_i = self._plot_stern_layer_lines(
-                ax_i, phi_mv, configs)
+            self._plot_stern_layer_lines(ax_i, phi_mv, configs)
         if configs.if_debye_line:
             idx_closest = np.abs(radii - debye_l).argmin()
             phi_value = phi_mv[idx_closest]
-            ax_i = self._plot_debye_lines(
-                ax_i, phi_value, debye_l, configs)
+            self._plot_debye_lines(ax_i, phi_value, debye_l, configs)
         if configs.if_2nd_debye:
             idx_closest = np.abs(radii - debye_l*2).argmin()
             phi_value = phi_mv[idx_closest]
-            ax_i = self._plot_debye_lines(
-                ax_i, phi_value, debye_l*2, configs, label='2')
+            self._plot_debye_lines(ax_i, phi_value, debye_l*2, configs)
 
     def _set_axis_lims(self,
                        ax_i: plt.axes,
                        configs: PlotConfig
                        ) -> None:
         """set the axis limits"""
-        y_lims: tuple[float, float] = ax_i.get_ylim()
         x_lims: tuple[float, float] = ax_i.get_xlim()
         ax_i.set_xlim(configs.x_lims[0], x_lims[1])
         ax_i.set_ylim(configs.y_lims)
@@ -536,9 +533,8 @@ class PlotPotential:
                           ax_i: plt.axes,
                           phi_value: float,
                           debye_l: float,
-                          configs: PlotConfig,
-                          label: str = ''
-                          ) -> plt.axes:
+                          configs: PlotConfig
+                          ) -> None:
         """plot lines for the debye length"""
         # pylint: disable=too-many-arguments
 
@@ -565,13 +561,12 @@ class PlotPotential:
                   phi_value-0.2,
                   h_line_label,
                   fontsize=elsevier_plot_tools.FONT_SIZE_PT)
-        return ax_i
 
     def _plot_stern_layer_lines(self,
                                 ax_i: plt.axes,
                                 phi_mv: np.ndarray,
                                 configs: PlotConfig,
-                                ) -> plt.axes:
+                                ) -> None:
         """plot the stern layer lines"""
         ax_i.vlines(x=(x_temp := self.configs.stern_layer/10),
                     ymin=configs.y_lims[0],
@@ -594,7 +589,6 @@ class PlotPotential:
                   phi_0-0.2,
                   fr'$\psi_0$: {phi_0:.2f} [mV]',
                   fontsize=elsevier_plot_tools.FONT_SIZE_PT)
-        return ax_i
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

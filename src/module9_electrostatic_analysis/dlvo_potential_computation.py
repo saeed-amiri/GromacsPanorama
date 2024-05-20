@@ -458,6 +458,14 @@ class PlotPotential:
         """add shcem of the dlvo model for a sphere"""
         ax_i.axis('off')
         ax_i.imshow(plt.imread(configs.scheme_fig_path))
+        ax_i.text(0.09,
+          1,
+          'b)',
+          ha='right',
+          va='top',
+          transform=ax_i.transAxes,
+          fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+        self.info_msg += f'\tScheme image: {configs.scheme_fig_path}\n'
 
     def plot_panel_c(self,
                      ax_i: plt.axes,
@@ -545,7 +553,8 @@ class PlotPotential:
         debye_l_str: str = f'{debye_l:.2f}'
         configs.x_ticks.extend([debye_l])
         ax_i.set_xticks(configs.x_ticks)
-        ax_i.set_xticklabels(x_tick_labels + [debye_l_str])
+        ax_i.set_xticklabels(x_tick_labels + [debye_l_str],
+                             fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
         ax_i.set_yticks(configs.y_ticks)
 

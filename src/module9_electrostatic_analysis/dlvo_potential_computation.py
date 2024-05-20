@@ -134,9 +134,9 @@ class PlotConfig:
 
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
         'label': r'0.03 ODA/$nm^2$',  # 15Oda
-        'color': 'black',
+        'color': 'dimgrey',
         'marker': 'o',
-        'linestyle': '-',
+        'linestyle': '--',
         'markersize': 0,
         'linewidth': elsevier_plot_tools.LINE_WIDTH,
     })
@@ -144,11 +144,17 @@ class PlotConfig:
     line_styles: list[str] = \
         field(default_factory=lambda: ['-', ':', '--', '-.'])
     colors: list[str] = \
-        field(default_factory=lambda: ['black', 'red', 'blue', 'green'])
+        field(default_factory=lambda: ['black',
+                                       'darkred',
+                                       'royalblue',
+                                       'darkgreen',
+                                       'dimgrey'])
 
     y_unit: str = ''
-    y_lims: tuple[float, float] = (-0.85, 18)
+    y_lims: tuple[float, float] = (0, 18)
     x_lims: tuple[float, float] = (2, 12)
+
+    x_ticks: list[float] = field(default_factory=lambda: [3, 5, 7, 9])
 
     legend_loc: str = 'lower right'
     if_stern_line: bool = True
@@ -156,7 +162,7 @@ class PlotConfig:
     if_2nd_debye: bool = False
 
     if_title: bool = False
-    if_grid: bool = True
+    if_grid: bool = False
 
 
 @dataclass

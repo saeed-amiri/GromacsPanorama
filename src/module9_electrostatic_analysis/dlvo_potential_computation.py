@@ -137,7 +137,7 @@ class PlotConfig:
         'label': r'0.03 ODA/$nm^2$',  # 15Oda
         'color': 'black',
         'marker': 'o',
-        'linestyle': '--',
+        'linestyle': '-',
         'markersize': 0,
         'linewidth': elsevier_plot_tools.LINE_WIDTH,
     })
@@ -156,9 +156,9 @@ class PlotConfig:
     x_lims: tuple[float, float] = (2, 12)
 
     x_ticks: list[float] = field(default_factory=lambda: [3, 7, 9])
-    y_ticks: list[float] = field(default_factory=lambda: [0, 10, 20])
+    y_ticks: list[float] = field(default_factory=lambda: [])
 
-    legend_loc: str = 'lower right'
+    legend_loc: str = 'upper right'
     if_stern_line: bool = True
     if_debye_line: bool = True
     if_2nd_debye: bool = False
@@ -475,7 +475,9 @@ class PlotPotential:
                    ) -> None:
         """plot the data"""
         line, = ax_i.plot(radii, phi_mv, **configs.graph_styles)
-        line.set_dashes((4, 0, 0, 0, 0, 0))
+        ax_i.legend(handles=[line],
+                    loc=configs.legend_loc,
+                    fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
     def _set_grids(self,
                    ax_i: plt.axes
@@ -551,7 +553,7 @@ class PlotPotential:
                         ax_i: plt.axes
                         ) -> None:
         """set the figure labels"""
-        ax_i.text(-0.085,
+        ax_i.text(-0.013,
                   1,
                   'a)',
                   ha='right',
@@ -589,7 +591,7 @@ class PlotPotential:
                   h_label,
                   fontsize=elsevier_plot_tools.FONT_SIZE_PT+2)
         # Plot horizontal line from phi_value to the graph
-        h_line_label = rf'$\psi${h_label} = {phi_value:.2f} [mV]'
+        h_line_label = rf'$\psi${h_label} = {phi_value:.2f}'
         ax_i.hlines(y=phi_value,
                     xmin=0,
                     xmax=debye_l+0.5,
@@ -626,8 +628,16 @@ class PlotPotential:
                     linewidth=elsevier_plot_tools.LINE_WIDTH)
         ax_i.text(x_temp+0.6,
                   phi_0-0.2,
-                  fr'$\psi_0$: {phi_0:.2f} [mV]',
+                  fr'$\psi_0$: {phi_0:.2f}',
                   fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+
+    def _set_mirror_axes(self,
+                         ax_i: plt.axes,
+                         configs: PlotConfig
+                         ) -> None:
+        """set the mirror axes"""
+        if not configs.if_mirror_axes:
+            elsevier_plot_tools.remove_mirror_axes(ax_i)
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

@@ -151,10 +151,11 @@ class PlotConfig:
                                        'dimgrey'])
 
     y_unit: str = ''
-    y_lims: tuple[float, float] = (0, 18)
+    y_lims: tuple[float, float] = (0, 22)
     x_lims: tuple[float, float] = (2, 12)
 
-    x_ticks: list[float] = field(default_factory=lambda: [3, 5, 7, 9])
+    x_ticks: list[float] = field(default_factory=lambda: [3, 7, 9])
+    y_ticks: list[float] = field(default_factory=lambda: [0, 10, 20])
 
     legend_loc: str = 'lower right'
     if_stern_line: bool = True
@@ -484,7 +485,7 @@ class PlotPotential:
         y_lims: tuple[float, float] = ax_i.get_ylim()
         x_lims: tuple[float, float] = ax_i.get_xlim()
         ax_i.set_xlim(configs.x_lims[0], x_lims[1])
-        ax_i.set_ylim((configs.y_lims[0], y_lims[1]))
+        ax_i.set_ylim(configs.y_lims)
 
     def _set_axis_ticks(self,
                         ax_i: plt.axes,
@@ -530,8 +531,7 @@ class PlotPotential:
                     ymax=phi_value+2,
                     color=configs.colors[4],
                     linestyle=configs.line_styles[2],
-                    linewidth=elsevier_plot_tools.LINE_WIDTH,
-                    label=rf'${label}\lambda_D$: {debye_l:.2f} [nm]')
+                    linewidth=elsevier_plot_tools.LINE_WIDTH)
         ax_i.text(debye_l-0.05,
                   phi_value+2.4,
                   h_label,

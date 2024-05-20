@@ -558,18 +558,26 @@ class PlotPotential:
         """plot the stern layer lines"""
         ax_i.vlines(x=(x_temp := self.configs.stern_layer/10),
                     ymin=configs.y_lims[0],
-                    ymax=phi_mv.max(),
-                    color=configs.colors[0],
+                    ymax=phi_mv.max()+2.0,
+                    color=configs.colors[4],
                     linestyle=configs.line_styles[2],
-                    linewidth=elsevier_plot_tools.LINE_WIDTH,
-                    label=f'Stern layer: {x_temp:.2f} [nm]')
+                    linewidth=elsevier_plot_tools.LINE_WIDTH)
+        ax_i.text(x_temp-0.5,
+                  phi_mv.max()+2.8,
+                  'Stern layer',
+                  fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        
         ax_i.hlines(y=(phi_0 := phi_mv.max()),
                     xmin=0,
-                    xmax=x_temp,
-                    color=configs.colors[3],
-                    linestyle=configs.line_styles[1],
-                    linewidth=elsevier_plot_tools.LINE_WIDTH,
-                    label=fr'$\psi_0$: {phi_0:.2f} [mV]')
+                    xmax=x_temp+0.5,
+                    color=configs.colors[4],
+                    linestyle=configs.line_styles[2],
+                    linewidth=elsevier_plot_tools.LINE_WIDTH)
+        ax_i.text(x_temp+0.6,
+                  phi_0-0.2,
+                  fr'$\psi_0$: {phi_0:.2f} [mV]',
+                  fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        
         return ax_i
 
     def write_msg(self,

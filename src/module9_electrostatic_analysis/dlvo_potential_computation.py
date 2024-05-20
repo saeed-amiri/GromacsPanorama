@@ -523,30 +523,31 @@ class PlotPotential:
                           ) -> plt.axes:
         """plot lines for the debye length"""
         # pylint: disable=too-many-arguments
-        if not label:
-            l_s1: int = 3
-            l_s2: int = 2
-            h_label: str = r'$_{\lambda_D}$'
-        else:
-            l_s1 = 3
-            l_s2 = 3
-            h_label = rf'$_{{{label}\lambda_D}}$'
 
+        h_label: str = r'$_{\lambda_D}$'
         ax_i.vlines(x=debye_l,
                     ymin=configs.y_lims[0],
-                    ymax=phi_value,
-                    color=configs.colors[l_s1],
-                    linestyle=configs.line_styles[l_s1],
+                    ymax=phi_value+2,
+                    color=configs.colors[4],
+                    linestyle=configs.line_styles[2],
                     linewidth=elsevier_plot_tools.LINE_WIDTH,
                     label=rf'${label}\lambda_D$: {debye_l:.2f} [nm]')
+        ax_i.text(debye_l-0.05,
+                  phi_value+2.4,
+                  h_label,
+                  fontsize=elsevier_plot_tools.FONT_SIZE_PT+2)
         # Plot horizontal line from phi_value to the graph
+        h_line_label=rf'$\psi${h_label} = {phi_value:.2f} [mV]'
         ax_i.hlines(y=phi_value,
                     xmin=0,
-                    xmax=debye_l,
-                    color=configs.colors[l_s2],
-                    linestyle=configs.line_styles[l_s2],
-                    linewidth=elsevier_plot_tools.LINE_WIDTH,
-                    label=rf'$\psi${h_label}: {phi_value:.2f} [mV]')
+                    xmax=debye_l+0.5,
+                    color=configs.colors[4],
+                    linestyle=configs.line_styles[2],
+                    linewidth=elsevier_plot_tools.LINE_WIDTH)
+        ax_i.text(debye_l+0.6,
+                  phi_value-0.2,
+                  h_line_label,
+                  fontsize=elsevier_plot_tools.FONT_SIZE_PT)
         return ax_i
 
     def _plot_stern_layer_lines(self,

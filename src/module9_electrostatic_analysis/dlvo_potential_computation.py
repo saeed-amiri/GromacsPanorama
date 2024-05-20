@@ -403,14 +403,16 @@ class PlotPotential:
         ax_i: plt.axes
         fig_i: plt.figure
         fig_i, ax_i = elsevier_plot_tools.mk_canvas(size_type='single_column')
+        self.plot_panel_a(ax_i, radii, phi_r, debye_l, configs)
+        self._save_fig(fig_i, configs)
 
-    def plot_panel_ax(self,
-                        ax_i: plt.axes,
-                        radii: np.ndarray,
-                        phi_r: np.ndarray,
-                        debye_l: float,
-                        configs: PlotConfig
-                        ) -> None:
+    def plot_panel_a(self,
+                     ax_i: plt.axes,
+                     radii: np.ndarray,
+                     phi_r: np.ndarray,
+                     debye_l: float,
+                     configs: PlotConfig
+                     ) -> None:
         """plot the data"""
         phi_mv: np.ndarray = phi_r * 100
         # kappa * radius of the np
@@ -424,7 +426,6 @@ class PlotPotential:
         self._set_axis_lims(ax_i, configs)
         self._set_axis_ticks(ax_i, debye_l, configs)
         self._set_fig_labels(ax_i)
-        self._save_fig(fig_i, configs)
 
     def _plot_data(self,
                    ax_i: plt.axes,
@@ -553,7 +554,7 @@ class PlotPotential:
                   h_label,
                   fontsize=elsevier_plot_tools.FONT_SIZE_PT+2)
         # Plot horizontal line from phi_value to the graph
-        h_line_label=rf'$\psi${h_label} = {phi_value:.2f} [mV]'
+        h_line_label = rf'$\psi${h_label} = {phi_value:.2f} [mV]'
         ax_i.hlines(y=phi_value,
                     xmin=0,
                     xmax=debye_l+0.5,
@@ -582,7 +583,7 @@ class PlotPotential:
                   phi_mv.max()+2.8,
                   'Stern layer',
                   fontsize=elsevier_plot_tools.FONT_SIZE_PT)
-        
+
         ax_i.hlines(y=(phi_0 := phi_mv.max()),
                     xmin=0,
                     xmax=x_temp+0.5,
@@ -593,7 +594,6 @@ class PlotPotential:
                   phi_0-0.2,
                   fr'$\psi_0$: {phi_0:.2f} [mV]',
                   fontsize=elsevier_plot_tools.FONT_SIZE_PT)
-        
         return ax_i
 
     def write_msg(self,

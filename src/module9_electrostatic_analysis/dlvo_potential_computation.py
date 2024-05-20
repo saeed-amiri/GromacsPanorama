@@ -165,6 +165,16 @@ class PlotConfig:
 
     if_title: bool = False
     if_grid: bool = False
+    if_mirror_axes: bool = False
+    scheme_fig_path_0: str = \
+        '/scratch/saeed/GÖHBP/PRE_DFG_7May24/single_np/15Oda/'
+    scheme_fig_path_1: str = 'electrostatic_potential/dlvo_sphere.jpg'
+    scheme_fig_path: str = f'{scheme_fig_path_0}{scheme_fig_path_1}'
+
+    isosurface_fig_path: str = \
+        '/scratch/saeed/GÖHBP/PRE_DFG_7May24/single_np/15Oda/'
+    isosurface_fig_name: str = 'electrostatic_potential/isosurface.tga'
+    isosurface_fig: str = f'{isosurface_fig_path}{isosurface_fig_name}'
 
 
 @dataclass

@@ -413,7 +413,7 @@ class PlotPotential:
         self._set_title(ax_i, kappa_r, configs)
         self._plot_vertical_lines(ax_i, configs, phi_mv, radii, debye_l)
         self._set_axis_lims(ax_i, configs)
-        self._set_axis_ticks(ax_i, configs)
+        self._set_axis_ticks(ax_i, debye_l, configs)
         self._set_fig_labels(ax_i)
         self._save_fig(fig_i, configs)
 
@@ -489,10 +489,17 @@ class PlotPotential:
 
     def _set_axis_ticks(self,
                         ax_i: plt.axes,
+                        debye_l: float,
                         configs: PlotConfig
                         ) -> None:
         """set the axis ticks"""
+        x_tick_labels: list[str] = [str(f'{i:.1f}') for i in configs.x_ticks]
+        debye_l_str: str = f'{debye_l:.2f}'
+        configs.x_ticks.extend([debye_l])
         ax_i.set_xticks(configs.x_ticks)
+        ax_i.set_xticklabels(x_tick_labels + [debye_l_str])
+
+        ax_i.set_yticks(configs.y_ticks)
 
     def _set_fig_labels(self,
                         ax_i: plt.axes

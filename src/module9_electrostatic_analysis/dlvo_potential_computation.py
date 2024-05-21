@@ -173,7 +173,7 @@ class PlotConfig:
 
     isosurface_fig_path: str = \
         '/scratch/saeed/GÖHBP/PRE_DFG_7May24/single_np/15Oda/'
-    isosurface_fig_name: str = 'electrostatic_potential/isosurface.tga'
+    isosurface_fig_name: str = 'electrostatic_potential/isosurface.png'
     isosurface_fig: str = f'{isosurface_fig_path}{isosurface_fig_name}'
 
 
@@ -474,6 +474,14 @@ class PlotPotential:
         """add shcem of the dlvo model for a sphere"""
         ax_i.axis('off')
         ax_i.imshow(plt.imread(configs.isosurface_fig))
+        ax_i.text(0.09,
+          1,
+          'c)',
+          ha='right',
+          va='top',
+          transform=ax_i.transAxes,
+          fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+        self.info_msg += f'\tIsosurface image: {configs.isosurface_fig}\n'
 
     def _plot_data(self,
                    ax_i: plt.axes,
@@ -637,7 +645,7 @@ class PlotPotential:
                     linewidth=elsevier_plot_tools.LINE_WIDTH)
         ax_i.text(x_temp+0.6,
                   phi_0-0.2,
-                  fr'$\psi_0$: {phi_0:.2f}',
+                  fr'$\psi_0$ = {phi_0:.2f}',
                   fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
     def _set_mirror_axes(self,

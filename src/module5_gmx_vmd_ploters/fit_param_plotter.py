@@ -102,6 +102,8 @@ class FitPlotConfig(BaseConfig):
             'second_turn': 'darkred'})
     graph_max_col: str = 'second_turn'
 
+    yticks: list[float] = field(default_factory=lambda: [0, 3.0, 6.0])
+
     def __post_init__(self) -> None:
         """Post init function"""
         if self.plot_contact_radius:
@@ -208,11 +210,9 @@ class PlotFitted:
         xticklabels: list[np.float64] = \
             [np.round(item/(21.7*21.7), 2) for item in ax_i.get_xticks()]
         ax_i.set_xticklabels(xticklabels)
-        y_max: float = \
-            max(fit_data[config.graph_max_col].unique().tolist()) / 10.0
-        y_ticks: list[np.float64] = list(np.linspace(0, y_max, 4))
-        y_ticks = [round(item, 1) for item in y_ticks]
-        ax_i.set_yticks(y_ticks)
+
+        ax_i.set_yticks(config.yticks)
+        ax_i.set_yticklabels([f'{item:.1f}' for item in config.yticks])
 
         if config.show_grid:
             ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)

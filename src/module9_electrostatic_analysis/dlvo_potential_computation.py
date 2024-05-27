@@ -420,11 +420,11 @@ class PlotPotential:
             ax_i.axis('off')
         grid_panel = gridspec.GridSpec(1, 7, figure=fig_i)
 
-        axs[0] = fig_i.add_subplot(grid_panel[0, :3])
-        axs[1] = fig_i.add_subplot(grid_panel[0, 3:5])
+        axs[0] = fig_i.add_subplot(grid_panel[0, :2])
+        axs[1] = fig_i.add_subplot(grid_panel[0, 2:5])
         axs[2] = fig_i.add_subplot(grid_panel[0, 5:])
-        self.plot_panel_a(axs[0], radii, phi_r, debye_l, configs)
-        self.plot_panel_b(axs[1], configs)
+        self.plot_panel_b(axs[0], configs)
+        self.plot_panel_a(axs[1], radii, phi_r, debye_l, configs)
         self.plot_panel_c(axs[2], configs)
         self._save_fig(fig_i, configs)
 
@@ -460,7 +460,7 @@ class PlotPotential:
         ax_i.imshow(plt.imread(configs.scheme_fig_path))
         ax_i.text(0.09,
           1,
-          'b)',
+          'a)',
           ha='right',
           va='top',
           transform=ax_i.transAxes,
@@ -572,7 +572,7 @@ class PlotPotential:
         """set the figure labels"""
         ax_i.text(-0.013,
                   1,
-                  'a)',
+                  'b)',
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,

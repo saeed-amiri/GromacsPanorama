@@ -459,29 +459,60 @@ class PlotPotential:
         ax_i.axis('off')
         ax_i.imshow(plt.imread(configs.scheme_fig_path))
         ax_i.text(0.09,
-          1,
-          'a)',
-          ha='right',
-          va='top',
-          transform=ax_i.transAxes,
-          fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+                  1,
+                  'a)',
+                  ha='right',
+                  va='top',
+                  transform=ax_i.transAxes,
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
         self.info_msg += f'\tScheme image: {configs.scheme_fig_path}\n'
 
     def plot_panel_c(self,
                      ax_i: plt.axes,
                      configs: PlotConfig
                      ) -> None:
-        """add shcem of the dlvo model for a sphere"""
+        """add scheme of the dlvo model for a sphere"""
         ax_i.axis('off')
-        ax_i.imshow(plt.imread(configs.isosurface_fig))
+        img = plt.imread(configs.isosurface_fig)
+        ax_i.imshow(img)
         ax_i.text(0.09,
-          1,
-          'c)',
-          ha='right',
-          va='top',
-          transform=ax_i.transAxes,
-          fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+                  1,
+                  'c)',
+                  ha='right',
+                  va='top',
+                  transform=ax_i.transAxes,
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+        ax_i.text(0.175,
+                  0.5,
+                  r'$\lambda_D$',
+                  ha='right',
+                  va='top',
+                  transform=ax_i.transAxes,
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT-2)
         self.info_msg += f'\tIsosurface image: {configs.isosurface_fig}\n'
+        # Add a circle on top of the image
+        self._add_circle(ax_i, img, 485, '--', 'black')  # debye length
+        self._add_circle(ax_i, img, 360, '-', 'black')  # Stern layer
+
+    def _add_circle(self,
+                    ax_i: plt.axes,
+                    img: np.ndarray,
+                    radius: float,
+                    line_style: str,
+                    color: str
+                    ) -> None:
+        """add a circle to the image"""
+        # pylint: disable=too-many-arguments
+        x_np_com = img.shape[0] / 2 - 15
+        y_np_com = img.shape[1] / 2 + 40
+        circle = plt.Circle((x_np_com, y_np_com),
+                            radius,
+                            fill=False,
+                            color=color,
+                            linestyle=line_style,
+                            linewidth=0.7)
+        ax_i.add_patch(circle)
+        circle.set_zorder(10)
 
     def _plot_data(self,
                    ax_i: plt.axes,

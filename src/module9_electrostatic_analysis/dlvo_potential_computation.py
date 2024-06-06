@@ -87,14 +87,14 @@ class ParameterConfig:
     # pylint: disable=too-many-instance-attributes
     np_radius: float = 30.0  # In Ångströms
     stern_layer: float = 30.0  # In Ångströms
-    avg_contact_angle: float = 36.0  # In Degrees
+    avg_contact_angle: float = 38.0  # In Degrees
     np_core_charge: int = -8  # Number of charge inside the NP
     all_aptes_charges: int = 322  # Protonated APTES
     # Parameters for the phi computation
     phi_parameters: dict[str, float] = field(default_factory=lambda: {
         'T': 298.15,  # Temperature of the system
         'e_charge': 1.602e-19,  # Elementary charge [C]
-        'c_salt': 0.0046,   # Bulk concentration of the salt in M(=mol/l)
+        'c_salt': 0.00479,   # Bulk concentration of the salt in M(=mol/l)
         'epsilon': 78.5,  # medium  permittivity,
         'epsilon_0': 8.854187817e-12,   # vacuum permittivity, farads per meter
         'n_avogadro': 6.022e23,  # Avogadro's number
@@ -259,7 +259,7 @@ class ElectroStaticComputation:
 
         self.info_msg += (
             f'\t`{debye_l_nm = :.4f}` [nm]\n\t'
-            rf'$kappa$ r ={debye_l_nm*self.configs.np_radius/10:.3f}'
+            rf'$\kappa$ r ={debye_l_nm*self.configs.np_radius/10:.3f}'
             '\n')
         return float(debye_l_nm)
 

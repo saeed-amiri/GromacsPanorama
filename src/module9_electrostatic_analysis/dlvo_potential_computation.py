@@ -151,8 +151,11 @@ class PlotConfig:
                                        'darkgreen',
                                        'dimgrey'])
 
+    angstrom_to_nm: float = 0.1
+    voltage_to_mV: float = 1000
+
     y_unit: str = ''
-    y_lims: tuple[float, float] = (0, 22)
+    y_lims: tuple[float, float] = (0, 220)
     x_lims: tuple[float, float] = (2, 12)
 
     x_ticks: list[float] = field(default_factory=lambda: [3, 7, 9])
@@ -453,9 +456,10 @@ class PlotPotential:
                      ) -> None:
         """plot the data"""
         # pylint: disable=too-many-arguments
-        phi_mv: np.ndarray = phi_r * 100
+        phi_mv: np.ndarray = phi_r * configs.voltage_to_mV
         # kappa * radius of the np
-        kappa_r: float = self.configs.np_radius / debye_l / 10
+        kappa_r: float = \
+            self.configs.np_radius / (debye_l * configs.angstrom_to_nm)
         self._plot_data(ax_i, radii, phi_mv, configs)
 
         self._set_grids(ax_i)
@@ -572,6 +576,7 @@ class PlotPotential:
             idx_closest = np.abs(radii - debye_l*2).argmin()
             phi_value = phi_mv[idx_closest]
             self._plot_debye_lines(ax_i, phi_value, debye_l*2, configs)
+        self.info_msg += f'\tPotential at Debye: {phi_value:.2f} [mV]\n'
 
     def _set_axis_lims(self,
                        ax_i: plt.axes,
@@ -630,12 +635,12 @@ class PlotPotential:
         h_label: str = r'$_{\lambda_D}$'
         ax_i.vlines(x=debye_l,
                     ymin=configs.y_lims[0],
-                    ymax=phi_value+2,
+                    ymax=phi_value+20,
                     color=configs.colors[4],
                     linestyle=configs.line_styles[2],
                     linewidth=elsevier_plot_tools.LINE_WIDTH)
         ax_i.text(debye_l-0.05,
-                  phi_value+2.6,
+                  phi_value+26,
                   h_label,
                   fontsize=elsevier_plot_tools.FONT_SIZE_PT+2)
         # Plot horizontal line from phi_value to the graph
@@ -659,12 +664,12 @@ class PlotPotential:
         """plot the stern layer lines"""
         ax_i.vlines(x=(x_temp := self.configs.stern_layer/10),
                     ymin=configs.y_lims[0],
-                    ymax=phi_mv.max()+2.0,
+                    ymax=phi_mv.max()+20,
                     color=configs.colors[4],
                     linestyle=configs.line_styles[2],
                     linewidth=elsevier_plot_tools.LINE_WIDTH)
         ax_i.text(x_temp-0.5,
-                  phi_mv.max()+2.8,
+                  phi_mv.max()+25,
                   'Stern layer',
                   fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 

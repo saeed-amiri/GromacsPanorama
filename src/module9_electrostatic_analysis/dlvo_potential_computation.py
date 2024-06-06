@@ -570,12 +570,13 @@ class PlotPotential:
             self._plot_stern_layer_lines(ax_i, phi_mv, configs)
         if configs.if_debye_line:
             idx_closest = np.abs(radii - debye_l).argmin()
-            phi_value = phi_mv[idx_closest]
+            phi_value = phi_mv[idx_closest+1]
             self._plot_debye_lines(ax_i, phi_value, debye_l, configs)
         if configs.if_2nd_debye:
             idx_closest = np.abs(radii - debye_l*2).argmin()
-            phi_value = phi_mv[idx_closest]
+            phi_value = phi_mv[idx_closest+1]
             self._plot_debye_lines(ax_i, phi_value, debye_l*2, configs)
+
         self.info_msg += f'\tPotential at Debye: {phi_value:.2f} [mV]\n'
 
     def _set_axis_lims(self,

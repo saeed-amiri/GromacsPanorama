@@ -423,12 +423,28 @@ class PlotPotential:
         axs[0] = fig_i.add_subplot(grid_panel[0, :2])
         axs[1] = fig_i.add_subplot(grid_panel[0, 2:5])
         axs[2] = fig_i.add_subplot(grid_panel[0, 5:])
-        self.plot_panel_b(axs[0], configs)
-        self.plot_panel_a(axs[1], radii, phi_r, debye_l, configs)
+        self.plot_panel_a(axs[0], configs)
+        self.plot_panel_b(axs[1], radii, phi_r, debye_l, configs)
         self.plot_panel_c(axs[2], configs)
         self._save_fig(fig_i, configs)
 
     def plot_panel_a(self,
+                     ax_i: plt.axes,
+                     configs: PlotConfig
+                     ) -> None:
+        """add shcem of the dlvo model for a sphere"""
+        ax_i.axis('off')
+        ax_i.imshow(plt.imread(configs.scheme_fig_path))
+        ax_i.text(0.09,
+                  1,
+                  'a)',
+                  ha='right',
+                  va='top',
+                  transform=ax_i.transAxes,
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+        self.info_msg += f'\tScheme image: {configs.scheme_fig_path}\n'
+
+    def plot_panel_b(self,
                      ax_i: plt.axes,
                      radii: np.ndarray,
                      phi_r: np.ndarray,
@@ -450,22 +466,6 @@ class PlotPotential:
         self._set_axis_ticks(ax_i, debye_l, configs)
         self._set_fig_labels(ax_i)
         self._set_mirror_axes(ax_i, configs)
-
-    def plot_panel_b(self,
-                     ax_i: plt.axes,
-                     configs: PlotConfig
-                     ) -> None:
-        """add shcem of the dlvo model for a sphere"""
-        ax_i.axis('off')
-        ax_i.imshow(plt.imread(configs.scheme_fig_path))
-        ax_i.text(0.09,
-                  1,
-                  'a)',
-                  ha='right',
-                  va='top',
-                  transform=ax_i.transAxes,
-                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
-        self.info_msg += f'\tScheme image: {configs.scheme_fig_path}\n'
 
     def plot_panel_c(self,
                      ax_i: plt.axes,

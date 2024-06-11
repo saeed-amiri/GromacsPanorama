@@ -70,10 +70,12 @@ from common import logger, xvg_to_dataframe
 from common.colors_text import TextColor as bcolors
 from module9_electrostatic_analysis.dlvo_potential_plot import \
     PlotPotential
-from module9_electrostatic_analysis.dlvo_potential_charge_density import \
-    ChargeDensity
 from module9_electrostatic_analysis.dlvo_potential_ionic_strength import \
     IonicStrengthCalculation
+from module9_electrostatic_analysis.dlvo_potential_charge_density import \
+    ChargeDensity
+from module9_electrostatic_analysis.dlvo_potential_non_linear_aprox import \
+    NonLinearPotential
 from module9_electrostatic_analysis.dlvo_potential_configs import AllConfig
 
 
@@ -112,6 +114,7 @@ class ElectroStaticComputation:
         radii: np.ndarray
         phi_r: np.ndarray
         radii, phi_r = self.compute_potential(debye_l)
+
         self.plot_save_phi(radii, phi_r, debye_l, log)
 
     def get_debye(self,
@@ -158,6 +161,8 @@ class ElectroStaticComputation:
             radii, phi_r = self._linear_planar_possion(debye_l, phi_0, box_lim)
         elif compute_type == 'sphere':
             radii, phi_r = self._linear_shpere(debye_l, phi_0, box_lim/2)
+        elif compute_type == 'non_linear':
+            radii, phi_r  = self._non_linear_sphere_possion(debye_l, phi_0)
         return radii, phi_r
 
     def _get_phi_zero(self,
@@ -243,6 +248,16 @@ class ElectroStaticComputation:
             (2 * epsilon * kbt)
         phi_0: np.ndarray = 2 * kbt * np.arcsinh(args) / param['e_charge']
         return phi_0
+
+    def _non_linear_sphere_possion(self,
+                                   debye_l: float,
+                                   phi_0: np.ndarray,
+                                   ) -> None:
+        """compute the non-linearized Possion-Boltzmann equation for a
+        sphere"""
+        non_linear_pot = NonLinearPotential(
+            debye_l, phi_0, logger.logging.Logger, self.charge, self.configs)
+        return non_linear_pot.radii, non_linear_pot.phi_r 
 
     def plot_save_phi(self,
                       radii: np.ndarray,

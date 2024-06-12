@@ -129,6 +129,7 @@ class NumerInResidue:
 class AllConfig(FileConfig, FFTypeConfig, NumerInResidue):
     """set all the configs"""
     compute_radius: bool = True
+    write_debug: bool = False
 
 
 class PdbToPqr:
@@ -281,7 +282,8 @@ class PdbToPqr:
                 df_recombined[df_recombined['residue_name'] == res]
             total_charge: float = sum(df_i['charge'])
             self.info_msg += f'\t\t{res}: {total_charge:.3f}\n'
-            df_i.to_csv(f'{res}_charge_debug', sep=' ')
+            if self.configs.write_debug:
+                df_i.to_csv(f'{res}_charge_debug', sep=' ')
             del df_i
 
     def _set_oda_charge(self,
@@ -398,6 +400,8 @@ class PdbToPqr:
                   ) -> None:
         """writing the pqr to a file"""
         with open(pqr_file_name, 'w', encoding='utf8') as f_w:
+            print(f'{bcolors.OKGREEN}\tWriting the pqr file as '
+                  f'`{pqr_file_name}`{bcolors.ENDC}')
             for _, row in pqr_df.iterrows():
                 line = f"ATOM  {row['atom_id']:>5} " \
                        f"{row['atom_name']:<4} " \
@@ -471,12 +475,12 @@ class ReadInputStructureFile:
         structure_dict: dict[str, pd.DataFrame] = {}
         if self.file_type == 'gro':
             for struct_i in strucure_files:
-                fname_i: str = struct_i.split('.', -1)[0]
+                fname_i: str = os.path.splitext(os.path.basename(struct_i))[0]
                 structure_dict[fname_i] = \
                     gro_to_df.ReadGro(struct_i, log).gro_data
         else:
             for struct_i in strucure_files:
-                fname_i = struct_i.split('.', -1)[0]
+                fname_i = os.path.splitext(os.path.basename(struct_i))[0]
                 structure_dict[fname_i] = \
                     pdb_to_df.Pdb(struct_i, log).pdb_df
         return structure_dict
@@ -488,7 +492,7 @@ class ReadInputStructureFile:
         """check the files' extension, they all should be same gro or
         pdb"""
         file_extension: list[str] = \
-            [item.split('.', -1)[1] for item in strucure_files]
+            [os.path.splitext(item)[1][1:] for item in strucure_files]
         if (l_list := len(set_ext := set(file_extension))) > 1:
             log.error(
                 msg := (f'\tThere are `{l_list}` file types: '
@@ -499,7 +503,7 @@ class ReadInputStructureFile:
            self._configs.accebtable_file_type:
             log.error(
                 msg := (f'\tThe file type: `{exten_type}` is not exceptable!'
-                        'should be one of the\n'
+                        '\tshould be one of the\n'
                         f'{self._configs.accebtable_file_type}\n'))
             sys.exit(f'\n\t{bcolors.FAIL}{msg}{bcolors.ENDC}\n')
 

@@ -43,7 +43,7 @@ class NonLinearPotential:
 
     def __init__(self,
                  debye_l: float,
-                 phi_0: float,
+                 phi_0: np.ndarray,
                  log: logger.logging.Logger,
                  charge: np.ndarray,
                  configs: AllConfig = AllConfig()
@@ -56,15 +56,49 @@ class NonLinearPotential:
 
     def compute_potential(self,
                           debye_l: float,
-                          phi_0: float,
+                          phi_0: np.ndarray,
                           charge: np.ndarray
-                          ) -> None:
+                          ) -> tuple[np.ndarray, np.ndarray]:
         """compute the DLVO potential"""
-        box_lim: float = self.configs.phi_parameters['box_xlim']
+        box_lim: float = self.configs.phi_parameters['box_xlim'] / 2.0
         r_np: float = self.configs.np_radius / 10.0  # [A] -> [nm]
-        radii: np.ndarray = np.linspace(r_np, box_lim, len(charge))
+        radii: np.ndarray = np.linspace(r_np+0.01, box_lim, len(charge))
         phi_r: np.ndarray = np.zeros(radii.shape)
+
+        alpha: np.ndarray = phi_0 * self.configs.phi_parameters['e_charge'] / \
+            (4.0 * self.configs.phi_parameters['k_boltzman_JK'] *
+             self.configs.phi_parameters['T'])
+
+        kappa: float = 1.0 / debye_l
+        phi_r = self.compute_phi_r(radii, phi_r, alpha, kappa, r_np)
         return radii, phi_r
+
+    def compute_phi_r(self,
+                      radii: np.ndarray,
+                      phi_r: np.ndarray,
+                      alpha: np.ndarray,
+                      kappa: float,
+                      r_np: float
+                      ) -> np.ndarray:
+        """compute the potential"""
+        # pylint: disable=too-many-arguments
+        a_r: np.ndarray = r_np / radii
+        beta: float = self.configs.phi_parameters['k_boltzman_JK'] * \
+            self.configs.phi_parameters['T']
+        co_factor: float = 2.0 * beta / self.configs.phi_parameters['e_charge']
+
+        for phi in alpha:
+            alpha_exp: np.ndarray = phi * np.exp(-kappa * (radii - r_np))
+            radial_term: np.ndarray = alpha_exp * a_r
+            phi_r += \
+                co_factor * np.log((1.0 + radial_term) / (1.0 - radial_term))
+
+        phi_r = phi_r / len(alpha)
+        self.info_msg += \
+            ('\tComputing the potential in nonlinear approximation of the'
+             'Boltzmann-Poisson equation\n')
+
+        return phi_r
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log
@@ -75,6 +109,7 @@ class NonLinearPotential:
             f'\tTime: {now.strftime("%Y-%m-%d %H:%M:%S")}\n'
         print(f'{bcolors.OKCYAN}{NonLinearPotential.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == '__main__':

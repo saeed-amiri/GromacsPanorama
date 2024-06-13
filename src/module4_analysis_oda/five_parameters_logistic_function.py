@@ -84,6 +84,7 @@ class Plot5PLF2S:
                     second_derivative: np.ndarray
                     ) -> None:
         """plot the graph"""
+        # pylint: disable=too-many-locals
         curvature: np.ndarray = \
             self.initiate_curvature(first_derivative, second_derivative)
         first_derv_norm_factor: float = max(first_derivative)
@@ -105,13 +106,13 @@ class Plot5PLF2S:
                   ydata,
                   c='k',
                   ls='-',
-                  label='F(x)')
+                  label='F(r)')
 
         ax_i.plot(xdata,
                   first_derivative/first_derv_norm_factor,
                   c='k',
                   ls='--',
-                  label=r'F$^\prime$(x) [normalized]')
+                  label=r'F$^\prime$(r) [normalized]')
 
         ax_i.plot(xdata,
                   curvature/curvature_norm_factor,
@@ -121,32 +122,32 @@ class Plot5PLF2S:
 
         ylims: tuple[float, float] = ax_i.get_ylim()
 
-        ax_i.vlines(c_vline,
-                    ymin=ylims[0],
-                    ymax=ylims[1],
-                    color='b',
-                    ls='--',
-                    label='midpoint')
+        fit_points: list[float] = \
+            [c_vline, first_turn_vline, second_turn_vline]
 
-        ax_i.vlines(first_turn_vline,
-                    ymin=ylims[0],
-                    ymax=ylims[1],
-                    color='g',
-                    ls=':',
-                    label='first turn')
+        for fit_point in fit_points:
+            ax_i.vlines(fit_point,
+                        ymin=ylims[0],
+                        ymax=ylims[1],
+                        color='grey',
+                        ls='-')
 
-        ax_i.vlines(second_turn_vline,
-                    ymin=ylims[0],
-                    ymax=ylims[1],
-                    color='r',
-                    ls=':',
-                    label='second trun')
+        plt_xlims: tuple[float, float] = ax_i.get_xlim()
+        for h_line in [-1, 1]:
+            ax_i.hlines(h_line,
+                        xmin=plt_xlims[0],
+                        xmax=plt_xlims[1],
+                        color='grey',
+                        alpha=0.75,
+                        ls=':')
+
         ax_i.set_ylim(ylims)
+        ax_i.set_xlim(plt_xlims)
 
-        ax_i = self._set_x_axis(ax_i, xrange)
+        ax_i = self._set_x_axis(ax_i, fit_points)
         ax_i = self._set_y_axis(ax_i, yrange)
 
-        ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
+        # ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
         self.save_close_fig(fig_i, fname=self.config.fname)
         self.info_msg += f'\tThe figure saved as `{self.config.fname}`\n'
 
@@ -154,19 +155,14 @@ class Plot5PLF2S:
 
     @staticmethod
     def _set_x_axis(ax_i: plt.axes,
-                    xrange: tuple[float, float]
+                    fit_points: list[float]
                     ) -> plt.axes:
         """modify and set the x axis"""
-        x_values = np.linspace(xrange[0], xrange[1], 10)
-        ax_i.set_xticks(x_values)
-
-        # Set all labels to empty, except the first and last
-        labels = [''] * len(x_values)
-        labels[0] = 'min'
-        labels[-1] = 'max'
-        plt.gca().set_xticklabels(labels)
-        plt.tick_params(axis='x', direction='in', length=3, width=1)
-        ax_i.set_xlabel('xdata')
+        ax_i.set_xticks([])
+        turns_labels = ['b', 'a', 'c']
+        for loc_i, loc_l in zip(fit_points, turns_labels):
+            ax_i.text(loc_i-2, -1.25, f'{loc_l}')
+        ax_i.set_xlabel('r', labelpad=20)
         return ax_i
 
     @staticmethod
@@ -179,13 +175,13 @@ class Plot5PLF2S:
 
         # Set all labels to empty, except the first and last
         labels = [''] * len(y_values)
-        labels[0] = '-d'
-        labels[2] = 'a'
-        labels[-1] = 'd'
+        labels[0] = r'$-l$'
+        labels[2] = r'$u$'
+        labels[-1] = r'$l$'
 
         plt.gca().set_yticklabels(labels)
         plt.tick_params(axis='y', direction='in', length=3, width=1)
-        ax_i.set_ylabel('ydata')
+        ax_i.set_ylabel('F(r)')
         return ax_i
 
     @staticmethod
@@ -216,7 +212,7 @@ class Plot5PLF2S:
         """
         plt.legend(ncol=3,
                    loc='upper center',
-                   bbox_to_anchor=(0.5, 1.25),
+                   bbox_to_anchor=(0.5, 1.16),
                    fontsize=11)
         fig.savefig(fname,
                     dpi=300,

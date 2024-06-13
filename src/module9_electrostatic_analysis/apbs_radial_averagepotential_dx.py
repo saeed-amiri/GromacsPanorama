@@ -99,6 +99,8 @@ class RadialAveragePotential:
         origin: list[float]
         grid_points, grid_spacing, origin = self._get_header(
             lines[:self.configs.number_of_header_lines], log)
+        tail: list[str] = self._get_tail(
+            lines[-self.configs.number_of_tail_lines:])
 
     def _get_header(self,
                     head_lines: list[str],
@@ -118,6 +120,12 @@ class RadialAveragePotential:
                 grid_spacing.append([
                     float(i) for i in line.split()[-3:] if float(i) != 0.0][0])
         return grid_points, grid_spacing, origin
+
+    def _get_tail(self,
+                  tail_lines: list[str]
+                  ) -> list[str]:
+        """get the tail"""
+        return tail_lines
 
     @staticmethod
     def check_header(head_lines: list[str],

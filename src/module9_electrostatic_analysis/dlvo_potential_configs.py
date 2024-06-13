@@ -135,7 +135,7 @@ class AllConfig(FileConfig, ParameterConfig):
         salt: use the slac concentration
         all: compute it from all charge groups in the system
     """
-    compute_type: str = 'sphere'
+    compute_type: str = 'non_linear'
     phi_0_type: str = 'grahame'
     ionic_type: str = 'salt'
     plot_config: PlotConfig = field(default_factory=PlotConfig)

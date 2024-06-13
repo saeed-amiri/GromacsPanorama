@@ -45,7 +45,8 @@ class AnalyticConfig:
     charge: np.ndarray = np.array([1.0, 1.0])
     beta: float = 1.0
     colors: list[str] = field(default_factory=lambda: [
-        '#f7f7f7', '#cccccc', '#969696', '#636363', '#252525'])
+        '#d9d9d9', '#bdbdbd', '#969696', '#737373', '#525252', '#252525',
+        '#000000'])
 
 
 class NonLinearPotential:
@@ -134,7 +135,7 @@ class NonLinearPotential:
             f'\tTime: {now.strftime("%Y-%m-%d %H:%M:%S")}\n'
         print(f'{bcolors.OKCYAN}{NonLinearPotential.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
-        log.info(msg=self.info_msg)
+        # log.info(msg=self.info_msg)
 
 
 class AnalyticAnalysis:
@@ -189,7 +190,7 @@ class AnalyticAnalysis:
         a_r = r_np / radii
         co_factor = 2.0 * beta
         phi_r_list: list[np.ndarray] = []
-        for strength in range(1, 4):
+        for strength in range(1, 6):
             for alpha_i in alpha:
                 alpha_exp = \
                     strength * alpha_i * np.exp(-kappa * (radii - r_np))
@@ -211,9 +212,9 @@ class AnalyticAnalysis:
             ax_i.plot(radii,
                       phi_r,
                       color=self.configs.colors[strength],
-                      label=f'alpha={strength}')
-        ax_i.set_xlabel('distance r, a.u.')
-        ax_i.set_ylabel('y, a.u.')
+                      label=rf'$\alpha$={strength:.1f}')
+        ax_i.set_xlabel('r')
+        ax_i.set_ylabel('y')
         y_lo: float = ax_i.get_ylim()[0]
         plt.vlines(param['r_np'],
                    y_lo,
@@ -236,7 +237,7 @@ class AnalyticAnalysis:
               f'\tTime: {now.strftime("%Y-%m-%d %H:%M:%S")}\n'
         print(f'{bcolors.OKCYAN}{AnalyticAnalysis.__name__}:\n'
                 f'\t{self.info_msg}{bcolors.ENDC}')
-        log.info(msg=self.info_msg)
+        # log.info(msg=self.info_msg)
 
 
 if __name__ == '__main__':

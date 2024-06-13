@@ -88,7 +88,9 @@ class AveragePotential:
         with open(file_name, 'r', encoding='utf-8') as f_in:
             return self.read_data(f_in)
     
-    def read_header_tail(self, file_name: str) -> tuple[list[str], list[str]]:
+    def read_header_tail(self,
+                         file_name: str
+                         ) -> tuple[list[str], list[str]]:
         """read the header"""
         header: list[str] = []
         tail: list[str] = []

@@ -101,6 +101,29 @@ class RadialAveragePotential:
             lines[:self.configs.number_of_header_lines], log)
         tail: list[str] = self._get_tail(
             lines[-self.configs.number_of_tail_lines:])
+        data: list[float] = self._get_data(lines[
+            self.configs.number_of_header_lines:
+            -self.configs.number_of_tail_lines])
+        self.process_data(data, grid_points, grid_spacing, origin, log)
+
+    def _get_data(self,
+                  data_lines: list[str]
+                  ) -> list[float]:
+        """get the data"""
+        data: list[float] = [item.split() for item in data_lines]
+        data = [float(i) for sublist in data for i in sublist]
+        return data
+
+    def process_data(self,
+                     data: list[float],
+                     grid_points: list[int],
+                     grid_spacing: list[float],
+                     origin: list[float],
+                     log: logger.logging.Logger
+                     ) -> None:
+        """process the data"""
+        self.check_number_of_points(data, grid_points, log)
+        
 
     def _get_header(self,
                     head_lines: list[str],
@@ -112,7 +135,7 @@ class RadialAveragePotential:
         origin: list[float]
         self.check_header(head_lines, log)
         for line in head_lines:
-            if 'counts' in line:
+            if 'object 1' in line:
                 grid_points = [int(i) for i in line.split()[-3:]]
             if 'origin' in line:
                 origin = [float(i) for i in line.split()[-3:]]
@@ -126,6 +149,19 @@ class RadialAveragePotential:
                   ) -> list[str]:
         """get the tail"""
         return tail_lines
+
+    @staticmethod
+    def check_number_of_points(data: list[float],
+                               grid_points: list[int],
+                               log: logger.logging.Logger
+                               ) -> None:
+        """check the number of points"""
+        if len(data) != np.prod(grid_points):
+            msg: str = ('The number of data points is not correct!\n'
+                        f'\t{len(data) = } != {np.prod(grid_points) = }\n')
+            print(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+            log.error(msg)
+            sys.exit(1)
 
     @staticmethod
     def check_header(head_lines: list[str],

@@ -48,10 +48,8 @@ input files are in the format of .dx
 Saeed
 """
 
-import os
 import sys
-import typing
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
@@ -99,7 +97,7 @@ class RadialAveragePotential:
         origin: list[float]
         grid_points, grid_spacing, origin = self._get_header(
             lines[:self.configs.number_of_header_lines], log)
-        tail: list[str] = self._get_tail(
+        _: list[str] = self._get_tail(
             lines[-self.configs.number_of_tail_lines:])
         data: list[float] = self._get_data(lines[
             self.configs.number_of_header_lines:
@@ -122,8 +120,10 @@ class RadialAveragePotential:
                      log: logger.logging.Logger
                      ) -> None:
         """process the data"""
+        # pylint: disable=too-many-arguments
         self.check_number_of_points(data, grid_points, log)
-        
+        self._get_box_size(grid_points, grid_spacing, origin)
+        data = np.array(data).reshape(grid_points)
 
     def _get_header(self,
                     head_lines: list[str],
@@ -162,6 +162,21 @@ class RadialAveragePotential:
             print(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
             log.error(msg)
             sys.exit(1)
+
+    def _get_box_size(self,
+                      grid_points: list[int],
+                      grid_spacing: list[float],
+                      origin: list[float]
+                      ) -> None:
+        """get the box size"""
+        x_size: float = grid_points[0] * grid_spacing[0] - origin[0]
+        y_size: float = grid_points[1] * grid_spacing[1] - origin[1]
+        z_size: float = grid_points[2] * grid_spacing[2] - origin[2]
+        self.info_msg += (
+            f'\tThe box size is:\n'
+            f'\t{x_size = :.5f} [nm]\n'
+            f'\t{y_size = :.5f} [nm]\n'
+            f'\t{z_size = :.5f} [nm]\n')
 
     @staticmethod
     def check_header(head_lines: list[str],

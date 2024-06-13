@@ -87,8 +87,8 @@ class NonLinearPotential:
             self.configs.phi_parameters['T']
         co_factor: float = 2.0 * beta / self.configs.phi_parameters['e_charge']
 
-        for phi in alpha:
-            alpha_exp: np.ndarray = phi * np.exp(-kappa * (radii - r_np))
+        for alpha_i in alpha:
+            alpha_exp: np.ndarray = alpha_i * np.exp(-kappa * (radii - r_np))
             radial_term: np.ndarray = alpha_exp * a_r
             phi_r += \
                 co_factor * np.log((1.0 + radial_term) / (1.0 - radial_term))

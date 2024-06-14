@@ -55,7 +55,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from common import logger, file_writer
+from common import logger, my_tools
 from common.colors_text import TextColor as bcolors
 
 
@@ -127,14 +127,20 @@ class RadialAveragePotential:
         print(f'{np.max(data) = }')
         print(f'{np.min(data) = }')
         data = np.array(data).reshape(grid_points)
-        self.radial_average(data, grid_points, grid_spacing, origin)
+        radii, radial_average = \
+            self.radial_average(data, grid_points, grid_spacing, origin)
+        self._plot_radial_average(radii, radial_average)
+        self.write_radial_average(radii, radial_average, log)
 
     def radial_average(self,
                        data: np.ndarray,
                        grid_points: list[int],
                        grid_spacing: list[float],
-                       origin: list[float]) -> None:
-        """Compute and plot the radial average of the potential from the center of the box."""
+                       origin: list[float]) -> tuple[np.ndarray, list[float]]:
+        """Compute and plot the radial average of the potential from
+        the center of the box."""
+        # pylint: disable=too-many-locals
+        # pylint: disable=unused-argument
         
         # Calculate the center of the box in grid units
         center_x = grid_points[0] // 2
@@ -158,7 +164,7 @@ class RadialAveragePotential:
         # Calculate the radial average
         radii = np.arange(0, max_radius, grid_spacing[0])
 
-        radial_average = []
+        radial_average: list[float] = []
 
         for r in radii:
             mask = (distances >= r) & (distances < r + grid_spacing[0])
@@ -167,6 +173,12 @@ class RadialAveragePotential:
                 radial_average.append(avg_potential)
             else:
                 radial_average.append(0)
+        return radii, radial_average
+    
+    def _plot_radial_average(self,
+                             radii: np.ndarray,
+                             radial_average: list[float]) -> None:
+        """Plot the radial average of the potential"""
         # Plot the radial average
         plt.figure(figsize=(10, 6))
 
@@ -177,6 +189,20 @@ class RadialAveragePotential:
         plt.legend()
         plt.grid(True)
         plt.show()
+    
+    def write_radial_average(self,
+                             radii: np.ndarray,
+                             radial_average: list[float],
+                             log: logger.logging.Logger
+                             ) -> None:
+        """Write the radial average to a file"""
+        # Write the radial average to a file
+        data = {
+            'Radius [nm]': radii/10, 'Average Potential [mV]': radial_average}
+        df_i = pd.DataFrame(data)
+        df_i.set_index(df_i.columns[0], inplace=True)
+        my_tools.write_xvg(
+            df_i, log, extra_msg=[''], fname=self.configs.output_file)
 
     def _get_header(self,
                     head_lines: list[str],

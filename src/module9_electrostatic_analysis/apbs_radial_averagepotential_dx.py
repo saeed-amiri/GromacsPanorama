@@ -53,6 +53,7 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from common import logger, file_writer
 from common.colors_text import TextColor as bcolors
@@ -123,7 +124,59 @@ class RadialAveragePotential:
         # pylint: disable=too-many-arguments
         self.check_number_of_points(data, grid_points, log)
         self._get_box_size(grid_points, grid_spacing, origin)
+        print(f'{np.max(data) = }')
+        print(f'{np.min(data) = }')
         data = np.array(data).reshape(grid_points)
+        self.radial_average(data, grid_points, grid_spacing, origin)
+
+    def radial_average(self,
+                       data: np.ndarray,
+                       grid_points: list[int],
+                       grid_spacing: list[float],
+                       origin: list[float]) -> None:
+        """Compute and plot the radial average of the potential from the center of the box."""
+        
+        # Calculate the center of the box in grid units
+        center_x = grid_points[0] // 2
+        center_y = grid_points[1] // 2
+        center_z = grid_points[2] // 2
+
+        # Calculate the maximum radius for the radial average
+        max_radius = min(center_x, center_y, center_z) * min(grid_spacing)
+        print(f'{max_radius = }')
+        # Create a grid of distances from the center
+        x = np.linspace(0, grid_points[0] - 1, grid_points[0])
+        y = np.linspace(0, grid_points[1] - 1, grid_points[1])
+        z = np.linspace(0, grid_points[2] - 1, grid_points[2])
+
+        X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
+
+        distances = np.sqrt((X - center_x)**2 +
+                            (Y - center_y)**2 +
+                            (Z - center_z)**2) * grid_spacing[0]
+
+        # Calculate the radial average
+        radii = np.arange(0, max_radius, grid_spacing[0])
+
+        radial_average = []
+
+        for r in radii:
+            mask = (distances >= r) & (distances < r + grid_spacing[0])
+            if np.sum(mask) > 0:
+                avg_potential = np.mean(data[mask]) * 25.2  # Convert to mV
+                radial_average.append(avg_potential)
+            else:
+                radial_average.append(0)
+        # Plot the radial average
+        plt.figure(figsize=(10, 6))
+
+        plt.plot(radii/10, radial_average, label='Radial Average of Potential')
+        plt.xlabel('Radius [nm]')
+        plt.ylabel('Average Potential')
+        plt.title('Radial Average of Potential from the Center of the Box')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
 
     def _get_header(self,
                     head_lines: list[str],

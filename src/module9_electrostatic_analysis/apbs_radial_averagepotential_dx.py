@@ -197,8 +197,11 @@ class RadialAveragePotential:
                              ) -> None:
         """Write the radial average to a file"""
         # Write the radial average to a file
-        data = {
-            'Radius [nm]': radii/10, 'Average Potential [mV]': radial_average}
+        convert_to_kt_e = [i/25.2 for i in radial_average]
+        data = {'Radius [nm]': radii/10,
+                'Average Potential [mV]': radial_average,
+                'Average Potential [kT/e]': convert_to_kt_e
+                }
         df_i = pd.DataFrame(data)
         df_i.set_index(df_i.columns[0], inplace=True)
         my_tools.write_xvg(

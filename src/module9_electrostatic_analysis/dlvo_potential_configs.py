@@ -14,6 +14,7 @@ class FileConfig:
     charge_fname: str = 'charge_df.xvg'
     contact_fname: str = 'contact.xvg'
     fout: str = 'potential.xvg'
+    radial_avg_file: str = 'radial_average_potential.xvg'
 
 
 @dataclass
@@ -59,7 +60,7 @@ class ParameterConfig:
 
 
 @dataclass
-class PlotConfig:
+class PlotConfig(FileConfig):
     """
     Basic configurations and setup for the plots.
     """
@@ -74,7 +75,7 @@ class PlotConfig:
     })
 
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
-        'label': r'0.03 ODA/$nm^2$',  # 15Oda
+        'label': 'analytic average',
         'color': 'black',
         'marker': 'o',
         'linestyle': '-',
@@ -95,7 +96,7 @@ class PlotConfig:
     voltage_to_mV: float = 1000
 
     y_unit: str = ''
-    y_lims: tuple[float, float] = (0, 220)
+    y_lims: tuple[float, float] = (0, 260)
     x_lims: tuple[float, float] = (2, 12)
 
     x_ticks: list[float] = field(default_factory=lambda: [3, 7, 9])
@@ -109,6 +110,8 @@ class PlotConfig:
     if_title: bool = False
     if_grid: bool = False
     if_mirror_axes: bool = False
+    plot_radial_avg: bool = True
+
     scheme_fig_path_0: str = \
         '/scratch/saeed/GÖHBP/PRE_DFG_7May24/single_np/15Oda/'
     scheme_fig_path_1: str = 'electrostatic_potential/dlvo_sphere.jpg'

@@ -62,7 +62,6 @@ from common.colors_text import TextColor as bcolors
 @dataclass
 class InputConfig:
     """set the name of the input files"""
-    header_file: str = 'apt_cor_0.dx'
     number_of_header_lines: int = 11
     number_of_tail_lines: int = 5
     output_file: str = 'radial_average_potential.xvg'

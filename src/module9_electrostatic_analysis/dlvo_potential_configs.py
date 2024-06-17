@@ -14,7 +14,9 @@ class FileConfig:
     charge_fname: str = 'charge_df.xvg'
     contact_fname: str = 'contact.xvg'
     fout: str = 'potential.xvg'
-    radial_avg_file: str = 'radial_average_potential.xvg'
+    radial_avg_files: dict[str, str] = field(default_factory=lambda: {
+        'numerical, nonlinear': 'radial_average_potential_nonlinear.xvg',
+        'numerical, linear': 'radial_average_potential_linear.xvg'})
 
 
 @dataclass
@@ -66,7 +68,7 @@ class PlotConfig(FileConfig):
     """
     # pylint: disable=invalid-name
     # pylint: disable=too-many-instance-attributes
-    graph_suffix: str = f'els_potential.{elsevier_plot_tools.IMG_FORMAT}'
+    graph_suffix: str = f'els_potential_nonlinear.{elsevier_plot_tools.IMG_FORMAT}'
 
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'potential',

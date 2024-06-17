@@ -4,16 +4,16 @@ potential.
 The output files are in the format of .dx
 """
 
-import os
 import sys
 import typing
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+import multiprocessing as mp
 
 import numpy as np
 import pandas as pd
-from collections import deque
 
 from common import logger
+from common.cpuconfig import ConfigCpuNr
 from common.colors_text import TextColor as bcolors
 
 

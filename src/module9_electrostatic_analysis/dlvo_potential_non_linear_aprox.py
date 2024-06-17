@@ -168,7 +168,7 @@ class NonLinearPotential:
             f'\tTime: {now.strftime("%Y-%m-%d %H:%M:%S")}\n'
         print(f'{bcolors.OKCYAN}{NonLinearPotential.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
-        log.info(msg=self.info_msg)
+        log.info(self.info_msg)
 
 
 class AnalyticAnalysis:
@@ -189,7 +189,7 @@ class AnalyticAnalysis:
         self.configs = configs
         param: dict[typing.Any, typing.Any] = self.inialize_data(radii)
         phi_r_list: list[np.ndarray] = self.test_equation(**param)
-        self.plot(radii, phi_r_list, param)
+        self.plot_diff_alpha(radii, phi_r_list, param)
         self._write_msg(log)
 
     def inialize_data(self,
@@ -233,11 +233,11 @@ class AnalyticAnalysis:
             phi_r_list.append(phi_r / len(alpha))
         return phi_r_list
 
-    def plot(self,
-             radii: np.ndarray,
-             phi_r_list: list[np.ndarray],
-             param: dict[typing.Any, typing.Any]
-             ) -> None:
+    def plot_diff_alpha(self,
+                        radii: np.ndarray,
+                        phi_r_list: list[np.ndarray],
+                        param: dict[typing.Any, typing.Any]
+                        ) -> None:
         """plot the data"""
 
         fig_i, ax_i = elsevier_plot_tools.mk_canvas('single_column')
@@ -269,7 +269,7 @@ class AnalyticAnalysis:
         self.info_msg += f'\tTime: {now.strftime("%Y-%m-%d %H:%M:%S")}\n'
         print(f'{bcolors.OKCYAN}{AnalyticAnalysis.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
-        log.info(msg=self.info_msg)
+        log.info(self.info_msg)
 
 
 if __name__ == '__main__':

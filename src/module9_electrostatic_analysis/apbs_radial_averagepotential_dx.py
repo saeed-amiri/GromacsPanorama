@@ -64,7 +64,7 @@ class InputConfig:
     """set the name of the input files"""
     number_of_header_lines: int = 11
     number_of_tail_lines: int = 5
-    output_file: str = 'radial_average_potential.xvg'
+    output_file: str = 'radial_average_potential_nonlinear.xvg'
 
 
 class RadialAveragePotential:
@@ -123,8 +123,6 @@ class RadialAveragePotential:
         # pylint: disable=too-many-arguments
         self.check_number_of_points(data, grid_points, log)
         self._get_box_size(grid_points, grid_spacing, origin)
-        print(f'{np.max(data) = }')
-        print(f'{np.min(data) = }')
         data = np.array(data).reshape(grid_points)
         radii, radial_average = \
             self.radial_average(data, grid_points, grid_spacing, origin)
@@ -148,7 +146,6 @@ class RadialAveragePotential:
 
         # Calculate the maximum radius for the radial average
         max_radius = min(center_x, center_y, center_z) * min(grid_spacing)
-        print(f'{max_radius = }')
         # Create a grid of distances from the center
         x = np.linspace(0, grid_points[0] - 1, grid_points[0])
         y = np.linspace(0, grid_points[1] - 1, grid_points[1])
@@ -166,7 +163,7 @@ class RadialAveragePotential:
         radial_average: list[float] = []
 
         for r in radii:
-            mask = (distances >= r) & (distances < r + grid_spacing[0])
+            mask = (distances >= r) & (distances < r + grid_spacing[0])  & (Z <= 80)
             if np.sum(mask) > 0:
                 avg_potential = np.mean(data[mask]) * 25.2  # Convert to mV
                 radial_average.append(avg_potential)

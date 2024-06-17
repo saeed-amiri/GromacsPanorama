@@ -42,12 +42,12 @@ class AveragePotential:
         """write and log messages"""
         self.configs = configs
         self.get_files(log)
-        read_files: list[np.ndarray]
+        total_sum: pd.DataFrame
         header: list[str]
         tail: list[str]
-        read_files, header, tail = self.read_files()
-        averages_potential: np.ndarray = \
-            self.get_average_potential(read_files, log)
+        total_sum, header, tail = self.read_files(log)
+        averages_potential: pd.DataFrame = \
+            self.get_average_potential(total_sum, log)
         self.write_file(averages_potential, header, tail)
         self._write_msg(log)
 
@@ -64,7 +64,7 @@ class AveragePotential:
 
         if len(files) == 0:
             msg: str = '\tNo files are provided!\n'
-            log.error(f'{bcolors.FAIL}{msg}{bcolors.ENDC}') 
+            log.error(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
             sys.exit(msg)
 
     def read_files(self) -> tuple[list[np.ndarray], list[str], list[str]]:
@@ -77,9 +77,9 @@ class AveragePotential:
         return data_frames, header, tail
 
     def get_average_potential(self,
-                              data_frames: list[np.ndarray],
+                              data_frames: list[pd.DataFrame],
                               log: logger.logging.Logger
-                              ) -> None:
+                              ) -> pd.DataFrame:
         """get the average potential"""
         average_data = self.average_data(data_frames)
         average_data = self.check_average_data(average_data, log)
@@ -87,11 +87,11 @@ class AveragePotential:
 
     def read_file(self,
                   file_name: str
-                  ) -> None:
+                  ) -> pd.DataFrame:
         """read the file"""
         with open(file_name, 'r', encoding='utf-8') as f_in:
             return self.read_data(f_in)
-    
+
     def read_header_tail(self,
                          file_name: str
                          ) -> tuple[list[str], list[str]]:
@@ -118,24 +118,21 @@ class AveragePotential:
                            engine='python')
 
     def average_data(self,
-                     data_frames: list[np.ndarray]
-                     ) -> None:
+                     total_sum: pd.DataFrame
+                     ) -> pd.DataFrame:
         """average the data"""
-        average_data = np.zeros(data_frames[0].shape)
-        for data_frame in data_frames:
-            average_data += data_frame
-        average_data /= len(data_frames)
+        average_data = total_sum / self.num_files
         return average_data
-    
+
     def check_average_data(self,
-                           average_data: np.ndarray,
+                           average_data: pd.DataFrame,
                            log: logger.logging.Logger
-                           ) -> np.ndarray:
+                           ) -> pd.DataFrame:
         """check the average data"""
         if not np.all(average_data):
-              msg: str = '\tThe average data is zero!\n'
-              log.error(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
-              sys.exit(msg)
+            msg: str = '\tThe average data is zero!\n'
+            log.error(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+            sys.exit(msg)
         # Assuming df is your DataFrame
         nan_cols: list = \
             average_data.columns[average_data.isna().all()].tolist()
@@ -144,7 +141,7 @@ class AveragePotential:
         return average_data
 
     def write_file(self,
-                   average_data: np.ndarray,
+                   average_data: pd.DataFrame,
                    header: list[str],
                    tail: list[str]
                    ) -> None:
@@ -163,7 +160,7 @@ class AveragePotential:
             f_out.write(f'{line}\n')
 
     def write_data(self,
-                   data: np.ndarray,
+                   data: pd.DataFrame,
                    f_out: typing.TextIO
                    ) -> None:
         """write the data"""
@@ -188,5 +185,3 @@ class AveragePotential:
 
 if __name__ == '__main__':
     AveragePotential(logger.logging.Logger('average_potential.log'))
-
-                 

@@ -221,6 +221,7 @@ class AnalyticAnalysis:
         a_r = r_np / radii
         co_factor = 2.0 * beta
         self._plot_different_alpha(radii, alpha, r_np, kappa, a_r, co_factor)
+        self._plot_different_np_r(radii, alpha, kappa, a_r, co_factor)
 
     def _plot_different_alpha(self,
                                 radii: np.ndarray,
@@ -240,13 +241,13 @@ class AnalyticAnalysis:
                 phi_r += co_factor * np.log((1.0 + radial_term) /
                                             (1.0 - radial_term))
             phi_r_list.append(phi_r / len(alpha))
-        self.plot_diff_alpha(radii, phi_r_list, r_np)
+        self.plot_diff_alpha_graphs(radii, phi_r_list, r_np)
 
-    def plot_diff_alpha(self,
-                        radii: np.ndarray,
-                        phi_r_list: list[np.ndarray],
-                        r_np: float
-                        ) -> None:
+    def plot_diff_alpha_graphs(self,
+                               radii: np.ndarray,
+                               phi_r_list: list[np.ndarray],
+                               r_np: float
+                               ) -> None:
         """plot the data"""
 
         fig_i, ax_i = elsevier_plot_tools.mk_canvas('single_column')

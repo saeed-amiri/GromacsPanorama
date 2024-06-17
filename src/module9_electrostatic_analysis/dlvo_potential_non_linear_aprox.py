@@ -188,7 +188,7 @@ class AnalyticAnalysis:
                  ) -> None:
         self.configs = configs
         param: dict[typing.Any, typing.Any] = self.inialize_data(radii)
-        phi_r_list: list[np.ndarray] = self.test_equation(**param)
+        self.test_equation(**param)
         self._write_msg(log)
 
     def inialize_data(self,
@@ -211,7 +211,7 @@ class AnalyticAnalysis:
                       phi_0: np.ndarray,
                       charge: np.ndarray,
                       beta: float
-                      ) -> list[np.ndarray]:
+                      ) -> None:
         """test the equation"""
         # pylint: disable=unused-argument
         # pylint: disable=too-many-locals
@@ -224,13 +224,15 @@ class AnalyticAnalysis:
         self._plot_different_np_r(radii, alpha, kappa, a_r, co_factor)
 
     def _plot_different_alpha(self,
-                                radii: np.ndarray,
-                                alpha: np.ndarray,
-                                r_np: float,
-                                kappa: float,
-                                a_r: np.ndarray,
-                                co_factor: float,
-                                ) -> None:
+                              radii: np.ndarray,
+                              alpha: np.ndarray,
+                              r_np: float,
+                              kappa: float,
+                              a_r: np.ndarray,
+                              co_factor: float,
+                              ) -> None:
+        """plot the data for different alpha"""
+        # pylint: disable=too-many-arguments
         phi_r_list: list[np.ndarray] = []
         phi_r = np.zeros(radii.shape)
         for strength in range(1, 6):
@@ -267,9 +269,49 @@ class AnalyticAnalysis:
                    lw=0.7)
         plt.xlim(2, 10)
         ax_i.set_ylim(y_lo, 15)
-        ax_i.set_yticks([])
         plt.legend()
-        elsevier_plot_tools.save_close_fig(fig_i, 'analytic_approximation.png')
+        elsevier_plot_tools.save_close_fig(
+            fig_i, 'analytic_approximation_alpha.jpg')
+
+    def _plot_different_np_r(self,
+                             radii: np.ndarray,
+                             alpha: np.ndarray,
+                             kappa: float,
+                             a_r: np.ndarray,
+                             co_factor: float,
+                             ) -> None:
+        """plot the data for different NP radius"""
+        # pylint: disable=too-many-arguments
+        phi_r_list: list[np.ndarray] = []
+        phi_r = np.zeros(radii.shape)
+        for r_np in range(1, 6):
+            for alpha_i in alpha:
+                alpha_exp = alpha_i * np.exp(-kappa * (radii - r_np))
+                radial_term = alpha_exp * a_r
+                phi_r += co_factor * np.log((1.0 + radial_term) /
+                                            (1.0 - radial_term))
+            phi_r_list.append(phi_r / len(alpha))
+        self.plot_diff_np_r_graphs(radii, phi_r_list)
+
+    def plot_diff_np_r_graphs(self,
+                              radii: np.ndarray,
+                              phi_r_list: list[np.ndarray]
+                              ) -> None:
+        """plot the data for different NP radius"""
+        fig_i, ax_i = elsevier_plot_tools.mk_canvas('single_column')
+        for r_np, phi_r in enumerate(phi_r_list, 1):
+            ax_i.plot(radii,
+                      phi_r,
+                      color=self.configs.colors[r_np],
+                      label=rf'$r_{{np}}$={r_np:.1f}')
+        ax_i.set_xlabel('r')
+        ax_i.set_ylabel('y')
+        y_lo: float = ax_i.get_ylim()[0]
+        plt.xlim(2, 10)
+        ax_i.set_ylim(y_lo, 15)
+        plt.legend()
+        elsevier_plot_tools.save_close_fig(
+            fig_i, 'analytic_approximation_r_np.jpg')
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

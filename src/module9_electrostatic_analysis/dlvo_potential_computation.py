@@ -54,8 +54,8 @@ frameworks for comprehensive colloidal system analysis.
 Saeed
 
 Adding the a non-linearized version of the Poisson-Boltzmann equation
-for the sphere system based on the  Lee.R. White 
-DOI: https://doi.org/10.1039/F29777300577 
+for the sphere system based on the  Lee.R. White
+DOI: https://doi.org/10.1039/F29777300577
 It wriiten in a separate file, since this one gettinge too long.
 Also the script is splited into separate files for better readability.
 11 Jun 2024
@@ -162,7 +162,7 @@ class ElectroStaticComputation:
         elif compute_type == 'sphere':
             radii, phi_r = self._linear_shpere(debye_l, phi_0, box_lim/2)
         elif compute_type == 'non_linear':
-            radii, phi_r  = self._non_linear_sphere_possion(debye_l, phi_0)
+            radii, phi_r = self._non_linear_sphere_possion(debye_l, phi_0)
         return radii, phi_r
 
     def _get_phi_zero(self,
@@ -257,7 +257,7 @@ class ElectroStaticComputation:
         sphere"""
         non_linear_pot = NonLinearPotential(
             debye_l, phi_0, logger.logging.Logger, self.charge, self.configs)
-        return non_linear_pot.radii, non_linear_pot.phi_r 
+        return non_linear_pot.radii, non_linear_pot.phi_r
 
     def plot_save_phi(self,
                       radii: np.ndarray,

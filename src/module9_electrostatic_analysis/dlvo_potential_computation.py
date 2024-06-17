@@ -66,7 +66,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-from common import logger, xvg_to_dataframe
+from common import logger
 from common.colors_text import TextColor as bcolors
 from module9_electrostatic_analysis.dlvo_potential_plot import \
     PlotPotential
@@ -113,7 +113,7 @@ class ElectroStaticComputation:
         debye_l: float = self.get_debye(ionic_strength)
         radii: np.ndarray
         phi_r: np.ndarray
-        radii, phi_r = self.compute_potential(debye_l)
+        radii, phi_r = self.compute_potential(debye_l, log)
 
         self.plot_save_phi(radii, phi_r, debye_l, log)
 
@@ -146,7 +146,8 @@ class ElectroStaticComputation:
         return float(debye_l_nm)
 
     def compute_potential(self,
-                          debye_l: float
+                          debye_l: float,
+                          log: logger.logging.Logger
                           ) -> tuple[np.ndarray, np.ndarray]:
         """
         compute phi_r with different approximations
@@ -162,7 +163,7 @@ class ElectroStaticComputation:
         elif compute_type == 'sphere':
             radii, phi_r = self._linear_shpere(debye_l, phi_0, box_lim/2)
         elif compute_type == 'non_linear':
-            radii, phi_r = self._non_linear_sphere_possion(debye_l, phi_0)
+            radii, phi_r = self._non_linear_sphere_possion(debye_l, phi_0, log)
         return radii, phi_r
 
     def _get_phi_zero(self,
@@ -252,11 +253,12 @@ class ElectroStaticComputation:
     def _non_linear_sphere_possion(self,
                                    debye_l: float,
                                    phi_0: np.ndarray,
+                                   log: logger.logging.Logger
                                    ) -> None:
         """compute the non-linearized Possion-Boltzmann equation for a
         sphere"""
         non_linear_pot = NonLinearPotential(
-            debye_l, phi_0, logger.logging.Logger, self.charge, self.configs)
+            debye_l, phi_0, log, self.charge, self.configs)
         return non_linear_pot.radii, non_linear_pot.phi_r
 
     def plot_save_phi(self,

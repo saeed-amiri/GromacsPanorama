@@ -269,7 +269,7 @@ class AnalyticAnalysis:
                    lw=0.7)
         plt.xlim(2, 10)
         ax_i.set_ylim(y_lo, 15)
-        plt.legend()
+        self._add_text(ax_i, text=f'$r_{{np}}$={r_np:.1f}')
         elsevier_plot_tools.save_close_fig(
             fig_i, 'analytic_approximation_alpha.jpg')
 
@@ -309,9 +309,20 @@ class AnalyticAnalysis:
         y_lo: float = ax_i.get_ylim()[0]
         plt.xlim(2, 10)
         ax_i.set_ylim(y_lo, 15)
-        plt.legend()
+        self._add_text(ax_i, text=f'$\\alpha$={1.0:.1f}')
         elsevier_plot_tools.save_close_fig(
             fig_i, 'analytic_approximation_r_np.jpg')
+
+    def _add_text(self,
+                  ax_i: plt.Axes,
+                  text: str
+                  ) -> None:
+        """add text to the plot"""
+        ax_i.text(7, 13.5, text,
+                  horizontalalignment='center',
+                  verticalalignment='center',
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT,
+                  )
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

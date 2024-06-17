@@ -189,7 +189,6 @@ class AnalyticAnalysis:
         self.configs = configs
         param: dict[typing.Any, typing.Any] = self.inialize_data(radii)
         phi_r_list: list[np.ndarray] = self.test_equation(**param)
-        self.plot_diff_alpha(radii, phi_r_list, param)
         self._write_msg(log)
 
     def inialize_data(self,
@@ -218,11 +217,21 @@ class AnalyticAnalysis:
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-arguments
 
-        phi_r = np.zeros(radii.shape)
         kappa = 1.0 / debye_l
         a_r = r_np / radii
         co_factor = 2.0 * beta
+        self._plot_different_alpha(radii, alpha, r_np, kappa, a_r, co_factor)
+
+    def _plot_different_alpha(self,
+                                radii: np.ndarray,
+                                alpha: np.ndarray,
+                                r_np: float,
+                                kappa: float,
+                                a_r: np.ndarray,
+                                co_factor: float,
+                                ) -> None:
         phi_r_list: list[np.ndarray] = []
+        phi_r = np.zeros(radii.shape)
         for strength in range(1, 6):
             for alpha_i in alpha:
                 alpha_exp = \
@@ -231,12 +240,12 @@ class AnalyticAnalysis:
                 phi_r += co_factor * np.log((1.0 + radial_term) /
                                             (1.0 - radial_term))
             phi_r_list.append(phi_r / len(alpha))
-        return phi_r_list
+        self.plot_diff_alpha(radii, phi_r_list, r_np)
 
     def plot_diff_alpha(self,
                         radii: np.ndarray,
                         phi_r_list: list[np.ndarray],
-                        param: dict[typing.Any, typing.Any]
+                        r_np: float
                         ) -> None:
         """plot the data"""
 
@@ -249,7 +258,7 @@ class AnalyticAnalysis:
         ax_i.set_xlabel('r')
         ax_i.set_ylabel('y')
         y_lo: float = ax_i.get_ylim()[0]
-        plt.vlines(param['r_np'],
+        plt.vlines(r_np,
                    y_lo,
                    15,
                    colors='r',

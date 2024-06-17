@@ -31,6 +31,10 @@ class AveragePotential:
     Compute the average potential from the output files of ABPS simulations
     """
     info_msg: str = 'Message from AveragePotential:\n'
+    files: list[str]
+    num_files: int
+    n_cores: int
+
     def __init__(self,
                  log: logger.logging.Logger,
                  configs: FileConfig = FileConfig()

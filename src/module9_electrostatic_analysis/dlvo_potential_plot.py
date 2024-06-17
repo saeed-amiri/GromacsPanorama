@@ -165,22 +165,26 @@ class PlotPotential:
                          log: logger.logging.Logger
                          ) -> None:
         """plot the radial average"""
+        apbs_files: dict[str, str] = {}
         if configs.plot_radial_avg:
             try:
-                df_i: pd.DataFrame = xvg_to_dataframe.XvgParser(
-                    fname=configs.radial_avg_file,
-                    log=log,
-                    x_type=float).xvg_df
+                for item, d_file in configs.radial_avg_files.items():
+                    df_i: pd.DataFrame = xvg_to_dataframe.XvgParser(
+                        fname=d_file,
+                        log=log,
+                        x_type=float).xvg_df
+                    apbs_files[item] = df_i
             except FileNotFoundError:
                 self.info_msg += ('\tRadial average file not found: '
                                   f'{configs.radial_avg_file}\n')
                 return
-            ax_i.plot(df_i.iloc[:, 0],
-                      df_i.iloc[:, 1],
-                      c='k',
-                      linestyle=':',
-                      linewidth=elsevier_plot_tools.LINE_WIDTH,
-                      label='numerical average')
+            for item, df_i in apbs_files.items():
+                ax_i.plot(df_i.iloc[:, 0],
+                          df_i.iloc[:, 1],
+                          color=configs.colors[4],
+                          linestyle=configs.line_styles[1],
+                          linewidth=elsevier_plot_tools.LINE_WIDTH,
+                          label=item)
 
     def _set_grids(self,
                    ax_i: plt.axes

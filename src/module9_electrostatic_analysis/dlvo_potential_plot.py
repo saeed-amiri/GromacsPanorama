@@ -5,11 +5,12 @@ Plot the electrostatic potential
 from datetime import datetime
 
 import numpy as np
+import pandas as pd
 
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 
-from common import logger, elsevier_plot_tools
+from common import logger, elsevier_plot_tools, xvg_to_dataframe
 from common.colors_text import TextColor as bcolors
 from module9_electrostatic_analysis.dlvo_potential_configs import \
     AllConfig, PlotConfig
@@ -29,13 +30,14 @@ class PlotPotential:
                  ) -> None:
         # pylint: disable=too-many-arguments
         self.configs = configs
-        self.plot_potential(radii, phi_r, debye_l)
+        self.plot_potential(radii, phi_r, debye_l, log)
         self.write_msg(log)
 
     def plot_potential(self,
                        radii: np.ndarray,
                        phi_r: np.ndarray,
-                       debye_l: float
+                       debye_l: float,
+                       log: logger.logging.Logger
                        ) -> None:
         """plot and save the electostatic potential"""
         configs: PlotConfig = self.configs.plot_config
@@ -53,7 +55,7 @@ class PlotPotential:
         axs[1] = fig_i.add_subplot(grid_panel[0, 2:5])
         axs[2] = fig_i.add_subplot(grid_panel[0, 5:])
         self.plot_panel_a(axs[0], configs)
-        self.plot_panel_b(axs[1], radii, phi_r, debye_l, configs)
+        self.plot_panel_b(axs[1], radii, phi_r, debye_l, configs, log)
         self.plot_panel_c(axs[2], configs)
         self._save_fig(fig_i, configs)
 
@@ -78,7 +80,8 @@ class PlotPotential:
                      radii: np.ndarray,
                      phi_r: np.ndarray,
                      debye_l: float,
-                     configs: PlotConfig
+                     configs: PlotConfig,
+                     log: logger.logging.Logger
                      ) -> None:
         """plot the data"""
         # pylint: disable=too-many-arguments
@@ -87,6 +90,7 @@ class PlotPotential:
         kappa_r: float = \
             self.configs.np_radius / (debye_l * configs.angstrom_to_nm)
         self._plot_data(ax_i, radii, phi_mv, configs)
+        self._plot_radial_avg(ax_i, configs, log)
 
         self._set_grids(ax_i)
         self._set_axis_labels(ax_i, configs)
@@ -96,6 +100,8 @@ class PlotPotential:
         self._set_axis_ticks(ax_i, debye_l, configs)
         self._set_fig_labels(ax_i)
         self._set_mirror_axes(ax_i, configs)
+        ax_i.legend(loc=configs.legend_loc,
+                    fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
     def plot_panel_c(self,
                      ax_i: plt.axes,
@@ -151,10 +157,30 @@ class PlotPotential:
                    configs: PlotConfig
                    ) -> None:
         """plot the data"""
-        line, = ax_i.plot(radii, phi_mv, **configs.graph_styles)
-        ax_i.legend(handles=[line],
-                    loc=configs.legend_loc,
-                    fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        ax_i.plot(radii, phi_mv, **configs.graph_styles)
+
+    def _plot_radial_avg(self,
+                         ax_i: plt.axes,
+                         configs: PlotConfig,
+                         log: logger.logging.Logger
+                         ) -> None:
+        """plot the radial average"""
+        if configs.plot_radial_avg:
+            try:
+                df_i: pd.DataFrame = xvg_to_dataframe.XvgParser(
+                    fname=configs.radial_avg_file,
+                    log=log,
+                    x_type=float).xvg_df
+            except FileNotFoundError:
+                self.info_msg += ('\tRadial average file not found: '
+                                  f'{configs.radial_avg_file}\n')
+                return
+            ax_i.plot(df_i.iloc[:, 0],
+                      df_i.iloc[:, 1],
+                      c='k',
+                      linestyle=':',
+                      linewidth=elsevier_plot_tools.LINE_WIDTH,
+                      label='numerical average')
 
     def _set_grids(self,
                    ax_i: plt.axes
@@ -289,11 +315,12 @@ class PlotPotential:
                                 configs: PlotConfig,
                                 ) -> None:
         """plot the stern layer lines"""
+        y_lims: tuple[float, float] = ax_i.get_ylim()
         ax_i.vlines(x=(x_temp := self.configs.stern_layer/10),
                     ymin=configs.y_lims[0],
-                    ymax=phi_mv.max()+20,
+                    ymax=y_lims[1]+10,
                     color=configs.colors[4],
-                    linestyle=configs.line_styles[2],
+                    linestyle=configs.line_styles[0],
                     linewidth=elsevier_plot_tools.LINE_WIDTH)
         ax_i.text(x_temp-0.5,
                   phi_mv.max()+25,

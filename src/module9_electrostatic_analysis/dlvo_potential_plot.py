@@ -90,7 +90,7 @@ class PlotPotential:
         kappa_r: float = \
             self.configs.np_radius / (debye_l * configs.angstrom_to_nm)
         self._plot_data(ax_i, radii, phi_mv, configs)
-        self._plot_radial_avg(ax_i, configs, log)
+        self._plot_radial_avg(ax_i, configs, debye_l, log)
 
         self._set_grids(ax_i)
         self._set_axis_labels(ax_i, configs)
@@ -162,6 +162,7 @@ class PlotPotential:
     def _plot_radial_avg(self,
                          ax_i: plt.axes,
                          configs: PlotConfig,
+                         debye_l: float,
                          log: logger.logging.Logger
                          ) -> None:
         """plot the radial average"""
@@ -178,13 +179,26 @@ class PlotPotential:
                 self.info_msg += ('\tRadial average file not found: '
                                   f'{configs.radial_avg_file}\n')
                 return
-            for item, df_i in apbs_files.items():
+            for j, (item, df_i) in enumerate(apbs_files.items()):
                 ax_i.plot(df_i.iloc[:, 0],
                           df_i.iloc[:, 1],
                           color=configs.colors[4],
-                          linestyle=configs.line_styles[1],
+                          linestyle=configs.line_styles[j*2+1],
                           linewidth=elsevier_plot_tools.LINE_WIDTH,
                           label=item)
+                self._get_debye_potential(df_i, item, debye_l)
+
+    def _get_debye_potential(self,
+                             df_i: pd.DataFrame,
+                             item: str,
+                             debye_l: float
+                             ) -> None:
+        """get the potential at the Debye length"""
+        idx_closest = np.abs(df_i.iloc[:, 0] - debye_l).argmin()
+        phi_value = df_i.iloc[idx_closest, 1]
+        self.info_msg += (
+            f'\tPotential at Debye ({item}): {phi_value:.2f} [mV] = '
+            f'{phi_value/25.2:.2f} [kT/e]\n')
 
     def _set_grids(self,
                    ax_i: plt.axes

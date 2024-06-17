@@ -58,23 +58,75 @@ class AveragePotential:
         files = sys.argv[1:]
         files = [f for f in files if f.endswith('.dx')]
         files = [f for f in files if f != 'average_potential.dx']
-        self.files = files[:50]
-
-        self.info_msg += f'\tThe numbers of files is {len(files) = }\n'
+        self.files = files
+        self.num_files = len(files)
+        self.info_msg += f'\tThe numbers of files is {self.num_files = }\n'
 
         if len(files) == 0:
             msg: str = '\tNo files are provided!\n'
             log.error(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
             sys.exit(msg)
 
-    def read_files(self) -> tuple[list[np.ndarray], list[str], list[str]]:
+    def read_and_sum_files(self,
+                           file_names: list[str]
+                           ) -> pd.DataFrame:
+        """read and sum the files"""
+        # Initialize the sum
+        total_sum = None
+
+        # Read and sum the data in each file
+        for file_name in file_names:
+            data = self.read_file(file_name)
+            if total_sum is None:
+                total_sum = data
+            else:
+                total_sum += data
+
+        return total_sum
+
+    def read_files(self,
+                   log: logger.logging
+                   ) -> tuple[list[pd.DataFrame], list[str], list[str]]:
         """read the files"""
-        data_frames: list[np.ndarray] = []
-        for file_name in self.files:
-            if file_name == self.configs.header_file:
-                header, tail = self.read_header_tail(file_name)
-            data_frames.append(self.read_file(file_name))
-        return data_frames, header, tail
+        self._initiate_cpu(log)
+        self._set_number_of_cores()
+        file_chunks: list[list[str]] = self._chunk_files()
+        header, tail = self.read_header_tail(self.files[0])
+
+        with mp.Pool(self.n_cores) as pools:
+            sums = pools.map(self.read_and_sum_files, file_chunks)
+
+        # Sum the results from each chunk
+        total_sum = sum(sums)
+        return total_sum, header, tail
+
+    def _initiate_cpu(self,
+                      log: logger.logging.Logger
+                      ) -> None:
+        """
+        Return the number of core for run based on the data and the machine
+        """
+        cpu_info = ConfigCpuNr(log)
+        self.n_cores: int = min(cpu_info.cores_nr, len(self.files))
+        self.info_msg += f'\tThe numbers of using cores: {self.n_cores}\n'
+
+    def _set_number_of_cores(self) -> None:
+        """
+        Set the number of cores for the multiprocessing baesd on the number of
+        files.
+        """
+        if self.num_files < self.n_cores:
+            self.n_cores = self.num_files
+            self.info_msg += f'\tThe numbers of cores set to: {self.n_cores}\n'
+
+    def _chunk_files(self) -> list[list[str]]:
+        """
+        Chunk the list of files based on the number of cores
+        """
+        self.info_msg += f'\tThe files are chunked to: {self.n_cores} parts\n'
+        chunk_size = len(self.files) // self.n_cores
+        return [self.files[i:i + chunk_size] for i in
+                range(0, len(self.files), chunk_size)]
 
     def get_average_potential(self,
                               data_frames: list[pd.DataFrame],
@@ -150,7 +202,7 @@ class AveragePotential:
             self.write_header(header, f_out)
             self.write_data(average_data, f_out)
             self.write_tail(tail, f_out)
-    
+
     def write_header(self,
                      header: list[str],
                      f_out: typing.TextIO

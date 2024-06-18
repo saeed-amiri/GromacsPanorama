@@ -187,6 +187,11 @@ class PlotPotential:
                           linewidth=elsevier_plot_tools.LINE_WIDTH,
                           label=item)
                 self._get_debye_potential(df_i, item, debye_l)
+                idx_closest = np.abs(df_i.iloc[:, 0] - debye_l).argmin()
+                phi_value = (df_i.iloc[:, 1][idx_closest] +
+                             df_i.iloc[:, 1][idx_closest+1])/2
+                self._plot_debye_lines(
+                    ax_i, phi_value, debye_l, configs, order_of_plot=2)
 
     def _get_debye_potential(self,
                              df_i: pd.DataFrame,
@@ -195,7 +200,7 @@ class PlotPotential:
                              ) -> None:
         """get the potential at the Debye length"""
         idx_closest = np.abs(df_i.iloc[:, 0] - debye_l).argmin()
-        phi_value = df_i.iloc[idx_closest, 1]
+        phi_value = (df_i.iloc[idx_closest, 1] + df_i.iloc[idx_closest+1, 1])/2
         self.info_msg += (
             f'\tPotential at Debye ({item}): {phi_value:.2f} [mV] = '
             f'{phi_value/25.2:.2f} [kT/e]\n')

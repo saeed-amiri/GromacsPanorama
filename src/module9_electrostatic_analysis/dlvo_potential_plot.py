@@ -118,7 +118,7 @@ class PlotPotential:
                   va='top',
                   transform=ax_i.transAxes,
                   fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
-        ax_i.text(0.15,
+        ax_i.text(0.12,
                   0.5,
                   r'$\lambda_D$',
                   ha='right',
@@ -127,8 +127,8 @@ class PlotPotential:
                   fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT-2)
         self.info_msg += f'\tIsosurface image: {configs.isosurface_fig}\n'
         # Add a circle on top of the image
-        self._add_circle(ax_i, img, 890, '--', 'black')  # debye length
-        self._add_circle(ax_i, img, 670, '-', 'black')  # Stern layer
+        self._add_circle(ax_i, img, 970, '--', 'black')  # debye length
+        # self._add_circle(ax_i, img, 670, '-', 'black')  # Stern layer
 
     def _add_circle(self,
                     ax_i: plt.axes,
@@ -139,7 +139,7 @@ class PlotPotential:
                     ) -> None:
         """add a circle to the image"""
         # pylint: disable=too-many-arguments
-        x_np_com = img.shape[0] / 2 - 15
+        x_np_com = img.shape[0] / 2
         y_np_com = img.shape[1] / 2 + 40
         circle = plt.Circle((x_np_com, y_np_com),
                             radius,
@@ -254,8 +254,7 @@ class PlotPotential:
                        configs: PlotConfig
                        ) -> None:
         """set the axis limits"""
-        x_lims: tuple[float, float] = ax_i.get_xlim()
-        ax_i.set_xlim(configs.x_lims[0], x_lims[1])
+        ax_i.set_xlim(configs.x_lims)
         ax_i.set_ylim(configs.y_lims)
 
     def _set_axis_ticks(self,
@@ -298,34 +297,35 @@ class PlotPotential:
                           ax_i: plt.axes,
                           phi_value: float,
                           debye_l: float,
-                          configs: PlotConfig
+                          configs: PlotConfig,
+                          order_of_plot: int = 1
                           ) -> None:
         """plot lines for the debye length"""
         # pylint: disable=too-many-arguments
-
         h_label: str = r'$_{\lambda_D}$'
-        ax_i.vlines(x=debye_l,
-                    ymin=configs.y_lims[0],
-                    ymax=phi_value+20,
-                    color=configs.colors[4],
-                    linestyle=configs.line_styles[2],
-                    linewidth=elsevier_plot_tools.LINE_WIDTH)
-        ax_i.text(debye_l-0.05,
-                  phi_value+26,
-                  h_label,
-                  fontsize=elsevier_plot_tools.FONT_SIZE_PT+2)
-        # Plot horizontal line from phi_value to the graph
         h_line_label = rf'$\psi${h_label} = {phi_value:.2f}'
+        if order_of_plot == 1:
+            ax_i.vlines(x=debye_l,
+                        ymin=configs.y_lims[0],
+                        ymax=phi_value+60,
+                        color=configs.colors[4],
+                        linestyle=configs.line_styles[2],
+                        linewidth=elsevier_plot_tools.LINE_WIDTH)
+            ax_i.text(debye_l-0.05,
+                      phi_value+66,
+                      h_label,
+                      fontsize=elsevier_plot_tools.FONT_SIZE_PT+2)
+            # Plot horizontal line from phi_value to the graph
         ax_i.hlines(y=phi_value,
                     xmin=0,
                     xmax=debye_l+0.5,
                     color=configs.colors[4],
                     linestyle=configs.line_styles[2],
                     linewidth=elsevier_plot_tools.LINE_WIDTH)
-        ax_i.text(debye_l+0.6,
-                  phi_value-0.2,
+        ax_i.text(debye_l-1.35,
+                  phi_value+5.0,
                   h_line_label,
-                  fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+                  fontsize=elsevier_plot_tools.FONT_SIZE_PT-2)
 
     def _plot_stern_layer_lines(self,
                                 ax_i: plt.axes,

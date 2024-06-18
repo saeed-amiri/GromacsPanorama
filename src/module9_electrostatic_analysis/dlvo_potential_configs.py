@@ -103,7 +103,7 @@ class PlotConfig(FileConfig):
 
     y_unit: str = ''
     y_lims: tuple[float, float] = (0, 260)
-    x_lims: tuple[float, float] = (2.8, 6)
+    x_lims: tuple[float, float] = (2.8, 5.1)
 
     x_ticks: list[float] = field(default_factory=lambda: [3, 4, 5])
     y_ticks: list[float] = field(default_factory=lambda: [])

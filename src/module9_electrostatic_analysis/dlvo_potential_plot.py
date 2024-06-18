@@ -182,8 +182,8 @@ class PlotPotential:
             for j, (item, df_i) in enumerate(apbs_files.items()):
                 ax_i.plot(df_i.iloc[:, 0],
                           df_i.iloc[:, 1],
-                          color=configs.colors[4],
-                          linestyle=configs.line_styles[j*2+1],
+                          color=configs.colors[j+1],
+                          linestyle=configs.line_styles[j*2],
                           linewidth=elsevier_plot_tools.LINE_WIDTH,
                           label=item)
                 self._get_debye_potential(df_i, item, debye_l)

@@ -15,8 +15,8 @@ class FileConfig:
     contact_fname: str = 'contact.xvg'
     fout: str = 'potential.xvg'
     radial_avg_files: dict[str, str] = field(default_factory=lambda: {
-        'numerical, nonlinear': 'radial_average_potential_nonlinear.xvg',
-        'numerical, linear': 'radial_average_potential_linear.xvg'})
+        'numerical solution': 'radial_average_potential_nonlinear.xvg'})
+    # 'numerical, linear': 'radial_average_potential_linear.xvg'})
 
 
 @dataclass
@@ -43,9 +43,9 @@ class ParameterConfig:
         'k_boltzman_JK': 1.380649e-23,  # Joules per Kelvin (J/K)
         'k_boltzman_eVK': 8.617333262145e-5,  # Electronvolts per Kelvin (eV/K)
         'phi_0': 1.0e-9,  # The potential at zero point (V)
-        'box_xlim': 21.7,  # Length of the box in x direction [nm]
-        'box_ylim': 21.7,  # Length of the box in y direction [nm]
-        'box_zlim': 11.3  # Length of the box in z direction [nm] (water)
+        'box_xlim': 21.8,  # Length of the box in x direction [nm]
+        'box_ylim': 21.8,  # Length of the box in y direction [nm]
+        'box_zlim': 22.5  # Length of the box in z direction [nm] whole box
     })
     charge_sings: dict[str, int] = field(default_factory=lambda: ({
         'SOL': 0,
@@ -55,6 +55,9 @@ class ParameterConfig:
         'POT': +1,
         'APT_COR': +1
     }))
+
+    grids: list[int] = field(default_factory=lambda: [161, 161, 161])
+    z_gird_up_limit: int = 161
 
     def __post_init__(self) -> None:
         self.nr_aptes_charges: int = \
@@ -68,7 +71,8 @@ class PlotConfig(FileConfig):
     """
     # pylint: disable=invalid-name
     # pylint: disable=too-many-instance-attributes
-    graph_suffix: str = f'els_potential_nonlinear.{elsevier_plot_tools.IMG_FORMAT}'
+    graph_suffix: str = \
+        f'els_potential_nonlinear.{elsevier_plot_tools.IMG_FORMAT}'
 
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'potential',
@@ -77,10 +81,10 @@ class PlotConfig(FileConfig):
     })
 
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
-        'label': 'analytic average',
+        'label': 'analytical solution',
         'color': 'black',
         'marker': 'o',
-        'linestyle': '-',
+        'linestyle': ':',
         'markersize': 0,
         'linewidth': elsevier_plot_tools.LINE_WIDTH,
     })
@@ -99,13 +103,13 @@ class PlotConfig(FileConfig):
 
     y_unit: str = ''
     y_lims: tuple[float, float] = (0, 260)
-    x_lims: tuple[float, float] = (2, 12)
+    x_lims: tuple[float, float] = (2.8, 6)
 
-    x_ticks: list[float] = field(default_factory=lambda: [3, 7, 9])
+    x_ticks: list[float] = field(default_factory=lambda: [3, 4, 5])
     y_ticks: list[float] = field(default_factory=lambda: [])
 
     legend_loc: str = 'upper right'
-    if_stern_line: bool = True
+    if_stern_line: bool = False
     if_debye_line: bool = True
     if_2nd_debye: bool = False
 

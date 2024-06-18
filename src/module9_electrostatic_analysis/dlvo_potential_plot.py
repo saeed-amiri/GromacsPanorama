@@ -243,6 +243,8 @@ class PlotPotential:
         # pylint: disable=too-many-arguments
         if configs.if_stern_line:
             self._plot_stern_layer_lines(ax_i, phi_mv, configs)
+        else:
+            self._plot_stern_vline_only(ax_i, configs)
         if configs.if_debye_line:
             idx_closest = np.abs(radii - debye_l).argmin()
             phi_value = phi_mv[idx_closest+1]
@@ -360,6 +362,18 @@ class PlotPotential:
                   phi_0-0.2,
                   fr'$\psi_0$ = {phi_0:.2f}',
                   fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+
+    def _plot_stern_vline_only(self,
+                               ax_i: plt.axes,
+                               configs: PlotConfig
+                               ) -> None:
+        """plot the stern layer vertical line only"""
+        ax_i.vlines(self.configs.stern_layer/10,
+                    ymin=configs.y_lims[0],
+                    ymax=configs.y_lims[1],
+                    color=configs.colors[4],
+                    linestyle=configs.line_styles[0],
+                    linewidth=elsevier_plot_tools.LINE_WIDTH)
 
     def _set_mirror_axes(self,
                          ax_i: plt.axes,

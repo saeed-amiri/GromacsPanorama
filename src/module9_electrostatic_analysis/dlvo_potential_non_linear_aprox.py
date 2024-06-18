@@ -85,14 +85,23 @@ class NonLinearPotential:
 
         phi_r: np.ndarray = np.zeros(radii.shape)
 
-        alpha: np.ndarray = phi_0 * self.configs.phi_parameters['e_charge'] / \
-            (4.0 * self.configs.phi_parameters['k_boltzman_JK'] *
-             self.configs.phi_parameters['T'])
+        alpha: np.ndarray = self.compute_alpha(phi_0)
 
         kappa: float = 1.0 / debye_l
         phi_r = self.compute_phi_r(radii, phi_r, alpha, kappa, r_np)
         self.test_equation(radii, log)
         return radii, phi_r
+
+    def compute_alpha(self,
+                      phi_0: np.ndarray
+                      ) -> np.ndarray:
+        """compute the alpha based on the equation 4.23
+        from the book by Hans-Jürgen Butt,  and Michael Kappl
+        alpha = tanh(e\\psi_0 / 4kT)
+        """
+        return np.tanh(phi_0 * self.configs.phi_parameters['e_charge'] /
+                       (4.0 * self.configs.phi_parameters['k_boltzman_JK'] *
+                        self.configs.phi_parameters['T']))
 
     def compute_phi_r(self,
                       radii: np.ndarray,

@@ -64,7 +64,7 @@ Also the script is splited into separate files for better readability.
 from datetime import datetime
 
 import numpy as np
-import pandas as pd
+from scipy.optimize import fsolve
 
 from common import logger
 from common.colors_text import TextColor as bcolors
@@ -257,7 +257,7 @@ class ElectroStaticComputation:
                                    debye_l: float,
                                    phi_0: np.ndarray,
                                    log: logger.logging.Logger
-                                   ) -> None:
+                                   ) -> tuple[np.ndarray, np.ndarray]:
         """compute the non-linearized Possion-Boltzmann equation for a
         sphere"""
         non_linear_pot = NonLinearPotential(

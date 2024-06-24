@@ -199,8 +199,15 @@ class PlotPotential:
                              debye_l: float
                              ) -> None:
         """get the potential at the Debye length"""
+        idx_closest = np.abs(df_i.iloc[:, 0] - 3).argmin()
+        phi_value = (
+            df_i.iloc[idx_closest, 1] + df_i.iloc[idx_closest+1, 1])/2
+        self.info_msg += (
+            f'\tPotential at stern ({item}): {phi_value:.2f} [mV] = '
+            f'{phi_value/25.2:.2f} [kT/e]\n')
         idx_closest = np.abs(df_i.iloc[:, 0] - debye_l).argmin()
-        phi_value = (df_i.iloc[idx_closest, 1] + df_i.iloc[idx_closest+1, 1])/2
+        phi_value = (
+            df_i.iloc[idx_closest, 1] + df_i.iloc[idx_closest+1, 1])/2
         self.info_msg += (
             f'\tPotential at Debye ({item}): {phi_value:.2f} [mV] = '
             f'{phi_value/25.2:.2f} [kT/e]\n')

@@ -159,11 +159,14 @@ class ElectroStaticComputation:
         phi_r: np.ndarray
 
         if (compute_type := self.configs.compute_type) == 'planar':
-            radii, phi_r = self._linear_planar_possion(debye_l, phi_0, box_lim)
+            radii, phi_r = self._linear_planar_possion(
+                debye_l, phi_0, box_lim)
         elif compute_type == 'sphere':
-            radii, phi_r = self._linear_shpere(debye_l, phi_0, box_lim/2)
+            radii, phi_r = self._linear_shpere(
+                debye_l, phi_0, box_lim/2)
         elif compute_type == 'non_linear':
-            radii, phi_r = self._non_linear_sphere_possion(debye_l, phi_0, log)
+            radii, phi_r = self._non_linear_sphere_possion(
+                debye_l, phi_0, log)
         return radii, phi_r
 
     def _get_phi_zero(self,
@@ -177,8 +180,8 @@ class ElectroStaticComputation:
             phi_0 = self._compute_phi_0_grahame_low_potential(debye_l)
         elif phi_0_type == 'grahame':
             phi_0 = self._compute_phi_0_grahame(debye_l)
-        self.info_msg += \
-            f'\tAvg. {phi_0.mean() = :.3f} [V] from `{phi_0_type}` values\n'
+        self.info_msg += (f'\tAvg. {phi_0.mean() = :.3f} [V] from `'
+                          f'{phi_0_type}` values\n')
         return phi_0
 
     def _linear_planar_possion(self,

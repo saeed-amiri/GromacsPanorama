@@ -274,13 +274,15 @@ class ElectroStaticComputation:
         epsilon: float = param['epsilon'] * param['epsilon_0']
         r_np: float = self.configs.np_radius / 10.0  # [A] -> [nm]
         a_kappa: float = r_np / debye_l
-
         y_0: float = param['e_charge'] / (2.0 * kbt)
         co_factor: float = epsilon * epsilon / (y_0 * debye_l)
+
         phi_0: np.ndarray = np.zeros(self.charge.shape)
         for i, sigma in enumerate(self.charge_density):
             phi_0[i] = self._fsolve_phi_0(
                 y_0, a_kappa, co_factor, sigma)
+        self.info_msg += ('\tPhi_0 computed from numerical solution of '
+                          'nonlinear equation from Grahame relation\n')
         return phi_0
 
     def _fsolve_phi_0(self,

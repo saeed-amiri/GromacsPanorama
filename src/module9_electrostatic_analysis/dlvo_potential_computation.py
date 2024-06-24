@@ -179,7 +179,7 @@ class ElectroStaticComputation:
         elif phi_0_type == 'grahame_low':
             phi_0 = self._compute_phi_0_grahame_low_potential(debye_l)
         elif phi_0_type == 'grahame':
-            phi_0 = self._compute_phi_0_grahame(debye_l)
+            phi_0 = self._compute_phi_0_grahame_nonlinear(debye_l)
         self.info_msg += (f'\tAvg. {phi_0.mean() = :.3f} [V] from `'
                           f'{phi_0_type}` values\n')
         return phi_0
@@ -252,6 +252,64 @@ class ElectroStaticComputation:
             (2 * epsilon * kbt)
         phi_0: np.ndarray = 2 * kbt * np.arcsinh(args) / param['e_charge']
         return phi_0
+
+    def _compute_phi_0_grahame_nonlinear(self,
+                                         debye_l: float
+                                         ) -> np.ndarray:
+        """compute the phi_0 based on the nonlinearized Possion-Boltzmann
+        relation for a sphere:
+        The grahame equation for sphere:
+        Solving the equation 4.25 from pp. 101, Surface and Interfacial
+        Forces, H-J Burr and M.Kappl
+        COmputing the phi_0 based on the equation 4.25 does not has analytical
+        solution, so we need to solve it numerically:
+        0 = (epsilon * epsilon_0 * kappa / y0) * \
+            [sinh(y0 * phi_0) - (2/kappa * a)tanh(y0 * phi_0 / 2)]] - sigma
+        y0 = e / (2 * k_B * T)
+        sigma := charge density
+        """
+        param: dict[str, float] = self.configs.phi_parameters
+
+        kbt: float = param['T'] * param['k_boltzman_JK']
+        epsilon: float = param['epsilon'] * param['epsilon_0']
+        r_np: float = self.configs.np_radius / 10.0  # [A] -> [nm]
+        a_kappa: float = r_np / debye_l
+
+        y_0: float = param['e_charge'] / (2.0 * kbt)
+        co_factor: float = epsilon * epsilon / (y_0 * debye_l)
+        phi_0: np.ndarray = np.zeros(self.charge.shape)
+        for i, sigma in enumerate(self.charge_density):
+            phi_0[i] = self._fsolve_phi_0(
+                y_0, a_kappa, co_factor, sigma)
+        return phi_0
+
+    def _fsolve_phi_0(self,
+                      y_0: float,
+                      a_kappa: float,
+                      co_factor: float,
+                      sigma: float
+                      ) -> float:
+        """solve the equation 4.25 from pp. 101, Surface and Interfacial
+        Forces, H-J Burr and M.Kappl
+        """
+        return fsolve(
+            self._nonlinear_grahame_equation,
+            y_0, args=(a_kappa, co_factor, sigma))
+
+    @staticmethod
+    def _nonlinear_grahame_equation(y_0: float,
+                                    a_kappa: float,
+                                    co_factor: float,
+                                    sigma: float
+                                    ) -> float:
+        """equation 4.25 from pp. 101, Surface and Interfacial
+        Forces, H-J Burr and M.Kappl
+        """
+        return (
+            co_factor * (np.sinh(y_0 * sigma) -
+                         (2/a_kappa) * np.tanh(y_0 * sigma / 2)
+                         ) - sigma
+                         )
 
     def _non_linear_sphere_possion(self,
                                    debye_l: float,

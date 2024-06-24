@@ -74,6 +74,7 @@ class RadialAveragePotential:
     """
 
     info_msg: str = 'Message from RadialAveragePotential:\n'
+    average_index_from: int = 80
 
     def __init__(self,
                  file_name: str,
@@ -138,7 +139,8 @@ class RadialAveragePotential:
         the center of the box."""
         # pylint: disable=too-many-locals
         # pylint: disable=unused-argument
-        
+        self._info_msg = (
+            f'\tThe average index is set to {self.average_index_from}\n')
         # Calculate the center of the box in grid units
         center_x = grid_points[0] // 2
         center_y = grid_points[1] // 2
@@ -165,7 +167,7 @@ class RadialAveragePotential:
         for r in radii:
             mask = (distances >= r) \
                 & (distances < r + grid_spacing[0]) \
-                & (Z <= 80)
+                & (Z <= self.average_index_from)
             if np.sum(mask) > 0:
                 avg_potential = np.mean(data[mask]) * 25.2  # Convert to mV
                 radial_average.append(avg_potential)
@@ -200,10 +202,13 @@ class RadialAveragePotential:
                 'Average Potential [mV]': radial_average,
                 'Average Potential [kT/e]': convert_to_kt_e
                 }
+        extra_msg_0 = ('The radial average is set below the index: '
+                        f'{self.average_index_from}')
+        extra_msg = [extra_msg_0, 'The conversion factor to [meV] is 25.2']
         df_i = pd.DataFrame(data)
         df_i.set_index(df_i.columns[0], inplace=True)
         my_tools.write_xvg(
-            df_i, log, extra_msg=[''], fname=self.configs.output_file)
+            df_i, log, extra_msg, fname=self.configs.output_file)
 
     def _get_header(self,
                     head_lines: list[str],

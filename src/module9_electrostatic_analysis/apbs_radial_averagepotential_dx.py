@@ -163,7 +163,9 @@ class RadialAveragePotential:
         radial_average: list[float] = []
 
         for r in radii:
-            mask = (distances >= r) & (distances < r + grid_spacing[0])  & (Z <= 80)
+            mask = (distances >= r) \
+                & (distances < r + grid_spacing[0]) \
+                & (Z <= 80)
             if np.sum(mask) > 0:
                 avg_potential = np.mean(data[mask]) * 25.2  # Convert to mV
                 radial_average.append(avg_potential)

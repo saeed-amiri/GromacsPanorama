@@ -58,7 +58,7 @@ class ChargeDensity:
         self.info_msg += (f'\tAve. `{charge.mean() = :.3f}` [e]\n'
                           f'\t`{cap_surface.mean()*1e18 = :.3f}` [nm^2]\n'
                           f'\tAve. `charge_{density.mean() = :.3f}` '
-                          f'[C/m^2] or [As/m^2] \n')
+                          f'[C/nm^2] or [As/nm^2] \n')
         return charge, density
 
     def _compute_under_water_area(self,
@@ -107,7 +107,7 @@ class ChargeDensity:
         now = datetime.now()
         self.info_msg += \
             f'\tTime: {now.strftime("%Y-%m-%d %H:%M:%S")}\n'
-        print(f'{bcolors.OKCYAN}{ChargeDensity.__name__}:\n'
+        print(f'{bcolors.OKGREEN}{ChargeDensity.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
 

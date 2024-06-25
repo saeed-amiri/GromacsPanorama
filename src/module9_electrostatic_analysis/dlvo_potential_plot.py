@@ -90,12 +90,13 @@ class PlotPotential:
         kappa_r: float = \
             self.configs.np_radius / (debye_l * configs.angstrom_to_nm)
         self._plot_data(ax_i, radii, phi_mv, configs)
-        self._plot_radial_avg(ax_i, configs, debye_l, log)
+        phi_vlaue_calced: float = \
+            self._plot_vertical_lines(ax_i, configs, phi_mv, radii, debye_l)
+        self._plot_radial_avg(ax_i, configs, debye_l, phi_vlaue_calced, log)
 
         self._set_grids(ax_i)
         self._set_axis_labels(ax_i, configs)
         self._set_title(ax_i, kappa_r, configs)
-        self._plot_vertical_lines(ax_i, configs, phi_mv, radii, debye_l)
         self._set_axis_lims(ax_i, configs)
         self._set_axis_ticks(ax_i, debye_l, configs)
         self._set_fig_labels(ax_i)
@@ -163,8 +164,9 @@ class PlotPotential:
                          ax_i: plt.axes,
                          configs: PlotConfig,
                          debye_l: float,
+                         phi_value_from_computation: float,
                          log: logger.logging.Logger
-                         ) -> None:
+                         ) -> float:
         """plot the radial average"""
         apbs_files: dict[str, str] = {}
         if configs.plot_radial_avg:
@@ -190,8 +192,10 @@ class PlotPotential:
                 idx_closest = np.abs(df_i.iloc[:, 0] - debye_l).argmin()
                 phi_value = (df_i.iloc[:, 1][idx_closest] +
                              df_i.iloc[:, 1][idx_closest+1])/2
-                self._plot_debye_lines(
-                    ax_i, phi_value, debye_l, configs, order_of_plot=2)
+                if np.abs(phi_value - phi_value_from_computation) > 10:
+                    self._plot_debye_lines(
+                        ax_i, phi_value, debye_l, configs, order_of_plot=2)
+            return phi_value
 
     def _get_debye_potential(self,
                              df_i: pd.DataFrame,
@@ -245,9 +249,10 @@ class PlotPotential:
                              phi_mv: np.ndarray,
                              radii: np.ndarray,
                              debye_l: float
-                             ) -> None:
+                             ) -> float:
         """plot vertical lines"""
         # pylint: disable=too-many-arguments
+        phi_value: float = 0.0
         if configs.if_stern_line:
             self._plot_stern_layer_lines(ax_i, phi_mv, configs)
         else:
@@ -262,6 +267,7 @@ class PlotPotential:
             self._plot_debye_lines(ax_i, phi_value, debye_l*2, configs)
 
         self.info_msg += f'\tPotential at Debye: {phi_value:.2f} [mV]\n'
+        return phi_value
 
     def _set_axis_lims(self,
                        ax_i: plt.axes,
@@ -336,10 +342,10 @@ class PlotPotential:
                     color=configs.colors[4],
                     linestyle=configs.line_styles[2],
                     linewidth=elsevier_plot_tools.LINE_WIDTH)
-        ax_i.text(debye_l-1.35,
-                  phi_value+5.0,
+        ax_i.text(debye_l-0.5,
+                  phi_value-18.0,
                   h_line_label,
-                  fontsize=elsevier_plot_tools.FONT_SIZE_PT-2)
+                  fontsize=elsevier_plot_tools.FONT_SIZE_PT-1)
 
     def _plot_stern_layer_lines(self,
                                 ax_i: plt.axes,

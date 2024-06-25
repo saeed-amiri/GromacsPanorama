@@ -282,7 +282,7 @@ class ElectroStaticComputation:
         y_0: float = param['e_charge'] / (2.0 * kbt)
         co_factor: float = epsilon * epsilon / (y_0 * debye_l)
 
-        phi_0: np.ndarray = np.zeros(self.charge.shape)
+        phi_0: np.ndarray = np.zeros(self.charge.shape, dtype=np.float64)
         sigma = self.charge_density
         phi_0 = self._fsolve_phi_0(
                 y_0, a_kappa, co_factor, sigma)

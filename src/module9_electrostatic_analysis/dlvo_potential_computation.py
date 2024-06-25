@@ -311,9 +311,58 @@ class ElectroStaticComputation:
         """
         Solve the nonlinear Grahame equation numerically.
 
-    @staticmethod
-    def _nonlinear_grahame_equation(phi_0: float,
-                                    y_x: float,
+        Parameters:
+        y_0 (float): Parameter y_0.
+        a_kappa (float): Parameter a_kappa.
+        co_factor (float): Coefficient factor.
+        sigma (float): Charge density.
+
+        Returns:
+        float: Solution for phi_0.
+        """
+        # pylint: disable=too-many-arguments
+        solution = fsolve(self._nonlinear_grahame_equation,
+                          y_initial_guess,
+                          args=(y_0, a_kappa, co_factor, sigma),
+                          full_output=True,
+                          maxfev=10000)
+        phi_0, _, ier, msg = solution
+        if ier != 1 and not self.iter_flase_report_flag:
+            log.warning(msg := "\tWarning: fsolve did not converge.\n")
+            print(f"{bcolors.WARNING}{msg}{bcolors.ENDC}")
+            self.info_msg += msg
+            self.iter_flase_report_flag = True
+        return phi_0[0]
+
+    def _root_phi_0(self,
+                    y_0: float,
+                    a_kappa: float,
+                    co_factor: float,
+                    sigma: float) -> float:
+        """
+        Solve the nonlinear Grahame equation numerically using the root solver.
+
+        Parameters:
+        y_0 (float): Parameter y_0.
+        a_kappa (float): Parameter a_kappa.
+        co_factor (float): Coefficient factor.
+        sigma (float): Charge density.
+
+        Returns:
+        float: Solution for phi_0.
+        """
+        y_initial_guess: float = 0.17
+        solution = root(self._nonlinear_grahame_equation,
+                        y_initial_guess,
+                        args=(y_0, a_kappa, co_factor, sigma),
+                        method='hybr')
+        if not solution.success:
+            print(f"Warning: root did not converge. `{solution.message}`")
+        return solution.x[0]
+
+    def _nonlinear_grahame_equation(self,
+                                    phi_x: float,
+                                    y_0: float,
                                     a_kappa: float,
                                     co_factor: float,
                                     sigma: float

@@ -155,7 +155,7 @@ class ElectroStaticComputation:
         compute phi_r with different approximations
         """
         box_lim: float = self.configs.phi_parameters['box_xlim']
-        phi_0: np.ndarray = self._get_phi_zero(debye_l)
+        phi_0: np.ndarray = self._get_phi_zero(debye_l, log)
 
         radii: np.ndarray
         phi_r: np.ndarray
@@ -172,7 +172,8 @@ class ElectroStaticComputation:
         return radii, phi_r
 
     def _get_phi_zero(self,
-                      debye_l: float
+                      debye_l: float,
+                      log: logger.logging.Logger
                       ) -> np.ndarray:
         """get the value of the phi_0 based on the configuration"""
         phi_0: np.ndarray = np.zeros(self.charge.shape)

@@ -87,6 +87,7 @@ class ElectroStaticComputation:
     configs: AllConfig
     charge_density: np.ndarray
     charge: np.ndarray
+    iter_flase_report_flag: bool = False
 
     def __init__(self,
                  log: logger.logging.Logger,
@@ -255,19 +256,21 @@ class ElectroStaticComputation:
         return phi_0
 
     def _compute_phi_0_grahame_nonlinear(self,
-                                         debye_l: float
+                                         debye_l: float,
+                                         log: logger.logging.Logger
                                          ) -> np.ndarray:
-        """compute the phi_0 based on the nonlinearized Possion-Boltzmann
-        relation for a sphere:
-        The grahame equation for sphere:
-        Solving the equation 4.25 from pp. 101, Surface and Interfacial
-        Forces, H-J Burr and M.Kappl
-        COmputing the phi_0 based on the equation 4.25 does not has analytical
-        solution, so we need to solve it numerically:
-        0 = (epsilon * epsilon_0 * kappa / y0) * \
-            [sinh(y0 * phi_0) - (2/kappa * a)tanh(y0 * phi_0 / 2)]] - sigma
-        y0 = e / (2 * k_B * T)
-        sigma := charge density
+        """
+        Compute the phi_0 based on the nonlinearized Poisson-Boltzmann
+        relation for a sphere using the Grahame equation.
+
+        This method numerically solves the equation 4.25 from pp. 101,
+        Surface and Interfacial Forces, H-J Butt and M.Kappl.
+
+        Parameters:
+        debye_l (float): Debye length.
+
+        Returns:
+        np.ndarray: Computed phi_0 values.
         """
         param: dict[str, float] = self.configs.phi_parameters
 

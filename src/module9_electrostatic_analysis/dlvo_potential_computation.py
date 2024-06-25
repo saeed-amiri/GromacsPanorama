@@ -64,7 +64,8 @@ Also the script is splited into separate files for better readability.
 from datetime import datetime
 
 import numpy as np
-from scipy.optimize import fsolve
+from scipy.optimize import fsolve, root
+
 
 from common import logger
 from common.colors_text import TextColor as bcolors

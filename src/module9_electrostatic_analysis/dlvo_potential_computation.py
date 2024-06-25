@@ -142,8 +142,9 @@ class ElectroStaticComputation:
         debye_l_nm = debye_l * 1e9
 
         self.info_msg += (
-            f'\t`{debye_l_nm = :.4f}` [nm]\n\t'
-            rf'$\kappa$ r ={debye_l_nm*self.configs.np_radius/10:.3f}'
+            f'\t`{debye_l_nm = :.4f}` [nm]\n'
+            f'\t`np_radius = {self.configs.np_radius:.4f}` [nm]\n\t'
+            rf'\kappa * r = {self.configs.np_radius/10/debye_l_nm:.3f}'
             '\n')
         return float(debye_l_nm)
 

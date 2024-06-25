@@ -295,21 +295,21 @@ class ElectroStaticComputation:
                                           log)
         self.info_msg += ('\tPhi_0 computed from numerical solution of '
                           'nonlinear equation from Grahame relation\n')
+        if all(phi_0) == y_initial_guess:
+            print("Warning: phi_0 did not converge.")
+            self.info_msg += 'Warning: phi_0 did not converge.\n'
         return phi_0
 
     def _fsolve_phi_0(self,
                       y_0: float,
                       a_kappa: float,
                       co_factor: float,
-                      sigma: float
+                      sigma: float,
+                      y_initial_guess: float,
+                      log: logger.logging.Logger
                       ) -> float:
-        """solve the equation 4.25 from pp. 101, Surface and Interfacial
-        Forces, H-J Burr and M.Kappl
         """
-        y_initial_guess: float = 1.0
-        return fsolve(
-            self._nonlinear_grahame_ohshima_equation,
-            y_initial_guess, args=(y_0, a_kappa, co_factor, sigma))
+        Solve the nonlinear Grahame equation numerically.
 
     @staticmethod
     def _nonlinear_grahame_equation(phi_0: float,

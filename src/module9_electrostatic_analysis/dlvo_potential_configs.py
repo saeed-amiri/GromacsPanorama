@@ -130,6 +130,40 @@ class PlotConfig(FileConfig):
 
 
 @dataclass
+class SolvingConfig(FileConfig, ParameterConfig):
+    """set the parameters for the numerical solution
+    Option for the computation type:
+    compute_type:
+        planar: Linearized Possion-Boltzmann for planar approximation
+        sphere: Linearized Possion-Boltzmann for a sphere
+    phi_0_set:
+        grahame: Grahame equation
+        grahame_low: Grahame equation for low potential
+        constant: from a constant value
+    ionic strength:
+        salt: use the slac concentration
+        all: compute it from all charge groups in the system
+    phi_euation_aprx: (Poission-Boltzmann approximation eqution for phi)
+        simple: simple linearized Poission-Boltzmann equation
+        Loeb: Loeb equation
+        Ohshima: Ohshima equation
+    solver:
+        _fsolve: use the fsolve from scipy
+        _root: use the root from scipy
+    """
+
+    compute_type: str = 'non_linear'
+
+    phi_0_type: str = 'grahame'
+
+    ionic_strength: str = 'salt'
+
+    phi_equation_aprx: str = 'Ohshima'
+
+    solver: str = '_fsolve'
+
+
+@dataclass
 class AllConfig(FileConfig, ParameterConfig):
     """set all the parameters and confiurations
     computation types:
@@ -144,7 +178,6 @@ class AllConfig(FileConfig, ParameterConfig):
         salt: use the slac concentration
         all: compute it from all charge groups in the system
     """
-    compute_type: str = 'non_linear'
-    phi_0_type: str = 'grahame'
     ionic_type: str = 'salt'
     plot_config: PlotConfig = field(default_factory=PlotConfig)
+    solving_config: SolvingConfig = field(default_factory=SolvingConfig)

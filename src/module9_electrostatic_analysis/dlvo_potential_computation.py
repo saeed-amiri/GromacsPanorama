@@ -182,8 +182,8 @@ class ElectroStaticComputation:
         elif phi_0_type == 'grahame_low':
             phi_0 = self._compute_phi_0_grahame_low_potential(debye_l)
         elif phi_0_type == 'grahame':
-            phi_0 = self._compute_phi_0_grahame_nonlinear(debye_l)
-        self.info_msg += (f'\tAvg. {phi_0.mean() = :.3f} [V] from `'
+            phi_0 = self._compute_phi_0_grahame_nonlinear(debye_l, log)
+        self.info_msg += (f'\tAvg. {phi_0.mean()*100 = :.3f} [mV] from `'
                           f'{phi_0_type}` values\n')
         return phi_0
 

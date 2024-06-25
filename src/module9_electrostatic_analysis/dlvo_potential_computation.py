@@ -283,21 +283,28 @@ class ElectroStaticComputation:
         co_factor: float = epsilon * epsilon / (y_0 * debye_l)
 
         phi_0: np.ndarray = np.zeros(self.charge.shape, dtype=np.float64)
-        sigma = self.charge_density
+
+        sigma = self.charge_density.copy()
         y_initial_guess: float = 25.18
 
+        self.iter_flase_report_flag = False
+
         for i, _ in enumerate(phi_0):
-            phi_0[i] = self._fsolve_phi_0(y_0,
-                                          a_kappa,
-                                          co_factor,
-                                          sigma[i],
-                                          y_initial_guess,
-                                          log)
+            phi_0[i] = self._root_phi_0(y_0,
+                                        a_kappa,
+                                        co_factor,
+                                        sigma[i],
+                                        y_initial_guess,
+                                        log)
+
         self.info_msg += ('\tPhi_0 computed from numerical solution of '
                           'nonlinear equation from Grahame relation\n')
+
         if all(phi_0) == y_initial_guess:
-            print("Warning: phi_0 did not converge.")
+            print(f"{bcolors.CAUTION}\tWarning: phi_0 did not converge."
+                  f"{bcolors.ENDC}\n")
             self.info_msg += 'Warning: phi_0 did not converge.\n'
+
         return phi_0
 
     def _fsolve_phi_0(self,
@@ -338,7 +345,10 @@ class ElectroStaticComputation:
                     y_0: float,
                     a_kappa: float,
                     co_factor: float,
-                    sigma: float) -> float:
+                    sigma: float,
+                    y_initial_guess: float,
+                    log: logger.logging.Logger
+                    ) -> float:
         """
         Solve the nonlinear Grahame equation numerically using the root solver.
 
@@ -351,13 +361,20 @@ class ElectroStaticComputation:
         Returns:
         float: Solution for phi_0.
         """
-        y_initial_guess: float = 0.17
+        # pylint: disable=too-many-arguments
         solution = root(self._nonlinear_grahame_equation,
                         y_initial_guess,
                         args=(y_0, a_kappa, co_factor, sigma),
-                        method='hybr')
-        if not solution.success:
-            print(f"Warning: root did not converge. `{solution.message}`")
+                        method='hybr',
+                        options={'xtol': 1e-10,
+                                 'maxfev': 10000})
+        if not solution.success and not self.iter_flase_report_flag:
+            log.warning(
+                msg :=
+                f"\tWarning: root did not converge. `{solution.message}`\n")
+            print(f"{bcolors.WARNING}{msg}{bcolors.ENDC}")
+            self.info_msg += msg
+            self.iter_flase_report_flag = True
         return solution.x[0]
 
     def _nonlinear_grahame_equation(self,

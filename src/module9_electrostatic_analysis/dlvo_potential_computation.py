@@ -284,8 +284,15 @@ class ElectroStaticComputation:
 
         phi_0: np.ndarray = np.zeros(self.charge.shape, dtype=np.float64)
         sigma = self.charge_density
-        phi_0 = self._fsolve_phi_0(
-                y_0, a_kappa, co_factor, sigma)
+        y_initial_guess: float = 25.18
+
+        for i, _ in enumerate(phi_0):
+            phi_0[i] = self._fsolve_phi_0(y_0,
+                                          a_kappa,
+                                          co_factor,
+                                          sigma[i],
+                                          y_initial_guess,
+                                          log)
         self.info_msg += ('\tPhi_0 computed from numerical solution of '
                           'nonlinear equation from Grahame relation\n')
         return phi_0

@@ -154,13 +154,15 @@ class ElectroStaticComputation:
         """
         compute phi_r with different approximations
         """
+        s_config: "AllConfig" = self.configs.solving_config
         box_lim: float = self.configs.phi_parameters['box_xlim']
-        phi_0: np.ndarray = self._get_phi_zero(debye_l, log)
+        phi_0: np.ndarray = self._get_phi_zero(debye_l, log, s_config)
 
         radii: np.ndarray
         phi_r: np.ndarray
 
-        if (compute_type := self.configs.compute_type) == 'planar':
+
+        if (compute_type := s_config.compute_type) == 'planar':
             radii, phi_r = self._linear_planar_possion(
                 debye_l, phi_0, box_lim)
         elif compute_type == 'sphere':
@@ -173,11 +175,12 @@ class ElectroStaticComputation:
 
     def _get_phi_zero(self,
                       debye_l: float,
-                      log: logger.logging.Logger
+                      log: logger.logging.Logger,
+                      s_config: "AllConfig"
                       ) -> np.ndarray:
         """get the value of the phi_0 based on the configuration"""
         phi_0: np.ndarray = np.zeros(self.charge.shape)
-        if (phi_0_type := self.configs.phi_0_type) == 'constant':
+        if (phi_0_type := s_config.phi_0_type) == 'constant':
             phi_0 += self.configs.phi_parameters['phi_0']
         elif phi_0_type == 'grahame_low':
             phi_0 = self._compute_phi_0_grahame_low_potential(debye_l)

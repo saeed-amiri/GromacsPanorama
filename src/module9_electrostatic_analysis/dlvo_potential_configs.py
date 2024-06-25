@@ -120,7 +120,7 @@ class PlotConfig(FileConfig):
 
     scheme_fig_path_0: str = \
         '/scratch/saeed/GÖHBP/PRE_DFG_7May24/single_np/15Oda/'
-    scheme_fig_path_1: str = 'electrostatic_potential/dlvo_sphere.jpg'
+    scheme_fig_path_1: str = 'electrostatic_potential/exclusion_zone_edgy.jpg'
     scheme_fig_path: str = f'{scheme_fig_path_0}{scheme_fig_path_1}'
 
     isosurface_fig_path: str = \

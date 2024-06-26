@@ -143,7 +143,7 @@ class ElectroStaticComputation:
 
         self.info_msg += (
             f'\t`{debye_l_nm = :.4f}` [nm]\n'
-            f'\t`np_radius = {self.configs.np_radius:.4f}` [nm]\n\t'
+            f'\t`np_radius = {self.configs.np_radius/10.0:.4f}` [nm]\n\t'
             rf'\kappa * r = {self.configs.np_radius/10/debye_l_nm:.3f}'
             '\n')
         return float(debye_l_nm)
@@ -161,7 +161,6 @@ class ElectroStaticComputation:
 
         radii: np.ndarray
         phi_r: np.ndarray
-
 
         if (compute_type := s_config.compute_type) == 'planar':
             radii, phi_r = self._linear_planar_possion(

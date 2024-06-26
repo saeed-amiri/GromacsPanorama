@@ -75,6 +75,8 @@ class RadialAveragePotential:
 
     info_msg: str = 'Message from RadialAveragePotential:\n'
     average_index_from: int = 80
+    pot_unit_conversion: float = 25.2
+    dist_unit_conversion: float = 10.0
 
     def __init__(self,
                  file_name: str,
@@ -109,8 +111,8 @@ class RadialAveragePotential:
                   data_lines: list[str]
                   ) -> list[float]:
         """get the data"""
-        data: list[float] = [item.split() for item in data_lines]
-        data = [float(i) for sublist in data for i in sublist]
+        data_tmp: list[list[str]] = [item.split() for item in data_lines]
+        data = [float(i) for sublist in data_tmp for i in sublist]
         return data
 
     def process_data(self,
@@ -124,14 +126,14 @@ class RadialAveragePotential:
         # pylint: disable=too-many-arguments
         self.check_number_of_points(data, grid_points, log)
         self._get_box_size(grid_points, grid_spacing, origin)
-        data = np.array(data).reshape(grid_points)
+        data_arr: np.ndarray = np.array(data).reshape(grid_points)
         radii, radial_average = \
-            self.radial_average(data, grid_points, grid_spacing, origin)
+            self.radial_average(data_arr, grid_points, grid_spacing, origin)
         self._plot_radial_average(radii, radial_average)
         self.write_radial_average(radii, radial_average, log)
 
     def radial_average(self,
-                       data: np.ndarray,
+                       data_arr: np.ndarray,
                        grid_points: list[int],
                        grid_spacing: list[float],
                        origin: list[float]) -> tuple[np.ndarray, list[float]]:
@@ -139,7 +141,7 @@ class RadialAveragePotential:
         the center of the box."""
         # pylint: disable=too-many-locals
         # pylint: disable=unused-argument
-        self._info_msg = (
+        self.info_msg += (
             f'\tThe average index is set to {self.average_index_from}\n')
         # Calculate the center of the box in grid units
         center_x = grid_points[0] // 2
@@ -149,32 +151,34 @@ class RadialAveragePotential:
         # Calculate the maximum radius for the radial average
         max_radius = min(center_x, center_y, center_z) * min(grid_spacing)
         # Create a grid of distances from the center
-        x = np.linspace(0, grid_points[0] - 1, grid_points[0])
-        y = np.linspace(0, grid_points[1] - 1, grid_points[1])
-        z = np.linspace(0, grid_points[2] - 1, grid_points[2])
+        x_space = np.linspace(0, grid_points[0] - 1, grid_points[0])
+        y_space = np.linspace(0, grid_points[1] - 1, grid_points[1])
+        z_space = np.linspace(0, grid_points[2] - 1, grid_points[2])
 
-        X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
+        grid_x, grid_y, grid_z = \
+            np.meshgrid(x_space, y_space, z_space, indexing='ij')
 
-        distances = np.sqrt((X - center_x)**2 +
-                            (Y - center_y)**2 +
-                            (Z - center_z)**2) * grid_spacing[0]
+        distances = np.sqrt((grid_x - center_x)**2 +
+                            (grid_y - center_y)**2 +
+                            (grid_z - center_z)**2) * grid_spacing[0]
 
         # Calculate the radial average
         radii = np.arange(0, max_radius, grid_spacing[0])
 
         radial_average: list[float] = []
 
-        for r in radii:
-            mask = (distances >= r) \
-                & (distances < r + grid_spacing[0]) \
-                & (Z <= self.average_index_from)
+        for radius in radii:
+            mask = (distances >= radius) \
+                & (distances < radius + grid_spacing[0]) \
+                & (grid_z <= self.average_index_from)
             if np.sum(mask) > 0:
-                avg_potential = np.mean(data[mask]) * 25.2  # Convert to mV
+                avg_potential = \
+                    np.mean(data_arr[mask]) * self.pot_unit_conversion
                 radial_average.append(avg_potential)
             else:
                 radial_average.append(0)
         return radii, radial_average
-    
+
     def _plot_radial_average(self,
                              radii: np.ndarray,
                              radial_average: list[float]) -> None:
@@ -182,14 +186,16 @@ class RadialAveragePotential:
         # Plot the radial average
         plt.figure(figsize=(10, 6))
 
-        plt.plot(radii/10, radial_average, label='Radial Average of Potential')
+        plt.plot(radii/self.dist_unit_conversion,
+                 radial_average,
+                 label='Radial Average of Potential')
         plt.xlabel('Radius [nm]')
         plt.ylabel('Average Potential')
         plt.title('Radial Average of Potential from the Center of the Box')
         plt.legend()
         plt.grid(True)
         plt.show()
-    
+
     def write_radial_average(self,
                              radii: np.ndarray,
                              radial_average: list[float],
@@ -197,14 +203,16 @@ class RadialAveragePotential:
                              ) -> None:
         """Write the radial average to a file"""
         # Write the radial average to a file
-        convert_to_kt_e = [i/25.2 for i in radial_average]
-        data = {'Radius [nm]': radii/10,
+        convert_to_kt_e = [i/self.pot_unit_conversion for i in radial_average]
+        data = {'Radius [nm]': radii/self.dist_unit_conversion,
                 'Average Potential [mV]': radial_average,
                 'Average Potential [kT/e]': convert_to_kt_e
                 }
         extra_msg_0 = ('The radial average is set below the index: '
-                        f'{self.average_index_from}')
-        extra_msg = [extra_msg_0, 'The conversion factor to [meV] is 25.2']
+                       f'{self.average_index_from}')
+        extra_msg = \
+            [extra_msg_0,
+             f'The conversion factor to [meV] is {self.pot_unit_conversion}']
         df_i = pd.DataFrame(data)
         df_i.set_index(df_i.columns[0], inplace=True)
         my_tools.write_xvg(
@@ -280,12 +288,11 @@ class RadialAveragePotential:
 
     def read_file(self,
                   file_name: str
-                  ) -> None:
+                  ) -> list[str]:
         """read the file"""
         with open(file_name, 'r', encoding='utf-8') as f_dx:
             lines = f_dx.readlines()
-        lines = [line.strip() for line in lines]
-        return lines
+        return [line.strip() for line in lines]
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

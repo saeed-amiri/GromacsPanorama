@@ -143,27 +143,33 @@ class RadialAveragePotential:
         # pylint: disable=unused-argument
         self.info_msg += (
             f'\tThe average index is set to {self.average_index_from}\n')
+
         # Calculate the center of the box in grid units
-        center_x = grid_points[0] // 2
-        center_y = grid_points[1] // 2
-        center_z = grid_points[2] // 2
+        center_x: float = grid_points[0] // 2
+        center_y: float = grid_points[1] // 2
+        center_z: float = grid_points[2] // 2
 
         # Calculate the maximum radius for the radial average
-        max_radius = min(center_x, center_y, center_z) * min(grid_spacing)
+        max_radius: float = \
+            min(center_x, center_y, center_z) * min(grid_spacing)
         # Create a grid of distances from the center
-        x_space = np.linspace(0, grid_points[0] - 1, grid_points[0])
-        y_space = np.linspace(0, grid_points[1] - 1, grid_points[1])
-        z_space = np.linspace(0, grid_points[2] - 1, grid_points[2])
+        x_space: np.ndarray = \
+            np.linspace(0, grid_points[0] - 1, grid_points[0])
+        y_space: np.ndarray = \
+            np.linspace(0, grid_points[1] - 1, grid_points[1])
+        z_space: np.ndarray = \
+            np.linspace(0, grid_points[2] - 1, grid_points[2])
 
         grid_x, grid_y, grid_z = \
             np.meshgrid(x_space, y_space, z_space, indexing='ij')
 
-        distances = np.sqrt((grid_x - center_x)**2 +
-                            (grid_y - center_y)**2 +
-                            (grid_z - center_z)**2) * grid_spacing[0]
+        distances: np.ndarray = \
+            np.sqrt((grid_x - center_x)**2 +
+                    (grid_y - center_y)**2 +
+                    (grid_z - center_z)**2) * grid_spacing[0]
 
         # Calculate the radial average
-        radii = np.arange(0, max_radius, grid_spacing[0])
+        radii: np.ndarray = np.arange(0, max_radius, grid_spacing[0])
 
         radial_average: list[float] = []
 
@@ -177,6 +183,7 @@ class RadialAveragePotential:
                 radial_average.append(avg_potential)
             else:
                 radial_average.append(0)
+
         return radii, radial_average
 
     def _plot_radial_average(self,

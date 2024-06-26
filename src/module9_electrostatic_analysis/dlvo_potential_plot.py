@@ -30,13 +30,14 @@ class PlotPotential:
                  ) -> None:
         # pylint: disable=too-many-arguments
         self.configs = configs
-        self.plot_potential(radii, phi_r, debye_l, log)
+        debye_distance: float = debye_l + self.configs.np_radius / 10.0
+        self.plot_potential(radii, phi_r, debye_distance, log)
         self.write_msg(log)
 
     def plot_potential(self,
                        radii: np.ndarray,
                        phi_r: np.ndarray,
-                       debye_l: float,
+                       debye_d: float,
                        log: logger.logging.Logger
                        ) -> None:
         """plot and save the electostatic potential"""
@@ -55,7 +56,7 @@ class PlotPotential:
         axs[1] = fig_i.add_subplot(grid_panel[0, 2:5])
         axs[2] = fig_i.add_subplot(grid_panel[0, 5:])
         self.plot_panel_a(axs[0], configs)
-        self.plot_panel_b(axs[1], radii, phi_r, debye_l, configs, log)
+        self.plot_panel_b(axs[1], radii, phi_r, debye_d, configs, log)
         self.plot_panel_c(axs[2], configs)
         self._save_fig(fig_i, configs)
 
@@ -79,7 +80,7 @@ class PlotPotential:
                      ax_i: plt.axes,
                      radii: np.ndarray,
                      phi_r: np.ndarray,
-                     debye_l: float,
+                     debye_d: float,
                      configs: PlotConfig,
                      log: logger.logging.Logger
                      ) -> None:
@@ -88,17 +89,17 @@ class PlotPotential:
         phi_mv: np.ndarray = phi_r * configs.voltage_to_mV
         # kappa * radius of the np
         kappa_r: float = \
-            self.configs.np_radius / (debye_l * configs.angstrom_to_nm)
+            self.configs.np_radius / (debye_d * configs.angstrom_to_nm)
         self._plot_data(ax_i, radii, phi_mv, configs)
         phi_vlaue_calced: float = \
-            self._plot_vertical_lines(ax_i, configs, phi_mv, radii, debye_l)
-        self._plot_radial_avg(ax_i, configs, debye_l, phi_vlaue_calced, log)
+            self._plot_vertical_lines(ax_i, configs, phi_mv, radii, debye_d)
+        self._plot_radial_avg(ax_i, configs, debye_d, phi_vlaue_calced, log)
 
         self._set_grids(ax_i)
         self._set_axis_labels(ax_i, configs)
         self._set_title(ax_i, kappa_r, configs)
         self._set_axis_lims(ax_i, configs)
-        self._set_axis_ticks(ax_i, debye_l, configs)
+        self._set_axis_ticks(ax_i, debye_d, configs)
         self._set_fig_labels(ax_i)
         self._set_mirror_axes(ax_i, configs)
         ax_i.legend(loc=configs.legend_loc,
@@ -163,7 +164,7 @@ class PlotPotential:
     def _plot_radial_avg(self,
                          ax_i: plt.axes,
                          configs: PlotConfig,
-                         debye_l: float,
+                         debye_d: float,
                          phi_value_from_computation: float,
                          log: logger.logging.Logger
                          ) -> float:
@@ -188,30 +189,46 @@ class PlotPotential:
                           linestyle=configs.line_styles[j*2],
                           linewidth=elsevier_plot_tools.LINE_WIDTH,
                           label=item)
-                self._get_debye_potential(df_i, item, debye_l)
-                idx_closest = np.abs(df_i.iloc[:, 0] - debye_l).argmin()
-                phi_value = (df_i.iloc[:, 1][idx_closest] +
-                             df_i.iloc[:, 1][idx_closest+1])/2
+                self._get_debye_potential(df_i, item, debye_d)
+                idx_closest = np.abs(df_i.iloc[:, 0] - debye_d).argmin()
+                try:
+                    phi_value = (df_i.iloc[:, 1][idx_closest] +
+                                 df_i.iloc[:, 1][idx_closest+1])/2
+                except IndexError:
+                    phi_value = df_i.iloc[:, 1][idx_closest]
+                except KeyError:
+                    phi_value = df_i.iloc[:, 0][idx_closest]
                 if np.abs(phi_value - phi_value_from_computation) > 10:
                     self._plot_debye_lines(
-                        ax_i, phi_value, debye_l, configs, order_of_plot=2)
+                        ax_i, phi_value, debye_d, configs, order_of_plot=2)
             return phi_value
 
     def _get_debye_potential(self,
                              df_i: pd.DataFrame,
                              item: str,
-                             debye_l: float
+                             debye_d: float
                              ) -> None:
         """get the potential at the Debye length"""
         idx_closest = np.abs(df_i.iloc[:, 0] - 3).argmin()
-        phi_value = (
-            df_i.iloc[idx_closest, 1] + df_i.iloc[idx_closest+1, 1])/2
+        try:
+            phi_value = (
+                df_i.iloc[idx_closest, 1] + df_i.iloc[idx_closest+1, 1])/2
+        except IndexError:
+            phi_value = df_i.iloc[idx_closest, 1]
+        except KeyError:
+            phi_value = df_i.iloc[idx_closest, 0]
+
         self.info_msg += (
             f'\tPotential at stern ({item}): {phi_value:.2f} [mV] = '
             f'{phi_value/25.2:.2f} [kT/e]\n')
-        idx_closest = np.abs(df_i.iloc[:, 0] - debye_l).argmin()
-        phi_value = (
-            df_i.iloc[idx_closest, 1] + df_i.iloc[idx_closest+1, 1])/2
+        idx_closest = np.abs(df_i.iloc[:, 0] - debye_d).argmin()
+        try:
+            phi_value = (
+                df_i.iloc[idx_closest, 1] + df_i.iloc[idx_closest+1, 1])/2
+        except IndexError:
+            phi_value = df_i.iloc[idx_closest, 1]
+        except KeyError:
+            phi_value = df_i.iloc[idx_closest, 0]
         self.info_msg += (
             f'\tPotential at Debye ({item}): {phi_value:.2f} [mV] = '
             f'{phi_value/25.2:.2f} [kT/e]\n')
@@ -248,7 +265,7 @@ class PlotPotential:
                              configs: PlotConfig,
                              phi_mv: np.ndarray,
                              radii: np.ndarray,
-                             debye_l: float
+                             debye_d: float
                              ) -> float:
         """plot vertical lines"""
         # pylint: disable=too-many-arguments
@@ -258,13 +275,13 @@ class PlotPotential:
         else:
             self._plot_stern_vline_only(ax_i, configs)
         if configs.if_debye_line:
-            idx_closest = np.abs(radii - debye_l).argmin()
+            idx_closest = np.abs(radii - debye_d).argmin()
             phi_value = phi_mv[idx_closest+1]
-            self._plot_debye_lines(ax_i, phi_value, debye_l, configs)
+            self._plot_debye_lines(ax_i, phi_value, debye_d, configs)
         if configs.if_2nd_debye:
-            idx_closest = np.abs(radii - debye_l*2).argmin()
+            idx_closest = np.abs(radii - debye_d*2).argmin()
             phi_value = phi_mv[idx_closest+1]
-            self._plot_debye_lines(ax_i, phi_value, debye_l*2, configs)
+            self._plot_debye_lines(ax_i, phi_value, debye_d*2, configs)
 
         self.info_msg += f'\tPotential at Debye: {phi_value:.2f} [mV]\n'
         return phi_value
@@ -279,15 +296,15 @@ class PlotPotential:
 
     def _set_axis_ticks(self,
                         ax_i: plt.axes,
-                        debye_l: float,
+                        debye_d: float,
                         configs: PlotConfig
                         ) -> None:
         """set the axis ticks"""
         x_tick_labels: list[str] = [str(f'{i:.1f}') for i in configs.x_ticks]
-        debye_l_str: str = f'{debye_l:.2f}'
-        configs.x_ticks.extend([debye_l])
+        debye_d_str: str = f'{debye_d:.2f}'
+        configs.x_ticks.extend([debye_d])
         ax_i.set_xticks(configs.x_ticks)
-        ax_i.set_xticklabels(x_tick_labels + [debye_l_str],
+        ax_i.set_xticklabels(x_tick_labels + [debye_d_str],
                              fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
         ax_i.set_yticks(configs.y_ticks)
@@ -316,7 +333,7 @@ class PlotPotential:
     def _plot_debye_lines(self,
                           ax_i: plt.axes,
                           phi_value: float,
-                          debye_l: float,
+                          debye_d: float,
                           configs: PlotConfig,
                           order_of_plot: int = 1
                           ) -> None:
@@ -325,25 +342,25 @@ class PlotPotential:
         h_label: str = r'$_{\lambda_D}$'
         h_line_label = rf'$\psi${h_label} = {phi_value:.2f}'
         if order_of_plot == 1:
-            ax_i.vlines(x=debye_l,
+            ax_i.vlines(x=debye_d,
                         ymin=configs.y_lims[0],
                         ymax=phi_value+60,
                         color=configs.colors[4],
                         linestyle=configs.line_styles[2],
                         linewidth=elsevier_plot_tools.LINE_WIDTH)
-            ax_i.text(debye_l-0.05,
+            ax_i.text(debye_d+0.05,
                       phi_value+66,
                       h_label,
                       fontsize=elsevier_plot_tools.FONT_SIZE_PT+2)
             # Plot horizontal line from phi_value to the graph
         ax_i.hlines(y=phi_value,
                     xmin=0,
-                    xmax=debye_l+0.5,
+                    xmax=debye_d+0.5,
                     color=configs.colors[4],
                     linestyle=configs.line_styles[2],
                     linewidth=elsevier_plot_tools.LINE_WIDTH)
-        ax_i.text(debye_l-0.5,
-                  phi_value-18.0,
+        ax_i.text(debye_d-3.5,
+                  phi_value-15.0,
                   h_line_label,
                   fontsize=elsevier_plot_tools.FONT_SIZE_PT-1)
 

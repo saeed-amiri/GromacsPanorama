@@ -407,6 +407,30 @@ class ElectroStaticComputation:
                 ) - sigma
             )
 
+    def _nonlinear_grahame_ohshima_equation(self,
+                                            phi_0: float,
+                                            y_0: float,
+                                            a_kappa: float,
+                                            co_factor: float,
+                                            sigma: float
+                                            ) -> float:
+        """equation 4.25 from pp. 101, Surface and Interfacial
+        Forces, H-J Burr and M.Kappl
+        as solved by Ohshima 1982: doi.org/10.1016/0021-9797(82)90393-9
+        see M. Mass, 2022
+        """
+        # pylint: disable=too-many-arguments
+        arg: float = y_0 * phi_0
+        return (
+            co_factor * np.sinh(arg) *
+            (
+                1 +
+                1/a_kappa * (2 / (self.safe_cosh(arg)**2)) +
+                1/a_kappa**2 * (8 * self.safe_log(self.safe_cosh(arg)) /
+                                self.safe_sinh(arg)**2)
+            ) ** 0.5 - sigma
+            )[0]
+
     @staticmethod
     def safe_sinh(x_in: float
                   ) -> float:

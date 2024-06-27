@@ -428,26 +428,24 @@ class ElectroStaticComputation:
         return np.sinh(x_in)
 
     @staticmethod
-    def _nonlinear_grahame_ohshima_equation(phi_0: float,
-                                            y_0: float,
-                                            a_kappa: float,
-                                            co_factor: float,
-                                            sigma: float
-                                            ) -> float:
-        """equation 4.25 from pp. 101, Surface and Interfacial
-        Forces, H-J Burr and M.Kappl
-        as solved by Ohshima 1982: doi.org/10.1016/0021-9797(82)90393-9
-        see M. Mass, 2022
+    def safe_cosh(x_in: float
+                  ) -> float:
         """
-        arg: float = y_0 * phi_0
-        return (
-            co_factor * np.sinh(arg) *
-            (
-                1 +
-                1/a_kappa * (2 / (np.cosh(arg)**2)) +
-                1/a_kappa**2 * (8 * np.log(np.cosh(arg)) / np.sinh(arg)**2)
-            ) ** 0.5 - sigma
-            )[0]
+        Safe computation of sinh to avoid overflow.
+
+        Parameters:
+        x_in (float): Input value.
+
+        Returns:
+        float: Hyperbolic cosine of x.
+        """
+        # Cap x to avoid overflow
+        max_x = 700
+        if x_in > max_x:
+            return np.cosh(max_x)
+        if x_in < -max_x:
+            return np.cosh(-max_x)
+        return np.cosh(x_in)
 
     @staticmethod
     def safe_log1p(x_in: float

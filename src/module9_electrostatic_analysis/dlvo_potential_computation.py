@@ -103,7 +103,7 @@ class ElectroStaticComputation:
         """initiate computation by finding debye length"""
         charge_info = ChargeDensity(log, self.configs)
         self.charge, self.charge_density = \
-            charge_info.density, charge_info.density
+            charge_info.charge, charge_info.density
         if self.configs.ionic_type == 'all':
             ionic_strength: float = IonicStrengthCalculation(
                 'topol.top', log, self.configs).ionic_strength

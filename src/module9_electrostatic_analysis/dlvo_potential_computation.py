@@ -457,6 +457,14 @@ class ElectroStaticComputation:
             return np.log1p(x_in)
         return float('-inf')
 
+    @staticmethod
+    def safe_log(x_in: float
+                 ) -> float:
+        """safe computation of log1p to avoid overflow"""
+        if x_in > -1.0:
+            return np.log(x_in)
+        return float('-inf')
+
     def _non_linear_sphere_possion(self,
                                    debye_l: float,
                                    phi_0: np.ndarray,

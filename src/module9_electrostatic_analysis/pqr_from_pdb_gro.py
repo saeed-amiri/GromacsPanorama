@@ -492,7 +492,7 @@ class StructureToPqr:
                         ) -> None:
         """write the charge data to a xvg file"""
         row_sums: pd.Series = charge_df.drop(columns=['frame']).sum(axis=1)
-        self._check_total_charge(charge_df)
+        self._check_total_charge(row_sums)
         charge_df['total_charge'] = row_sums
         charge_df = charge_df.set_index('frame', drop=True)
         extra_comments: str = 'Charge in each residue'
@@ -510,7 +510,7 @@ class StructureToPqr:
     def _check_total_charge(row_sums: pd.Series
                             ) -> None:
         """check the total charge"""
-        all_whole = np.all([value % 1 == 0 for value in row_sums])
+        all_whole = all(round(value, 3) % 1 == 0 for value in row_sums)
         if not all_whole:
             raise ValueError('The total charge is not a whole number!')
 

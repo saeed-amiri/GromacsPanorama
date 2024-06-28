@@ -66,6 +66,7 @@ Saeed
 12 Feb 2024
 """
 
+import re
 import os
 import sys
 import typing
@@ -177,6 +178,7 @@ class StructureToPqr:
                      ) -> list[str]:
         """generate the pqr data and write them"""
         pqr_files_list: list[str] = []
+        charges_dfs: list[pd.DataFrame] = []
         for fname, struct in strcuture_data.items():
             self.count_residues(fname, struct)
             df_i: pd.DataFrame = self.get_atom_type(struct)
@@ -188,7 +190,9 @@ class StructureToPqr:
             self.write_pqr(fname := f'{fname}.pqr', df_i)
             pqr_files_list.append(fname)
             self.info_msg += f'\tA pqr file writen as `{fname}`\n'
+            charges_dfs.append(self._report_residue_charge(fname, df_i))
             self.info_msg += '\t' + '-' * 75 + '\n'
+        print(pd.concat(charges_dfs))
         return pqr_files_list
 
     def count_residues(self,
@@ -267,24 +271,39 @@ class StructureToPqr:
 
         df_recombined = pd.concat([df_np, df_oda, df_solution])
         df_recombined = df_recombined.sort_index()
-        self._report_residue_charge(df_recombined)
         self.info_msg += ('\tThe total charge of this portion is: '
                           f'`{sum(df_recombined["charge"]):.3f}`\n')
         return df_recombined
 
     def _report_residue_charge(self,
+                               fname: str,
                                df_recombined: pd.DataFrame
                                ) -> None:
         """log all the charges for each residues"""
+        resdiue_list: list[str] = self.configs.res_number_dict.keys()
+        charge_df: pd.DataFrame = \
+            pd.DataFrame(columns=['frame'].extend(resdiue_list))
+        charge_df['frame'] = [self.extract_number_from_filename(fname)]
         self.info_msg += '\tThe charges in each residue:\n'
-        for res in self.configs.res_number_dict.keys():
+        for res in resdiue_list:
             df_i: pd.DataFrame = \
                 df_recombined[df_recombined['residue_name'] == res]
             total_charge: float = sum(df_i['charge'])
+            charge_df[res] = [total_charge]
             self.info_msg += f'\t\t{res}: {total_charge:.3f}\n'
             if self.configs.write_debug:
                 df_i.to_csv(f'{res}_charge_debug', sep=' ')
             del df_i
+        return charge_df
+
+    @staticmethod
+    def extract_number_from_filename(filename: str
+                                     ) -> int:
+        """extract the number from the filename"""
+        match = re.search(r'(\d+)', filename)
+        if match:
+            return int(match.group(1))
+        raise ValueError(f"No integer found in {filename}")
 
     def _set_oda_charge(self,
                         df_oda: pd.DataFrame

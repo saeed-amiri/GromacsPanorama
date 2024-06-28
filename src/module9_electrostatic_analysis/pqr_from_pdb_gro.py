@@ -78,7 +78,8 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
-from common import logger, itp_to_df, pdb_to_df, gro_to_df, my_tools, cpuconfig
+from common import logger, itp_to_df, pdb_to_df, gro_to_df, my_tools, \
+    cpuconfig, file_writer
 from common.colors_text import TextColor as bcolors
 
 from module9_electrostatic_analysis import parse_charmm_data, \
@@ -94,6 +95,7 @@ class FileConfig:
     pqr_file: str = field(init=False)  # The output file to write, ext.: pqr
     accebtable_file_type: list[str] = \
         field(default_factory=lambda: ['gro', 'pdb'])
+    charge_xvg_file: str = 'charge_df.xvg'
 
 
 @dataclass
@@ -171,7 +173,8 @@ class StructureToPqr:
             charges_df: pd.DataFrame = \
                 self.generate_pqr_parallel(strcuture_data, log)
         else:
-            charges_df: pd.DataFrame = self.generate_pqr(strcuture_data, log)
+            charges_df = self.generate_pqr(strcuture_data, log)
+        self.write_charge_df(charges_df, log)
 
     def compute_radius(self) -> pd.DataFrame:
         """compute the radius based on sigma"""
@@ -482,6 +485,34 @@ class StructureToPqr:
                 f_w.write(line)
             f_w.write('TER\n')
             f_w.write('END\n')
+
+    def write_charge_df(self,
+                        charge_df: pd.DataFrame,
+                        log: logger.logging.Logger
+                        ) -> None:
+        """write the charge data to a xvg file"""
+        row_sums: pd.Series = charge_df.drop(columns=['frame']).sum(axis=1)
+        self._check_total_charge(charge_df)
+        charge_df['total_charge'] = row_sums
+        charge_df = charge_df.set_index('frame', drop=True)
+        extra_comments: str = 'Charge in each residue'
+        file_writer.write_xvg(charge_df,
+                              log,
+                              fname=self.configs.charge_xvg_file,
+                              extra_comments=extra_comments,
+                              xaxis_label='Frame index',
+                              yaxis_label='Charge (e)',
+                              title='Charge information')
+        self.info_msg += \
+            f'\tcharge_df was written to `{self.configs.charge_xvg_file}`\n'
+
+    @staticmethod
+    def _check_total_charge(row_sums: pd.Series
+                            ) -> None:
+        """check the total charge"""
+        all_whole = np.all([value % 1 == 0 for value in row_sums])
+        if not all_whole:
+            raise ValueError('The total charge is not a whole number!')
 
     def check_ff_files(self,
                        log: logger.logging.Logger

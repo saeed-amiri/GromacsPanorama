@@ -133,6 +133,7 @@ class AllConfig(FileConfig, FFTypeConfig, NumerInResidue):
     n_cores: int = 1
     compute_radius: bool = True
     write_debug: bool = False
+    run_parallel: bool = True
 
 
 class StructureToPqr:
@@ -165,8 +166,11 @@ class StructureToPqr:
         self.file_type: str = strcuture_info.file_type
         self.force_field = ReadForceFieldFile(log)
         self.ff_radius: pd.DataFrame = self.compute_radius()
-        self.set_number_of_cores(log, len(strcuture_data))
-        self.pqr_files_list = self.generate_pqr(strcuture_data, log)
+        if self.configs.run_parallel:
+            self.set_number_of_cores(log, len(strcuture_data))
+            self.generate_pqr_parallel(strcuture_data, log)
+        else:
+            self.pqr_files_list = self.generate_pqr(strcuture_data, log)
 
     def compute_radius(self) -> pd.DataFrame:
         """compute the radius based on sigma"""
@@ -191,23 +195,52 @@ class StructureToPqr:
                      log: logger.logging.Logger
                      ) -> list[str]:
         """generate the pqr data and write them"""
-        pqr_files_list: list[str] = []
         charges_dfs: list[pd.DataFrame] = []
         for fname, struct in strcuture_data.items():
-            self.count_residues(fname, struct)
-            df_i: pd.DataFrame = self.get_atom_type(struct)
-            df_i = self.set_radius(df_i)
-            df_i = self.set_charge(df_i, log)
-            df_i = self.assign_chain_ids(df_i)
-            df_i = self.mk_pqr_df(df_i)
-            df_i = self.convert_nm_ang(self.file_type, df_i)
-            self.write_pqr(fname := f'{fname}.pqr', df_i)
-            pqr_files_list.append(fname)
+            charge_df_i: pd.DataFrame = \
+                self._process_structure((fname, struct, log))
+            charges_dfs.append(charge_df_i)
             self.info_msg += f'\tA pqr file writen as `{fname}`\n'
-            charges_dfs.append(self._report_residue_charge(fname, df_i))
             self.info_msg += '\t' + '-' * 75 + '\n'
         charges_df: pd.DataFrame = pd.concat(charges_dfs)
-        return pqr_files_list
+        return charges_df
+
+    def generate_pqr_parallel(self,
+                              structure_data: dict[str, pd.DataFrame],
+                              log: logger.logging.Logger
+                              ) -> None:
+        """generate the pqr data and write them in parallel"""
+        charges_dfs = []
+
+        # Prepare data for multiprocessing
+        pool_data = [(fname, struct, log) for
+                     fname, struct in structure_data.items()]
+
+        with Pool(processes=self.configs.n_cores) as pool:
+            results = pool.map(self._process_structure, pool_data)
+
+        for charge_df in results:
+            charges_dfs.append(charge_df)
+
+        charges_df = pd.concat(charges_dfs)
+
+    def _process_structure(self,
+                           fname_struct: tuple[
+                               str, pd.DataFrame, logger.logging.Logger],
+                           ) -> pd.DataFrame:
+        """process the structure data"""
+        fname, struct, log = fname_struct
+        self.count_residues(fname, struct)
+        df_i: pd.DataFrame = self.get_atom_type(struct)
+        df_i = self.set_radius(df_i)
+        df_i = self.set_charge(df_i, log)
+        df_i = self.assign_chain_ids(df_i)
+        df_i = self.mk_pqr_df(df_i)
+        df_i = self.convert_nm_ang(self.file_type, df_i)
+        pqr_fname = f'{fname}.pqr'
+        self.write_pqr(pqr_fname, df_i)
+        charge_df = self._report_residue_charge(pqr_fname, df_i)
+        return charge_df
 
     def count_residues(self,
                        fname: str,
@@ -304,7 +337,6 @@ class StructureToPqr:
                 df_recombined[df_recombined['residue_name'] == res]
             total_charge: float = sum(df_i['charge'])
             charge_df[res] = [total_charge]
-            self.info_msg += f'\t\t{res}: {total_charge:.3f}\n'
             if self.configs.write_debug:
                 df_i.to_csv(f'{res}_charge_debug', sep=' ')
             del df_i

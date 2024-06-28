@@ -519,17 +519,19 @@ class StructureToPqr:
             f_w.write('END\n')
 
     def write_df_to_xvg(self,
-                        charge_df: pd.DataFrame,
+                        df_i: pd.DataFrame,
                         log: logger.logging.Logger,
                         df_type: str
                         ) -> None:
         """write the charge data to a xvg file"""
-        row_sums: pd.Series = charge_df.drop(columns=['frame']).sum(axis=1)
+        # sort the dataframe based on the frame
+        df_i = df_i.sort_values(by='frame')
+        row_sums: pd.Series = df_i.drop(columns=['frame']).sum(axis=1)
         self._check_total_charge(row_sums)
-        charge_df[f'total_{df_type}'] = row_sums
-        charge_df = charge_df.set_index('frame', drop=True)
+        df_i[f'total_{df_type}'] = row_sums
+        df_i = df_i.set_index('frame', drop=True)
         extra_comments: str = f'{df_type} in each residue'
-        file_writer.write_xvg(charge_df,
+        file_writer.write_xvg(df_i,
                               log,
                               fname := self.configs.out_xvg_file[df_type],
                               extra_comments=extra_comments,

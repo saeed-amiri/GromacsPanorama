@@ -125,7 +125,7 @@ class NumerInResidue:
             "D10": 32,
             "ODN": 59,
             'COR': 4356,
-            'APT': 0
+            'APT': 4726
         })
 
 
@@ -162,6 +162,8 @@ class StructureToPqr:
                  log: logger.logging.Logger
                  ) -> pd.DataFrame:
         """get all the infos"""
+        charges_df: pd.DataFrame
+        numbers_df: pd.DataFrame
         strcuture_info: "ReadInputStructureFile" = ReadInputStructureFile(
             log, self.configs.structure_files)
         strcuture_data: dict[str, pd.DataFrame] = strcuture_info.structure_dict
@@ -170,11 +172,12 @@ class StructureToPqr:
         self.ff_radius: pd.DataFrame = self.compute_radius()
         if self.configs.run_parallel:
             self.set_number_of_cores(log, len(strcuture_data))
-            charges_df: pd.DataFrame = \
+            charges_df, numbers_df = \
                 self.generate_pqr_parallel(strcuture_data, log)
         else:
-            charges_df = self.generate_pqr(strcuture_data, log)
+            charges_df, numbers_df = self.generate_pqr(strcuture_data, log)
         self.write_charge_df(charges_df, log)
+        print(numbers_df)
 
     def compute_radius(self) -> pd.DataFrame:
         """compute the radius based on sigma"""
@@ -197,17 +200,23 @@ class StructureToPqr:
     def generate_pqr(self,
                      strcuture_data: dict[str, pd.DataFrame],
                      log: logger.logging.Logger
-                     ) -> list[str]:
+                     ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """generate the pqr data and write them"""
         charges_dfs: list[pd.DataFrame] = []
+        numbers_dfs: list[pd.DataFrame] = []
+        charge_df_i: pd.DataFrame
+        number_df_i: pd.DataFrame
+
         for fname, struct in strcuture_data.items():
-            charge_df_i: pd.DataFrame = \
+            charge_df_i, number_df_i = \
                 self._process_structure((fname, struct, log))
             charges_dfs.append(charge_df_i)
+            numbers_dfs.append(number_df_i)
             self.info_msg += f'\tA pqr file writen as `{fname}`\n'
             self.info_msg += '\t' + '-' * 75 + '\n'
         charges_df: pd.DataFrame = pd.concat(charges_dfs)
-        return charges_df
+        numbers_df: pd.DataFrame = pd.concat(numbers_dfs)
+        return charges_df, numbers_df
 
     def generate_pqr_parallel(self,
                               structure_data: dict[str, pd.DataFrame],
@@ -215,6 +224,7 @@ class StructureToPqr:
                               ) -> pd.DataFrame:
         """generate the pqr data and write them in parallel"""
         charges_dfs = []
+        numbers_dfs = []
 
         # Prepare data for multiprocessing
         pool_data = [(fname, struct, log) for
@@ -223,11 +233,13 @@ class StructureToPqr:
         with Pool(processes=self.configs.n_cores) as pool:
             results = pool.map(self._process_structure, pool_data)
 
-        for charge_df in results:
+        for charge_df, number_df in results:
             charges_dfs.append(charge_df)
+            numbers_dfs.append(number_df)
 
         charges_df = pd.concat(charges_dfs)
-        return charges_df
+        numbers_df = pd.concat(numbers_dfs)
+        return charges_df, numbers_df
 
     def _process_structure(self,
                            fname_struct: tuple[
@@ -330,22 +342,40 @@ class StructureToPqr:
     def _report_residue_charge(self,
                                fname: str,
                                df_recombined: pd.DataFrame
-                               ) -> pd.DataFrame:
+                               ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """log all the charges for each residues"""
         resdiue_list: list[str] = list(self.configs.res_number_dict.keys())
+
         charge_df: pd.DataFrame = \
             pd.DataFrame(columns=['frame'] + resdiue_list)
-        charge_df['frame'] = [self.extract_number_from_filename(fname)]
+        numbers_df: pd.DataFrame = \
+            pd.DataFrame(columns=['frame'] + resdiue_list)
+
+        charge_df['frame'] = [ind := self.extract_number_from_filename(fname)]
+        numbers_df['frame'] = [ind]
+
         self.info_msg += '\tThe charges in each residue:\n'
+
         for res in resdiue_list:
             df_i: pd.DataFrame = \
                 df_recombined[df_recombined['residue_name'] == res]
             total_charge: float = sum(df_i['charge'])
+            total_atoms: int = len(df_i)
+
+            try:
+                nr_res = total_atoms / self.configs.res_number_dict[res]
+            except ZeroDivisionError:
+                nr_res = 0
+
             charge_df[res] = [total_charge]
+            numbers_df[res] = [nr_res]
+
             if self.configs.write_debug:
                 df_i.to_csv(f'{res}_charge_debug', sep=' ')
+
             del df_i
-        return charge_df
+
+        return charge_df, numbers_df
 
     @staticmethod
     def extract_number_from_filename(filename: str

@@ -72,12 +72,13 @@ import sys
 import typing
 import string
 from collections import Counter
+from multiprocessing import Pool
 from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
 
-from common import logger, itp_to_df, pdb_to_df, gro_to_df, my_tools
+from common import logger, itp_to_df, pdb_to_df, gro_to_df, my_tools, cpuconfig
 from common.colors_text import TextColor as bcolors
 
 from module9_electrostatic_analysis import parse_charmm_data, \
@@ -129,6 +130,7 @@ class NumerInResidue:
 @dataclass
 class AllConfig(FileConfig, FFTypeConfig, NumerInResidue):
     """set all the configs"""
+    n_cores: int = 1
     compute_radius: bool = True
     write_debug: bool = False
 
@@ -163,6 +165,7 @@ class StructureToPqr:
         self.file_type: str = strcuture_info.file_type
         self.force_field = ReadForceFieldFile(log)
         self.ff_radius: pd.DataFrame = self.compute_radius()
+        self.set_number_of_cores(log, len(strcuture_data))
         self.pqr_files_list = self.generate_pqr(strcuture_data, log)
 
     def compute_radius(self) -> pd.DataFrame:
@@ -171,6 +174,17 @@ class StructureToPqr:
         radius = ff_radius['sigma'] * 2**(1/6) / 2
         ff_radius['radius'] = radius
         return ff_radius
+
+    def set_number_of_cores(self,
+                            log: logger.logging.Logger,
+                            n_files: int
+                            ) -> None:
+        """set the number of cores"""
+        self.configs.n_cores = cpuconfig.ConfigCpuNr(log).cores_nr
+        if self.configs.n_cores > n_files:
+            self.configs.n_cores = n_files
+            self.info_msg += \
+                f'\tThe number of cores was set to {self.configs.n_cores}\n'
 
     def generate_pqr(self,
                      strcuture_data: dict[str, pd.DataFrame],
@@ -192,7 +206,7 @@ class StructureToPqr:
             self.info_msg += f'\tA pqr file writen as `{fname}`\n'
             charges_dfs.append(self._report_residue_charge(fname, df_i))
             self.info_msg += '\t' + '-' * 75 + '\n'
-        print(pd.concat(charges_dfs))
+        charges_df: pd.DataFrame = pd.concat(charges_dfs)
         return pqr_files_list
 
     def count_residues(self,

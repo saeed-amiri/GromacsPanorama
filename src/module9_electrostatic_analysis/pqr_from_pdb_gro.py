@@ -168,9 +168,10 @@ class StructureToPqr:
         self.ff_radius: pd.DataFrame = self.compute_radius()
         if self.configs.run_parallel:
             self.set_number_of_cores(log, len(strcuture_data))
-            self.generate_pqr_parallel(strcuture_data, log)
+            charges_df: pd.DataFrame = \
+                self.generate_pqr_parallel(strcuture_data, log)
         else:
-            self.pqr_files_list = self.generate_pqr(strcuture_data, log)
+            charges_df: pd.DataFrame = self.generate_pqr(strcuture_data, log)
 
     def compute_radius(self) -> pd.DataFrame:
         """compute the radius based on sigma"""
@@ -208,7 +209,7 @@ class StructureToPqr:
     def generate_pqr_parallel(self,
                               structure_data: dict[str, pd.DataFrame],
                               log: logger.logging.Logger
-                              ) -> None:
+                              ) -> pd.DataFrame:
         """generate the pqr data and write them in parallel"""
         charges_dfs = []
 
@@ -223,6 +224,7 @@ class StructureToPqr:
             charges_dfs.append(charge_df)
 
         charges_df = pd.concat(charges_dfs)
+        return charges_df
 
     def _process_structure(self,
                            fname_struct: tuple[

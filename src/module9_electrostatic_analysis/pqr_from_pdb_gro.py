@@ -331,15 +331,14 @@ class StructureToPqr:
                     np_flag = False
                 atom_id: int = int(row['atom_id'] - np_id_zero + 1)
                 res_nr: int = row['residue_number']
+
                 try:
-                    charge = \
-                        ff_df[(ff_df['atomnr'] == atom_id) &
-                              (ff_df['resnr'] == res_nr)
-                              ]['charge'].values[0]
+                    charge = ff_df[
+                        (ff_df['atomnr'] == atom_id) &
+                        (ff_df['resnr'] == res_nr)]['charge'].values[0]
                 except IndexError:
-                    charge = \
-                        ff_df[
-                            ff_df['atomnr'] == atom_id]['charge'].values[0]
+                    charge = ff_df[
+                        ff_df['atomnr'] == atom_id]['charge'].values[0]
                 df_np.at[index, 'charge'] = float(charge)
             self.info_msg += ('\tTotal charge of the np section is: '
                               f'{sum(df_np["charge"]):.3f}\n')

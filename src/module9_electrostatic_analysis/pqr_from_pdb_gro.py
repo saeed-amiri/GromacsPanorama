@@ -16,7 +16,7 @@ Main Components:
     - AllConfig: Inherits from FileConfig and FFTypeConfig to
     consolidate all configuration settings into a single, accessible
     object.
-    - PdbToPqr: The core class responsible for orchestrating the
+    - StructureToPqr: The core class responsible for orchestrating the
     conversion process, including reading input files, applying force
     field parameters (charges and radii), and generating the output
     PQR file.
@@ -35,7 +35,7 @@ Workflow:
     1. Initialize the script with a list of structure files and a
     logging mechanism.
     2. Configuration settings (file names, force field mappings) are
-    defined and passed to the PdbToPqr class.
+    defined and passed to the StructureToPqr class.
     3. Structural input files are read, and relevant atomistic data
     (atom types, positions) are extracted.
     4. Force field parameters (atomic charges and radii) are applied
@@ -132,12 +132,12 @@ class AllConfig(FileConfig, FFTypeConfig, NumerInResidue):
     write_debug: bool = False
 
 
-class PdbToPqr:
+class StructureToPqr:
     """
     preapre the file with positions, charges and radii
     """
 
-    info_msg: str = 'Message from PdbToPqr:\n'
+    info_msg: str = 'Message from StructureToPqr:\n'
     configs: AllConfig
     force_field: "ReadForceFieldFile"
     pqr_files_list: list[str]  # Name of the pqr files outputs
@@ -435,7 +435,7 @@ class PdbToPqr:
                   log: logger.logging.Logger  # To log
                   ) -> None:
         """write and log messages"""
-        print(f'{bcolors.OKCYAN}{PdbToPqr.__name__}:\n'
+        print(f'{bcolors.OKCYAN}{StructureToPqr.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
 
@@ -626,5 +626,5 @@ class ReadForceFieldFile:
 
 
 if __name__ == '__main__':
-    PdbToPqr(
+    StructureToPqr(
         structure_files=sys.argv[1:], log=logger.setup_logger('pdb2pqr.log'))

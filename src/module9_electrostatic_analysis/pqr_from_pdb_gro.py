@@ -278,11 +278,11 @@ class StructureToPqr:
     def _report_residue_charge(self,
                                fname: str,
                                df_recombined: pd.DataFrame
-                               ) -> None:
+                               ) -> pd.DataFrame:
         """log all the charges for each residues"""
-        resdiue_list: list[str] = self.configs.res_number_dict.keys()
+        resdiue_list: list[str] = list(self.configs.res_number_dict.keys())
         charge_df: pd.DataFrame = \
-            pd.DataFrame(columns=['frame'].extend(resdiue_list))
+            pd.DataFrame(columns=['frame'] + resdiue_list)
         charge_df['frame'] = [self.extract_number_from_filename(fname)]
         self.info_msg += '\tThe charges in each residue:\n'
         for res in resdiue_list:

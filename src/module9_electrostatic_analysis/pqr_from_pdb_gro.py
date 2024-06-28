@@ -95,7 +95,9 @@ class FileConfig:
     pqr_file: str = field(init=False)  # The output file to write, ext.: pqr
     accebtable_file_type: list[str] = \
         field(default_factory=lambda: ['gro', 'pdb'])
-    charge_xvg_file: str = 'charge_df.xvg'
+    out_xvg_file: dict[str, str] = field(
+        default_factory=lambda: {'charge': 'charge_df.xvg',
+                                 'number': 'number_df.xvg'})
 
 
 @dataclass
@@ -176,13 +178,13 @@ class StructureToPqr:
                 self.generate_pqr_parallel(strcuture_data, log)
         else:
             charges_df, numbers_df = self.generate_pqr(strcuture_data, log)
-        self.write_charge_df(charges_df, log)
-        print(numbers_df)
+        self.write_df_to_xvg(charges_df, log, 'charge')
+        self.write_df_to_xvg(numbers_df, log, 'number')
 
     def compute_radius(self) -> pd.DataFrame:
         """compute the radius based on sigma"""
         ff_radius: pd.DataFrame = self.force_field.ff_sigma.copy()
-        radius = ff_radius['sigma'] * 2**(1/6) / 2
+        radius = ff_radius['sigma'] * 2**(1/6) / 2.0
         ff_radius['radius'] = radius
         return ff_radius
 
@@ -516,25 +518,26 @@ class StructureToPqr:
             f_w.write('TER\n')
             f_w.write('END\n')
 
-    def write_charge_df(self,
+    def write_df_to_xvg(self,
                         charge_df: pd.DataFrame,
-                        log: logger.logging.Logger
+                        log: logger.logging.Logger,
+                        df_type: str
                         ) -> None:
         """write the charge data to a xvg file"""
         row_sums: pd.Series = charge_df.drop(columns=['frame']).sum(axis=1)
         self._check_total_charge(row_sums)
-        charge_df['total_charge'] = row_sums
+        charge_df[f'total_{df_type}'] = row_sums
         charge_df = charge_df.set_index('frame', drop=True)
-        extra_comments: str = 'Charge in each residue'
+        extra_comments: str = f'{df_type} in each residue'
         file_writer.write_xvg(charge_df,
                               log,
-                              fname=self.configs.charge_xvg_file,
+                              fname := self.configs.out_xvg_file[df_type],
                               extra_comments=extra_comments,
                               xaxis_label='Frame index',
-                              yaxis_label='Charge (e)',
-                              title='Charge information')
+                              yaxis_label=f'"{df_type}" in each residue',
+                              title=f'{df_type} information')
         self.info_msg += \
-            f'\tcharge_df was written to `{self.configs.charge_xvg_file}`\n'
+            f'\tData was written to `{fname}`\n'
 
     @staticmethod
     def _check_total_charge(row_sums: pd.Series

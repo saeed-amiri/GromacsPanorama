@@ -83,16 +83,18 @@ class ChargeDensity:
                             cap_surface_meter_squre: np.ndarray
                             ) -> None:
         """compute the charge density of the NP core"""
-        np_core_charge_density_e_per_nanometer: float = (
-            configs.nr_aptes_charges - configs.np_core_charge
-            ) / cap_surface_meter_squre.mean() / 1e18
+        net_charge_on_apt_core: int = \
+            configs.all_aptes_charges + configs.np_core_charge
+        np_core_charge_density_e_per_nanometer: float = \
+            (net_charge_on_apt_core) / cap_surface_meter_squre.mean() / 1e18
 
         np_core_charge_density_columb_per_meter: float = \
-            (configs.nr_aptes_charges - configs.np_core_charge) *\
+            (net_charge_on_apt_core) *\
             configs.phi_parameters['e_charge'] / cap_surface_meter_squre.mean()
 
         self.info_msg += (
             f'\tThe charge density of the NP core is:\n'
+            f'\t\t{net_charge_on_apt_core = :.3f} [e]\n'
             f'\t\t{np_core_charge_density_columb_per_meter = :.3f} [C/m^2]\n'
             f'\t\t{np_core_charge_density_e_per_nanometer = :.3f} [e/nm^2]\n'
             )

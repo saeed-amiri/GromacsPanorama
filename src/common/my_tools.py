@@ -29,9 +29,9 @@ def check_file_exist(fname: str,  # Name of the file to check
         else:
             log.warning('\tThere was a problem in reading the file; return\n')
             return False
-    else:
-        log.info(msg := f'`{fname}` exist.')
-        print(f'{bcolors.OKBLUE}my_tools:\n\t{msg}{bcolors.ENDC}\n')
+    log.info(msg := f'`{fname}` exist.')
+    print(f'{bcolors.OKBLUE}my_tools:\n\t{msg}{bcolors.ENDC}\n')
+    return None
 
 
 def check_file_extension(fname: str,  # Name of the file to check
@@ -110,6 +110,7 @@ def write_xvg(df_i: pd.DataFrame,
     Raises:
         ValueError: If the DataFrame has no columns.
     """
+    # pylint: disable=too-many-arguments
     if df_i is None:
         log.error(msg := f'{__name__}\tThe DataFarme is `None`!\n')
         sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
@@ -149,9 +150,10 @@ def write_xvg(df_i: pd.DataFrame,
                         comment_lines + header_lines + legend_lines])
         df_i.to_csv(f_w, sep=' ', index=write_index, header=None, na_rep='NaN')
 
+
 def read_topol_resnr(fname: str,
-                    log: logger.logging.Logger
-                    ) -> dict[str, int]:
+                     log: logger.logging.Logger
+                     ) -> dict[str, int]:
     """read the topol file and retrun the number of each residue"""
     check_file_exist(fname, log)
     molecules: bool = False
@@ -174,7 +176,8 @@ def read_topol_resnr(fname: str,
     log.info(msg := f'`{__name__}`: `{fname}` is read:\n\t{residue_nr = }\n')
     print(f'{bcolors.OKBLUE}my_tools:\n\t{msg}{bcolors.ENDC}\n')
     return residue_nr
-        
+
+
 def get_tpr_fname(fname: str,
                   log: logger.logging.Logger
                   ) -> str:
@@ -185,3 +188,19 @@ def get_tpr_fname(fname: str,
     log.info(msg := f'`{__name__}`: tpr file is `{tpr_fname}` .\n')
     print(f'{bcolors.OKBLUE}my_tools:\n\t{msg}{bcolors.ENDC}\n')
     return tpr_fname
+
+
+def check_int_in_filename(in_str: str) -> bool:
+    """check if the string contains an integer"""
+    return any(i.isdigit() for i in in_str)
+
+
+def get_number_from_filename(f_name: str) -> int:
+    """get the number from the file name"""
+    print(f_name)
+    return int(re.search(r'\d+', f_name).group())
+
+
+def get_files_with_extension(extension: str) -> list[str]:
+    """get the list of files with the given extension"""
+    return [f for f in os.listdir() if f.endswith(extension)]

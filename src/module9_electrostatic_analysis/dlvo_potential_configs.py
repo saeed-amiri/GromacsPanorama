@@ -12,10 +12,11 @@ from common import elsevier_plot_tools
 class FileConfig:
     """set the name of the input files"""
     charge_fname: str = 'charge_df.xvg'
+    total_charge_coloumn: str = 'total_charge'
     contact_fname: str = 'contact.xvg'
     fout: str = 'potential.xvg'
     radial_avg_files: dict[str, str] = field(default_factory=lambda: {
-        'numerical solution': 'radial_average_potential_nonlinear.xvg'})
+        'numerical solution': 'radial_average_potential_nonlinear_3_2.xvg'})
     # 'numerical, linear': 'radial_average_potential_linear.xvg'})
 
 
@@ -28,7 +29,7 @@ class ParameterConfig:
     """
     # pylint: disable=too-many-instance-attributes
     np_radius: float = 30.0  # In Ångströms
-    stern_layer: float = 30.0  # In Ångströms
+    stern_layer: float = 34.0  # In Ångströms
     avg_contact_angle: float = 38.0  # In Degrees
     np_core_charge: int = -8  # Number of charge inside the NP
     all_aptes_charges: int = 322  # Protonated APTES
@@ -109,6 +110,7 @@ class PlotConfig(FileConfig):
     y_ticks: list[float] = field(default_factory=lambda: [])
 
     legend_loc: str = 'upper right'
+    if_np_radius_line: bool = True
     if_stern_line: bool = False
     if_debye_line: bool = True
     if_2nd_debye: bool = False

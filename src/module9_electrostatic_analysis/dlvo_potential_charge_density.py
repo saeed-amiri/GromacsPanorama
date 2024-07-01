@@ -43,13 +43,7 @@ class ChargeDensity:
         cap_surface_meter_squre: np.ndarray = \
             self._compute_under_water_area(configs.np_radius, contact_angle)
 
-        np_cap_charge_density_e_per_nanometer: float = (
-            configs.nr_aptes_charges - configs.np_core_charge
-            ) / cap_surface_meter_squre.mean() / 1e18
-
-        np_cap_charge_density_columb_per_meter: float = \
-            (configs.nr_aptes_charges - configs.np_core_charge) *\
-            configs.phi_parameters['e_charge'] / cap_surface_meter_squre.mean()
+        self._np_core_apt_charge(configs, cap_surface_meter_squre)
 
         density: np.ndarray = (charge * configs.phi_parameters['e_charge']) /\
             cap_surface_meter_squre
@@ -59,8 +53,6 @@ class ChargeDensity:
             f'\t`{cap_surface_meter_squre.mean()*1e18 = :.3f}` [nm^2]\n'
             f'\tAve. `charge_{density.mean() = :.3f}` [C/m^2] or [As/m^2]\n'
             f'\tThe charge density of the NP in the water is:\n'
-            f'\t{np_cap_charge_density_columb_per_meter = :.3f} [C/m^2]\n'
-            f'\t{np_cap_charge_density_e_per_nanometer = :.3f} [e/nm^2]\n'
             )
         return charge, density
 
@@ -85,6 +77,25 @@ class ChargeDensity:
             contact_angle = np.zeros(charge.shape)
             contact_angle += configs.avg_contact_angle
         return contact_angle
+
+    def _np_core_apt_charge(self,
+                            configs: AllConfig,
+                            cap_surface_meter_squre: np.ndarray
+                            ) -> None:
+        """compute the charge density of the NP core"""
+        np_core_charge_density_e_per_nanometer: float = (
+            configs.nr_aptes_charges - configs.np_core_charge
+            ) / cap_surface_meter_squre.mean() / 1e18
+
+        np_core_charge_density_columb_per_meter: float = \
+            (configs.nr_aptes_charges - configs.np_core_charge) *\
+            configs.phi_parameters['e_charge'] / cap_surface_meter_squre.mean()
+
+        self.info_msg += (
+            f'\tThe charge density of the NP core is:\n'
+            f'\t\t{np_core_charge_density_columb_per_meter = :.3f} [C/m^2]\n'
+            f'\t\t{np_core_charge_density_e_per_nanometer = :.3f} [e/nm^2]\n'
+            )
 
     @staticmethod
     def _compute_under_water_area(np_radius: float,

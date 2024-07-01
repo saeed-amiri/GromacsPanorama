@@ -548,7 +548,9 @@ class StructureToPqr:
         """check the total charge"""
         all_whole = all(round(value, 3) % 1 == 0 for value in row_sums)
         if not all_whole:
-            raise ValueError('The total charge is not a whole number!')
+            raise ValueError(
+                f'\n{bcolors.FAIL}The total charge is not a whole number!'
+                f'{bcolors.ENDC}')
 
     def check_ff_files(self,
                        log: logger.logging.Logger

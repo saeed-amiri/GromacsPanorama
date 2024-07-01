@@ -531,7 +531,7 @@ class StructureToPqr:
         self._check_total_charge(row_sums)
         df_i[f'total_{df_type}'] = row_sums
         df_i = df_i.set_index('frame', drop=True)
-        extra_comments: str = f'{df_type} in each residue'
+        extra_comments: str = f'# {df_type} in each residue'
         file_writer.write_xvg(df_i,
                               log,
                               fname := self.configs.out_xvg_file[df_type],

@@ -107,6 +107,7 @@ class FFTypeConfig:
         default_factory=lambda: {
             "SOL": 'TIP3',
             "CLA": 'CLA',
+            "POT": 'POT',
             "D10": 'D10_charmm',
             "ODN": 'ODAp_charmm',
             'APT': 'np_info',

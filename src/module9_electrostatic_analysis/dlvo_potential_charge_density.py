@@ -35,7 +35,8 @@ class ChargeDensity:
                      ) -> tuple[np.ndarray, np.ndarray]:
         """read the input files and compute the charge desnity"""
         charge: np.ndarray = \
-            self._get_column(configs.charge_fname, log, column='total')
+            self._get_column(configs.charge_fname,
+                             log, column=configs.total_charge_coloumn)
         try:
             contact_angle: np.ndarray = \
                 self._get_column(configs.contact_fname,
@@ -53,11 +54,14 @@ class ChargeDensity:
 
         cap_surface: np.ndarray = \
             self._compute_under_water_area(configs.np_radius, contact_angle)
+
         np_cap_charge_density: float = \
             (configs.nr_aptes_charges - configs.np_core_charge) *\
             configs.phi_parameters['e_charge'] / cap_surface.mean()
+
         density: np.ndarray = \
             (charge * configs.phi_parameters['e_charge']) / cap_surface
+
         self.info_msg += (
             f'\tAve. `{charge.mean() = :.3f}` [e]\n'
             f'\t`{cap_surface.mean()*1e18 = :.3f}` [nm^2]\n'

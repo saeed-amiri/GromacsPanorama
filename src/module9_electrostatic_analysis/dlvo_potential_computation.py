@@ -179,8 +179,31 @@ class ElectroStaticComputation:
                       ) -> np.ndarray:
         """get the value of the phi_0 based on the configuration"""
         phi_0_compute = DLVOPotentialPhiZero(
-            debye_l, self.charge_density, self.charge, self.configs, log)
+            debye_length=debye_l,
+            charge=self.charge,
+            charge_density=self.charge_density,
+            configs=self.configs,
+            log=log)
+        if self.configs.remove_phi_0_density_0:
+            phi_0_compute_density_0: np.ndarray = \
+                self.remove_zero_density(debye_l, log)
+            return phi_0_compute.phi_0 - phi_0_compute_density_0
         return phi_0_compute.phi_0
+
+    def remove_zero_density(self,
+                            debye_l: float,
+                            log: logger.logging.Logger
+                            ) -> np.ndarray:
+        """remove the potentioal of zero density from the phi_0"""
+        zero_density: np.ndarray = np.zeros(self.charge_density.shape)
+        zero_charge: np.ndarray = np.zeros(self.charge.shape)
+        phi_0_at_denisty_0 = DLVOPotentialPhiZero(
+            debye_length=debye_l,
+            charge_density=zero_density,
+            charge=zero_charge,
+            configs=self.configs,
+            log=log)
+        return phi_0_at_denisty_0.phi_0
 
     def _linear_planar_possion(self,
                                debye_l: float,

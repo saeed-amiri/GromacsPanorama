@@ -53,9 +53,8 @@ class ChargeDensity:
             f'\tAve. `{charge.mean() = :.3f}` [e]\n'
             f'\t`{cap_surface_meter_squre.mean()*1e18 = :.3f}` [nm^2]\n'
             f'\tAve. `{e_density.mean() / 1e18 = :.3f}` [e/nm^2]\n'
-            f'\tAve. `charge_{density.mean() = :.3f}` [C/m^2] or [As/m^2]\n'
-            f'\tThe charge density of the NP in the water is:\n'
-            )
+            f'\tAve. `charge_{density.mean() = :.3f}` [C/m^2] or [As/m^2]\n')
+
         return charge, density
 
     def _get_contact_angle_density(self,

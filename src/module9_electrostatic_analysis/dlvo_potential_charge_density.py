@@ -45,12 +45,14 @@ class ChargeDensity:
 
         self._np_core_apt_charge(configs, cap_surface_meter_squre)
 
-        density: np.ndarray = (charge * configs.phi_parameters['e_charge']) /\
-            cap_surface_meter_squre
+        e_density: np.ndarray = charge / cap_surface_meter_squre
+
+        density: np.ndarray = (e_density * configs.phi_parameters['e_charge'])
 
         self.info_msg += (
             f'\tAve. `{charge.mean() = :.3f}` [e]\n'
             f'\t`{cap_surface_meter_squre.mean()*1e18 = :.3f}` [nm^2]\n'
+            f'\tAve. `{e_density.mean() / 1e18 = :.3f}` [e/nm^2]\n'
             f'\tAve. `charge_{density.mean() = :.3f}` [C/m^2] or [As/m^2]\n'
             f'\tThe charge density of the NP in the water is:\n'
             )
@@ -95,8 +97,8 @@ class ChargeDensity:
         self.info_msg += (
             f'\tThe charge density of the NP core is:\n'
             f'\t\t{net_charge_on_apt_core = :.3f} [e]\n'
-            f'\t\t{np_core_charge_density_columb_per_meter = :.3f} [C/m^2]\n'
             f'\t\t{np_core_charge_density_e_per_nanometer = :.3f} [e/nm^2]\n'
+            f'\t\t{np_core_charge_density_columb_per_meter = :.3f} [C/m^2]\n'
             )
 
     @staticmethod

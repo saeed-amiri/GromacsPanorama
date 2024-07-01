@@ -591,6 +591,13 @@ class ReadInputStructureFile:
                  configs: FileConfig = FileConfig()
                  ) -> None:
         self._configs = configs
+        strucure_files = [
+            file for file in strucure_files
+            if my_tools.check_int_in_filename(os.path.basename(file))]
+        if not strucure_files:
+            log.error(msg := '\tNo structure files are provided!\n')
+            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
         self.structure_dict = self._proccess_files(strucure_files, log)
         self._write_msg(log)
 

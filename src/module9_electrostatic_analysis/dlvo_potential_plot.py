@@ -120,9 +120,9 @@ class PlotPotential:
                   va='top',
                   transform=ax_i.transAxes,
                   fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
-        ax_i.text(0.12,
+        ax_i.text(0.15,
                   0.5,
-                  r'$\lambda_D$',
+                  r'<->',
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,
@@ -270,6 +270,13 @@ class PlotPotential:
         """plot vertical lines"""
         # pylint: disable=too-many-arguments
         phi_value: float = 0.0
+        if configs.if_np_radius_line:
+            ax_i.vlines(x=self.configs.np_radius/10,
+                        ymin=configs.y_lims[0],
+                        ymax=phi_mv.max(),
+                        color=configs.colors[4],
+                        linestyle=configs.line_styles[0],
+                        linewidth=elsevier_plot_tools.LINE_WIDTH)
         if configs.if_stern_line:
             self._plot_stern_layer_lines(ax_i, phi_mv, configs)
         else:
@@ -371,14 +378,15 @@ class PlotPotential:
                                 ) -> None:
         """plot the stern layer lines"""
         y_lims: tuple[float, float] = ax_i.get_ylim()
-        ax_i.vlines(x=(x_temp := self.configs.stern_layer/10),
+        ax_i.vlines(x=(x_temp := self.configs.stern_layer/10+0.1),
                     ymin=configs.y_lims[0],
                     ymax=y_lims[1]+10,
                     color=configs.colors[4],
                     linestyle=configs.line_styles[0],
                     linewidth=elsevier_plot_tools.LINE_WIDTH)
-        ax_i.text(x_temp-0.5,
-                  phi_mv.max()+25,
+        print(f'{bcolors.CAUTION}Stern layer at {x_temp} nm{bcolors.ENDC}')
+        ax_i.text(x_temp+0.5,
+                  phi_mv.max()-300,
                   'Stern layer',
                   fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
@@ -389,7 +397,7 @@ class PlotPotential:
                     linestyle=configs.line_styles[2],
                     linewidth=elsevier_plot_tools.LINE_WIDTH)
         ax_i.text(x_temp+0.6,
-                  phi_0-0.2,
+                  phi_0-280.2,
                   fr'$\psi_0$ = {phi_0:.2f}',
                   fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 

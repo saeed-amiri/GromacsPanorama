@@ -37,6 +37,39 @@ class ChargeDensity:
         charge: np.ndarray = \
             self._get_column(configs.charge_fname,
                              log, column=configs.total_charge_coloumn)
+        contact_angle: np.ndarray = \
+            self._get_contact_angle_density(charge, configs, log)
+
+        cap_surface_meter_squre: np.ndarray = \
+            self._compute_under_water_area(configs.np_radius, contact_angle)
+
+        np_cap_charge_density_e_per_nanometer: float = (
+            configs.nr_aptes_charges - configs.np_core_charge
+            ) / cap_surface_meter_squre.mean() / 1e18
+
+        np_cap_charge_density_columb_per_meter: float = \
+            (configs.nr_aptes_charges - configs.np_core_charge) *\
+            configs.phi_parameters['e_charge'] / cap_surface_meter_squre.mean()
+
+        density: np.ndarray = (charge * configs.phi_parameters['e_charge']) /\
+            cap_surface_meter_squre
+
+        self.info_msg += (
+            f'\tAve. `{charge.mean() = :.3f}` [e]\n'
+            f'\t`{cap_surface_meter_squre.mean()*1e18 = :.3f}` [nm^2]\n'
+            f'\tAve. `charge_{density.mean() = :.3f}` [C/m^2] or [As/m^2]\n'
+            f'\tThe charge density of the NP in the water is:\n'
+            f'\t{np_cap_charge_density_columb_per_meter = :.3f} [C/m^2]\n'
+            f'\t{np_cap_charge_density_e_per_nanometer = :.3f} [e/nm^2]\n'
+            )
+        return charge, density
+
+    def _get_contact_angle_density(self,
+                                   charge: np.ndarray,
+                                   configs: AllConfig,
+                                   log: logger.logging.Logger
+                                   ) -> np.ndarray:
+        """get the contact angle from the charge"""
         try:
             contact_angle: np.ndarray = \
                 self._get_column(configs.contact_fname,
@@ -51,27 +84,10 @@ class ChargeDensity:
                  f'angle `{configs.avg_contact_angle}` is used.\n')
             contact_angle = np.zeros(charge.shape)
             contact_angle += configs.avg_contact_angle
+        return contact_angle
 
-        cap_surface: np.ndarray = \
-            self._compute_under_water_area(configs.np_radius, contact_angle)
-
-        np_cap_charge_density: float = \
-            (configs.nr_aptes_charges - configs.np_core_charge) *\
-            configs.phi_parameters['e_charge'] / cap_surface.mean()
-
-        density: np.ndarray = \
-            (charge * configs.phi_parameters['e_charge']) / cap_surface
-
-        self.info_msg += (
-            f'\tAve. `{charge.mean() = :.3f}` [e]\n'
-            f'\t`{cap_surface.mean()*1e18 = :.3f}` [nm^2]\n'
-            f'\tAve. `charge_{density.mean() = :.3f}` [C/m^2] or [As/m^2] \n'
-            f'\tThe charge density of the NP in the water is:\n'
-            f'\t{np_cap_charge_density = :.3f} [C/m^2]\n')
-        return charge, density
-
-    def _compute_under_water_area(self,
-                                  np_radius: float,
+    @staticmethod
+    def _compute_under_water_area(np_radius: float,
                                   contact_angle: np.ndarray
                                   ) -> np.ndarray:
         """
@@ -98,8 +114,8 @@ class ChargeDensity:
             2 * np.pi * np_radius**2 * (1 + np.cos(radians))
         return in_water_cap_area * 1e-20
 
-    def _get_column(self,
-                    fname: str,
+    @staticmethod
+    def _get_column(fname: str,
                     log: logger.logging.Logger,
                     column: str,
                     if_exit: bool = True

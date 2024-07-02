@@ -24,15 +24,13 @@ Saeed
 
 import typing
 from dataclasses import dataclass, field
-from datetime import datetime
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 from common import logger, elsevier_plot_tools
 from common.colors_text import TextColor as bcolors
-from module9_electrostatic_analysis.dlvo_potential_configs import \
-    AllConfig
+from module9_electrostatic_analysis.dlvo_potential_configs import AllConfig
 
 
 @dataclass
@@ -90,6 +88,7 @@ class NonLinearPotential:
         kappa: float = 1.0 / debye_l
         phi_r = self.compute_phi_r(radii, phi_r, alpha, kappa, r_np)
         self.test_equation(radii, log)
+        self._get_potential_to_log(radii, phi_r)
         return radii, phi_r
 
     def compute_alpha(self,
@@ -151,7 +150,7 @@ class NonLinearPotential:
         y_grid: np.ndarray = np.linspace(0, box_lims[1], grids[1])
         z_grid: np.ndarray = np.linspace(0, box_lims[2], grids[2])
         z_limit_index = np.abs(z_grid - z_grid_up_limit).argmin()
-        z_grid = z_grid[:z_limit_index//2]
+        z_grid = z_grid[:int(z_limit_index//2)]
         radii = np.sqrt(x_grid[:, None, None] ** 2 +
                         y_grid[None, :, None] ** 2 +
                         z_grid[None, None, :] ** 2)
@@ -168,13 +167,23 @@ class NonLinearPotential:
         """test the equation"""
         AnalyticAnalysis(log, radii)
 
+    def _get_potential_to_log(self,
+                              radii: np.ndarray,
+                              phi_r: np.ndarray
+                              ) -> None:
+        """get the potential to log"""
+        phi_r0: np.float64 = phi_r[0]
+        stern_loc: float = self.configs.stern_layer
+        # Get the potential at the stern layer, or colsest value to it
+        phi_stern: np.float64 = phi_r[np.abs(radii - stern_loc).argmin()]
+        self.info_msg += ('\tThe potential from the anaytical results:\n'
+                          f'\t\t{phi_r0 = :.5f} [V]\n'
+                          f'\t\t{phi_stern = :.5f} [V]\n')
+
     def _write_msg(self,
                    log: logger.logging.Logger  # To log
                    ) -> None:
         """write and log messages"""
-        now = datetime.now()
-        self.info_msg += \
-            f'\tTime: {now.strftime("%Y-%m-%d %H:%M:%S")}\n'
         print(f'{bcolors.OKCYAN}{NonLinearPotential.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
@@ -346,8 +355,6 @@ class AnalyticAnalysis:
                    log: logger.logging.Logger  # To log
                    ) -> None:
         """write and log messages"""
-        now = datetime.now()
-        self.info_msg += f'\tTime: {now.strftime("%Y-%m-%d %H:%M:%S")}\n'
         print(f'{bcolors.OKCYAN}{AnalyticAnalysis.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)

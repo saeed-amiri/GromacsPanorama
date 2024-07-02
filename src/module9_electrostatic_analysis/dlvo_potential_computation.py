@@ -144,8 +144,9 @@ class ElectroStaticComputation:
 
         self.info_msg += (
             f'\t`{debye_l_nm = :.4f}` [nm]\n'
-            f'\t`np_radius = {self.configs.np_radius/10.0:.4f}` [nm]\n\t'
-            rf'\kappa * r = {self.configs.np_radius/10/debye_l_nm:.3f}'
+            '\t`computation_radius = '
+            f'{self.configs.computation_radius/10.0:.4f}` [nm]\n\t'
+            f'\kappa * r = {self.configs.computation_radius/10/debye_l_nm:.3f}'
             '\n')
         return float(debye_l_nm)
 
@@ -158,7 +159,9 @@ class ElectroStaticComputation:
         """
         s_config: "AllConfig" = self.configs.solving_config
         box_lim: float = self.configs.phi_parameters['box_xlim']
-        phi_0: np.ndarray = self._get_phi_zero(debye_l, log)
+        phi_0: np.ndarray
+        phi_0_at_denisty_0: np.ndarray
+        phi_0, phi_0_at_denisty_0 = self._get_phi_zero(debye_l, log)
 
         radii: np.ndarray
         phi_r: np.ndarray
@@ -171,12 +174,16 @@ class ElectroStaticComputation:
         elif compute_type == 'non_linear':
             radii, phi_r = self._non_linear_sphere_possion(
                 debye_l, phi_0, log)
+            if self.configs.remove_phi_r_density_0:
+                _, phi_r_at_zero = self._non_linear_sphere_possion(
+                    debye_l, phi_0_at_denisty_0, log)
+                phi_r -= phi_r_at_zero
         return radii, phi_r
 
     def _get_phi_zero(self,
                       debye_l: float,
                       log: logger.logging.Logger
-                      ) -> np.ndarray:
+                      ) -> tuple[np.ndarray, np.ndarray]:
         """get the value of the phi_0 based on the configuration"""
         phi_0_compute = DLVOPotentialPhiZero(
             debye_length=debye_l,
@@ -186,14 +193,14 @@ class ElectroStaticComputation:
             log=log)
         if self.configs.remove_phi_0_density_0:
             phi_0_compute_density_0: np.ndarray = \
-                self.remove_zero_density(debye_l, log)
-            return phi_0_compute.phi_0 - phi_0_compute_density_0
-        return phi_0_compute.phi_0
+                self.compute_phi_0_zero_density(debye_l, log)
+            return phi_0_compute.phi_0, phi_0_compute_density_0
+        return phi_0_compute.phi_0, np.zeros(self.charge_density.shape)
 
-    def remove_zero_density(self,
-                            debye_l: float,
-                            log: logger.logging.Logger
-                            ) -> np.ndarray:
+    def compute_phi_0_zero_density(self,
+                                   debye_l: float,
+                                   log: logger.logging.Logger
+                                   ) -> np.ndarray:
         """remove the potentioal of zero density from the phi_0"""
         zero_density: np.ndarray = np.zeros(self.charge_density.shape)
         zero_charge: np.ndarray = np.zeros(self.charge.shape)
@@ -235,7 +242,7 @@ class ElectroStaticComputation:
         r_np := the nanoparticle radius
         pp. 110, Surface and Interfacial Forces, H-J Burr and M.Kappl
         """
-        r_np: float = self.configs.np_radius / 10.0  # [A] -> [nm]
+        r_np: float = self.configs.computation_radius / 10.0  # [A] -> [nm]
         radii: np.ndarray = np.linspace(r_np, box_lim, len(self.charge))
         phi_r: np.ndarray = np.zeros(radii.shape)
         for phi in phi_0:

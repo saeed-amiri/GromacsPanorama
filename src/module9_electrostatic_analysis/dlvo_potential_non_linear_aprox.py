@@ -80,7 +80,7 @@ class NonLinearPotential:
                           ) -> tuple[np.ndarray, np.ndarray]:
         """compute the DLVO potential"""
         # pylint: disable=unused-argument
-        r_np: float = self.configs.np_radius / 10.0  # [A] -> [nm]
+        r_np: float = self.configs.computation_radius / 10.0  # [A] -> [nm]
         radii: np.ndarray = self.get_radii(r_np)
 
         phi_r: np.ndarray = np.zeros(radii.shape)

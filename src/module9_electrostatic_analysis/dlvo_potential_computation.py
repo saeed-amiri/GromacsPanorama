@@ -64,8 +64,6 @@ Also the script is splited into separate files for better readability.
 from datetime import datetime
 
 import numpy as np
-from scipy.optimize import fsolve, root
-
 
 from common import logger
 from common.colors_text import TextColor as bcolors
@@ -146,7 +144,7 @@ class ElectroStaticComputation:
             f'\t`{debye_l_nm = :.4f}` [nm]\n'
             '\t`computation_radius = '
             f'{self.configs.computation_radius/10.0:.4f}` [nm]\n\t'
-            f'\kappa * r = {self.configs.computation_radius/10/debye_l_nm:.3f}'
+            f'kappa * r = {self.configs.computation_radius/10/debye_l_nm:.3f}'
             '\n')
         return float(debye_l_nm)
 
@@ -178,6 +176,10 @@ class ElectroStaticComputation:
                 _, phi_r_at_zero = self._non_linear_sphere_possion(
                     debye_l, phi_0_at_denisty_0, log)
                 phi_r -= phi_r_at_zero
+        else:
+            raise ValueError(
+                f'\t\n{bcolors.FAIL}Unknown computation type: {compute_type}'
+                f'{bcolors.ENDC}\n')
         return radii, phi_r
 
     def _get_phi_zero(self,

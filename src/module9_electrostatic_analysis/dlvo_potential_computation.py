@@ -77,6 +77,8 @@ from module9_electrostatic_analysis.dlvo_potential_non_linear_aprox import \
     NonLinearPotential
 from module9_electrostatic_analysis.dlvo_potential_phi_zero import \
     DLVOPotentialPhiZero
+from module9_electrostatic_analysis.dlvo_potential_phi_0_sigma import \
+    PhiZeroSigma
 from module9_electrostatic_analysis.dlvo_potential_configs import AllConfig
 
 
@@ -93,12 +95,13 @@ class ElectroStaticComputation:
                  configs: AllConfig = AllConfig()
                  ) -> None:
         self.configs = configs
-        self.initiate(log)
+        debye_l: float = self.initiate(log)
+        self.compare_experiments(debye_l, log)
         self.write_msg(log)
 
     def initiate(self,
                  log: logger.logging.Logger
-                 ) -> None:
+                 ) -> float:
         """initiate computation by finding debye length"""
         charge_info = ChargeDensity(log, self.configs)
         self.charge, self.charge_density = \
@@ -117,6 +120,7 @@ class ElectroStaticComputation:
         radii, phi_r = self.compute_potential(debye_l, log)
 
         self.plot_save_phi(radii, phi_r, debye_l, log)
+        return debye_l
 
     def get_debye(self,
                   ionic_strength: float
@@ -272,6 +276,25 @@ class ElectroStaticComputation:
                       ) -> None:
         """plot and save the electostatic potential"""
         PlotPotential(radii, phi_r, debye_l, self.configs, log)
+
+    def compare_experiments(self,
+                            debye_l: float,
+                            log: logger.logging.Logger
+                            ) -> None:
+        """compare the experimental and the MD simulation results"""
+        if self.configs.compare_phi_0_sigma:
+            charge_md: np.ndarray = self.charge
+            charge_density_md: np.ndarray = self.charge_density
+            charge_exp: np.ndarray = charge_md.copy()
+            charge_density_exp: np.ndarray = charge_density_md.copy()
+            PhiZeroSigma(debye_md=debye_l,
+                         log=log,
+                         configs=self.configs,
+                         charge_md=charge_md,
+                         charge_density_md=charge_density_md,
+                         charge_exp=charge_exp,
+                         charge_density_exp=charge_density_exp
+                         )
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

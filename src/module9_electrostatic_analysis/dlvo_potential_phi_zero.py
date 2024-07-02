@@ -89,7 +89,7 @@ class DLVOPotentialPhiZero:
 
         kbt: float = param['T'] * param['k_boltzman_JK']
         epsilon: float = param['epsilon'] * param['epsilon_0']
-        r_np: float = self.configs.np_radius / 10.0  # [A] -> [nm]
+        r_np: float = self.configs.computation_radius / 10.0  # [A] -> [nm]
         a_kappa: float = r_np / debye_l
         y_0: float = param['e_charge'] / (2.0 * kbt)
         co_factor: float = epsilon * epsilon / (y_0 * debye_l)

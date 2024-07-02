@@ -20,7 +20,8 @@ from common import logger, elsevier_plot_tools
 from common.colors_text import TextColor as bcolors
 from module9_electrostatic_analysis.dlvo_potential_phi_zero import \
     DLVOPotentialPhiZero
-from module9_electrostatic_analysis.dlvo_potential_configs import AllConfig
+from module9_electrostatic_analysis.dlvo_potential_configs import \
+    AllConfig, PhiZeroSigmaConfig
 
 
 # Helper functions
@@ -78,7 +79,7 @@ class PhiZeroSigma:
         self.validate_kwargs(kwargs, log)
         self.assign_kwargs(kwargs)
         self.configs = configs
-        self.compute_experiments_values(log)
+        self.compute_phi_0(log)
         self.write_msg(log)
 
     def validate_kwargs(self,
@@ -101,21 +102,23 @@ class PhiZeroSigma:
         self.debye_md = kwargs['debye_md']
         self.charge_density_range = kwargs['charge_density_range']
 
-    def compute_experiments_values(self,
-                                   log: logger.logging.Logger
-                                   ) -> None:
+    def compute_phi_0(self,
+                      log: logger.logging.Logger
+                      ) -> None:
         """compute the phi_0 with respect to sigma"""
-        configs = self.configs.experiment_config
+        configs = self.configs.phi_zero_sigma_config
         self.lambda_exp = self._compute_lambda_exp(configs)
+        denisty_range: np.ndarray = \
+            np.linspace(*self.charge_density_range, configs.nr_density_points)
 
     def _compute_lambda_exp(self,
-                            configs: AllConfig
+                            configs: "PhiZeroSigmaConfig"
                             ) -> list[float]:
         """compute the Debye length from the experimental data
         from concentrations of salts
         """
         lambda_exp: list[float] = []
-        for ionic_strength in configs.salt_concentration:
+        for ionic_strength in configs.exp_salt_concentration:
             lambda_exp.append(self._get_debye(ionic_strength))
         return lambda_exp
 

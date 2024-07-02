@@ -16,8 +16,8 @@ class FileConfig:
     contact_fname: str = 'contact.xvg'
     fout: str = 'potential.xvg'
     radial_avg_files: dict[str, str] = field(default_factory=lambda: {
-        'numerical solution': 'radial_average_potential_nonlinear_3_2.xvg'})
-    # 'numerical, linear': 'radial_average_potential_linear.xvg'})
+        'numerical solution': 'radial_average_potential_nonlinear_3_6.xvg',
+        'numerical, 3.2': 'radial_average_potential_nonlinear_3_2.xvg'})
 
 
 @dataclass
@@ -30,6 +30,7 @@ class ParameterConfig:
     # pylint: disable=too-many-instance-attributes
     np_radius: float = 30.0  # In Ångströms
     stern_layer: float = 34.0  # In Ångströms
+    computation_radius: float = 30.0  # In Ångströms
     avg_contact_angle: float = 38.0  # In Degrees
     np_core_charge: int = -8  # Number of charge inside the NP
     all_aptes_charges: int = 322  # Protonated APTES
@@ -103,7 +104,7 @@ class PlotConfig(FileConfig):
     voltage_to_mV: float = 1000
 
     y_unit: str = ''
-    y_lims: tuple[float, float] = (0, 260)
+    y_lims: tuple[float, float] = (0, 200)
     x_lims: tuple[float, float] = (2.8, 7.7)
 
     x_ticks: list[float] = field(default_factory=lambda: [3, 5])
@@ -181,5 +182,7 @@ class AllConfig(FileConfig, ParameterConfig):
         all: compute it from all charge groups in the system
     """
     ionic_type: str = 'salt'
+    remove_phi_0_density_0: bool = True
+    remove_phi_r_density_0: bool = False
     plot_config: PlotConfig = field(default_factory=PlotConfig)
     solving_config: SolvingConfig = field(default_factory=SolvingConfig)

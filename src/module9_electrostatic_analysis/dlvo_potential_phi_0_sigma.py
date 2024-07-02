@@ -68,19 +68,15 @@ class PhiZeroSigma:
     configs: AllConfig
     debye_md: float
     debye_exp: list[float]
-    charge_md: np.ndarray
-    charge_density_md: np.ndarray
-    charge_exp: np.ndarray
-    charge_density_exp: np.ndarray
+    charge_density_range: tuple[float, float]
 
     def __init__(self,
-                 debye_md: float,  # Debye length from the MD simulation
                  log: logger.logging.Logger,
                  configs: AllConfig,
                  **kwargs: typing.Dict[str, typing.Any],
                  ) -> None:
         self.validate_kwargs(kwargs, log)
-        self.assign_kwargs(debye_md, kwargs)
+        self.assign_kwargs(kwargs)
         self.configs = configs
         self.compute_experiments_values(log)
         self.write_msg(log)
@@ -90,25 +86,20 @@ class PhiZeroSigma:
                         log: logger.logging.Logger
                         ) -> None:
         """Check if all the inputs are valid"""
-        expected_kwargs = ['charge_md',
-                           'charge_density_md',
-                           'charge_exp',
-                           'charge_density_exp']
+        expected_kwargs = ['debye_md', 'charge_density_range']
+
         check_no_kwargs(kwargs, log)
         check_all_kwargs_exist(kwargs, expected_kwargs, log)
         check_unkown_kwargs(kwargs, expected_kwargs, log)
+
         self.info_msg += f'\tThe following {kwargs.keys() = } are given\n'
 
     def assign_kwargs(self,
-                      debye_md: float,
                       kwargs: typing.Dict[str, typing.Any]
                       ) -> None:
         """assign the kwargs to the class"""
-        self.debye_md = debye_md
-        self.charge_md = kwargs['charge_md']
-        self.charge_density_md = kwargs['charge_density_md']
-        self.charge_exp = kwargs['charge_exp']
-        self.charge_density_exp = kwargs['charge_density_exp']
+        self.debye_md = kwargs['debye_md']
+        self.charge_density_range = kwargs['charge_density_range']
 
     def compute_experiments_values(self,
                                    log: logger.logging.Logger
@@ -167,4 +158,8 @@ class PhiZeroSigma:
 
 
 if __name__ == '__main__':
-    PhiZeroSigma(0.1, logger.logging.Logger('phi_0_sigma.log'), AllConfig())
+    PhiZeroSigma(logger.logging.Logger('phi_0_sigma.log'),
+                 AllConfig(),
+                 debye_md=0.1,
+                 charge_density_range=(0.1, 0.2)
+                 )

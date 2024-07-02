@@ -283,17 +283,11 @@ class ElectroStaticComputation:
                             ) -> None:
         """compare the experimental and the MD simulation results"""
         if self.configs.compare_phi_0_sigma:
-            charge_md: np.ndarray = self.charge
-            charge_density_md: np.ndarray = self.charge_density
-            charge_exp: np.ndarray = charge_md.copy()
-            charge_density_exp: np.ndarray = charge_density_md.copy()
-            PhiZeroSigma(debye_md=debye_l,
-                         log=log,
+            charge_density_range: np.ndarray = (0, self.charge_density.max())
+            PhiZeroSigma(log=log,
                          configs=self.configs,
-                         charge_md=charge_md,
-                         charge_density_md=charge_density_md,
-                         charge_exp=charge_exp,
-                         charge_density_exp=charge_density_exp
+                         debye_md=debye_l,
+                         charge_density_range=charge_density_range,
                          )
 
     def write_msg(self,

@@ -16,7 +16,7 @@ class FileConfig:
     contact_fname: str = 'contact.xvg'
     fout: str = 'potential.xvg'
     radial_avg_files: dict[str, str] = field(default_factory=lambda: {
-        'numerical solution': 'radial_average_potential_nonlinear_3_6.xvg',
+        'numerical, 3.6': 'radial_average_potential_nonlinear_3_6.xvg',
         'numerical, 3.2': 'radial_average_potential_nonlinear_3_2.xvg'})
 
 

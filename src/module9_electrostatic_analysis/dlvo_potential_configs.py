@@ -167,6 +167,22 @@ class SolvingConfig(FileConfig, ParameterConfig):
 
 
 @dataclass
+class ExperimentConfig:
+    """
+    Set the for the experimental data
+    such as concentration of the salt and the temperature
+    and also the radii of the nanoparticles
+    concentration of the salt is in M(=mol/l)
+    radii in Angstrom
+    temperature in Kelvin
+    """
+    salt_concentration: list[float] = field(default_factory=lambda: [
+        0.01, 0.1, 0.5, 1.0])
+    temperature: float = 298.15
+    np_radii: list[float] = field(default_factory=lambda: [30.0, 40.0, 50.0])
+
+
+@dataclass
 class AllConfig(FileConfig, ParameterConfig):
     """set all the parameters and confiurations
     computation types:
@@ -183,6 +199,9 @@ class AllConfig(FileConfig, ParameterConfig):
     """
     ionic_type: str = 'salt'
     remove_phi_0_density_0: bool = True
-    remove_phi_r_density_0: bool = False
+    remove_phi_r_density_0: bool = True
     plot_config: PlotConfig = field(default_factory=PlotConfig)
     solving_config: SolvingConfig = field(default_factory=SolvingConfig)
+    compare_phi_0_sigma: bool = True
+    experiment_config: ExperimentConfig = field(
+        default_factory=ExperimentConfig)

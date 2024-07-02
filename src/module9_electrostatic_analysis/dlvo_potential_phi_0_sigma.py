@@ -10,8 +10,6 @@ experimental data.
 To determine the rationality of the DLVO modleing
 """
 
-import os
-import sys
 import typing
 from datetime import datetime
 
@@ -59,14 +57,21 @@ def check_unkown_kwargs(kwargs: typing.Any,
             msg: str = f'\n{key} is unknown!\n'
             log.error(msg)
             raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+# ----------------
 
 
 class PhiZeroSigma:
     """compute the phi_0 with respect to sigma"""
+    # pylint: disable=too-many-instance-attributes
     info_msg: str = 'Message from PhiZeroSigma:\n'
+
     configs: AllConfig
     debye_md: float
     debye_exp: list[float]
+    charge_md: np.ndarray
+    charge_density_md: np.ndarray
+    charge_exp: np.ndarray
+    charge_density_exp: np.ndarray
 
     def __init__(self,
                  debye_md: float,  # Debye length from the MD simulation
@@ -74,16 +79,16 @@ class PhiZeroSigma:
                  configs: AllConfig,
                  **kwargs: typing.Dict[str, typing.Any],
                  ) -> None:
-        self.validate_and_assign_kwargs(kwargs, log)
+        self.validate_kwargs(kwargs, log)
+        self.assign_kwargs(debye_md, kwargs)
         self.configs = configs
-        self.debye_md = debye_md
         self.compute_experiments_values(log)
         self.write_msg(log)
 
-    def validate_and_assign_kwargs(self,
-                                   kwargs: typing.Dict[str, typing.Any],
-                                   log: logger.logging.Logger
-                                   ) -> None:
+    def validate_kwargs(self,
+                        kwargs: typing.Dict[str, typing.Any],
+                        log: logger.logging.Logger
+                        ) -> None:
         """Check if all the inputs are valid"""
         expected_kwargs = ['charge_md',
                            'charge_density_md',
@@ -93,6 +98,17 @@ class PhiZeroSigma:
         check_all_kwargs_exist(kwargs, expected_kwargs, log)
         check_unkown_kwargs(kwargs, expected_kwargs, log)
         self.info_msg += f'\tThe following {kwargs.keys() = } are given\n'
+
+    def assign_kwargs(self,
+                      debye_md: float,
+                      kwargs: typing.Dict[str, typing.Any]
+                      ) -> None:
+        """assign the kwargs to the class"""
+        self.debye_md = debye_md
+        self.charge_md = kwargs['charge_md']
+        self.charge_density_md = kwargs['charge_density_md']
+        self.charge_exp = kwargs['charge_exp']
+        self.charge_density_exp = kwargs['charge_density_exp']
 
     def compute_experiments_values(self,
                                    log: logger.logging.Logger

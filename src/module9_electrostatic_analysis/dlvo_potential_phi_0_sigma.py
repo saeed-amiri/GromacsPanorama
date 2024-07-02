@@ -25,22 +25,74 @@ from module9_electrostatic_analysis.dlvo_potential_phi_zero import \
 from module9_electrostatic_analysis.dlvo_potential_configs import AllConfig
 
 
+# Helper functions
+# ----------------
+def check_no_kwargs(kwargs: typing.Any,
+                    log: logger.logging.Logger
+                    ) -> None:
+    """raise an error if the kwargs are not given"""
+    if not kwargs:
+        msg: str = '\nNo kwargs are given!\n'
+        log.error(msg)
+        raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
+
+def check_all_kwargs_exist(kwargs: typing.Any,
+                           expected_kwargs: list[str],
+                           log: logger.logging.Logger
+                           ) -> None:
+    """check if all the expected kwargs are given"""
+    for key in expected_kwargs:
+        if key not in kwargs:
+            msg: str = f'\n{key} is not given!\n'
+            log.error(msg)
+            raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
+
+def check_unkown_kwargs(kwargs: typing.Any,
+                        expected_kwargs: list[str],
+                        log: logger.logging.Logger
+                        ) -> None:
+    """check if there are any unknown kwargs"""
+    for key in kwargs:
+        if key not in expected_kwargs:
+            msg: str = f'\n{key} is unknown!\n'
+            log.error(msg)
+            raise ValueError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
+
 class PhiZeroSigma:
     """compute the phi_0 with respect to sigma"""
     info_msg: str = 'Message from PhiZeroSigma:\n'
     configs: AllConfig
-    lambda_md: float
-    lambda_exp: list[float]
+    debye_md: float
+    debye_exp: list[float]
 
     def __init__(self,
-                 lambda_md: float,  # Debye length from the MD simulation
+                 debye_md: float,  # Debye length from the MD simulation
                  log: logger.logging.Logger,
-                 configs: AllConfig
+                 configs: AllConfig,
+                 **kwargs: typing.Dict[str, typing.Any],
                  ) -> None:
+        self.validate_and_assign_kwargs(kwargs, log)
         self.configs = configs
-        self.lambda_md = lambda_md
+        self.debye_md = debye_md
         self.compute_experiments_values(log)
         self.write_msg(log)
+
+    def validate_and_assign_kwargs(self,
+                                   kwargs: typing.Dict[str, typing.Any],
+                                   log: logger.logging.Logger
+                                   ) -> None:
+        """Check if all the inputs are valid"""
+        expected_kwargs = ['charge_md',
+                           'charge_density_md',
+                           'charge_exp',
+                           'charge_density_exp']
+        check_no_kwargs(kwargs, log)
+        check_all_kwargs_exist(kwargs, expected_kwargs, log)
+        check_unkown_kwargs(kwargs, expected_kwargs, log)
+        self.info_msg += f'\tThe following {kwargs.keys() = } are given\n'
 
     def compute_experiments_values(self,
                                    log: logger.logging.Logger
@@ -93,7 +145,7 @@ class PhiZeroSigma:
         now = datetime.now()
         self.info_msg += \
             f'\tTime: {now.strftime("%Y-%m-%d %H:%M:%S")}\n'
-        print(f'{bcolors.OKCYAN}{DLVOPotentialPhiZero.__name__}:\n'
+        print(f'{bcolors.OKGREEN}{DLVOPotentialPhiZero.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
 

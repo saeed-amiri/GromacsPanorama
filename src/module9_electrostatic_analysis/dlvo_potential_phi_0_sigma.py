@@ -206,7 +206,7 @@ class PhiZeroSigma:
         """plot the phi_0 with respect to sigma"""
         if self.configs.phi_zero_sigma_config.plot_bare_equation:
             self._plot_bare_equation()
-            self._plot_debye_sigma()
+            self._plot_debye_ion_strength()
 
     def _plot_bare_equation(self) -> None:
         """plot the bare equation"""
@@ -223,24 +223,24 @@ class PhiZeroSigma:
                       c=reversed_black_shades[i+2],
                       label=rf'y = {c_0} $\cdot$ x')
         ax_i.set_xlabel('x')
-        ax_i.set_ylabel('asinh(y)')
+        ax_i.set_ylabel(r'sinh$^{-1}$(y)')
         elsevier_plot_tools.save_close_fig(fig,
                                            'bare_equation_arcsinh_overx.jpg',
                                            loc='lower right')
 
-    def _plot_debye_sigma(self) -> None:
+    def _plot_debye_ion_strength(self) -> None:
         """plot the debye length with respect to sigma"""
         fig, ax_i = elsevier_plot_tools.mk_canvas('single_column')
-        denisty_range: np.ndarray = \
-            np.linspace(*self.charge_density_range,
+        ion_strength: np.ndarray = \
+            np.linspace(0.01, 100,
                         self.configs.phi_zero_sigma_config.nr_density_points)
         debye: typing.Union[np.float64, np.ndarray] = \
-            self._get_debye(denisty_range)
-        ax_i.plot(denisty_range,
+            self._get_debye(ion_strength)
+        ax_i.plot(ion_strength,
                   debye,
                   c=elsevier_plot_tools.BLACK_SHADES[0],
                   label='Debye length')
-        ax_i.set_xlabel(r'$\sigma$ [C/m$^2$]')
+        ax_i.set_xlabel(r'$c_0$ [mM]')
         ax_i.set_ylabel(r'$\lambda$ [nm]')
         elsevier_plot_tools.save_close_fig(fig,
                                            'debye_length_sigma.jpg',

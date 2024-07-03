@@ -80,6 +80,7 @@ class PhiZeroSigma:
         self.assign_kwargs(kwargs)
         self.configs = configs
         self.compute_phi_0(log)
+        self.plot_phi_0_sigma(log)
         self.write_msg(log)
 
     def validate_kwargs(self,
@@ -171,6 +172,28 @@ class PhiZeroSigma:
             f'\tSalt C is: `{ionic_strength}` -> `{debye_l_nm = :.4f}` [nm]\n')
         return float(debye_l_nm)
 
+    def plot_phi_0_sigma(self,
+                         log: logger.logging.Logger
+                         ) -> None:
+        """plot the phi_0 with respect to sigma"""
+        if self.configs.phi_zero_sigma_config.plot_bare_equation:
+            self._plot_bare_equation()
+
+    def _plot_bare_equation(self) -> None:
+        """plot the bare equation"""
+
+        x_data: np.ndarray = \
+            np.linspace(-10, 10,
+                        self.configs.phi_zero_sigma_config.nr_density_points)
+        for i in [0.05, 0.1, 1, 10, 100]:
+            y_data: np.ndarray = np.arcsinh(x_data*i)
+            plt.plot(x_data, y_data, label=f'y = {i} * x')
+        plt.xlabel('x')
+        plt.ylabel('asinh(y)')
+        plt.legend()
+        plt.savefig('bare_equation_arcsinh_overx.jpg')
+        plt.close()
+
     def write_msg(self,
                   log: logger.logging.Logger  # To log
                   ) -> None:
@@ -186,7 +209,5 @@ class PhiZeroSigma:
 if __name__ == '__main__':
     PhiZeroSigma(logger.logging.Logger('phi_0_sigma.log'),
                  AllConfig(),
-                 kwargs={
-                     'debye_md': 0.1,
-                     'charge_density_range': (0.1, 0.2)
-                 })
+                 debye_md=0.1,
+                 charge_density_range=(0.1, 0.2))

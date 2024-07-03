@@ -107,7 +107,7 @@ class PhiZeroSigma:
                       ) -> None:
         """compute the phi_0 with respect to sigma"""
         configs = self.configs.phi_zero_sigma_config
-        self.lambda_exp = self._compute_lambda_exp(configs)
+        self.debye_exp = self._compute_debye_exp(configs)
         denisty_range: np.ndarray = \
             np.linspace(*self.charge_density_range, configs.nr_density_points)
 
@@ -117,10 +117,10 @@ class PhiZeroSigma:
         """compute the Debye length from the experimental data
         from concentrations of salts
         """
-        lambda_exp: list[float] = []
+        debye_exp: list[float] = []
         for ionic_strength in configs.exp_salt_concentration:
-            lambda_exp.append(self._get_debye(ionic_strength))
-        return lambda_exp
+            debye_exp.append(self._get_debye(ionic_strength))
+        return debye_exp
 
     def _get_debye(self,
                    ionic_strength: float
@@ -163,6 +163,7 @@ class PhiZeroSigma:
 if __name__ == '__main__':
     PhiZeroSigma(logger.logging.Logger('phi_0_sigma.log'),
                  AllConfig(),
-                 debye_md=0.1,
-                 charge_density_range=(0.1, 0.2)
-                 )
+                 kwargs={
+                     'debye_md': 0.1,
+                     'charge_density_range': (0.1, 0.2)
+                 })

@@ -29,6 +29,7 @@ class DLVOPotentialPhiZero:
                  charge: np.ndarray,
                  charge_density: np.ndarray,
                  configs: AllConfig,
+                 ion_strength: float,
                  log: logger.logging.Logger
                  ) -> None:
         # pylint: disable=too-many-arguments
@@ -36,10 +37,12 @@ class DLVOPotentialPhiZero:
         self.charge = charge
         self.charge_density = charge_density
         self.phi_0 = self._get_phi_zero(
-            debye_length, log, s_config=configs.solving_config)
+            debye_length, ion_strength, log, s_config=configs.solving_config)
+        self.write_msg(log)
 
     def _get_phi_zero(self,
                       debye_l: float,
+                      ionic_strength: float,
                       log: logger.logging.Logger,
                       s_config: "AllConfig"
                       ) -> np.ndarray:

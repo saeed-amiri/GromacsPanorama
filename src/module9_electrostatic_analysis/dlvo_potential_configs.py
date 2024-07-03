@@ -157,7 +157,7 @@ class SolvingConfig(FileConfig, ParameterConfig):
 
     compute_type: str = 'non_linear'
 
-    phi_0_type: str = 'grahame'
+    phi_0_type: str = 'grahame_simple'
 
     ionic_strength: str = 'salt'
 
@@ -167,7 +167,7 @@ class SolvingConfig(FileConfig, ParameterConfig):
 
 
 @dataclass
-class ExperimentConfig:
+class PhiZeroSigmaConfig:
     """
     Set the for the experimental data
     such as concentration of the salt and the temperature
@@ -176,10 +176,14 @@ class ExperimentConfig:
     radii in Angstrom
     temperature in Kelvin
     """
-    salt_concentration: list[float] = field(default_factory=lambda: [
+    exp_salt_concentration: list[float] = field(default_factory=lambda: [
         0.01, 0.1, 0.5, 1.0])
-    temperature: float = 298.15
-    np_radii: list[float] = field(default_factory=lambda: [30.0, 40.0, 50.0])
+    exp_np_radii: list[float] = \
+        field(default_factory=lambda: [30.0, 40.0, 50.0])
+    exp_temperature: float = 298.15
+    nr_density_points: float = 1000
+    y_lims: tuple[float, float] = field(default_factory=lambda: (1, 1.6))
+    x_lims: tuple[float, float] = field(default_factory=lambda: (-0.001, 0.02))
 
 
 @dataclass
@@ -199,9 +203,9 @@ class AllConfig(FileConfig, ParameterConfig):
     """
     ionic_type: str = 'salt'
     remove_phi_0_density_0: bool = True
-    remove_phi_r_density_0: bool = True
+    remove_phi_r_density_0: bool = False
     plot_config: PlotConfig = field(default_factory=PlotConfig)
     solving_config: SolvingConfig = field(default_factory=SolvingConfig)
     compare_phi_0_sigma: bool = True
-    experiment_config: ExperimentConfig = field(
-        default_factory=ExperimentConfig)
+    phi_zero_sigma_config: PhiZeroSigmaConfig = field(
+        default_factory=PhiZeroSigmaConfig)

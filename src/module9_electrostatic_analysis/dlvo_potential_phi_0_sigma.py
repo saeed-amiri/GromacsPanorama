@@ -107,16 +107,17 @@ class PhiZeroSigma:
                       log: logger.logging.Logger
                       ) -> None:
         """compute the phi_0 with respect to sigma"""
+        phi_list: dict[str, np.ndarray] = {}
         configs = self.configs.phi_zero_sigma_config
         self.debye_exp = self._compute_debye_exp(configs)
         denisty_range: np.ndarray = \
             np.linspace(*self.charge_density_range, configs.nr_density_points)
         for debye, ion_strength in zip(self.debye_exp,
                                        configs.exp_salt_concentration):
-            plt.plot(denisty_range, self._compute_phi_0_sigma(
-                debye, denisty_range, ion_strength, log), label=ion_strength)
-        plt.legend()
-        plt.show()
+            phi_list[f'{ion_strength}'] = self._compute_phi_0_sigma(
+                debye, denisty_range, ion_strength, log)
+
+        self._plot_phi_0_sigma(denisty_range, phi_list, configs)
 
     def _compute_phi_0_sigma(self,
                              debye: float,
@@ -134,6 +135,31 @@ class PhiZeroSigma:
             log=log
         ).phi_0
         return phi_sigma
+
+    def _plot_phi_0_sigma(self,
+                          denisty_range: np.ndarray,
+                          phi_list: dict[str, np.ndarray],
+                          configs: "PhiZeroSigmaConfig"
+                          ) -> None:
+        """plot the phi_0 with respect to sigma"""
+        fig, ax_i = elsevier_plot_tools.mk_canvas('single_column')
+        for i, (key, phi) in enumerate(phi_list.items()):
+            ax_i.plot(denisty_range,
+                      phi*100,
+                      c=elsevier_plot_tools.BLACK_SHADES[i*2],
+                      label=f'{key} [mM]',)
+        ax_i.set_xlabel(r'$\sigma$ [C/m$^2$]')
+        ax_i.set_ylabel(r'$\psi_0$ [mV]')
+        ax_i.set_ylim(configs.y_lims[0]*100, configs.y_lims[1]*100)
+        ax_i.text(0.01,
+                  105,
+                  s=(r'$\psi_0 = \frac{2k_BT}{e}\sinh^{-1}('
+                     r'\frac{\sigma}{8c_0\epsilon\epsilon_0k_BT})$'),
+                  fontsize=8)
+
+        elsevier_plot_tools.save_close_fig(fig,
+                                           'phi_0_sigma.jpg',
+                                           loc='lower right')
 
     def _compute_debye_exp(self,
                            configs: "PhiZeroSigmaConfig"

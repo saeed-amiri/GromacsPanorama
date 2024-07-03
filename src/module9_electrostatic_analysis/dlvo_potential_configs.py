@@ -181,7 +181,10 @@ class PhiZeroSigmaConfig:
     exp_np_radii: list[float] = \
         field(default_factory=lambda: [30.0, 40.0, 50.0])
     exp_temperature: float = 298.15
+
     nr_density_points: float = 1000
+    plot_bare_equation: bool = True
+
     y_lims: tuple[float, float] = field(default_factory=lambda: (1, 1.6))
     x_lims: tuple[float, float] = field(default_factory=lambda: (-0.001, 0.02))
 

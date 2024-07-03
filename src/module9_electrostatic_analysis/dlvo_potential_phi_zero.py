@@ -52,6 +52,9 @@ class DLVOPotentialPhiZero:
             phi_0 += self.configs.phi_parameters['phi_0']
         elif phi_0_type == 'grahame_low':
             phi_0 = self._compute_phi_0_grahame_low_potential(debye_l)
+        elif phi_0_type == 'grahame_simple':
+            phi_0 = self._compute_phi_0_grahame_simple(
+                ionic_strength, self.charge_density)
         elif phi_0_type == 'grahame':
             phi_0 = self._compute_phi_0_grahame_nonlinear(debye_l, log)
         self.info_msg += (f'\tAvg. {phi_0.mean()*100 = :.3f} [mV] from `'
@@ -69,6 +72,25 @@ class DLVOPotentialPhiZero:
         phi_0: np.ndarray = debye_l * 1e-9 * self.charge_density / (
             self.configs.phi_parameters['epsilon'] *
             self.configs.phi_parameters['epsilon_0'])
+        return phi_0
+
+    def _compute_phi_0_grahame_simple(self,
+                                      ionic_strength: float,
+                                      density: np.ndarray
+                                      ) -> np.ndarray:
+        """compute the phi_0 based on the linearized Possion-Boltzmann
+        relation:
+        density = sqrt(8 * c_0 * epsilon * epsilon_0 * k_boltzman_JK * T) *
+        sinh(e * phi_0 / 2k_BT)
+        pp. 102, Surface and Interfacial Forces, H-J Burr and M.Kappl
+        """
+        self.info_msg += '\tPhi_0 computed from Grahame sinh (1) relation\n'
+        param: dict[str, float] = self.configs.phi_parameters
+        kbt: float = param['T'] * param['k_boltzman_JK']
+        epsilon: float = param['epsilon'] * param['epsilon_0']
+        y_0: float = 2 * kbt / param['e_charge']
+        co_factor: float = np.sqrt(8 * ionic_strength * 1e3 * epsilon * kbt)
+        phi_0: np.ndarray = y_0 * np.arcsinh(density / co_factor)
         return phi_0
 
     def _compute_phi_0_grahame_nonlinear(self,

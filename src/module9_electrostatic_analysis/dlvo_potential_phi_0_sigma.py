@@ -169,12 +169,12 @@ class PhiZeroSigma:
         """
         debye_exp: list[float] = []
         for ionic_strength in configs.exp_salt_concentration:
-            debye_exp.append(self._get_debye(ionic_strength))
+            debye_exp.append(float(self._get_debye(ionic_strength)))
         return debye_exp
 
     def _get_debye(self,
-                   ionic_strength: float
-                   ) -> float:
+                   ionic_strength: typing.Union[float, np.ndarray]
+                   ) -> typing.Union[np.float64, np.ndarray]:
         """computing the debye length based on Poisson-Boltzmann apprx.
         See:
         pp. 96, Surface and Interfacial Forces, H-J Burr and M.Kappl
@@ -182,10 +182,11 @@ class PhiZeroSigma:
         param: dict[str, float] = self.configs.phi_parameters
 
         # ionnic strength in mol/m^3
-        ionic_str_mol_m3: float = ionic_strength * 1e3
+        ionic_str_mol_m3: typing.Union[float, np.ndarray] = \
+            ionic_strength * 1e3
 
         # Getting debye length
-        debye_l: np.float64 = np.sqrt(
+        debye_l: typing.Union[np.float64, np.ndarray] = np.sqrt(
             param['T'] * param['k_boltzman_JK'] *
             param['epsilon'] * param['epsilon_0'] /
             (2 * ionic_str_mol_m3 * param['n_avogadro'] * param['e_charge']**2

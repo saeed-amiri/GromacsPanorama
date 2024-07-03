@@ -207,18 +207,23 @@ class PhiZeroSigma:
 
     def _plot_bare_equation(self) -> None:
         """plot the bare equation"""
-
+        fig, ax_i = elsevier_plot_tools.mk_canvas('single_column')
+        reversed_black_shades: list[str] = \
+            list(reversed(elsevier_plot_tools.BLACK_SHADES))
         x_data: np.ndarray = \
             np.linspace(-10, 10,
                         self.configs.phi_zero_sigma_config.nr_density_points)
-        for i in [0.05, 0.1, 1, 10, 100]:
+        for i, c_0 in enumerate([0.05, 0.1, 1, 10, 100]):
             y_data: np.ndarray = np.arcsinh(x_data*i)
-            plt.plot(x_data, y_data, label=f'y = {i} * x')
-        plt.xlabel('x')
-        plt.ylabel('asinh(y)')
-        plt.legend()
-        plt.savefig('bare_equation_arcsinh_overx.jpg')
-        plt.close()
+            ax_i.plot(x_data,
+                      y_data,
+                      c=reversed_black_shades[i+2],
+                      label=rf'y = {c_0} $\cdot$ x')
+        ax_i.set_xlabel('x')
+        ax_i.set_ylabel('asinh(y)')
+        elsevier_plot_tools.save_close_fig(fig,
+                                           'bare_equation_arcsinh_overx.jpg',
+                                           loc='lower right')
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

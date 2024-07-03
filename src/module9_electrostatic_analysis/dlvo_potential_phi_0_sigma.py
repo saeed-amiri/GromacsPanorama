@@ -110,10 +110,33 @@ class PhiZeroSigma:
         self.debye_exp = self._compute_debye_exp(configs)
         denisty_range: np.ndarray = \
             np.linspace(*self.charge_density_range, configs.nr_density_points)
+        for debye, ion_strength in zip(self.debye_exp,
+                                       configs.exp_salt_concentration):
+            plt.plot(denisty_range, self._compute_phi_0_sigma(
+                debye, denisty_range, ion_strength, log), label=ion_strength)
+        plt.legend()
+        plt.show()
 
-    def _compute_lambda_exp(self,
-                            configs: "PhiZeroSigmaConfig"
-                            ) -> list[float]:
+    def _compute_phi_0_sigma(self,
+                             debye: float,
+                             denisty_range: np.ndarray,
+                             ion_strength: float,
+                             log: logger.logging.Logger
+                             ) -> np.ndarray:
+        """compute the phi_0 with respect to sigma"""
+        phi_sigma: np.ndarray = DLVOPotentialPhiZero(
+            debye_length=debye,
+            charge=np.zeros(denisty_range.shape),
+            charge_density=denisty_range,
+            configs=self.configs,
+            ion_strength=ion_strength,
+            log=log
+        ).phi_0
+        return phi_sigma
+
+    def _compute_debye_exp(self,
+                           configs: "PhiZeroSigmaConfig"
+                           ) -> list[float]:
         """compute the Debye length from the experimental data
         from concentrations of salts
         """

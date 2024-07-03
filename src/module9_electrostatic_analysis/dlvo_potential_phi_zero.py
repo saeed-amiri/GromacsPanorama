@@ -110,6 +110,8 @@ class DLVOPotentialPhiZero:
         Returns:
         np.ndarray: Computed phi_0 values.
         """
+        self.info_msg += '\tPhi_0 computed from Grahame sinh (2) relation\n'
+
         param: dict[str, float] = self.configs.phi_parameters
 
         kbt: float = param['T'] * param['k_boltzman_JK']

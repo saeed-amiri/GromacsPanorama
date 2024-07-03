@@ -196,6 +196,7 @@ class ElectroStaticComputation:
             charge=self.charge,
             charge_density=self.charge_density,
             configs=self.configs,
+            ion_strength=self.configs.phi_parameters['c_salt'],
             log=log)
         if self.configs.remove_phi_0_density_0:
             phi_0_compute_density_0: np.ndarray = \
@@ -215,6 +216,7 @@ class ElectroStaticComputation:
             charge_density=zero_density,
             charge=zero_charge,
             configs=self.configs,
+            ion_strength=self.configs.phi_parameters['c_salt'],
             log=log)
         return phi_0_at_denisty_0.phi_0
 

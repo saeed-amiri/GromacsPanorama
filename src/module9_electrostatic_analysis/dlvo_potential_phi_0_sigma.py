@@ -80,7 +80,7 @@ class PhiZeroSigma:
         self.assign_kwargs(kwargs)
         self.configs = configs
         self.compute_phi_0(log)
-        self.plot_phi_0_sigma(log)
+        self.plot_phi_0_sigma_relation(log)
         self.write_msg(log)
 
     def validate_kwargs(self,
@@ -192,15 +192,16 @@ class PhiZeroSigma:
              ))
 
         # convert to nm
-        debye_l_nm = debye_l * 1e9
+        debye_l_nm: typing.Union[np.float64, np.ndarray] = debye_l * 1e9
+        if isinstance(ionic_strength, np.float64):
+            self.info_msg += (
+                f'\tSalt C is: `{ionic_strength}` -> '
+                f'`{debye_l_nm = :.4f}` [nm]\n')
+        return debye_l_nm
 
-        self.info_msg += (
-            f'\tSalt C is: `{ionic_strength}` -> `{debye_l_nm = :.4f}` [nm]\n')
-        return float(debye_l_nm)
-
-    def plot_phi_0_sigma(self,
-                         log: logger.logging.Logger
-                         ) -> None:
+    def plot_phi_0_sigma_relation(self,
+                                  log: logger.logging.Logger
+                                  ) -> None:
         """plot the phi_0 with respect to sigma"""
         if self.configs.phi_zero_sigma_config.plot_bare_equation:
             self._plot_bare_equation()

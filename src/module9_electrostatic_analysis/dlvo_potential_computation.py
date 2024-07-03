@@ -289,9 +289,8 @@ class ElectroStaticComputation:
                 (0, self.charge_density.max())
             PhiZeroSigma(log=log,
                          configs=self.configs,
-                         kwargs={'debye_md': debye_l,
-                                 'charge_density_range': charge_density_range
-                                 })
+                         debye_md=debye_l,
+                         charge_density_range= charge_density_range)
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

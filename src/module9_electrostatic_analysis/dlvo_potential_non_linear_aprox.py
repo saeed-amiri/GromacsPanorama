@@ -81,12 +81,12 @@ class NonLinearPotential:
         r_np: float = self.configs.computation_radius / 10.0  # [A] -> [nm]
         radii: np.ndarray = self.get_radii(r_np)
 
-        phi_r: np.ndarray = np.zeros(radii.shape)
+        phi_r: np.ndarray
 
         alpha: np.ndarray = self.compute_alpha(phi_0)
 
         kappa: float = 1.0 / debye_l
-        phi_r = self.compute_phi_r(radii, phi_r, alpha, kappa, r_np)
+        phi_r = self.compute_phi_r(radii, alpha, kappa, r_np)
         self.test_equation(radii, log)
         self._get_potential_to_log(radii, phi_r)
         return radii, phi_r
@@ -104,7 +104,6 @@ class NonLinearPotential:
 
     def compute_phi_r(self,
                       radii: np.ndarray,
-                      phi_r: np.ndarray,
                       alpha: np.ndarray,
                       kappa: float,
                       r_np: float
@@ -115,12 +114,17 @@ class NonLinearPotential:
         beta: float = self.configs.phi_parameters['k_boltzman_JK'] * \
             self.configs.phi_parameters['T']
         co_factor: float = 2.0 * beta / self.configs.phi_parameters['e_charge']
-
+        phi_r: np.ndarray = np.zeros(radii.shape)
         for alpha_i in alpha:
             alpha_exp: np.ndarray = alpha_i * np.exp(-kappa * (radii - r_np))
             radial_term: np.ndarray = alpha_exp * a_r
-            phi_r += \
-                co_factor * np.log1p((1.0 + radial_term) / (1.0 - radial_term))
+            # Handle division carefully to avoid division by zero
+            valid_indices = np.abs(radial_term) < 1
+            phi_r[valid_indices] += co_factor * \
+                np.log(
+                    (1.0 + radial_term[valid_indices]) /
+                    (1.0 - radial_term[valid_indices])
+                    )
 
         phi_r = phi_r / len(alpha)
         self.info_msg += \

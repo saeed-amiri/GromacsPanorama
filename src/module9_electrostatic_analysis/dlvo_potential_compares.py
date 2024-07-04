@@ -53,7 +53,7 @@ class CompareChrages:
         s_configs: "ComparisonConfigs" = self.configs.comparison_configs
         self.charge_density_dict, self.charge_dict = \
             self.get_density_charge(s_configs, log)
-        self.r_cuts, self.density_ave = self.get_average_charge_density(log)
+        self.r_cuts, self.densities_ave = self.get_average_charge_density()
         self.plot_charge_density()
 
     def get_density_charge(self,
@@ -118,22 +118,140 @@ class ComparePhi_0:
 
     info_msg: str = 'Message from ComparePhi_0:\n'
     configs: AllConfig
-    phi_0_dict: dict[str, np.ndarray]
+    phi_0_dict_loeb: dict[str, np.ndarray]
+    phi_loeb_avg: list[np.float64]
 
     def __init__(self,
                  r_cuts: list[float],
                  densities_ave: list[np.float64],
+                 charges: dict[str, np.ndarray],
+                 charge_density: dict[str, np.ndarray],
                  log: logger.logging.Logger,
                  configs: AllConfig = AllConfig()
                  ) -> None:
         self.configs = configs
-        self.compare_systems(r_cuts, densities_ave, log)
+        self.compare_systems(
+            r_cuts, densities_ave, charges, charge_density, log)
         self._write_msg(log)
 
     def compare_systems(self,
+                        r_cuts: list[float],
+                        densities_ave: list[np.float64],
+                        charges: dict[str, np.ndarray],
+                        charge_density: dict[str, np.ndarray],
                         log: logger.logging.Logger
                         ) -> None:
         """compare the phi_0 of the systems"""
+        self.phi_0_dict_loeb = \
+            self.get_phi_0_loeb(charges, charge_density, log)
+        self.phi_loeb_avg = self._get_avergae_phi_0()
+        phi_loeb_mv: list[np.float64] = [i * 100 for i in self.phi_loeb_avg]
+        self.plot_phi_0_r_cut(r_cuts, phi_loeb_mv)
+        self.plot_phi_0_denisty(densities_ave, phi_loeb_mv)
+
+    def get_phi_0_loeb(self,
+                       charges: dict[str, np.ndarray],
+                       charge_density: dict[str, np.ndarray],
+                       log: logger.logging.Logger
+                       ) -> dict[str, np.ndarray]:
+        """get the phi_0 for the systems"""
+        phi_0_dict_loeb: dict[str, np.ndarray] = {}
+        _configs: AllConfig = self.configs
+        _configs.solving_config.phi_0_type = 'grahame'
+        ion_strength = _configs.phi_parameters['c_salt']
+        debye_length = self._get_debye(ion_strength)
+        for key, charge in charges.items():
+            density = charge_density[key]
+            phi_0: np.ndarray = DLVOPotentialPhiZero(
+                debye_length=debye_length,
+                charge=charge,
+                charge_density=density,
+                configs=_configs,
+                ion_strength=ion_strength,
+                log=log).phi_0
+            phi_0_dict_loeb[key] = phi_0
+        return phi_0_dict_loeb
+
+    def plot_phi_0_r_cut(self,
+                         r_cuts: list[float],
+                         phi_loeb_mv: list[np.float64]
+                         ) -> None:
+        """plot the phi_0"""
+        fig_i: plt.Figure
+        ax_i: plt.Axes
+        fig_i, ax_i = elsevier_plot_tools.mk_canvas(size_type='single_column')
+        ax_i.plot(r_cuts,
+                  phi_loeb_mv,
+                  'o:',
+                  label='Loeb approx.',
+                  color='black',
+                  lw=0.5,
+                  markersize=3)
+        ax_i.set_xlabel('Cut off radius [nm]')
+        ax_i.set_ylabel(r'$\psi_0$ [mV]')
+        elsevier_plot_tools.save_close_fig(
+            fig_i, fname := 'phi_0_comparison.jpg')
+        self.info_msg += (
+            f'\tThe phi_0 is plotted and saved as `{fname}`\n')
+
+    def plot_phi_0_denisty(self,
+                           densities_ave: list[np.float64],
+                           phi_loeb_mv: list[np.float64]
+                           ) -> None:
+        """plot the phi_0"""
+        fig_i: plt.Figure
+        ax_i: plt.Axes
+        fig_i, ax_i = elsevier_plot_tools.mk_canvas(size_type='single_column')
+        ax_i.plot(densities_ave,
+                  phi_loeb_mv,
+                  'o:',
+                  label='Loeb approx.',
+                  color='black',
+                  lw=0.5,
+                  markersize=3)
+        ax_i.set_xlabel(r'$\sigma$ [C/m$^2$]')
+        ax_i.set_ylabel(r'$\psi_0$ [mV]')
+        elsevier_plot_tools.save_close_fig(
+            fig_i, fname := 'phi_0_vs_density_comparison.jpg',
+            loc='lower right')
+        self.info_msg += (
+            f'\tThe phi_0 vs density is plotted and saved as `{fname}`\n')
+
+    def _get_avergae_phi_0(self) -> list[np.float64]:
+        """get the average phi_0"""
+        phi_0_ave: list[np.float64] = \
+            [np.mean(i) for i in list(self.phi_0_dict_loeb.values())]
+        return phi_0_ave
+
+    def _get_debye(self,
+                   ionic_strength: float
+                   ) -> float:
+        """computing the debye length based on Poisson-Boltzmann apprx.
+        See:
+        pp. 96, Surface and Interfacial Forces, H-J Burr and M.Kappl
+        """
+        param: dict[str, float] = self.configs.phi_parameters
+
+        # ionnic strength in mol/m^3
+        ionic_str_mol_m3: float = ionic_strength * 1e3
+
+        # Getting debye length
+        debye_l: np.float64 = np.sqrt(
+            param['T'] * param['k_boltzman_JK'] *
+            param['epsilon'] * param['epsilon_0'] /
+            (2 * ionic_str_mol_m3 * param['n_avogadro'] * param['e_charge']**2
+             ))
+
+        # convert to nm
+        debye_l_nm = debye_l * 1e9
+
+        self.info_msg += (
+            f'\t`{debye_l_nm = :.4f}` [nm]\n'
+            '\t`computation_radius = '
+            f'{self.configs.computation_radius/10.0:.4f}` [nm]\n\t'
+            f'kappa * r = {self.configs.computation_radius/10/debye_l_nm:.3f}'
+            '\n')
+        return float(debye_l_nm)
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log
@@ -145,10 +263,15 @@ class ComparePhi_0:
 
 
 if __name__ == '__main__':
-    R_CUTS: list[float]
-    DENISTY_AVG: list[np.float64]
-    R_CUTS, DENISTY_AVG = \
-        CompareChrages(log=logger.setup_logger('compare_charges.log'))
+    LOG: logger.logging.Logger = logger.setup_logger('compare_charges.log')
+    CHARGE_INFO = CompareChrages(log=LOG)
+    R_CUTS: list[float] = CHARGE_INFO.r_cuts
+    DENISTY_AVG: list[np.float64] = CHARGE_INFO.densities_ave
+    CHARGE: dict[str, np.ndarray] = CHARGE_INFO.charge_dict
+    CHARGE_DENSITY: dict[str, np.ndarray] = CHARGE_INFO.charge_density_dict
+
     ComparePhi_0(R_CUTS,
                  DENISTY_AVG,
-                 log=logger.setup_logger('compare_phi_0.log'))
+                 CHARGE,
+                 CHARGE_DENSITY,
+                 log=LOG)

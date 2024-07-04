@@ -11,6 +11,8 @@ The experimental data also should be plotted!
 
 import numpy as np
 
+import matplotlib.pyplot as plt
+
 from common import logger, elsevier_plot_tools
 from common.colors_text import TextColor as bcolors
 
@@ -49,6 +51,7 @@ class CompareChrages:
         s_configs: "ComparisonConfigs" = self.configs.comparison_configs
         self.charge_density_dict, self.charge_dict = \
             self.get_density_charge(s_configs, log)
+        self.plot_charge_density()
 
     def get_density_charge(self,
                            s_configs: "ComparisonConfigs",
@@ -68,6 +71,29 @@ class CompareChrages:
             charge_dict[key] = density_charge.charge
 
         return charge_density_dict, charge_dict
+
+    def plot_charge_density(self) -> None:
+        """plot the charge density"""
+        fig_i: plt.Figure
+        ax_i: plt.Axes
+        fig_i, ax_i = elsevier_plot_tools.mk_canvas(size_type='single_column')
+        radii: list[float] = \
+            [float(i) for i in list(self.charge_density_dict.keys())]
+        denisties: list[np.float64] = \
+            [np.mean(i) for i in list(self.charge_density_dict.values())]
+        ax_i.plot(radii,
+                  denisties,
+                  'o:',
+                  label='Charge Density',
+                  color='black',
+                  lw=0.5,
+                  markersize=3)
+        ax_i.set_xlabel('Cut off radius [nm]')
+        ax_i.set_ylabel(r'$\sigma$ [C/m$^2$]')
+        elsevier_plot_tools.save_close_fig(
+            fig_i, fname := 'charge_density_comparison.jpg')
+        self.info_msg += (
+            f'\tThe charge density is plotted and saved as `{fname}`\n')
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

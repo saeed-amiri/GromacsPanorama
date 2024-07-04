@@ -150,15 +150,33 @@ class PhiZeroSigma:
                       label=f'{key} [mM]',)
         ax_i.set_xlabel(r'$\sigma$ [C/m$^2$]')
         ax_i.set_ylabel(r'$\psi_0$ [mV]')
-        ax_i.set_ylim(configs.y_lims[0]*100, configs.y_lims[1]*100)
-        ax_i.text(0.01,
-                  105,
-                  s=(r'$\psi_0 = \frac{2k_BT}{e}\sinh^{-1}('
-                     r'\frac{\sigma}{8c_0\epsilon\epsilon_0k_BT})$'),
-                  fontsize=8)
+        if (
+             c_type := self.configs.solving_config.phi_0_type
+             ) == 'grahame_simple':
+            ax_i.set_ylim(configs.y_lims[0]*100, configs.y_lims[1]*100)
+            ax_i.text(0.01,
+                      105,
+                      s=(r'$\sigma = \frac{2k_BT}{e}\sinh^{-1}('
+                         r'\frac{\sigma}{8c_0\epsilon\epsilon_0k_BT})$'),
+                      fontsize=8)
+            out_name: str = 'phi_0_sigma_grahame_simple.jpg'
+        elif c_type == 'grahame':
+            ax_i.set_ylim(150, 240)
+            ax_i.text(0.018,
+                      202,
+                      s=(r'$\sigma = \frac{\epsilon\epsilon_0k_BT}{e\lambda}$'
+                         r'$(2\sinh(\frac{e\psi_0}{2k_BT})\,+\,$'
+                         r'$\frac{4\lambda}{a}\tanh(\frac{e\psi_0}{4k_BT}))$'),
+                      fontsize=8)
+            ax_i.text(0.018,
+                      185,
+                      s=f'a = {self.configs.computation_radius/10} [nm]',
+                      fontsize=8
+                      )
+            out_name: str = 'phi_0_sigma_grahame.jpg'
 
         elsevier_plot_tools.save_close_fig(fig,
-                                           'phi_0_sigma.jpg',
+                                           fname=out_name,
                                            loc='lower right')
 
     def _compute_debye_exp(self,

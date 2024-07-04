@@ -234,6 +234,65 @@ class ComparePhiZero:
         self.info_msg += (
             f'\tThe phi_0 is plotted and saved as `{fname}`\n')
 
+    def plot_phi_r_cut_brocken_axis(self,
+                                    r_cuts: list[float],
+                                    phi_loeb_mv: list[np.float64],
+                                    phi_grahame_mv: list[np.float64]) -> None:
+        """plot the phi_0 with a broken y-axis using matplotlib"""
+        _, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(6, 4))
+
+        # Set the y-axis limits for each subplot to create the 'break'
+        # effect
+        ax1.set_ylim(230, 232)  # Upper plot
+        ax2.set_ylim(155.5, 158)  # Lower plot
+
+        # Plot the data on both subplots
+        ax1.plot(r_cuts,
+                 phi_loeb_mv,
+                 'o:',
+                 label='Loeb approx.',
+                 color='black',
+                 lw=0.5,
+                 markersize=3)
+        ax2.plot(r_cuts,
+                 phi_grahame_mv,
+                 '^:',
+                 color='grey',
+                 lw=0.5,
+                 markersize=3)
+
+        # Hide the spines between ax and ax2
+        ax1.spines['bottom'].set_visible(False)
+        ax2.spines['top'].set_visible(False)
+        ax1.xaxis.tick_top()
+        ax1.tick_params(labeltop=False)
+        ax2.xaxis.tick_bottom()
+
+        # Add diagonal lines to indicate the 'break' in the axis
+        d_size = .015  # how big to make the diagonal lines in axes coordinates
+        kwargs = {"transform": ax1.transAxes, "color": 'k', "clip_on": False}
+        ax1.plot((-d_size, +d_size), (-d_size, +d_size), **kwargs)
+        ax1.plot((1 - d_size, 1 + d_size), (-d_size, +d_size), **kwargs)
+
+        # switch to the bottom axes
+        kwargs.update(transform=ax2.transAxes)
+        ax2.plot((-d_size, +d_size), (1 - d_size, 1 + d_size), **kwargs)
+        ax2.plot((1 - d_size, 1 + d_size), (1 - d_size, 1 + d_size), **kwargs)
+
+        # Labels, titles, and legends
+        ax2.set_xlabel('Cut off radius [nm]')
+        ax1.set_ylabel(r'$\psi_0$ [mV]')
+        ax2.set_ylabel(r'$\psi_0$ [mV]')
+        ax1.legend(loc='upper right')
+
+        # Adjust layout
+        plt.subplots_adjust(hspace=0.1)
+
+        # Save the figure
+        plt.savefig('phi_0_comparison_broken_axis.jpg')
+        self.info_msg += ('\tThe phi_0 is plotted with a broken y-axis '
+                          'and saved as `phi_0_comparison_broken_axis.jpg`\n')
+
     def plot_phi_0_denisty(self,
                            densities_ave: list[np.float64],
                            phi_loeb_mv: list[np.float64],
@@ -320,7 +379,7 @@ if __name__ == '__main__':
     CHARGE_DENSITY: dict[str, np.ndarray] = CHARGE_INFO.charge_density_dict
 
     ComparePhiZero(R_CUTS,
-                 DENISTY_AVG,
-                 CHARGE,
-                 CHARGE_DENSITY,
-                 log=LOG)
+                   DENISTY_AVG,
+                   CHARGE,
+                   CHARGE_DENSITY,
+                   log=LOG)

@@ -113,5 +113,42 @@ class CompareChrages:
         log.info(self.info_msg)
 
 
+class ComparePhi_0:
+    """Compare the phi_0 for different cut off radius"""
+
+    info_msg: str = 'Message from ComparePhi_0:\n'
+    configs: AllConfig
+    phi_0_dict: dict[str, np.ndarray]
+
+    def __init__(self,
+                 r_cuts: list[float],
+                 densities_ave: list[np.float64],
+                 log: logger.logging.Logger,
+                 configs: AllConfig = AllConfig()
+                 ) -> None:
+        self.configs = configs
+        self.compare_systems(r_cuts, densities_ave, log)
+        self._write_msg(log)
+
+    def compare_systems(self,
+                        log: logger.logging.Logger
+                        ) -> None:
+        """compare the phi_0 of the systems"""
+
+    def _write_msg(self,
+                   log: logger.logging.Logger  # To log
+                   ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{ComparePhi_0.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
 if __name__ == '__main__':
-    CompareChrages(log=logger.setup_logger('compare_charges.log'))
+    R_CUTS: list[float]
+    DENISTY_AVG: list[np.float64]
+    R_CUTS, DENISTY_AVG = \
+        CompareChrages(log=logger.setup_logger('compare_charges.log'))
+    ComparePhi_0(R_CUTS,
+                 DENISTY_AVG,
+                 log=logger.setup_logger('compare_phi_0.log'))

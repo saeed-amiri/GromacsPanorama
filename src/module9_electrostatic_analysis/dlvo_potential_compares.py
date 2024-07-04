@@ -113,10 +113,10 @@ class CompareChrages:
         log.info(self.info_msg)
 
 
-class ComparePhi_0:
+class ComparePhiZero:
     """Compare the phi_0 for different cut off radius"""
 
-    info_msg: str = 'Message from ComparePhi_0:\n'
+    info_msg: str = 'Message from ComparePhiZero:\n'
     configs: AllConfig
     phi_0_dict_loeb: dict[str, np.ndarray]
     phi_loeb_avg: list[np.float64]
@@ -129,6 +129,7 @@ class ComparePhi_0:
                  log: logger.logging.Logger,
                  configs: AllConfig = AllConfig()
                  ) -> None:
+        # pylint: disable=too-many-arguments
         self.configs = configs
         self.compare_systems(
             r_cuts, densities_ave, charges, charge_density, log)
@@ -142,6 +143,7 @@ class ComparePhi_0:
                         log: logger.logging.Logger
                         ) -> None:
         """compare the phi_0 of the systems"""
+        # pylint: disable=too-many-arguments
         self.phi_0_dict_loeb = \
             self.get_phi_0_loeb(charges, charge_density, log)
         self.phi_loeb_avg = self._get_avergae_phi_0()
@@ -196,7 +198,8 @@ class ComparePhi_0:
 
     def plot_phi_0_denisty(self,
                            densities_ave: list[np.float64],
-                           phi_loeb_mv: list[np.float64]
+                           phi_loeb_mv: list[np.float64],
+                           phi_grahame_mv: list[np.float64]
                            ) -> None:
         """plot the phi_0"""
         fig_i: plt.Figure
@@ -270,7 +273,7 @@ if __name__ == '__main__':
     CHARGE: dict[str, np.ndarray] = CHARGE_INFO.charge_dict
     CHARGE_DENSITY: dict[str, np.ndarray] = CHARGE_INFO.charge_density_dict
 
-    ComparePhi_0(R_CUTS,
+    ComparePhiZero(R_CUTS,
                  DENISTY_AVG,
                  CHARGE,
                  CHARGE_DENSITY,

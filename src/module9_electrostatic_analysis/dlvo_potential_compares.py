@@ -35,6 +35,8 @@ class CompareChrages:
     configs: AllConfig
     charge_density_dict: dict[str, np.ndarray]
     charge_dict: dict[str, np.ndarray]
+    r_cuts: list[float]
+    densities_ave: list[np.float64]
 
     def __init__(self,
                  log: logger.logging.Logger,
@@ -51,6 +53,7 @@ class CompareChrages:
         s_configs: "ComparisonConfigs" = self.configs.comparison_configs
         self.charge_density_dict, self.charge_dict = \
             self.get_density_charge(s_configs, log)
+        self.r_cuts, self.density_ave = self.get_average_charge_density(log)
         self.plot_charge_density()
 
     def get_density_charge(self,
@@ -72,17 +75,23 @@ class CompareChrages:
 
         return charge_density_dict, charge_dict
 
-    def plot_charge_density(self) -> None:
+    def get_average_charge_density(self
+                                   ) -> tuple[list[float], list[np.float64]]:
+        """get the average charge density"""
+        r_cuts: list[float] = \
+            [float(i) for i in list(self.charge_density_dict.keys())]
+        denisties: list[np.float64] = \
+            [np.mean(i) for i in list(self.charge_density_dict.values())]
+        return r_cuts, denisties
+
+    def plot_charge_density(self,
+                            ) -> None:
         """plot the charge density"""
         fig_i: plt.Figure
         ax_i: plt.Axes
         fig_i, ax_i = elsevier_plot_tools.mk_canvas(size_type='single_column')
-        radii: list[float] = \
-            [float(i) for i in list(self.charge_density_dict.keys())]
-        denisties: list[np.float64] = \
-            [np.mean(i) for i in list(self.charge_density_dict.values())]
-        ax_i.plot(radii,
-                  denisties,
+        ax_i.plot(self.r_cuts,
+                  self.densities_ave,
                   'o:',
                   label='Charge Density',
                   color='black',

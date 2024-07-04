@@ -120,6 +120,8 @@ class ComparePhiZero:
     configs: AllConfig
     phi_0_dict_loeb: dict[str, np.ndarray]
     phi_loeb_avg: list[np.float64]
+    phi_0_dict_grahame: dict[str, np.ndarray]
+    phi_grahame_avg: list[np.float64]
 
     def __init__(self,
                  r_cuts: list[float],
@@ -146,10 +148,15 @@ class ComparePhiZero:
         # pylint: disable=too-many-arguments
         self.phi_0_dict_loeb = \
             self.get_phi_0_loeb(charges, charge_density, log)
-        self.phi_loeb_avg = self._get_avergae_phi_0()
+        self.phi_0_dict_grahame = \
+            self._get_phi_0_grahame(charges, charge_density, log)
+        self.phi_loeb_avg = self._get_avergae_phi_0(self.phi_0_dict_loeb)
+        self.phi_grahame_avg = self._get_avergae_phi_0(self.phi_0_dict_grahame)
         phi_loeb_mv: list[np.float64] = [i * 100 for i in self.phi_loeb_avg]
-        self.plot_phi_0_r_cut(r_cuts, phi_loeb_mv)
-        self.plot_phi_0_denisty(densities_ave, phi_loeb_mv)
+        phi_grahame_mv: list[np.float64] = \
+            [i * 100 for i in self.phi_grahame_avg]
+        self.plot_phi_0_r_cut(r_cuts, phi_loeb_mv, phi_grahame_mv)
+        self.plot_phi_0_denisty(densities_ave, phi_loeb_mv, phi_grahame_mv)
 
     def get_phi_0_loeb(self,
                        charges: dict[str, np.ndarray],
@@ -174,9 +181,33 @@ class ComparePhiZero:
             phi_0_dict_loeb[key] = phi_0
         return phi_0_dict_loeb
 
+    def _get_phi_0_grahame(self,
+                           charges: dict[str, np.ndarray],
+                           charge_density: dict[str, np.ndarray],
+                           log: logger.logging.Logger
+                           ) -> dict[str, np.ndarray]:
+        """get the phi_0 for the systems"""
+        phi_0_dict_grahame: dict[str, np.ndarray] = {}
+        _configs: AllConfig = self.configs
+        _configs.solving_config.phi_0_type = 'grahame_simple'
+        ion_strength = _configs.phi_parameters['c_salt']
+        debye_length = self._get_debye(ion_strength)
+        for key, charge in charges.items():
+            density = charge_density[key]
+            phi_0: np.ndarray = DLVOPotentialPhiZero(
+                debye_length=debye_length,
+                charge=charge,
+                charge_density=density,
+                configs=_configs,
+                ion_strength=ion_strength,
+                log=log).phi_0
+            phi_0_dict_grahame[key] = phi_0
+        return phi_0_dict_grahame
+
     def plot_phi_0_r_cut(self,
                          r_cuts: list[float],
-                         phi_loeb_mv: list[np.float64]
+                         phi_loeb_mv: list[np.float64],
+                         phi_grahame_mv: list[np.float64]
                          ) -> None:
         """plot the phi_0"""
         fig_i: plt.Figure
@@ -187,6 +218,13 @@ class ComparePhiZero:
                   'o:',
                   label='Loeb approx.',
                   color='black',
+                  lw=0.5,
+                  markersize=3)
+        ax_i.plot(r_cuts,
+                  phi_grahame_mv,
+                  '^:',
+                  label='Grahame approx.',
+                  color='grey',
                   lw=0.5,
                   markersize=3)
         ax_i.set_xlabel('Cut off radius [nm]')
@@ -212,6 +250,13 @@ class ComparePhiZero:
                   color='black',
                   lw=0.5,
                   markersize=3)
+        ax_i.plot(densities_ave,
+                  phi_grahame_mv,
+                  '^:',
+                  label='Grahame approx.',
+                  color='grey',
+                  lw=0.5,
+                  markersize=3)
         ax_i.set_xlabel(r'$\sigma$ [C/m$^2$]')
         ax_i.set_ylabel(r'$\psi_0$ [mV]')
         elsevier_plot_tools.save_close_fig(
@@ -220,10 +265,11 @@ class ComparePhiZero:
         self.info_msg += (
             f'\tThe phi_0 vs density is plotted and saved as `{fname}`\n')
 
-    def _get_avergae_phi_0(self) -> list[np.float64]:
+    @staticmethod
+    def _get_avergae_phi_0(phi_dict) -> list[np.float64]:
         """get the average phi_0"""
         phi_0_ave: list[np.float64] = \
-            [np.mean(i) for i in list(self.phi_0_dict_loeb.values())]
+            [np.mean(i) for i in list(phi_dict.values())]
         return phi_0_ave
 
     def _get_debye(self,
@@ -260,7 +306,7 @@ class ComparePhiZero:
                    log: logger.logging.Logger  # To log
                    ) -> None:
         """write and log messages"""
-        print(f'{bcolors.OKCYAN}{ComparePhi_0.__name__}:\n'
+        print(f'{bcolors.OKCYAN}{ComparePhiZero.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
 

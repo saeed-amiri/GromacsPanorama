@@ -252,19 +252,20 @@ class AnalyticAnalysis:
         """plot the data for different alpha"""
         # pylint: disable=too-many-arguments
         phi_r_list: list[np.ndarray] = []
-        phi_r = np.zeros(radii.shape)
-        for strength in range(1, 6):
-            for alpha_i in alpha:
-                alpha_exp = \
-                    strength * alpha_i * np.exp(-kappa * (radii - r_np))
-                radial_term = alpha_exp * a_r
-                log_argument = (1.0 + radial_term) / (1.0 - radial_term)
-                # Check if log_argument is valid for np.log1p
-                if np.any(log_argument <= 0):
-                    # Handle invalid log_argument here, e.g., skip \
-                    #  or set phi_r to a default value
-                    continue  # Example: skip this iteration
-                phi_r += co_factor * np.log1p(log_argument)
+        strength: int = 1.0
+        for alpha_i in range(1, 6):
+            phi_r = np.zeros(radii.shape)
+            alpha_exp = \
+                strength * alpha_i * np.exp(-kappa * (radii - r_np))
+            radial_term = alpha_exp * a_r
+            log_argument: np.ndarray = \
+                (1.0 + radial_term) / (1.0 - radial_term)
+            # Check if log_argument is valid for np.log1p
+            if np.any(log_argument <= 0):
+                # Handle invalid log_argument here, e.g., skip \
+                #  or set phi_r to a default value
+                pass
+            phi_r += co_factor * np.log1p(log_argument)
             phi_r_list.append(phi_r / len(alpha))
         self.plot_diff_alpha_graphs(radii, phi_r_list, r_np)
 

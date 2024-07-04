@@ -256,7 +256,7 @@ class AnalyticAnalysis:
         """plot the data for different alpha"""
         # pylint: disable=too-many-arguments
         phi_r_list: list[np.ndarray] = []
-        strength: int = 1.0
+        strength: float = 1.0
         for alpha_i in range(1, 6):
             phi_r = np.zeros(radii.shape)
             alpha_exp = \
@@ -264,12 +264,12 @@ class AnalyticAnalysis:
             radial_term = alpha_exp * a_r
             log_argument: np.ndarray = \
                 (1.0 + radial_term) / (1.0 - radial_term)
-            # Check if log_argument is valid for np.log1p
+            # Check if log_argument is valid for np.log
             if np.any(log_argument <= 0):
                 # Handle invalid log_argument here, e.g., skip \
                 #  or set phi_r to a default value
                 pass
-            phi_r += co_factor * np.log1p(log_argument)
+            phi_r += co_factor * np.log(log_argument)
             phi_r_list.append(phi_r / len(alpha))
         self.plot_diff_alpha_graphs(radii, phi_r_list, r_np)
 
@@ -317,11 +317,11 @@ class AnalyticAnalysis:
                 alpha_exp = alpha_i * np.exp(-kappa * (radii - r_np))
                 radial_term = alpha_exp * a_r
                 log_argument = (1.0 + radial_term) / (1.0 - radial_term)
-                # Check if log_argument is valid for np.log1p
+                # Check if log_argument is valid for np.log
                 valid_indices = log_argument > 0
                 # Only update phi_r for valid indices
                 phi_r[valid_indices] += \
-                    co_factor * np.log1p(log_argument[valid_indices])
+                    co_factor * np.log(log_argument[valid_indices])
             phi_r_list.append(phi_r / len(alpha))
         self.plot_diff_np_r_graphs(radii, phi_r_list)
 

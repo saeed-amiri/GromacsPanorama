@@ -47,7 +47,8 @@ class PlotPotential:
         fig_i: plt.figure
         fig_i, axs = elsevier_plot_tools.mk_canvas_multi('double_column',
                                                          n_rows=1,
-                                                         n_cols=7)
+                                                         n_cols=7,
+                                                         aspect_ratio=2)
         for ax_i in axs:
             ax_i.axis('off')
         grid_panel = gridspec.GridSpec(1, 7, figure=fig_i)

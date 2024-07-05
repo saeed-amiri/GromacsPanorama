@@ -113,7 +113,7 @@ class PlotConfig(FileConfig):
     legend_loc: str = 'upper right'
     if_np_radius_line: bool = True
     if_stern_line: bool = False
-    if_debye_line: bool = True
+    if_debye_line: bool = False
     if_2nd_debye: bool = False
 
     if_title: bool = False
@@ -226,12 +226,14 @@ class AllConfig(FileConfig, ParameterConfig):
     """
     ionic_type: str = 'salt'
 
-    remove_phi_0_density_0: bool = True
+    remove_phi_0_density_0: bool = False
     remove_phi_r_density_0: bool = False
 
     plot_config: PlotConfig = field(default_factory=PlotConfig)
 
     solving_config: SolvingConfig = field(default_factory=SolvingConfig)
+
+    phi_r_calculater: str = 'non_linear'
 
     compare_phi_0_sigma: bool = True
     phi_zero_sigma_config: PhiZeroSigmaConfig = field(

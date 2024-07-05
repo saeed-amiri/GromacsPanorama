@@ -68,6 +68,7 @@ class CompareChrages:
         for key, charges_fname in s_configs.charge_files.items():
             _configs: AllConfig = self.configs
             _configs.charge_fname = charges_fname
+            _configs.computation_radius = float(key)*10.0
             density_charge = ChargeDensity(
                 log=log, configs=_configs)
             charge_density_dict[key] = density_charge.density
@@ -170,6 +171,7 @@ class ComparePhiZero:
         ion_strength = _configs.phi_parameters['c_salt']
         debye_length = self._get_debye(ion_strength)
         for key, charge in charges.items():
+            _configs.computation_radius = float(key)*10.0
             density = charge_density[key]
             phi_0: np.ndarray = DLVOPotentialPhiZero(
                 debye_length=debye_length,

@@ -390,14 +390,16 @@ class ComparePhiZero:
 
 if __name__ == '__main__':
     LOG: logger.logging.Logger = logger.setup_logger('compare_charges.log')
+
     CHARGE_INFO = CompareChrages(log=LOG)
     R_CUTS: list[float] = CHARGE_INFO.r_cuts
     DENISTY_AVG: list[np.float64] = CHARGE_INFO.densities_ave
     CHARGE: dict[str, np.ndarray] = CHARGE_INFO.charge_dict
     CHARGE_DENSITY: dict[str, np.ndarray] = CHARGE_INFO.charge_density_dict
 
-    ComparePhiZero(R_CUTS,
-                   DENISTY_AVG,
-                   CHARGE,
-                   CHARGE_DENSITY,
-                   log=LOG)
+    PHI_ZERO = ComparePhiZero(R_CUTS,
+                              DENISTY_AVG,
+                              CHARGE,
+                              CHARGE_DENSITY,
+                              log=LOG)
+

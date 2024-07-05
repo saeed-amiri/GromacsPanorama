@@ -158,6 +158,10 @@ class ComparePhiZero:
             [i * 100 for i in self.phi_grahame_avg]
         self.plot_phi_0_r_cut(r_cuts, phi_loeb_mv, phi_grahame_mv)
         self.plot_phi_0_denisty(densities_ave, phi_loeb_mv, phi_grahame_mv)
+        self.plot_phi_brocken_axis(
+            r_cuts, phi_loeb_mv, phi_grahame_mv, 'r_cut')
+        self.plot_phi_brocken_axis(
+            densities_ave, phi_loeb_mv, phi_grahame_mv, 'density')
 
     def get_phi_0_loeb(self,
                        charges: dict[str, np.ndarray],
@@ -236,27 +240,36 @@ class ComparePhiZero:
         self.info_msg += (
             f'\tThe phi_0 is plotted and saved as `{fname}`\n')
 
-    def plot_phi_r_cut_brocken_axis(self,
-                                    r_cuts: list[float],
-                                    phi_loeb_mv: list[np.float64],
-                                    phi_grahame_mv: list[np.float64]) -> None:
+    def plot_phi_brocken_axis(self,
+                              x_data: list[float],
+                              phi_loeb_mv: list[np.float64],
+                              phi_grahame_mv: list[np.float64],
+                              plot_type: str
+                              ) -> None:
         """plot the phi_0 with a broken y-axis using matplotlib"""
         _, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(6, 4))
 
         # Set the y-axis limits for each subplot to create the 'break'
         # effect
-        ax1.set_ylim(230, 232)  # Upper plot
-        ax2.set_ylim(155.5, 158)  # Lower plot
+        ax1.set_ylim(228, 232)  # Upper plot
+        ax2.set_ylim(153.5, 158)  # Lower plot
 
         # Plot the data on both subplots
-        ax1.plot(r_cuts,
+        ax1.plot(x_data,
                  phi_loeb_mv,
                  'o:',
                  label='Loeb approx.',
                  color='black',
                  lw=0.5,
                  markersize=3)
-        ax2.plot(r_cuts,
+        ax1.plot(x_data,
+                 phi_grahame_mv,
+                 '^:',
+                 label='Grahame approx.',
+                 color='grey',
+                 lw=0.5,
+                 markersize=3)
+        ax2.plot(x_data,
                  phi_grahame_mv,
                  '^:',
                  color='grey',
@@ -283,6 +296,8 @@ class ComparePhiZero:
 
         # Labels, titles, and legends
         ax2.set_xlabel('Cut off radius [nm]')
+        if plot_type == 'density':
+            ax2.set_xlabel(r'$\sigma$ [C/m$^2$]')
         ax1.set_ylabel(r'$\psi_0$ [mV]')
         ax2.set_ylabel(r'$\psi_0$ [mV]')
         ax1.legend(loc='upper right')
@@ -291,9 +306,10 @@ class ComparePhiZero:
         plt.subplots_adjust(hspace=0.1)
 
         # Save the figure
-        plt.savefig('phi_0_comparison_broken_axis.jpg')
-        self.info_msg += ('\tThe phi_0 is plotted with a broken y-axis '
-                          'and saved as `phi_0_comparison_broken_axis.jpg`\n')
+        plt.savefig(f'phi_0_{plot_type}_comparison_broken_axis.jpg')
+        self.info_msg += (
+            f'\tThe phi_0 vs {plot_type} is plotted with a broken y-axis '
+            'and saved as `phi_0_comparison_broken_axis.jpg`\n')
 
     def plot_phi_0_denisty(self,
                            densities_ave: list[np.float64],

@@ -89,7 +89,8 @@ class PlotPotential:
         phi_mv: np.ndarray = phi_r * configs.voltage_to_mV
         # kappa * radius of the np
         kappa_r: float = \
-            self.configs.np_radius / (debye_d * configs.angstrom_to_nm)
+            self.configs.computation_radius / \
+            (debye_d * configs.angstrom_to_nm)
         self._plot_data(ax_i, radii, phi_mv, configs)
         phi_vlaue_calced: float = \
             self._plot_vertical_lines(ax_i, configs, phi_mv, radii, debye_d)
@@ -198,7 +199,8 @@ class PlotPotential:
                     phi_value = df_i.iloc[:, 1][idx_closest]
                 except KeyError:
                     phi_value = df_i.iloc[:, 0][idx_closest]
-                if np.abs(phi_value - phi_value_from_computation) > 10:
+                if configs.if_debye_line and \
+                   np.abs(phi_value - phi_value_from_computation) > 10:
                     self._plot_debye_lines(
                         ax_i, phi_value, debye_d, configs, order_of_plot=2)
             return phi_value

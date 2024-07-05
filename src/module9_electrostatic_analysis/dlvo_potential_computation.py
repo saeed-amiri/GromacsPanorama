@@ -267,7 +267,7 @@ class ElectroStaticComputation:
         """compute the non-linearized Possion-Boltzmann equation for a
         sphere"""
         non_linear_pot = NonLinearPotential(
-            debye_l, phi_0, log, self.charge, self.configs)
+            debye_l, phi_0, log, self.configs)
         return non_linear_pot.radii, non_linear_pot.phi_r
 
     def plot_save_phi(self,

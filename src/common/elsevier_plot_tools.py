@@ -77,7 +77,7 @@ DPI_HALFTONE: int = 300
 DPI_COMBINATION: int = 500
 DPI_LINE_ART: int = 1000
 # Golden ratio
-GOLDEN_RATIO: float = (1 + 5 ** 0.5) / 2
+GOLDEN_RATIO: float = (1 + 5 ** 0.5) / 2.0
 # Lines and markers
 LINE_WIDTH: float = 1.0
 LINE_STYLES: list[str] = ['--', '-', '-.', ':']
@@ -89,38 +89,52 @@ MARKER_COLORS: list[str] = \
 MARKER_SHAPES: list[str] = ['o', 's', 'D', '^', 'v', 'x']
 # Output file format
 IMG_FORMAT: str = 'jpg'
+# Python list containing a palette of black shades
+BLACK_SHADES = [
+    "#000000",  # Pure Black
+    "#1C1C1C",  # Very Dark Gray
+    "#383838",  # Dark Gray
+    "#545454",  # Slightly Darker Gray
+    "#707070",  # Mid Gray
+    "#8C8C8C",  # Medium Light Gray
+    "#A8A8A8",  # Light Gray
+    "#C4C4C4",  # Very Light Gray
+    "#E0E0E0",  # Almost White Gray
+    "#FFFFFF"   # White (for the sake of gradient completion)
+]
 
 
-def set_figure_height(width: int,
-                      aspect_ratio: float = GOLDEN_RATIO
+def set_figure_height(width: float,
+                      aspect_ratio: float = 1.0
                       ) -> int:
     """Set the figure height based on the width and aspect ratio"""
-    return int(width / aspect_ratio)
+    return int(width / (aspect_ratio * GOLDEN_RATIO))
 
 
-def set_figure_size(size_type: str
-                    ) -> tuple[int, int]:
+def set_figure_size(size_type: str,
+                    aspect_ratio: float = 1.0
+                    ) -> tuple[float, float]:
     """Set the size of the figure based on the size type"""
-    sizes: dict[str, tuple[int, int]] = {
+    sizes: dict[str, tuple[float, float]] = {
         "minimal": (
             MINIMAL_SIZE_PT / POINT_PER_INCH,
-            set_figure_height(MINIMAL_SIZE_PT / POINT_PER_INCH)
-            ),
+            set_figure_height(MINIMAL_SIZE_PT / POINT_PER_INCH,
+                              aspect_ratio)),
         "single_column": (
             SINGLE_COLUMN_PT / POINT_PER_INCH,
-            set_figure_height(SINGLE_COLUMN_PT / POINT_PER_INCH)
-            ),
+            set_figure_height(SINGLE_COLUMN_PT / POINT_PER_INCH,
+                              aspect_ratio)),
         "one_half_column": (
             ONE_AND_HALF_COLUMN_PT / POINT_PER_INCH,
-            set_figure_height(ONE_AND_HALF_COLUMN_PT / POINT_PER_INCH)
-            ),
+            set_figure_height(ONE_AND_HALF_COLUMN_PT / POINT_PER_INCH,
+                              aspect_ratio)),
         "double_column": (
             DOUBLE_COLUMN_PT / POINT_PER_INCH,
-            set_figure_height(DOUBLE_COLUMN_PT / POINT_PER_INCH)
-            )
+            set_figure_height(DOUBLE_COLUMN_PT / POINT_PER_INCH,
+                              aspect_ratio))
     }
     return sizes.get(size_type, (SINGLE_COLUMN_PT,
-                     set_figure_height(SINGLE_COLUMN_PT)))
+                     set_figure_height(SINGLE_COLUMN_PT, aspect_ratio)))
 
 
 def set_font_size(ax_i: plt.Axes,
@@ -142,10 +156,12 @@ def set_dpi(dpi: int) -> None:
 
 
 def mk_canvas(size_type: str,
-              dpi: int = DPI_HALFTONE
+              dpi: int = DPI_HALFTONE,
+              aspect_ratio: float = 1.0
               ) -> tuple[plt.Figure, plt.Axes]:
     """Create a canvas for the figure"""
-    fig_i, ax_i = plt.subplots(figsize=set_figure_size(size_type))
+    fig_i, ax_i = \
+        plt.subplots(figsize=set_figure_size(size_type, aspect_ratio))
     set_dpi(dpi)
     ax_i = set_font_size(ax_i)
     return fig_i, ax_i
@@ -154,11 +170,14 @@ def mk_canvas(size_type: str,
 def mk_canvas_multi(size_type: str,
                     n_rows: int = 1,
                     n_cols: int = 1,
+                    aspect_ratio: float = 1.0,
                     dpi: int = DPI_HALFTONE
                     ) -> tuple[plt.Figure, plt.Axes]:
     """Create a canvas for a multi-panel figure"""
-    fig_i, axs_i = plt.subplots(n_rows, n_cols,
-                                figsize=set_figure_size(size_type))
+    fig_i, axs_i = \
+        plt.subplots(n_rows,
+                     n_cols,
+                     figsize=set_figure_size(size_type, aspect_ratio))
     set_dpi(dpi)
     for ax_i in axs_i:
         ax_i = set_font_size(ax_i)
@@ -185,7 +204,7 @@ def save_close_fig(fig: plt.Figure,
     if show_legend:
         if horizontal_legend:
             ncol = len(fig.axes[0].get_legend_handles_labels()[0])
-            y_loc = 0.89
+            y_loc = 0.23
             fig.legend(bbox_to_anchor=(0.9, y_loc),
                        fontsize=FONT_SIZE_PT,
                        ncol=ncol)

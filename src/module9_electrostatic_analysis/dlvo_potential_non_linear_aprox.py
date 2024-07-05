@@ -36,11 +36,11 @@ from module9_electrostatic_analysis.dlvo_potential_configs import AllConfig
 @dataclass
 class AnalyticConfig:
     """set the parameters for the analytic approximation plots"""
-    alpha: np.ndarray = np.array([1.0, 1.0])
+    alpha: np.ndarray = field(default_factory=lambda: np.array([1.0, 1.0]))
     r_np: float = 3.0  # [nm]
     debye_l: float = 1.0  # [nm]
-    phi_0: np.ndarray = np.array([1.0, 1.0])
-    charge: np.ndarray = np.array([1.0, 1.0])
+    phi_0: np.ndarray = field(default_factory=lambda: np.array([1.0, 1.0]))
+    charge: np.ndarray = field(default_factory=lambda: np.array([1.0, 1.0]))
     beta: float = 1.0
     colors: list[str] = field(default_factory=lambda: [
         '#d9d9d9', '#bdbdbd', '#969696', '#737373', '#525252', '#252525',

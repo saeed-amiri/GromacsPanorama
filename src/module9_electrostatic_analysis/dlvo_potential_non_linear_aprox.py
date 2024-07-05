@@ -77,14 +77,19 @@ class NonLinearPotential:
         """compute the DLVO potential"""
         # pylint: disable=unused-argument
         r_np: float = self.configs.computation_radius / 10.0  # [A] -> [nm]
-        radii: np.ndarray = self.get_radii(r_np)
 
         phi_r: np.ndarray
 
         alpha: np.ndarray = self.compute_alpha(phi_0)
 
         kappa: float = 1.0 / debye_l
-        phi_r = self.compute_phi_r(radii, alpha, kappa, r_np)
+        if self.configs.phi_r_calculater == 'non_linear':
+            radii: np.ndarray = self.get_radii(r_np)
+            phi_r = self.compute_phi_r(radii, alpha, kappa, r_np)
+        else:
+            radii = np.linspace(r_np, 11, phi_0.shape[0])
+            phi_r = self.compute_phi_r_linear(radii, phi_0, kappa, r_np)
+
         self.test_equation(radii, log)
         self._get_potential_to_log(radii, phi_r)
         return radii, phi_r
@@ -129,6 +134,17 @@ class NonLinearPotential:
             ('\tComputing the potential in nonlinear approximation of the'
              'Boltzmann-Poisson equation\n')
         return phi_r
+
+    def compute_phi_r_linear(self,
+                             radii: np.ndarray,
+                             phi_0: np.ndarray,
+                             kappa: float,
+                             r_np: float
+                             ) -> np.ndarray:
+        """compute the potential
+        \\phi(r) = r_np * \\phi_0 exp(-\\kappa(r-r_np))/r
+        """
+        return phi_0 * r_np * np.exp(-kappa * (radii - r_np)) / radii
 
     def get_radii(self,
                   r_np: float

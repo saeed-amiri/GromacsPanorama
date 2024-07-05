@@ -11,7 +11,7 @@ from common import elsevier_plot_tools
 @dataclass
 class FileConfig:
     """set the name of the input files"""
-    charge_fname: str = 'charge_df.xvg'
+    charge_fname: str = 'charge_df_3_6.xvg'
     total_charge_coloumn: str = 'total_charge'
     contact_fname: str = 'contact.xvg'
     fout: str = 'potential.xvg'
@@ -29,8 +29,8 @@ class ParameterConfig:
     """
     # pylint: disable=too-many-instance-attributes
     np_radius: float = 30.0  # In Ångströms
-    stern_layer: float = 34.0  # In Ångströms
-    computation_radius: float = 30.0  # In Ångströms
+    stern_layer: float = 36.0  # In Ångströms
+    computation_radius: float = 36.0  # In Ångströms
     avg_contact_angle: float = 38.0  # In Degrees
     np_core_charge: int = -8  # Number of charge inside the NP
     all_aptes_charges: int = 322  # Protonated APTES
@@ -157,7 +157,7 @@ class SolvingConfig(FileConfig, ParameterConfig):
 
     compute_type: str = 'non_linear'
 
-    phi_0_type: str = 'grahame_simple'
+    phi_0_type: str = 'grahame'
 
     ionic_strength: str = 'salt'
 
@@ -177,7 +177,7 @@ class PhiZeroSigmaConfig:
     temperature in Kelvin
     """
     exp_salt_concentration: list[float] = field(default_factory=lambda: [
-        0.01, 0.1, 0.5, 1.0])
+        0.0048, 0.01, 0.1, 0.5, 1.0])
     exp_np_radii: list[float] = \
         field(default_factory=lambda: [30.0, 40.0, 50.0])
     exp_temperature: float = 298.15
@@ -187,6 +187,26 @@ class PhiZeroSigmaConfig:
 
     y_lims: tuple[float, float] = field(default_factory=lambda: (1, 1.6))
     x_lims: tuple[float, float] = field(default_factory=lambda: (-0.001, 0.02))
+
+
+@dataclass
+class ComparisonConfigs:
+    """set the parameters for the comparison of the data"""
+    charge_column: str = 'total_charge'
+
+    charge_files: dict[str, str] = field(default_factory=lambda: {
+        '3.0': 'charge_df_3_0.xvg',
+        '3.2': 'charge_df_3_2.xvg',
+        '3.4': 'charge_df_3_4.xvg',
+        '3.6': 'charge_df_3_6.xvg'})
+    
+    
+    radial_avg_files: dict[str, str] = field(default_factory=lambda: {
+        '3.0': 'radial_average_potential_nonlinear_3_0.xvg',
+        '3.2': 'radial_average_potential_nonlinear_3_2.xvg',
+        '3.4': 'radial_average_potential_nonlinear_3_4.xvg',
+        '3.6': 'radial_average_potential_nonlinear_3_6.xvg',
+        })
 
 
 @dataclass
@@ -205,10 +225,18 @@ class AllConfig(FileConfig, ParameterConfig):
         all: compute it from all charge groups in the system
     """
     ionic_type: str = 'salt'
+
     remove_phi_0_density_0: bool = True
     remove_phi_r_density_0: bool = False
+
     plot_config: PlotConfig = field(default_factory=PlotConfig)
+
     solving_config: SolvingConfig = field(default_factory=SolvingConfig)
+
     compare_phi_0_sigma: bool = True
     phi_zero_sigma_config: PhiZeroSigmaConfig = field(
         default_factory=PhiZeroSigmaConfig)
+
+    plot_comparisons: bool = False
+    comparison_configs: ComparisonConfigs = field(
+        default_factory=ComparisonConfigs)

@@ -61,19 +61,17 @@ class NonLinearPotential:
                  debye_l: float,
                  phi_0: np.ndarray,
                  log: logger.logging.Logger,
-                 charge: np.ndarray,
                  configs: AllConfig = AllConfig()
                  ) -> None:
         """write and log messages"""
         self.configs = configs
         self.radii, self.phi_r = \
-            self.compute_potential(debye_l, phi_0, charge, log)
+            self.compute_potential(debye_l, phi_0, log)
         self._write_msg(log)
 
     def compute_potential(self,
                           debye_l: float,
                           phi_0: np.ndarray,
-                          charge: np.ndarray,
                           log: logger.logging.Logger
                           ) -> tuple[np.ndarray, np.ndarray]:
         """compute the DLVO potential"""

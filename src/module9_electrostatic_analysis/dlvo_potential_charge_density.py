@@ -41,7 +41,8 @@ class ChargeDensity:
             self._get_contact_angle_density(charge, configs, log)
 
         cap_surface_meter_squre: np.ndarray = \
-            self._compute_under_water_area(configs.np_radius, contact_angle)
+            self._compute_under_water_area(configs.computation_radius,
+                                           contact_angle)
 
         self._np_core_apt_charge(configs, cap_surface_meter_squre)
 
@@ -50,6 +51,7 @@ class ChargeDensity:
         density: np.ndarray = (e_density * configs.phi_parameters['e_charge'])
 
         self.info_msg += (
+            f'\tUsed Radius is `{configs.computation_radius}` [Å]\n'
             f'\tAve. `{charge.mean() = :.3f}` [e]\n'
             f'\t`{cap_surface_meter_squre.mean()*1e18 = :.3f}` [nm^2]\n'
             f'\tAve. `{e_density.mean() / 1e18 = :.3f}` [e/nm^2]\n'
@@ -101,7 +103,7 @@ class ChargeDensity:
             )
 
     @staticmethod
-    def _compute_under_water_area(np_radius: float,
+    def _compute_under_water_area(computation_radius: float,
                                   contact_angle: np.ndarray
                                   ) -> np.ndarray:
         """
@@ -112,7 +114,7 @@ class ChargeDensity:
         exposure to water.
 
         Parameters:
-        - np_radius: Radius of the NP in Ångströms.
+        - computation_radius: Radius of the sphere in Ångströms.
         - contact_angle: Contact angle(s) in degrees.
 
         Returns:
@@ -125,7 +127,7 @@ class ChargeDensity:
         # Formula: A = 2 * pi * r^2 * (1 + cos(θ))
         # Alco converted from Ångströms^2 to m^2
         in_water_cap_area: np.ndarray = \
-            2 * np.pi * np_radius**2 * (1 + np.cos(radians))
+            2 * np.pi * computation_radius**2 * (1 + np.cos(radians))
         return in_water_cap_area * 1e-20
 
     @staticmethod

@@ -184,6 +184,8 @@ class ElectroStaticComputation:
             raise ValueError(
                 f'\t\n{bcolors.FAIL}Unknown computation type: {compute_type}'
                 f'{bcolors.ENDC}\n')
+        self.info_msg += \
+            f'\tThe first value in the potential is: {phi_r[0]:.3f} [V]\n'
         return radii, phi_r
 
     def _get_phi_zero(self,
@@ -200,14 +202,14 @@ class ElectroStaticComputation:
             log=log)
         if self.configs.remove_phi_0_density_0:
             phi_0_compute_density_0: np.ndarray = \
-                self.compute_phi_0_zero_density(debye_l, log)
+                self.compute_phi_0_at_zero_density(debye_l, log)
             return phi_0_compute.phi_0, phi_0_compute_density_0
         return phi_0_compute.phi_0, np.zeros(self.charge_density.shape)
 
-    def compute_phi_0_zero_density(self,
-                                   debye_l: float,
-                                   log: logger.logging.Logger
-                                   ) -> np.ndarray:
+    def compute_phi_0_at_zero_density(self,
+                                      debye_l: float,
+                                      log: logger.logging.Logger
+                                      ) -> np.ndarray:
         """remove the potentioal of zero density from the phi_0"""
         zero_density: np.ndarray = np.zeros(self.charge_density.shape)
         zero_charge: np.ndarray = np.zeros(self.charge.shape)

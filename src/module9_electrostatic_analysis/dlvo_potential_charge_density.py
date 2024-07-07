@@ -21,6 +21,7 @@ class ChargeDensity:
     info_msg: str = 'Message from ChargeDensity:\n'
     density: np.ndarray
     charge: np.ndarray
+    total_area: float
 
     def __init__(self,
                  log: logger.logging.Logger,
@@ -43,7 +44,7 @@ class ChargeDensity:
         cap_surface_meter_squre: np.ndarray = \
             self._compute_under_water_area(configs.computation_radius,
                                            contact_angle)
-
+        self.total_area = self.get_total_area(configs.computation_radius)
         self._np_core_apt_charge(configs, cap_surface_meter_squre)
 
         e_density: np.ndarray = charge / cap_surface_meter_squre
@@ -87,7 +88,6 @@ class ChargeDensity:
                             ) -> None:
         """compute the charge density of the NP core"""
         # Total area of the sphere: 4 * pi * r^2
-        total_area: float = 4 * np.pi * configs.computation_radius**2 * 1e-20
         net_charge_on_apt_core: int = \
             configs.all_aptes_charges + configs.np_core_charge
         np_core_charge_density_e_per_nanometer: float = \
@@ -96,12 +96,13 @@ class ChargeDensity:
         np_core_charge_density_columb_per_meter: float = \
             net_charge_on_apt_core * \
             configs.phi_parameters['e_charge'] / cap_surface_meter_squre.mean()
+
         # Density over the total area
         over_total_area_e_per_meter: float = \
-            net_charge_on_apt_core / total_area / 1e18
+            net_charge_on_apt_core / self.total_area / 1e18
         over_total_area_columb_per_meter: float = \
             net_charge_on_apt_core * configs.phi_parameters['e_charge'] / \
-            total_area
+            self.total_area
 
         self.info_msg += (
             f'\tThe charge density of the NP core is:\n'
@@ -111,6 +112,13 @@ class ChargeDensity:
             f'\t\t{over_total_area_e_per_meter = :.3f} [e/m^2]\n'
             f'\t\t{over_total_area_columb_per_meter = :.3f} [C/m^2]\n'
             )
+
+    @staticmethod
+    def get_total_area(computation_radius: float) -> float:
+        """compute the total area of the NP
+        return the total area in m^2
+        """
+        return 4 * np.pi * computation_radius**2 * 1e-20
 
     @staticmethod
     def _compute_under_water_area(computation_radius: float,

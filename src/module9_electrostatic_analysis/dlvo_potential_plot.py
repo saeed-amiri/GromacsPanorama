@@ -276,7 +276,7 @@ class PlotPotential:
         if configs.if_np_radius_line:
             ax_i.vlines(x=self.configs.np_radius/10,
                         ymin=configs.y_lims[0],
-                        ymax=phi_mv.max(),
+                        ymax=configs.y_lims[1],
                         color=configs.colors[4],
                         linestyle=configs.line_styles[0],
                         linewidth=elsevier_plot_tools.LINE_WIDTH)

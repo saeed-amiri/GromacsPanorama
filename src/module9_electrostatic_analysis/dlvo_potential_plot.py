@@ -387,7 +387,7 @@ class PlotPotential:
                                 ) -> None:
         """plot the stern layer lines"""
         y_lims: tuple[float, float] = ax_i.get_ylim()
-        ax_i.vlines(x=(x_temp := self.configs.stern_layer/10+0.1),
+        ax_i.vlines(x=(x_temp := self.configs.stern_layer/10),
                     ymin=configs.y_lims[0],
                     ymax=y_lims[1]+10,
                     color=configs.colors[4],

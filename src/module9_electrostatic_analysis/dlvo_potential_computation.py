@@ -184,8 +184,11 @@ class ElectroStaticComputation:
             raise ValueError(
                 f'\t\n{bcolors.FAIL}Unknown computation type: {compute_type}'
                 f'{bcolors.ENDC}\n')
-        self.info_msg += \
+        self.info_msg += (
             f'\tThe first value in the potential is: {phi_r[0]:.3f} [V]\n'
+            f'\tThe last value in the potential is: {phi_r[-1]:.3f} [V]\n'
+            f'\tThe first value in the radii is: {radii[0]:.3f} [nm]\n'
+            )
         return radii, phi_r
 
     def _get_phi_zero(self,

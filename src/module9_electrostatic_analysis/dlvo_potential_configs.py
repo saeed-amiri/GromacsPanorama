@@ -3,6 +3,7 @@ This module contains the configurations for the DLVO potential calculation.
 """
 
 import typing
+import numpy as np
 from dataclasses import dataclass, field
 
 from common import elsevier_plot_tools
@@ -47,7 +48,8 @@ class ParameterConfig:
         'phi_0': 1.0e-9,  # The potential at zero point (V)
         'box_xlim': 21.8,  # Length of the box in x direction [nm]
         'box_ylim': 21.8,  # Length of the box in y direction [nm]
-        'box_zlim': 22.5  # Length of the box in z direction [nm] whole box
+        'box_zlim': 22.5,  # Length of the box in z direction [nm] whole box
+        'mv_to_v': 1e-3  # mV to V
     })
     charge_sings: dict[str, int] = field(default_factory=lambda: ({
         'SOL': 0,
@@ -199,8 +201,7 @@ class ComparisonConfigs:
         '3.2': 'charge_df_3_2.xvg',
         '3.4': 'charge_df_3_4.xvg',
         '3.6': 'charge_df_3_6.xvg'})
-    
-    
+
     radial_avg_files: dict[str, str] = field(default_factory=lambda: {
         '3.0': 'radial_average_potential_nonlinear_3_0.xvg',
         '3.2': 'radial_average_potential_nonlinear_3_2.xvg',

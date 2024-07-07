@@ -28,14 +28,16 @@ class ExperimentComputation:
     """
     info_msg: str = 'Message from ExperimentComputation:\n'
     configs: AllConfig
-    charge_density: np.ndarray
+    charge_density: typing.Union[float, np.ndarray]
 
     def __init__(self,
                  log: logger.logging.Logger,
                  configs: AllConfig = AllConfig()
                  ) -> None:
         self.configs = configs
-        self.compute_density()
+        self.charge_density = self.compute_density()
+        self.info_msg += \
+            f'\tThe charge density is computed: {self.charge_density}\n'
         self._write_msg(log)
 
     def compute_density(self) -> typing.Union[float, np.ndarray]:
@@ -62,8 +64,17 @@ class ExperimentComputation:
                                       np_radius=r_np/10.0))
         if style == 'ohshima':
             return zeta_potential
-        no_density: np.ndarray = np.zeros_like(zeta_potential)
-        return no_density
+        return self.no_density(zeta_potential, style)
+
+    def no_density(self,
+                   zeta_potential: typing.Union[float, np.ndarray],
+                   style: str
+                   ) -> typing.Union[float, np.ndarray]:
+        """compute the density based on the Grahame equation"""
+        self.info_msg += (
+            '\tNo density is computed\n'
+            f'\n\tAn unknown relation is asked for `{style}`\n\n')
+        return np.zeros_like(zeta_potential)
 
     def density_grahame(self,
                         zeta_potential: typing.Union[float, np.ndarray],
@@ -78,10 +89,10 @@ class ExperimentComputation:
                     parameters['T'] * parameters['k_boltzman_JK'] *
                     ionic_strength * 1e3 * parameters['n_avogadro']
                     ) *
-            np.sinh(parameters['e_charge'] * zeta_potential *
-                    parameters['mv_to_v'] /
-                    (2 * parameters['k_boltzman_JK'] *
-                    parameters['T']))
+            np.sinh(parameters['e_charge'] *
+                    zeta_potential * parameters['mv_to_v'] /
+                    (2.0 * parameters['k_boltzman_JK'] * parameters['T'])
+                    )
             )
 
     def density_loeb(self,
@@ -106,10 +117,12 @@ class ExperimentComputation:
             (2 * parameters['k_boltzman_JK'] * parameters['T'])
 
         # general term
-        general_term: typing.Union[float, np.ndarray] = co_factor * np.sinh(arg) * kappa
+        general_term: typing.Union[float, np.ndarray] = \
+            co_factor * np.sinh(arg) * kappa
 
         # effect of the np size
-        np_size_term: typing.Union[float, np.ndarray] = 2 * co_factor * np.tanh(arg/2.0) / np_radius
+        np_size_term: typing.Union[float, np.ndarray] = \
+            2.0 * co_factor * np.tanh(arg/2.0) / np_radius
 
         return general_term + np_size_term
 

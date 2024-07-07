@@ -78,19 +78,45 @@ class DLVOPotentialPhiZero:
                                       ionic_strength: float,
                                       density: np.ndarray
                                       ) -> np.ndarray:
-        """compute the phi_0 based on the linearized Possion-Boltzmann
+        """Compute the phi_0 based on the linearized Poisson-Boltzmann
         relation:
-        density = sqrt(8 * c_0 * epsilon * epsilon_0 * k_boltzman_JK * T) *
+        density = sqrt(8 * I * epsilon * epsilon_0 * k_boltzman_JK * T) *
         sinh(e * phi_0 / 2k_BT)
-        pp. 102, Surface and Interfacial Forces, H-J Burr and M.Kappl
+        pp. 102, Surface and Interfacial Forces, H-J Burr and M. Kappl
+
+        Parameters:
+        ionic_strength (float): The ionic strength of the solution in
+        mol/L:
+        I = 1/2 * sum_i(z_i^2 * c_i)
+
+        If c is the concentration in mol/L, then the number of ions
+        per cubic meter is:
+        Number of ions per m3
+
+        density (np.ndarray): The surface charge density in C/m^2.
+
+        Returns:
+        np.ndarray: The surface potential phi_0 in Volts.
         """
         self.info_msg += '\tPhi_0 computed from Grahame sinh (1) relation\n'
         param: dict[str, float] = self.configs.phi_parameters
+
+        # Calculate thermal energy k_B * T
         kbt: float = param['T'] * param['k_boltzman_JK']
+
+        # Calculate permittivity epsilon * epsilon_0
         epsilon: float = param['epsilon'] * param['epsilon_0']
+
+        # Calculate factor for conversion
         y_0: float = 2 * kbt / param['e_charge']
-        co_factor: float = np.sqrt(8 * ionic_strength * 1e3 * epsilon * kbt)
+
+        # Calculate the coefficient for the surface charge density term
+        co_factor: float = np.sqrt(
+            8 * ionic_strength * 1e3 * param['n_avogadro'] * epsilon * kbt)
+
+        # Calculate the surface potential phi_0
         phi_0: np.ndarray = y_0 * np.arcsinh(density / co_factor)
+
         return phi_0
 
     def _compute_phi_0_grahame_nonlinear(self,

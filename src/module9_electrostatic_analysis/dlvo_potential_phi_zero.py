@@ -120,15 +120,15 @@ class DLVOPotentialPhiZero:
         return phi_0
 
     def _compute_phi_0_grahame_nonlinear(self,
-                                         debye_l: float,
+                                         debye_l: float,  # in nm
                                          log: logger.logging.Logger
                                          ) -> np.ndarray:
         """
         Compute the phi_0 based on the nonlinearized Poisson-Boltzmann
-        relation for a sphere using the Grahame equation.
-
-        This method numerically solves the equation 4.25 from pp. 101,
-        Surface and Interfacial Forces, H-J Butt and M.Kappl.
+        relation for a sphere using the Loeb equation.
+        phi_0 = 2 * epsilon * epsilon_0 * k_B *  T / (e * debye_l) * [
+            sinh(e * phi_0 / 2k_BT) - 2 * debye_l /a * tanh(e * phi_0 / 2k_BT)
+            ]
 
         Parameters:
         debye_l (float): Debye length.
@@ -137,30 +137,37 @@ class DLVOPotentialPhiZero:
         np.ndarray: Computed phi_0 values.
         """
         self.info_msg += '\tPhi_0 computed from Grahame sinh (2) relation\n'
+        r_np: float = self.configs.computation_radius / 10.0  # [A] -> [nm]
 
         param: dict[str, float] = self.configs.phi_parameters
 
+        # Calculate thermal energy k_B * T
         kbt: float = param['T'] * param['k_boltzman_JK']
+        # Calculate permittivity epsilon * epsilon_0
         epsilon: float = param['epsilon'] * param['epsilon_0']
-        r_np: float = self.configs.computation_radius / 10.0  # [A] -> [nm]
+        # Calculate a_kappa: a_kappa = r_np / debye_l
         a_kappa: float = r_np / debye_l
+        # Calculate y_0: y_0 = e / (2 * k_B * T)
         y_0: float = param['e_charge'] / (2.0 * kbt)
-        co_factor: float = epsilon * epsilon / (y_0 * debye_l)
-
+        # Calculate the coefficient for the surface charge density term
+        # co_factor = epsilon / (y_0 * debye_l)
+        co_factor: float = epsilon / (y_0 * debye_l * 1e-9)
+        # Allocate memory for the computed phi_0 values
         phi_0: np.ndarray = np.zeros(self.charge.shape, dtype=np.float64)
 
         sigma = self.charge_density.copy()
-        y_initial_guess: float = 25.18
+        # Intial guess for the numerical solver
+        y_initial_guess: float = 0.1
 
         self.iter_flase_report_flag = False
 
         for i, _ in enumerate(phi_0):
-            phi_0[i] = self._root_phi_0(y_0,
-                                        a_kappa,
-                                        co_factor,
-                                        sigma[i],
-                                        y_initial_guess,
-                                        log)
+            phi_0[i] = self._root_phi_0(y_0=y_0,
+                                        a_kappa=a_kappa,
+                                        co_factor=co_factor,
+                                        sigma=sigma[i],
+                                        y_initial_guess=y_initial_guess,
+                                        log=log)
         self.info_msg += ('\tPhi_0 computed from numerical solution of '
                           'nonlinear equation from Grahame relation\n')
 
@@ -264,7 +271,7 @@ class DLVOPotentialPhiZero:
         # pylint: disable=too-many-arguments
         return (
             co_factor * (
-                self.safe_sinh(y_0 * phi_x) -
+                self.safe_sinh(y_0 * phi_x) +
                 (2/a_kappa) * np.tanh(y_0 * phi_x / 2)
                 ) - sigma
             )

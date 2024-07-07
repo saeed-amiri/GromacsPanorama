@@ -145,33 +145,32 @@ class PhiZeroSigma:
         fig, ax_i = elsevier_plot_tools.mk_canvas('single_column')
         for i, (key, phi) in enumerate(phi_list.items()):
             ax_i.plot(denisty_range,
-                      phi*100,
+                      phi*1000,
                       c=elsevier_plot_tools.BLACK_SHADES[i*2],
-                      label=f'{key} [mM]',)
+                      label=f'{key} [M]',)
         ax_i.set_xlabel(r'$\sigma$ [C/m$^2$]')
         ax_i.set_ylabel(r'$\psi_0$ [mV]')
         if (
              c_type := self.configs.solving_config.phi_0_type
              ) == 'grahame_simple':
-            ax_i.set_ylim(configs.y_lims[0]*100, configs.y_lims[1]*100)
-            ax_i.text(0.01,
-                      105,
-                      s=(r'$\sigma = \frac{2k_BT}{e}\sinh^{-1}('
+            # ax_i.set_ylim(configs.y_lims[0]*100, configs.y_lims[1]*100)
+            ax_i.text(0.0,
+                      130,
+                      s=(r'$\psi_0 = \frac{2k_BT}{e}\sinh^{-1}('
                          r'\frac{\sigma}{8c_0\epsilon\epsilon_0k_BT})$'),
-                      fontsize=8)
+                      fontsize=6)
             out_name: str = 'phi_0_sigma_grahame_simple.jpg'
         elif c_type == 'grahame':
-            ax_i.set_ylim(150, 240)
-            ax_i.text(0.018,
-                      202,
+            ax_i.text(-0.0,
+                      120,
                       s=(r'$\sigma = \frac{\epsilon\epsilon_0k_BT}{e\lambda}$'
                          r'$(2\sinh(\frac{e\psi_0}{2k_BT})\,+\,$'
                          r'$\frac{4\lambda}{a}\tanh(\frac{e\psi_0}{4k_BT}))$'),
-                      fontsize=8)
-            ax_i.text(0.018,
-                      185,
+                      fontsize=6)
+            ax_i.text(-0.0,
+                      100,
                       s=f'a = {self.configs.computation_radius/10} [nm]',
-                      fontsize=8
+                      fontsize=6
                       )
             out_name: str = 'phi_0_sigma_grahame.jpg'
 

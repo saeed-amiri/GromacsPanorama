@@ -81,6 +81,7 @@ class PhiZeroSigma:
         self.configs = configs
         self.compute_phi_0(log)
         self.plot_phi_0_sigma_relation(log)
+        self.phi_vs_np_radius(log)
         self.write_msg(log)
 
     def validate_kwargs(self,
@@ -136,6 +137,77 @@ class PhiZeroSigma:
         ).phi_0
         return phi_sigma
 
+    def phi_vs_np_radius(self,
+                         log: logger.logging.Logger
+                         ) -> None:
+        """compute the phi_0 with respect to changing the np_radius
+        in the simulation salt concentration
+        """
+        phi_list: dict[str, np.ndarray] = {}
+        configs = self.configs.phi_zero_sigma_config
+        denisty_range: np.ndarray = \
+            np.linspace(*self.charge_density_range, configs.nr_density_points)
+        for np_radius in configs.exp_np_radii:
+            phi_list[f'{np_radius}'] = self._compute_phi_0_np_radius(
+                self.debye_md, denisty_range, np_radius, log)
+        self.plot_0_np_radius(denisty_range, phi_list, configs)
+
+    def _compute_phi_0_np_radius(self,
+                                 debye: float,
+                                 denisty_range: np.ndarray,
+                                 np_radius: float,
+                                 log: logger.logging.Logger
+                                 ) -> np.ndarray:
+        """compute the phi_0 with respect to sigma"""
+        _configs = self.configs
+        _configs.computation_radius = np_radius
+        phi_np: np.ndarray = DLVOPotentialPhiZero(
+            debye_length=debye,
+            charge=np.zeros(denisty_range.shape),
+            charge_density=denisty_range,
+            configs=_configs,
+            ion_strength=self.configs.phi_parameters['c_salt'],
+            log=log
+        ).phi_0
+        return phi_np
+
+    def plot_0_np_radius(self,
+                         denisty_range: np.ndarray,
+                         phi_list: dict[str, np.ndarray],
+                         configs: "PhiZeroSigmaConfig"
+                         ) -> None:
+        """plot the phi_0 with respect to np radius"""
+        fig, ax_i = elsevier_plot_tools.mk_canvas('single_column')
+        for i, (key, phi) in enumerate(phi_list.items()):
+            ax_i.plot(denisty_range,
+                      phi*1000,
+                      c=elsevier_plot_tools.BLACK_SHADES[i*2],
+                      label=f'{float(key)/10:.1f} [nm]',)
+        ax_i.set_xlabel(r'$\sigma$ [C/m$^2$]')
+        ax_i.set_ylabel(r'$\psi_0$ [mV]')
+        if (
+           c_type := self.configs.solving_config.phi_0_type
+           ) == 'grahame_simple':
+            ax_i.text(0.0,
+                      130,
+                      s=(r'$\psi_0 = \frac{2k_BT}{e}\sinh^{-1}('
+                          r'\frac{\sigma}{8c_0\epsilon\epsilon_0k_BT})$'),
+                      fontsize=6)
+            out_name: str = 'phi_0_np_radius_grahame_simple.jpg'
+        elif c_type == 'grahame':
+            ax_i.text(
+                -0.0,
+                120,
+                s=(r'$\sigma = \frac{\epsilon\epsilon_0k_BT}{e\lambda}$'
+                    r'$(2\sinh(\frac{e\psi_0}{2k_BT})\,+\,$'
+                    r'$\frac{4\lambda}{a}\tanh(\frac{e\psi_0}{4k_BT}))$'),
+                fontsize=6)
+            out_name = 'phi_0_np_radius_grahame.jpg'
+
+        elsevier_plot_tools.save_close_fig(fig,
+                                           fname=out_name,
+                                           loc='lower right')
+
     def _plot_phi_0_sigma(self,
                           denisty_range: np.ndarray,
                           phi_list: dict[str, np.ndarray],
@@ -147,7 +219,7 @@ class PhiZeroSigma:
             ax_i.plot(denisty_range,
                       phi*1000,
                       c=elsevier_plot_tools.BLACK_SHADES[i*2],
-                      label=f'{key} [M]',)
+                      label=f'{key} [M]')
         ax_i.set_xlabel(r'$\sigma$ [C/m$^2$]')
         ax_i.set_ylabel(r'$\psi_0$ [mV]')
         if (
@@ -172,7 +244,7 @@ class PhiZeroSigma:
                       s=f'a = {self.configs.computation_radius/10} [nm]',
                       fontsize=6
                       )
-            out_name: str = 'phi_0_sigma_grahame.jpg'
+            out_name = 'phi_0_sigma_grahame.jpg'
 
         elsevier_plot_tools.save_close_fig(fig,
                                            fname=out_name,

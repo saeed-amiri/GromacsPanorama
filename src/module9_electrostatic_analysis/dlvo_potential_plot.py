@@ -311,10 +311,16 @@ class PlotPotential:
                         ) -> None:
         """set the axis ticks"""
         x_tick_labels: list[str] = [str(f'{i:.1f}') for i in configs.x_ticks]
-        debye_d_str: str = f'{debye_d:.2f}'
-        configs.x_ticks.extend([debye_d])
+        if configs.if_debye_line:
+            debye_d_str: str = f'{debye_d:.2f}'
+            configs.x_ticks.extend([debye_d])
+            x_tick_labels.append(debye_d_str)
+        if configs.if_stern_line:
+            stern_layer_str: str = f'{self.configs.stern_layer/10:.2f}'
+            configs.x_ticks.extend([self.configs.stern_layer/10])
+            x_tick_labels.append(stern_layer_str)
         ax_i.set_xticks(configs.x_ticks)
-        ax_i.set_xticklabels(x_tick_labels + [debye_d_str],
+        ax_i.set_xticklabels(x_tick_labels,
                              fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
         ax_i.set_yticks(configs.y_ticks)

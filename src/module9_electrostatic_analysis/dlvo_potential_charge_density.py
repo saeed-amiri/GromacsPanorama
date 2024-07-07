@@ -44,19 +44,28 @@ class ChargeDensity:
         cap_surface_meter_squre: np.ndarray = \
             self._compute_under_water_area(configs.computation_radius,
                                            contact_angle)
-        self.total_area = self.get_total_area(configs.computation_radius)
+
+        self.total_area = \
+            self.get_total_area(configs.computation_radius)  # in m^2
         self._np_core_apt_charge(configs, cap_surface_meter_squre)
 
         e_density: np.ndarray = charge / cap_surface_meter_squre
+
+        total_area_e_density: np.ndarray = charge / self.total_area
+        total_area_charge_density: np.ndarray = \
+            charge * configs.phi_parameters['e_charge'] / self.total_area
 
         density: np.ndarray = e_density * configs.phi_parameters['e_charge']
 
         self.info_msg += (
             f'\tUsed Radius is `{configs.computation_radius}` [Å]\n'
-            f'\tAve. `{charge.mean() = :.3f}` [e]\n'
-            f'\t`{cap_surface_meter_squre.mean()*1e18 = :.3f}` [nm^2]\n'
-            f'\tAve. `{e_density.mean() / 1e18 = :.3f}` [e/nm^2]\n'
-            f'\tAve. `charge_{density.mean() = :.3f}` [C/m^2] or [As/m^2]\n')
+            f'\t\tAve. `{charge.mean() = :.3f}` [e]\n'
+            f'\t\t`{cap_surface_meter_squre.mean()*1e18 = :.3f}` [nm^2]\n'
+            f'\t\tAve. `{e_density.mean()/1e18 = :.3f}` [e/nm^2]\n'
+            f'\t\tAve. `charge_{density.mean() = :.3f}` [C/m^2] or [As/m^2]\n'
+            f'\t\tAve. `{total_area_e_density.mean()/1e18  = :.3f} [e/nm^2]\n'
+            f'\t\tAve. `{total_area_charge_density.mean() = :.3f} [C/m^2]\n'
+            )
 
         return charge, density
 

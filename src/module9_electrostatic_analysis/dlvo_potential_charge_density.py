@@ -48,7 +48,7 @@ class ChargeDensity:
 
         e_density: np.ndarray = charge / cap_surface_meter_squre
 
-        density: np.ndarray = (e_density * configs.phi_parameters['e_charge'])
+        density: np.ndarray = e_density * configs.phi_parameters['e_charge']
 
         self.info_msg += (
             f'\tUsed Radius is `{configs.computation_radius}` [Å]\n'

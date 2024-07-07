@@ -97,6 +97,8 @@ class PlotPotential:
             self._plot_vertical_lines(ax_i, configs, phi_mv, radii, debye_d)
         self._plot_radial_avg(ax_i, configs, debye_d, phi_vlaue_calced, log)
 
+        self._plot_experiment_lines(ax_i, phi_mv, radii, configs)
+
         self._set_grids(ax_i)
         self._set_axis_labels(ax_i, configs)
         self._set_title(ax_i, kappa_r, configs)
@@ -236,6 +238,28 @@ class PlotPotential:
         self.info_msg += (
             f'\tPotential at Debye ({item}): {phi_value:.2f} [mV] = '
             f'{phi_value/25.2:.2f} [kT/e]\n')
+
+    def _plot_experiment_lines(self,
+                               ax_i: plt.axes,
+                               phi_mv: np.ndarray,
+                               radii: np.ndarray,
+                               configs: PlotConfig
+                               ) -> None:
+        """plot the experimental lines"""
+        if configs.if_experiment:
+            # finding the location of the experimental data in x axis
+            r_closest = np.abs(phi_mv - configs.phi_r_exprimental_avg).argmin()
+            ax_i.hlines(y=configs.phi_r_exprimental_avg,
+                        xmin=0,
+                        xmax=radii[r_closest] + 0.5,
+                        color=configs.colors[3],
+                        linestyle=configs.line_styles[2],
+                        linewidth=elsevier_plot_tools.LINE_WIDTH,
+                        label='Experimental')
+            ax_i.text(radii[r_closest] + 0.5,
+                      configs.phi_r_exprimental_avg,
+                      fr'$\psi_{{exp}}$ = {configs.phi_r_exprimental_avg:.2f}',
+                      fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
     def _set_grids(self,
                    ax_i: plt.axes

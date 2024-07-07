@@ -25,11 +25,11 @@ class DLVOPotentialPhiZero:
     iter_flase_report_flag: bool = False
 
     def __init__(self,
-                 debye_length: float,
-                 charge: np.ndarray,
-                 charge_density: np.ndarray,
+                 debye_length: float,  # in nm
+                 charge: np.ndarray,  # in e
+                 charge_density: np.ndarray,  # in C/m^2
                  configs: AllConfig,
-                 ion_strength: float,
+                 ion_strength: float, # in mol/L
                  log: logger.logging.Logger
                  ) -> None:
         # pylint: disable=too-many-arguments

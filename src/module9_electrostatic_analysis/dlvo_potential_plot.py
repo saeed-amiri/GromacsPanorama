@@ -171,6 +171,7 @@ class PlotPotential:
                          log: logger.logging.Logger
                          ) -> float:
         """plot the radial average"""
+        # pylint: disable=too-many-arguments
         apbs_files: dict[str, str] = {}
         if configs.plot_radial_avg:
             try:
@@ -393,11 +394,10 @@ class PlotPotential:
                     color=configs.colors[4],
                     linestyle=configs.line_styles[0],
                     linewidth=elsevier_plot_tools.LINE_WIDTH)
-        print(f'{bcolors.CAUTION}Stern layer at {x_temp} nm{bcolors.ENDC}')
-        ax_i.text(x_temp+0.5,
-                  phi_mv.max()-300,
-                  'Stern layer',
-                  fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        # ax_i.text(x_temp+0.5,
+        #   phi_mv.max(),
+        #   'Stern layer',
+        #   fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
         ax_i.hlines(y=(phi_0 := phi_mv.max()),
                     xmin=0,
@@ -406,7 +406,7 @@ class PlotPotential:
                     linestyle=configs.line_styles[2],
                     linewidth=elsevier_plot_tools.LINE_WIDTH)
         ax_i.text(x_temp+0.6,
-                  phi_0-280.2,
+                  phi_0,
                   fr'$\psi_0$ = {phi_0:.2f}',
                   fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 

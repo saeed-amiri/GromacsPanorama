@@ -211,6 +211,28 @@ class ComparisonConfigs:
 
 
 @dataclass
+class ExperimetnalConfigs:
+    """set the parameters for the experimental data
+    np_radii: in [Angstrom]
+    salt_concentration: in [M]
+    zeta_average: in [mV]
+    density_computatin_style:
+        Grahame: Grahame equation
+        Loeb: Loeb equation
+        Ohshima: Ohshima equation
+    """
+    np_radii: list[float] = field(default_factory=lambda: [200.0])
+    salt_concentration: list[float] = field(default_factory=lambda: [0.01])
+    data_files: dict[str, str] = field(default_factory=lambda: {
+        '200': 'potential_200.xvg'})
+    read_zeta_file: bool = False
+    zeta_average: dict[str, np.ndarray] = field(default_factory=lambda: {
+        '200': np.asarray([36.0, 39.3, 39.5])})
+
+    density_computatin_style: str = 'loeb'
+
+
+@dataclass
 class AllConfig(FileConfig, ParameterConfig):
     """set all the parameters and confiurations
     computation types:
@@ -243,3 +265,6 @@ class AllConfig(FileConfig, ParameterConfig):
     plot_comparisons: bool = False
     comparison_configs: ComparisonConfigs = field(
         default_factory=ComparisonConfigs)
+
+    experiment_configs: ExperimetnalConfigs = field(
+        default_factory=ExperimetnalConfigs)

@@ -33,6 +33,8 @@ class DLVOPotentialPhiZero:
                  log: logger.logging.Logger
                  ) -> None:
         # pylint: disable=too-many-arguments
+        print(f"{bcolors.CAUTION}{ion_strength}:\n"
+                f"\tComputing phi_0 for the DLVO potential\n{bcolors.ENDC}")
         self.configs = configs
         self.charge = charge
         self.charge_density = charge_density

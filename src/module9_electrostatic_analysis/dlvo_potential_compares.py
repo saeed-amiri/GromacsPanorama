@@ -123,6 +123,7 @@ class ComparePhiZero:
     phi_loeb_avg: list[np.float64]
     phi_0_dict_grahame: dict[str, np.ndarray]
     phi_grahame_avg: list[np.float64]
+    debye_length: float
 
     def __init__(self,
                  r_cuts: list[float],
@@ -153,9 +154,9 @@ class ComparePhiZero:
             self._get_phi_0_grahame(charges, charge_density, log)
         self.phi_loeb_avg = self._get_avergae_phi_0(self.phi_0_dict_loeb)
         self.phi_grahame_avg = self._get_avergae_phi_0(self.phi_0_dict_grahame)
-        phi_loeb_mv: list[np.float64] = [i * 100 for i in self.phi_loeb_avg]
+        phi_loeb_mv: list[np.float64] = [i * 1000 for i in self.phi_loeb_avg]
         phi_grahame_mv: list[np.float64] = \
-            [i * 100 for i in self.phi_grahame_avg]
+            [i * 1000 for i in self.phi_grahame_avg]
         self.plot_phi_0_r_cut(r_cuts, phi_loeb_mv, phi_grahame_mv)
         self.plot_phi_0_denisty(densities_ave, phi_loeb_mv, phi_grahame_mv)
         self.plot_phi_brocken_axis(

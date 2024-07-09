@@ -159,10 +159,11 @@ class ComparePhiZero:
             [i * 1000 for i in self.phi_grahame_avg]
         self.plot_phi_0_r_cut(r_cuts, phi_loeb_mv, phi_grahame_mv)
         self.plot_phi_0_denisty(densities_ave, phi_loeb_mv, phi_grahame_mv)
-        self.plot_phi_brocken_axis(
-            r_cuts, phi_loeb_mv, phi_grahame_mv, 'r_cut')
-        self.plot_phi_brocken_axis(
-            densities_ave, phi_loeb_mv, phi_grahame_mv, 'density')
+        if self.configs.comparison_configs.plot_brocken_graph:
+            self.plot_phi_brocken_axis(
+                r_cuts, phi_loeb_mv, phi_grahame_mv, 'r_cut')
+            self.plot_phi_brocken_axis(
+                densities_ave, phi_loeb_mv, phi_grahame_mv, 'density')
 
     def get_phi_0_loeb(self,
                        charges: dict[str, np.ndarray],

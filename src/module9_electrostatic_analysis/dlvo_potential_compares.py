@@ -391,6 +391,62 @@ class ComparePhiZero:
         log.info(self.info_msg)
 
 
+class ComparePhiR:
+    """Compare the phi_r for different cut off radius"""
+
+    info_msg: str = 'Message from ComparePhiR:\n'
+    configs: AllConfig
+
+    def __init__(self,
+                 debye_length: float,
+                 phi_0_loeb: dict[str, np.ndarray],
+                 phi_0_grahame: dict[str, np.ndarray],
+                 log: logger.logging.Logger,
+                 configs: AllConfig = AllConfig()
+                 ) -> None:
+        self.configs = configs
+        self.compare_systems(debye_length, phi_0_loeb, phi_0_grahame, log)
+        self._write_msg(log)
+
+    def compare_systems(self,
+                        debye_length: float,
+                        phi_0_loeb: dict[str, np.ndarray],
+                        phi_0_grahame: dict[str, np.ndarray],
+                        log: logger.logging.Logger
+                        ) -> None:
+        """compare the phi_r of the systems"""
+        _configs: AllConfig = self.configs
+        for key, phi_0 in phi_0_loeb.items():
+            _configs.computation_radius = float(key)*10.0
+            phi_loeb = NonLinearPotential(debye_l=debye_length,
+                                          phi_0=phi_0,
+                                          configs=_configs,
+                                          log=log)
+            phi_r_loeb: np.ndarray = phi_loeb.phi_r
+            radii: np.ndarray = phi_loeb.radii
+            phi_r_grahame: np.ndarray = NonLinearPotential(
+                debye_l=debye_length,
+                phi_0=phi_0_grahame[key],
+                configs=_configs,
+                log=log).phi_r
+            # self.plot_phi_r(phi_r_loeb, phi_r_grahame, key)
+            plt.plot(radii, phi_r_grahame, label=f'Grahame, {key}', ls='-')
+            plt.plot(radii, phi_r_loeb, label=f'Loeb, {key}',ls=':')
+        plt.xlim(2.5, 7.4)
+        plt.ylim(0, 0.25)
+        plt.legend()
+        plt.savefig('phi_r_comparison.jpg')
+        plt.close()
+
+    def _write_msg(self,
+                   log: logger.logging.Logger  # To log
+                   ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{ComparePhiR.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
+
 if __name__ == '__main__':
     LOG: logger.logging.Logger = logger.setup_logger('compare_charges.log')
 

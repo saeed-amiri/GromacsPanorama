@@ -368,3 +368,40 @@ class DLVOPotentialPhiZero:
         print(f'{bcolors.OKCYAN}{DLVOPotentialPhiZero.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
+
+
+def calculate_ion_concentration(water_molecules: int,
+                                ion_count: int
+                                ) -> float:
+    """ compute the concentration of the ions in the water"""
+    # Constants
+    avogadro_nr: float = 6.022e23  # molecules/mole
+    water_molecular_weight: float = 18.0  # g/mol
+
+    # Calculate moles of water
+    moles_water: float = water_molecules / avogadro_nr
+
+    # Calculate volume of water in liters
+    # 1 mole of water weighs 18 grams and occupies 18 mL
+    volume_water_liters: float = (moles_water * water_molecular_weight) / 1000
+
+    # Calculate moles of ions
+    moles_ions: float = ion_count / avogadro_nr
+
+    # Calculate concentration in moles per liter (Molarity, M)
+    concentration_molar: float = moles_ions / volume_water_liters
+
+    # Convert to millimolar (mM)
+    concentration_mmolar: float = concentration_molar * 1000
+    print(
+        f"\t{bcolors.CAUTION}Ion concentration: {concentration_molar:.3f} M\n"
+        f"\tor {concentration_mmolar:.3f} mM{bcolors.ENDC}\n")
+
+    return concentration_mmolar
+
+
+if __name__ == '__main__':
+    # Example usage
+    WATER_MOLECULES: int = 174253
+    ION_COUNT: int = 89
+    calculate_ion_concentration(WATER_MOLECULES, ION_COUNT)

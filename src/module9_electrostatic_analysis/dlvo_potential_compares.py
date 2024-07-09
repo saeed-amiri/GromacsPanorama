@@ -461,4 +461,11 @@ if __name__ == '__main__':
                               CHARGE,
                               CHARGE_DENSITY,
                               log=LOG)
+    DEBYE_LENGTH: float = PHI_ZERO.debye_length
+    PHI_0_DICT_LOEB: dict[str, np.ndarray] = PHI_ZERO.phi_0_dict_loeb
+    PHI_0_DICT_GRAHAME: dict[str, np.ndarray] = PHI_ZERO.phi_0_dict_grahame
 
+    PHI_R = ComparePhiR(DEBYE_LENGTH,
+                        PHI_0_DICT_LOEB,
+                        PHI_0_DICT_GRAHAME,
+                        log=LOG)

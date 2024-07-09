@@ -175,12 +175,12 @@ class ComparePhiZero:
         _configs: AllConfig = self.configs
         _configs.solving_config.phi_0_type = 'grahame'
         ion_strength = _configs.phi_parameters['c_salt']
-        debye_length = self._get_debye(ion_strength)
+        self.debye_length = self._get_debye(ion_strength)
         for key, charge in charges.items():
             _configs.computation_radius = float(key)*10.0
             density = charge_density[key]
             phi_0: np.ndarray = DLVOPotentialPhiZero(
-                debye_length=debye_length,
+                debye_length=self.debye_length,
                 charge=charge,
                 charge_density=density,
                 configs=_configs,

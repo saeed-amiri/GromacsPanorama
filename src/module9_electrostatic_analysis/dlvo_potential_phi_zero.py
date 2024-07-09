@@ -29,12 +29,12 @@ class DLVOPotentialPhiZero:
                  charge: np.ndarray,  # in e
                  charge_density: np.ndarray,  # in C/m^2
                  configs: AllConfig,
-                 ion_strength: float, # in mol/L
+                 ion_strength: float,  # in mol/L
                  log: logger.logging.Logger
                  ) -> None:
         # pylint: disable=too-many-arguments
-        print(f"{bcolors.CAUTION}{ion_strength}:\n"
-                f"\tComputing phi_0 for the DLVO potential\n{bcolors.ENDC}")
+        print(f"{bcolors.CAUTION}\tComputing phi_0 for the DLVO potential:\n"
+              f"\t{ion_strength = } [mM]\n{bcolors.ENDC}")
         self.configs = configs
         self.charge = charge
         self.charge_density = charge_density

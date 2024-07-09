@@ -253,8 +253,8 @@ class ComparePhiZero:
 
         # Set the y-axis limits for each subplot to create the 'break'
         # effect
-        ax1.set_ylim(228, 232)  # Upper plot
-        ax2.set_ylim(153.5, 158)  # Lower plot
+        # ax1.set_ylim(228, 232)  # Upper plot
+        # ax2.set_ylim(153.5, 158)  # Lower plot
 
         # Plot the data on both subplots
         ax1.plot(x_data,
@@ -309,6 +309,7 @@ class ComparePhiZero:
 
         # Save the figure
         plt.savefig(f'phi_0_{plot_type}_comparison_broken_axis.jpg')
+        plt.close()
         self.info_msg += (
             f'\tThe phi_0 vs {plot_type} is plotted with a broken y-axis '
             'and saved as `phi_0_comparison_broken_axis.jpg`\n')

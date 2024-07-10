@@ -321,6 +321,7 @@ class PhiZeroSigma:
                                           debye=debye)
             self._plot_kappa_a_ion_strength(ion_strength=ion_strength,
                                             debye=debye)
+            self._plot_kappa_a_c_colormap()
 
     def _plot_bare_equation(self) -> None:
         """plot the bare equation"""
@@ -381,7 +382,44 @@ class PhiZeroSigma:
         elsevier_plot_tools.save_close_fig(fig,
                                            'kappa_a_sigma.jpg',
                                            loc='upper left')
+        
+    def _plot_kappa_a_c_colormap(self) -> None:
+        """plot the kappa * a with respect to concentration"""
+       # Range of salt concentrations (mol/L) and colloidal radii (m)
+        c_0_values = np.logspace(-5, 0, 200)  # Concentration from 10^-5 to 1 M
+        a_values = np.logspace(-9, -6, 200)  # Radius from 1 nm to 1 µm
+        # Constants
+        epsilon = 80 * 8.854e-12  # Dielectric constant of water at room temperature (F/m)
+        k_B = 1.38e-23  # Boltzmann constant (J/K)
+        T = 298  # Temperature (K)
+        N_A = 6.022e23  # Avogadro's number (1/mol)
+        e = 1.602e-19  # Elementary charge (C)
+        def debye_length(c_0):
+            I = c_0  # Ionic strength for 1:1 electrolyte is equal to the concentration
+            return np.sqrt(epsilon * k_B * T / (2 * N_A * e**2 * I))
+        
+        # Create meshgrid for plotting
+        C_0, A = np.meshgrid(c_0_values, a_values)
+        Debye = debye_length(C_0)
+        print(Debye)
+        ratio = A / Debye
+        # Plotting
+        plt.figure(figsize=(10, 8))
+        plt.contourf(C_0, A, ratio, levels=np.logspace(-2, 2, 20), cmap='viridis')
+        plt.colorbar(label='a / Debye length')
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.xlabel('Salt Concentration (mol/L)')
+        plt.ylabel('Colloidal Radius (m)')
+        plt.title('Colloidal Radius / Debye Length Ratio')
 
+        # Overlay regions for Hückel and Smoluchowski models
+        plt.contour(C_0, A, ratio, levels=[0.1], colors='white', linestyles='--', linewidths=2)
+        plt.contour(C_0, A, ratio, levels=[100], colors='red', linestyles='--', linewidths=2)
+        plt.text(1e-4, 1e-7, 'Hückel Model', color='white', fontsize=12)
+        plt.text(1e-1, 1e-8, 'Smoluchowski Model', color='red', fontsize=12)
+
+        plt.show()
     def write_msg(self,
                   log: logger.logging.Logger  # To log
                   ) -> None:

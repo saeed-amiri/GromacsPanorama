@@ -309,8 +309,18 @@ class PhiZeroSigma:
                                   ) -> None:
         """plot the phi_0 with respect to sigma"""
         if self.configs.phi_zero_sigma_config.plot_bare_equation:
+            ion_strength: np.ndarray = \
+                np.linspace(
+                    0.01,
+                    100,
+                    self.configs.phi_zero_sigma_config.nr_density_points)
+            debye: typing.Union[np.float64, np.ndarray] = \
+                self._get_debye(ion_strength)
             self._plot_bare_equation()
-            self._plot_debye_ion_strength()
+            self._plot_debye_ion_strength(ion_strength=ion_strength,
+                                          debye=debye)
+            self._plot_kappa_a_ion_strength(ion_strength=ion_strength,
+                                            debye=debye)
 
     def _plot_bare_equation(self) -> None:
         """plot the bare equation"""
@@ -332,14 +342,12 @@ class PhiZeroSigma:
                                            'bare_equation_arcsinh_overx.jpg',
                                            loc='lower right')
 
-    def _plot_debye_ion_strength(self) -> None:
+    def _plot_debye_ion_strength(self,
+                                 ion_strength: np.ndarray,
+                                 debye: typing.Union[float, np.ndarray]
+                                 ) -> None:
         """plot the debye length with respect to sigma"""
         fig, ax_i = elsevier_plot_tools.mk_canvas('single_column')
-        ion_strength: np.ndarray = \
-            np.linspace(0.01, 100,
-                        self.configs.phi_zero_sigma_config.nr_density_points)
-        debye: typing.Union[np.float64, np.ndarray] = \
-            self._get_debye(ion_strength)
         ax_i.plot(ion_strength,
                   debye,
                   c=elsevier_plot_tools.BLACK_SHADES[0],
@@ -349,6 +357,30 @@ class PhiZeroSigma:
         elsevier_plot_tools.save_close_fig(fig,
                                            'debye_length_sigma.jpg',
                                            loc='upper right')
+
+    def _plot_kappa_a_ion_strength(self,
+                                   ion_strength: np.ndarray,
+                                   debye: typing.Union[float, np.ndarray]
+                                   ) -> None:
+        """plot the kappa * a with respect to sigma"""
+        fig, ax_i = elsevier_plot_tools.mk_canvas('single_column')
+        radii: list[float] = [self.configs.computation_radius, 100.0]
+
+        for i, radius in enumerate(radii):
+            kappa_a: np.ndarray = radius / 10.0 / debye
+            ax_i.plot(ion_strength,
+                      kappa_a,
+                      c=elsevier_plot_tools.BLACK_SHADES[i*4],
+                      label=rf'$a\,=\,${radius/10}')
+        ax_i.set_xlabel(r'$c_0$ [mM]')
+        ax_i.set_ylabel(r'$\kappa \cdot a$')
+        x_lim: tuple[float, float] = ax_i.get_xlim()
+        ax_i.hlines(0.1, x_lim[0], x_lim[1], ls='dashed', lw=1.0, color='grey')
+        ax_i.hlines(100, x_lim[0], x_lim[1], ls='dashed', lw=1.0, color='grey')
+        ax_i.set_xlim(x_lim)
+        elsevier_plot_tools.save_close_fig(fig,
+                                           'kappa_a_sigma.jpg',
+                                           loc='upper left')
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

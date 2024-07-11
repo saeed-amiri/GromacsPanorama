@@ -89,7 +89,7 @@ class BaseGraphConfig:
 
     line_styles: dict[str, str] = \
         field(default_factory=lambda: {
-            'CLA': ':',
+            'CLA': '-',
             'amino_n': '--',
             'N': '--',
             'amino_charge': '--',

@@ -253,7 +253,7 @@ class StructureToPqr:
         self.count_residues(fname, struct)
         df_i: pd.DataFrame = self.get_atom_type(struct)
         df_i = self.set_radius(df_i)
-        df_i = self.set_charge(df_i, log)
+        df_i = self.set_charge(df_i, fname, log)
         df_i = self.assign_chain_ids(df_i)
         df_i = self.mk_pqr_df(df_i)
         df_i = self.convert_nm_ang(self.file_type, df_i)
@@ -316,6 +316,7 @@ class StructureToPqr:
 
     def set_charge(self,
                    df_i: pd.DataFrame,
+                   fname: str,
                    log: logger.logging.Logger
                    ) -> pd.DataFrame:
         """set charge values for the atoms"""
@@ -334,7 +335,7 @@ class StructureToPqr:
             df_oda = self._set_oda_charge(df_oda)
 
         if not df_np.empty:
-            df_np = self._set_np_charge(df_np, log)
+            df_np = self._set_np_charge(df_np, fname, log)
 
         df_recombined = pd.concat([df_np, df_oda, df_solution])
         df_recombined = df_recombined.sort_index()
@@ -422,33 +423,43 @@ class StructureToPqr:
 
     def _set_np_charge(self,
                        df_np: pd.DataFrame,
+                       fname: str,
                        log: logger.logging.Logger
                        ) -> pd.DataFrame:
         """set the charges for the np section"""
-        np_flag: bool = True
+        df_i: pd.DataFrame = df_np.copy()
         if len(df_np) == len(
            ff_df := self.force_field.ff_charge['np_info']):
-            for index, row in df_np.iterrows():
-                if np_flag:
-                    np_id_zero: int = int(row['atom_id'])
-                    np_flag = False
-                atom_id: int = int(row['atom_id'] - np_id_zero + 1)
-                res_nr: int = row['residue_number']
+            charge: pd.DataFrame = ff_df['charge']
+            atom_ff_name: np.ndarray = ff_df['atomname'].values
 
-                try:
-                    charge = ff_df[
-                        (ff_df['atomnr'] == atom_id) &
-                        (ff_df['resnr'] == res_nr)]['charge'].values[0]
-                except IndexError:
-                    charge = ff_df[
-                        ff_df['atomnr'] == atom_id]['charge'].values[0]
-                df_np.at[index, 'charge'] = float(charge)
+            atom_pos_name: np.ndarray = df_np['atom_name'].values
+            df_i['charge'] = charge
+
+            # Check if atom names are the same
+            if not all(atom_ff_name == atom_pos_name):
+                diff_indices = [i for i, (a, b) in enumerate(
+                    zip(atom_ff_name, atom_pos_name)) if a != b]
+                log.error(
+                    '\tError! The atom names are not the same at indices: '
+                    + ', '.join(map(str, diff_indices)))
+                for i in diff_indices:
+                    print(
+                        f'{bcolors.CAUTION}\tIndex {i}: ff_df atom name = '
+                        f'{atom_ff_name[i]}, df_i atom name = '
+                        f'{atom_pos_name[i]} {bcolors.ENDC}\n')
+                sys.exit(
+                    f'{bcolors.FAIL}\n\tError! The atom names are not '
+                    f'the same in `{fname}` for APT_COR!{bcolors.ENDC}\n')
+
             self.info_msg += ('\tTotal charge of the np section is: '
-                              f'{sum(df_np["charge"]):.3f}\n')
+                              f'{sum(df_i["charge"]):.3f}\n')
         else:
             log.error(msg := '\tError! There is problem in np data!\n')
             sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
-        return df_np
+        del ff_df
+        del df_np
+        return df_i
 
     def assign_chain_ids(self,
                          df_i: pd.DataFrame

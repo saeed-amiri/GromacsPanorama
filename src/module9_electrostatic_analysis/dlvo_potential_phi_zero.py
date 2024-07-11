@@ -201,7 +201,7 @@ class DLVOPotentialPhiZero:
         float: Solution for phi_0.
         """
         # pylint: disable=too-many-arguments
-        solution = fsolve(self._nonlinear_grahame_equation,
+        solution = fsolve(self._nonlinear_loeb_equation,
                           y_initial_guess,
                           args=(y_0, a_kappa, co_factor, sigma),
                           full_output=True,
@@ -235,12 +235,22 @@ class DLVOPotentialPhiZero:
         float: Solution for phi_0.
         """
         # pylint: disable=too-many-arguments
-        solution = root(self._nonlinear_grahame_equation,
-                        y_initial_guess,
-                        args=(y_0, a_kappa, co_factor, sigma),
-                        method='hybr',
-                        options={'xtol': 1e-10,
-                                 'maxfev': 10000})
+        approx_relation: str = \
+            self.configs.solving_config.phi_equation_aprx.lower()
+        if approx_relation == 'loeb':
+            solution = root(self._nonlinear_loeb_equation,
+                            y_initial_guess,
+                            args=(y_0, a_kappa, co_factor, sigma),
+                            method='hybr',
+                            options={'xtol': 1e-10,
+                                     'maxfev': 10000})
+        elif approx_relation == 'ohshima':
+            solution = root(self._nonlinear_ohshima_equation,
+                            y_initial_guess,
+                            args=(y_0, a_kappa, co_factor, sigma),
+                            method='hybr',
+                            options={'xtol': 1e-10,
+                                     'maxfev': 10000})
         if not solution.success and not self.iter_flase_report_flag:
             log.warning(
                 msg :=
@@ -250,12 +260,12 @@ class DLVOPotentialPhiZero:
             self.iter_flase_report_flag = True
         return solution.x[0]
 
-    def _nonlinear_grahame_equation(self,
-                                    phi_x: float,
-                                    y_0: float,
-                                    a_kappa: float,
-                                    co_factor: float,
-                                    sigma: float) -> float:
+    def _nonlinear_loeb_equation(self,
+                                 phi_x: float,
+                                 y_0: float,
+                                 a_kappa: float,
+                                 co_factor: float,
+                                 sigma: float) -> float:
         """
         The nonlinear Grahame equation to solve.
 
@@ -278,13 +288,13 @@ class DLVOPotentialPhiZero:
                 ) - sigma
             )
 
-    def _nonlinear_grahame_ohshima_equation(self,
-                                            phi_0: float,
-                                            y_0: float,
-                                            a_kappa: float,
-                                            co_factor: float,
-                                            sigma: float
-                                            ) -> float:
+    def _nonlinear_ohshima_equation(self,
+                                    phi_0: float,
+                                    y_0: float,
+                                    a_kappa: float,
+                                    co_factor: float,
+                                    sigma: float
+                                    ) -> float:
         """equation 4.25 from pp. 101, Surface and Interfacial
         Forces, H-J Burr and M.Kappl
         as solved by Ohshima 1982: doi.org/10.1016/0021-9797(82)90393-9
@@ -296,8 +306,8 @@ class DLVOPotentialPhiZero:
             co_factor * np.sinh(arg) *
             (
                 1 +
-                1/a_kappa * (2 / (self.safe_cosh(arg)**2)) +
-                1/a_kappa**2 * (8 * self.safe_log(self.safe_cosh(arg)) /
+                1/a_kappa * (2 / (self.safe_cosh(arg/2.0)**2)) +
+                1/a_kappa**2 * (8 * self.safe_log(self.safe_cosh(arg/2.0)) /
                                 self.safe_sinh(arg)**2)
             ) ** 0.5 - sigma
             )[0]

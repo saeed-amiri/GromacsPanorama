@@ -71,6 +71,7 @@ import os
 import sys
 import typing
 import string
+import datetime
 from collections import Counter
 from multiprocessing import Pool
 from dataclasses import dataclass, field
@@ -165,6 +166,8 @@ class StructureToPqr:
                  log: logger.logging.Logger
                  ) -> pd.DataFrame:
         """get all the infos"""
+        init_time: datetime.datetime = datetime.datetime.now()
+        self.info_msg += f'\tThe script is initiated at `{init_time}`\n'
         charges_df: pd.DataFrame
         numbers_df: pd.DataFrame
         strcuture_info: "ReadInputStructureFile" = ReadInputStructureFile(
@@ -604,6 +607,8 @@ class StructureToPqr:
                   log: logger.logging.Logger  # To log
                   ) -> None:
         """write and log messages"""
+        final_time: datetime.datetime = datetime.datetime.now()
+        self.info_msg += f'\tThe script is finished at `{final_time}`\n'
         print(f'{bcolors.OKCYAN}{StructureToPqr.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)

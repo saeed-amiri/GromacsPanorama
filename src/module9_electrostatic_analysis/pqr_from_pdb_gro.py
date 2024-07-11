@@ -439,35 +439,47 @@ class StructureToPqr:
         if len(df_np) == len(
            ff_df := self.force_field.ff_charge['np_info']):
             charge: pd.DataFrame = ff_df['charge']
+
             atom_ff_name: np.ndarray = ff_df['atomname'].values
-
             atom_pos_name: np.ndarray = df_np['atom_name'].values
-            df_i['charge'] = charge
-
             # Check if atom names are the same
-            if not all(atom_ff_name == atom_pos_name):
-                diff_indices = [i for i, (a, b) in enumerate(
-                    zip(atom_ff_name, atom_pos_name)) if a != b]
-                log.error(
-                    '\tError! The atom names are not the same at indices: '
-                    + ', '.join(map(str, diff_indices)))
-                for i in diff_indices:
-                    print(
-                        f'{bcolors.CAUTION}\tIndex {i}: ff_df atom name = '
-                        f'{atom_ff_name[i]}, df_i atom name = '
-                        f'{atom_pos_name[i]} {bcolors.ENDC}\n')
-                sys.exit(
-                    f'{bcolors.FAIL}\n\tError! The atom names are not '
-                    f'the same in `{fname}` for APT_COR!{bcolors.ENDC}\n')
+            self._non_equal_names_error(
+                atom_ff_name, atom_pos_name, fname, log)
 
+            df_i['charge'] = charge
             self.info_msg += ('\tTotal charge of the np section is: '
                               f'{sum(df_i["charge"]):.3f}\n')
+
         else:
             log.error(msg := '\tError! There is problem in np data!\n')
             sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+
         del ff_df
         del df_np
+
         return df_i
+
+    def _non_equal_names_error(self,
+                               atom_ff_name: np.ndarray,
+                               atom_pos_name: np.ndarray,
+                               fname: str,
+                               log: logger.logging.Logger
+                               ) -> None:
+        """check if the names arent the same"""
+        if not np.array_equal(atom_ff_name == atom_pos_name):
+            diff_indices = [i for i, (a, b) in enumerate(
+                zip(atom_ff_name, atom_pos_name)) if a != b]
+            log.error(
+                '\tError! The atom names are not the same at indices: '
+                + ', '.join(map(str, diff_indices)))
+            for i in diff_indices:
+                print(
+                    f'{bcolors.CAUTION}\tIndex {i}: ff_df atom name = '
+                    f'{atom_ff_name[i]}, df_i atom name = '
+                    f'{atom_pos_name[i]} {bcolors.ENDC}\n')
+            sys.exit(
+                f'{bcolors.FAIL}\n\tError! The atom names are not '
+                f'the same in `{fname}` for APT_COR!{bcolors.ENDC}\n')
 
     def assign_chain_ids(self,
                          df_i: pd.DataFrame

@@ -441,7 +441,8 @@ class StructureToPqr:
         df_i: pd.DataFrame = df_np.copy()
         if len(df_np) == len(
            ff_df := self.force_field.ff_charge['np_info']):
-            charge: pd.DataFrame = ff_df['charge']
+            charge: np.ndarray = ff_df['charge'].values
+            df_i['charge'] = charge
 
             atom_ff_name: np.ndarray = ff_df['atomname'].values
             atom_pos_name: np.ndarray = df_np['atom_name'].values
@@ -449,7 +450,6 @@ class StructureToPqr:
             self._non_equal_names_error(
                 atom_ff_name, atom_pos_name, fname, log)
 
-            df_i['charge'] = charge
             self.info_msg += ('\tTotal charge of the np section is: '
                               f'{sum(df_i["charge"]):.3f}\n')
 
@@ -469,7 +469,7 @@ class StructureToPqr:
                                log: logger.logging.Logger
                                ) -> None:
         """check if the names arent the same"""
-        if not np.array_equal(atom_ff_name == atom_pos_name):
+        if not np.array_equal(atom_ff_name, atom_pos_name):
             diff_indices = [i for i, (a, b) in enumerate(
                 zip(atom_ff_name, atom_pos_name)) if a != b]
             log.error(

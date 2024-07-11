@@ -260,6 +260,7 @@ class StructureToPqr:
         pqr_fname = f'{fname}.pqr'
         self.write_pqr(pqr_fname, df_i)
         charge_df = self._report_residue_charge(pqr_fname, df_i)
+        del df_i
         return charge_df
 
     def count_residues(self,
@@ -341,6 +342,10 @@ class StructureToPqr:
         df_recombined = df_recombined.sort_index()
         self.info_msg += ('\tThe total charge of this portion is: '
                           f'`{sum(df_recombined["charge"]):.3f}`\n')
+        del df_i
+        del df_np
+        del df_oda
+        del df_solution
         return df_recombined
 
     def _report_residue_charge(self,
@@ -378,6 +383,7 @@ class StructureToPqr:
                 df_i.to_csv(f'{res}_charge_debug', sep=' ')
 
             del df_i
+        del df_recombined
 
         return charge_df, numbers_df
 
@@ -403,6 +409,8 @@ class StructureToPqr:
             df_i['charge'] = list(ff_df['charge'])
             df_list.append(df_i)
         df_updated: pd.DataFrame = pd.concat(df_list)
+        del df_oda
+        del df_list
         return df_updated.sort_index()
 
     def _set_solution_charge(self,
@@ -494,6 +502,7 @@ class StructureToPqr:
         float_columns: list[str] = ['x', 'y', 'z', 'charge', 'radius']
         df_i: pd.DataFrame = pdb_with_charge_radii[columns].copy()
         df_i[float_columns] = df_i[float_columns].astype(float)
+        del pdb_with_charge_radii
         return df_i
 
     @staticmethod
@@ -529,6 +538,7 @@ class StructureToPqr:
                 f_w.write(line)
             f_w.write('TER\n')
             f_w.write('END\n')
+        del pqr_df
 
     def write_df_to_xvg(self,
                         df_i: pd.DataFrame,
@@ -552,6 +562,7 @@ class StructureToPqr:
                               title=f'{df_type} information')
         self.info_msg += \
             f'\tData was written to `{fname}`\n'
+        del df_i
 
     @staticmethod
     def _check_total_charge(row_sums: pd.Series

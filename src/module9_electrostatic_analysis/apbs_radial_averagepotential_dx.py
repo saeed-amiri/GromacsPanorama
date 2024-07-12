@@ -79,14 +79,10 @@ class RadialAveragePotential:
     dist_unit_conversion: float = 10.0
 
     def __init__(self,
-                 file_name: str,
-                 log: logger.logging.Logger,
                  configs: InputConfig = InputConfig()
                  ) -> None:
         """write and log messages"""
         self.configs = configs
-        self.process_file(file_name, log)
-        self.write_msg(log)
 
     def process_file(self,
                      file_name: str,
@@ -106,6 +102,7 @@ class RadialAveragePotential:
             self.configs.number_of_header_lines:
             -self.configs.number_of_tail_lines])
         self.process_data(data, grid_points, grid_spacing, origin, log)
+        self.write_msg(log)
 
     def _get_data(self,
                   data_lines: list[str]
@@ -312,7 +309,7 @@ class RadialAveragePotential:
 
 if __name__ == '__main__':
     try:
-        RadialAveragePotential(
+        RadialAveragePotential().process_file(
             sys.argv[1],
             log=logger.setup_logger('radial_average_potential.log'))
     except IndexError:

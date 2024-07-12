@@ -74,6 +74,7 @@ import string
 import datetime
 from collections import Counter
 from multiprocessing import Pool
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -135,11 +136,14 @@ class NumerInResidue:
 
 @dataclass
 class AllConfig(FileConfig, FFTypeConfig, NumerInResidue):
-    """set all the configs"""
+    """set all the configs
+    parallel_type: str = 'threading' or 'multiprocessing'
+    """
     n_cores: int = 1
     compute_radius: bool = True
     write_debug: bool = False
     run_parallel: bool = True
+    paralle_type: str = 'multiprocessing'
 
 
 class StructureToPqr:
@@ -227,18 +231,39 @@ class StructureToPqr:
     def generate_pqr_parallel(self,
                               structure_data: dict[str, pd.DataFrame],
                               log: logger.logging.Logger
-                              ) -> pd.DataFrame:
+                              ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """generate the pqr data and write them in parallel"""
-        charges_dfs = []
-        numbers_dfs = []
-
         # Prepare data for multiprocessing
-        pool_data = [(fname, struct, log) for
-                     fname, struct in structure_data.items()]
+        pool_data: list[typing.Any] = [(fname, struct, log) for
+                                       fname, struct in structure_data.items()]
+
+        if self.configs.paralle_type == 'threading':
+            return self.generate_pqr_therad(pool_data)
+        return self.generate_pqr_multiprocessing(pool_data)
+
+    def generate_pqr_multiprocessing(self,
+                                     pool_data: list[typing.Any],
+                                     ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """generate the pqr data and write them in parallel"""
 
         with Pool(processes=self.configs.n_cores) as pool:
             results = pool.map(self._process_structure, pool_data)
+        return self._collect_results(results)
 
+    def generate_pqr_therad(self,
+                            pool_data: list[typing.Any],
+                            ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """generate the pqr data and write them in parallel using threads"""
+
+        with ThreadPoolExecutor(max_workers=self.configs.n_cores) as executor:
+            results = executor.map(self._process_structure, pool_data)
+        return self._collect_results(results)
+
+    def _collect_results(self,
+                         results: list[tuple[pd.DataFrame, pd.DataFrame]]
+                         ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        charges_dfs: list[pd.DataFrame] = []
+        numbers_dfs: list[pd.DataFrame] = []
         for charge_df, number_df in results:
             charges_dfs.append(charge_df)
             numbers_dfs.append(number_df)

@@ -19,7 +19,7 @@ class TestRadialAveragePotential(unittest.TestCase):
     Test the RadialAveragePotential class.
     """
 
-    def setUp(self):
+    def setUp(self) -> None:
         """
         Set up the test environment before each test.
 
@@ -38,7 +38,7 @@ class TestRadialAveragePotential(unittest.TestCase):
         # Create an instance of RadialAveragePotential with default config
         self.radial_average_potential = RadialAveragePotential(InputConfig())
 
-    def test_uniform_potential(self):
+    def test_uniform_potential(self) -> None:
         """
         Test the radial average calculation on a uniform potential.
 
@@ -58,7 +58,7 @@ class TestRadialAveragePotential(unittest.TestCase):
             self.radial_average_potential.pot_unit_conversion
         np.testing.assert_almost_equal(radial_average, expected_value)
 
-    def test_center_offset(self):
+    def test_center_offset(self) -> None:
         """
         Test the radial average calculation with a center offset.
 

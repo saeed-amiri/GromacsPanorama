@@ -155,8 +155,11 @@ class RadialAveragePotential:
         max_radius: float = \
             self._calculate_max_radius(center_xyz, grid_spacing)
 
+        # Create the distance grid
         grid_xyz: tuple[np.ndarray, np.ndarray, np.ndarray] = \
             self._create_distance_grid(grid_points)
+
+        # Calculate the distances from the center of the box
         distances: np.ndarray = self._compute_distance(
             grid_spacing, grid_xyz, center_xyz)
 
@@ -250,10 +253,10 @@ class RadialAveragePotential:
                              ) -> None:
         """Write the radial average to a file"""
         # Write the radial average to a file
-        convert_to_kt_e = [i/self.pot_unit_conversion for i in radial_average]
+        convert_to_kj = [i*self.pot_unit_conversion for i in radial_average]
         data = {'Radius [nm]': radii/self.dist_unit_conversion,
-                'Average Potential [mV]': radial_average,
-                'Average Potential [kT/e]': convert_to_kt_e
+                'Average Potential [mV]': convert_to_kj,
+                'Average Potential [kT/e]': radial_average
                 }
         extra_msg_0 = ('The radial average is set below the index: '
                        f'{self.average_index_from}')

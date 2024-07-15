@@ -71,10 +71,10 @@ class TestRadialAveragePotential(unittest.TestCase):
         # Instance of the class containing _create_distance_grid
 
         # Define grid points
-        grid_points = [5, 5, 5]
+        grid_points: list[int] = [5, 5, 5]
 
         # Expected shapes based on grid_points
-        expected_shape = (5, 5, 5)
+        expected_shape: tuple[float, float, float] = (5, 5, 5)
 
         # Call the method
         grid_x, grid_y, grid_z = \

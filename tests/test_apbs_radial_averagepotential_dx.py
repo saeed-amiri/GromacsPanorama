@@ -23,7 +23,7 @@ class TestRadialAveragePotential(unittest.TestCase):
         """
         Set up the test environment before each test.
 
-        This method initializes test data and creates an instance of the 
+        This method initializes test data and creates an instance of the
         RadialAveragePotential class with a mocked logger.
         """
         # Set up known test data
@@ -51,7 +51,7 @@ class TestRadialAveragePotential(unittest.TestCase):
             self.grid_points)
         expected_center = np.array([2.0, 2.0, 2.0])
         np.testing.assert_almost_equal(center, expected_center)
-    
+
     def test_calculate_max_radius(self) -> None:
         """
         Test the calculation of the maximum radius in the grid.
@@ -79,7 +79,7 @@ class TestRadialAveragePotential(unittest.TestCase):
         # Test radial average on uniform potential
         data_arr = np.array(self.data).reshape(self.grid_points)
         radii, radial_average = self.radial_average_potential.radial_average(
-            data_arr, self.grid_points, self.grid_spacing, self.origin)
+            data_arr, self.grid_points, self.grid_spacing)
 
         # Expect uniform potential to have the same average value scaled
         # by pot_unit_conversion
@@ -100,14 +100,13 @@ class TestRadialAveragePotential(unittest.TestCase):
         self.radial_average_potential.average_index_from = 2
         data_arr = np.array(self.data).reshape(self.grid_points)
         radii, radial_average = self.radial_average_potential.radial_average(
-            data_arr, self.grid_points, self.grid_spacing, [2.0, 2.0, 2.0])
+            data_arr, self.grid_points, self.grid_spacing)
 
         # Expect uniform potential to have the same average value scaled
         # by pot_unit_conversion
         expected_value = np.ones_like(radial_average) * \
             self.radial_average_potential.pot_unit_conversion
         np.testing.assert_almost_equal(radial_average, expected_value)
-
 
 
 if __name__ == '__main__':

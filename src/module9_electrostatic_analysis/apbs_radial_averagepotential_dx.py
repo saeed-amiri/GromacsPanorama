@@ -183,8 +183,8 @@ class RadialAveragePotential:
 
         return radii, radial_average
 
-    def _calculate_center(self,
-                          grid_points: list[int]
+    @staticmethod
+    def _calculate_center(grid_points: list[int]
                           ) -> tuple[float, float, float]:
         """Calculate the center of the box in grid units"""
         center_x = grid_points[0] // 2

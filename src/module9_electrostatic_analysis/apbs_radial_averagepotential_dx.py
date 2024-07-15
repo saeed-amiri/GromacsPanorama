@@ -200,6 +200,26 @@ class RadialAveragePotential:
         """Calculate the maximum radius for the radial average"""
         return min(center_xyz) * min(grid_spacing)
 
+    @staticmethod
+    def _create_distance_grid(grid_points: list[int],
+                              ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        x_space = np.linspace(0, grid_points[0] - 1, grid_points[0])
+        y_space = np.linspace(0, grid_points[1] - 1, grid_points[1])
+        z_space = np.linspace(0, grid_points[2] - 1, grid_points[2])
+
+        grid_x, grid_y, grid_z = \
+            np.meshgrid(x_space, y_space, z_space, indexing='ij')
+        return grid_x, grid_y, grid_z
+
+    @staticmethod
+    def _compute_distance(grid_spacing: list[float],
+                          grid_xyz: tuple[np.ndarray, np.ndarray, np.ndarray],
+                          center_xyz: tuple[float, float, float],
+                          ) -> np.ndarray:
+        return np.sqrt((grid_xyz[0] - center_xyz[0])**2 +
+                       (grid_xyz[1] - center_xyz[1])**2 +
+                       (grid_xyz[2] - center_xyz[2])**2) * grid_spacing[0]
+
     def _plot_radial_average(self,
                              radii: np.ndarray,
                              radial_average: list[float]) -> None:

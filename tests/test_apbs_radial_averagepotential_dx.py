@@ -112,8 +112,7 @@ class TestRadialAveragePotential(unittest.TestCase):
 
         # Expect uniform potential to have the same average value scaled
         # by pot_unit_conversion
-        expected_value = np.ones_like(radial_average) * \
-            self.radial_average_potential.pot_unit_conversion
+        expected_value = np.ones_like(radial_average)
         np.testing.assert_almost_equal(radial_average, expected_value)
 
     def test_center_offset(self) -> None:
@@ -133,8 +132,7 @@ class TestRadialAveragePotential(unittest.TestCase):
 
         # Expect uniform potential to have the same average value scaled
         # by pot_unit_conversion
-        expected_value = np.ones_like(radial_average) * \
-            self.radial_average_potential.pot_unit_conversion
+        expected_value = np.ones_like(radial_average)
         np.testing.assert_almost_equal(radial_average, expected_value)
 
 

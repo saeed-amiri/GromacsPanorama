@@ -142,9 +142,9 @@ class RadialAveragePotential:
             f'\tThe average index is set to {self.average_index_from}\n')
 
         # Calculate the center of the box in grid units
-        center_x: float = grid_points[0] // 2
-        center_y: float = grid_points[1] // 2
-        center_z: float = grid_points[2] // 2
+        center_xzy: tuple[float, float, float] = \
+            self._calculate_center(grid_points)
+        center_x, center_y, center_z = center_xzy
 
         # Calculate the maximum radius for the radial average
         max_radius: float = \
@@ -182,6 +182,15 @@ class RadialAveragePotential:
                 radial_average.append(0)
 
         return radii, radial_average
+
+    def _calculate_center(self,
+                          grid_points: list[int]
+                          ) -> tuple[float, float, float]:
+        """Calculate the center of the box in grid units"""
+        center_x = grid_points[0] // 2
+        center_y = grid_points[1] // 2
+        center_z = grid_points[2] // 2
+        return center_x, center_y, center_z
 
     def _plot_radial_average(self,
                              radii: np.ndarray,

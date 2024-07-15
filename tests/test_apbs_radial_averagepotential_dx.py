@@ -79,6 +79,20 @@ class TestRadialAveragePotential(unittest.TestCase):
             self.radial_average_potential.pot_unit_conversion
         np.testing.assert_almost_equal(radial_average, expected_value)
 
+    def test_calculate_center(self) -> None:
+        """
+        Test the calculation of the center of the grid.
+
+        This test verifies that the center of the grid is correctly
+        calculated by the radial average calculation.
+        """
+        # pylint: disable=unused-variable
+        # Test calculation of center
+        center = self.radial_average_potential._calculate_center(
+            self.grid_points)
+        expected_center = np.array([2.0, 2.0, 2.0])
+        np.testing.assert_almost_equal(center, expected_center)
+
 
 if __name__ == '__main__':
     unittest.main()

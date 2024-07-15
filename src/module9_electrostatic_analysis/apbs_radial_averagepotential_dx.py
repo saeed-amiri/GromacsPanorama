@@ -123,11 +123,18 @@ class RadialAveragePotential:
         # pylint: disable=too-many-arguments
         self.check_number_of_points(data, grid_points, log)
         self._get_box_size(grid_points, grid_spacing, origin)
-        data_arr: np.ndarray = np.array(data).reshape(grid_points)
+        data_arr: np.ndarray = self._reshape_reevaluate_data(data, grid_points)
         radii, radial_average = \
             self.radial_average(data_arr, grid_points, grid_spacing)
         self._plot_radial_average(radii, radial_average)
         self.write_radial_average(radii, radial_average, log)
+
+    def _reshape_reevaluate_data(self,
+                                 data: list[float],
+                                 grid_points: list[int]
+                                 ) -> np.ndarray:
+        """reshape and reevaluate the data"""
+        return np.array(data).reshape(grid_points) * self.pot_unit_conversion
 
     def radial_average(self,
                        data_arr: np.ndarray,
@@ -176,8 +183,7 @@ class RadialAveragePotential:
                    (distances < radius + grid_spacing[0]) & \
                    (grid_z <= self.average_index_from)
             if np.sum(mask) > 0:
-                avg_potential = \
-                    np.mean(data_arr[mask]) * self.pot_unit_conversion
+                avg_potential = np.mean(data_arr[mask])
                 radial_average.append(avg_potential)
             else:
                 radial_average.append(0)

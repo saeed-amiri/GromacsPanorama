@@ -133,48 +133,48 @@ class RadialAveragePotential:
                        data_arr: np.ndarray,
                        grid_points: list[int],
                        grid_spacing: list[float],
-                       origin: list[float]) -> tuple[np.ndarray, list[float]]:
+                       ) -> tuple[np.ndarray, list[float]]:
         """Compute and plot the radial average of the potential from
         the center of the box."""
         # pylint: disable=too-many-locals
-        # pylint: disable=unused-argument
         self.info_msg += (
             f'\tThe average index is set to {self.average_index_from}\n')
 
         # Calculate the center of the box in grid units
-        center_xzy: tuple[float, float, float] = \
+        center_xyz: tuple[float, float, float] = \
             self._calculate_center(grid_points)
-        center_x, center_y, center_z = center_xzy
 
         # Calculate the maximum radius for the radial average
         max_radius: float = \
-            self._calculate_max_radius(center_xzy, grid_spacing)
+            self._calculate_max_radius(center_xyz, grid_spacing)
 
-        # Create a grid of distances from the center
-        x_space: np.ndarray = \
-            np.linspace(0, grid_points[0] - 1, grid_points[0])
-        y_space: np.ndarray = \
-            np.linspace(0, grid_points[1] - 1, grid_points[1])
-        z_space: np.ndarray = \
-            np.linspace(0, grid_points[2] - 1, grid_points[2])
-
-        grid_x, grid_y, grid_z = \
-            np.meshgrid(x_space, y_space, z_space, indexing='ij')
-
-        distances: np.ndarray = \
-            np.sqrt((grid_x - center_x)**2 +
-                    (grid_y - center_y)**2 +
-                    (grid_z - center_z)**2) * grid_spacing[0]
+        grid_xyz: tuple[np.ndarray, np.ndarray, np.ndarray] = \
+            self._create_distance_grid(grid_points)
+        distances: np.ndarray = self._compute_distance(
+            grid_spacing, grid_xyz, center_xyz)
 
         # Calculate the radial average
-        radii: np.ndarray = np.arange(0, max_radius, grid_spacing[0])
+        radii, radial_average = self.calculate_radial_average(
+            data_arr, distances, grid_spacing, max_radius, grid_xyz[2])
 
-        radial_average: list[float] = []
+        return radii, radial_average
+
+    def calculate_radial_average(self,
+                                 data_arr: np.ndarray,
+                                 distances: np.ndarray,
+                                 grid_spacing: list[float],
+                                 max_radius: float,
+                                 grid_z: np.ndarray,
+                                 ) -> tuple[np.ndarray, list[float]]:
+        """Calculate the radial average of the potential"""
+        # pylint: disable=too-many-arguments
+        radii = np.arange(0, max_radius, grid_spacing[0])
+        radial_average = []
 
         for radius in radii:
-            mask = (distances >= radius) \
-                & (distances < radius + grid_spacing[0]) \
-                & (grid_z <= self.average_index_from)
+            mask = (distances >= radius) & \
+                   (distances < radius + grid_spacing[0]) & \
+                   (grid_z <= self.average_index_from)
             if np.sum(mask) > 0:
                 avg_potential = \
                     np.mean(data_arr[mask]) * self.pot_unit_conversion

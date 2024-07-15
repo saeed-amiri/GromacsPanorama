@@ -61,11 +61,40 @@ class TestRadialAveragePotential(unittest.TestCase):
         """
         # pylint: disable=unused-variable
         # Test calculation of max radius
-        center_xyz: tuple[int, int, int] = [2.0, 2.0, 2.0]
+        center_xyz: tuple[float, float, float] = (2.0, 2.0, 2.0)
         max_radius = self.radial_average_potential._calculate_max_radius(
             center_xyz, self.grid_spacing)
         expected_max_radius = 2.0
         self.assertAlmostEqual(max_radius, expected_max_radius)
+
+    def test_create_distance_grid(self):
+        # Instance of the class containing _create_distance_grid
+
+        # Define grid points
+        grid_points = [5, 5, 5]
+
+        # Expected shapes based on grid_points
+        expected_shape = (5, 5, 5)
+
+        # Call the method
+        grid_x, grid_y, grid_z = \
+            self.radial_average_potential._create_distance_grid(grid_points)
+
+        # Check if the shapes of the returned arrays match the expected shapes
+        self.assertEqual(
+            grid_x.shape, expected_shape, "grid_x shape is incorrect")
+        self.assertEqual(
+            grid_y.shape, expected_shape, "grid_y shape is incorrect")
+        self.assertEqual(
+            grid_z.shape, expected_shape, "grid_z shape is incorrect")
+
+        # Check the first and last elements to ensure linspace worked correctly
+        self.assertEqual(grid_x[0, 0, 0],
+                         0,
+                         "First element of grid_x is incorrect")
+        self.assertEqual(grid_x[-1, -1, -1],
+                         grid_points[0] - 1,
+                         "Last element of grid_x is incorrect")
 
     def test_uniform_potential(self) -> None:
         """

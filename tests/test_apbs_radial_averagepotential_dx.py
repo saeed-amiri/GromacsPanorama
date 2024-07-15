@@ -47,7 +47,7 @@ class TestRadialAveragePotential(unittest.TestCase):
         """
         # pylint: disable=unused-variable
         # Test calculation of center
-        center = self.radial_average_potential._calculate_center(
+        center = self.radial_average_potential.calculate_center(
             self.grid_points)
         expected_center = np.array([2.0, 2.0, 2.0])
         np.testing.assert_almost_equal(center, expected_center)
@@ -62,13 +62,15 @@ class TestRadialAveragePotential(unittest.TestCase):
         # pylint: disable=unused-variable
         # Test calculation of max radius
         center_xyz: tuple[float, float, float] = (2.0, 2.0, 2.0)
-        max_radius = self.radial_average_potential._calculate_max_radius(
+        max_radius = self.radial_average_potential.calculate_max_radius(
             center_xyz, self.grid_spacing)
         expected_max_radius = 2.0
         self.assertAlmostEqual(max_radius, expected_max_radius)
 
-    def test_create_distance_grid(self):
-        # Instance of the class containing _create_distance_grid
+    def test_create_distance_grid(self) -> None:
+        """
+        Test the creation of the distance grid.
+        """
 
         # Define grid points
         grid_points: list[int] = [5, 5, 5]
@@ -78,7 +80,7 @@ class TestRadialAveragePotential(unittest.TestCase):
 
         # Call the method
         grid_x, grid_y, grid_z = \
-            self.radial_average_potential._create_distance_grid(grid_points)
+            self.radial_average_potential.create_distance_grid(grid_points)
 
         # Check if the shapes of the returned arrays match the expected shapes
         self.assertEqual(

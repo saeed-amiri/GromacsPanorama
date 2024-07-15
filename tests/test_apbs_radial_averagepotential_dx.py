@@ -38,6 +38,35 @@ class TestRadialAveragePotential(unittest.TestCase):
         # Create an instance of RadialAveragePotential with default config
         self.radial_average_potential = RadialAveragePotential(InputConfig())
 
+    def test_calculate_center(self) -> None:
+        """
+        Test the calculation of the center of the grid.
+
+        This test verifies that the center of the grid is correctly
+        calculated by the radial average calculation.
+        """
+        # pylint: disable=unused-variable
+        # Test calculation of center
+        center = self.radial_average_potential._calculate_center(
+            self.grid_points)
+        expected_center = np.array([2.0, 2.0, 2.0])
+        np.testing.assert_almost_equal(center, expected_center)
+    
+    def test_calculate_max_radius(self) -> None:
+        """
+        Test the calculation of the maximum radius in the grid.
+
+        This test verifies that the maximum radius in the grid is correctly
+        calculated by the radial average calculation.
+        """
+        # pylint: disable=unused-variable
+        # Test calculation of max radius
+        center_xyz: tuple[int, int, int] = [2.0, 2.0, 2.0]
+        max_radius = self.radial_average_potential._calculate_max_radius(
+            center_xyz, self.grid_spacing)
+        expected_max_radius = 2.0
+        self.assertAlmostEqual(max_radius, expected_max_radius)
+
     def test_uniform_potential(self) -> None:
         """
         Test the radial average calculation on a uniform potential.
@@ -79,34 +108,6 @@ class TestRadialAveragePotential(unittest.TestCase):
             self.radial_average_potential.pot_unit_conversion
         np.testing.assert_almost_equal(radial_average, expected_value)
 
-    def test_calculate_center(self) -> None:
-        """
-        Test the calculation of the center of the grid.
-
-        This test verifies that the center of the grid is correctly
-        calculated by the radial average calculation.
-        """
-        # pylint: disable=unused-variable
-        # Test calculation of center
-        center = self.radial_average_potential._calculate_center(
-            self.grid_points)
-        expected_center = np.array([2.0, 2.0, 2.0])
-        np.testing.assert_almost_equal(center, expected_center)
-    
-    def test_calculate_max_radius(self) -> None:
-        """
-        Test the calculation of the maximum radius in the grid.
-
-        This test verifies that the maximum radius in the grid is correctly
-        calculated by the radial average calculation.
-        """
-        # pylint: disable=unused-variable
-        # Test calculation of max radius
-        center_xyz: tuple[int, int, int] = [2.0, 2.0, 2.0]
-        max_radius = self.radial_average_potential._calculate_max_radius(
-            center_xyz, self.grid_spacing)
-        expected_max_radius = 2.0
-        self.assertAlmostEqual(max_radius, expected_max_radius)
 
 
 if __name__ == '__main__':

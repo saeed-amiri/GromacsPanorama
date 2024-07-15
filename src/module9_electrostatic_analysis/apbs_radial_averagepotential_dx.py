@@ -125,7 +125,7 @@ class RadialAveragePotential:
         self._get_box_size(grid_points, grid_spacing, origin)
         data_arr: np.ndarray = np.array(data).reshape(grid_points)
         radii, radial_average = \
-            self.radial_average(data_arr, grid_points, grid_spacing, origin)
+            self.radial_average(data_arr, grid_points, grid_spacing)
         self._plot_radial_average(radii, radial_average)
         self.write_radial_average(radii, radial_average, log)
 

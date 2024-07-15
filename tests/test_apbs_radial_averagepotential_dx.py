@@ -98,6 +98,38 @@ class TestRadialAveragePotential(unittest.TestCase):
                          grid_points[0] - 1,
                          "Last element of grid_x is incorrect")
 
+    def test_calculate_radial_average(self) -> None:
+        """
+        Test the calculation of the radial average.
+        """
+        data = np.ones((10, 10, 10))  # Uniform potential
+        distances = np.sqrt((np.indices((10, 10, 10)) - 5) ** 2).sum(axis=0)
+        grid_z = np.zeros((10, 10, 10))
+        grid_spacing = [1.0]
+        max_radius = 5.0
+        radii, radial_average = \
+            self.radial_average_potential.calculate_radial_average(
+                data,
+                distances,
+                grid_spacing,
+                max_radius,
+                grid_z)
+
+        # Verify radii are correctly spaced
+        expected_radii = np.arange(0, max_radius, grid_spacing[0])
+        np.testing.assert_array_almost_equal(
+            radii, expected_radii, err_msg="Radii spacing is incorrect")
+
+        # Verify radial averages are as expected
+        # Since the potential is uniform and all grid_z values are 0
+        # (<= average_index_from),
+        # the radial average should be 1 for all calculated radii
+        expected_radial_averages = np.ones_like(radial_average)
+        np.testing.assert_array_almost_equal(
+            radial_average,
+            expected_radial_averages,
+            err_msg="Radial averages are incorrect")
+
     def test_uniform_potential(self) -> None:
         """
         Test the radial average calculation on a uniform potential.

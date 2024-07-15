@@ -10,6 +10,8 @@ from unittest.mock import MagicMock
 
 import numpy as np
 
+import matplotlib.pyplot as plt
+
 from src.module9_electrostatic_analysis.apbs_radial_averagepotential_dx \
     import RadialAveragePotential, InputConfig
 
@@ -168,6 +170,39 @@ class TestRadialAveragePotential(unittest.TestCase):
         # by pot_unit_conversion
         expected_value = np.ones_like(radial_average)
         np.testing.assert_almost_equal(radial_average, expected_value)
+        self.plot_test_results(radii, radial_average, expected_value)
+
+    def plot_test_results(self,
+                          radii,
+                          radial_average,
+                          expected_value
+                          ) -> None:
+        """
+        Plot the radial average against the expected uniform value.
+
+        Parameters:
+        - radii: The radii at which the radial average was calculated.
+        - radial_average: The calculated radial average values.
+        - expected_value: The expected uniform value for comparison.
+        """
+        _, ax_i = plt.subplots(figsize=(20, 12))
+        ax_i.plot(radii,
+                  radial_average,
+                  label='Calculated Radial Average',
+                  marker='o')
+
+        ax_i.axhline(y=expected_value[0],
+                     color='r',
+                     linestyle='-',
+                     label='Expected Uniform Value')
+
+        ax_i.set_xlabel('Radius', fontsize=22)
+        ax_i.set_ylabel('Radial Average Potential', fontsize=22)
+        ax_i.set_title('Radial Average vs. Expected Value', fontsize=22)
+        ax_i.tick_params(axis='both', which='major', labelsize=18)
+
+        plt.legend(fontsize=20)
+        plt.show()
 
 
 if __name__ == '__main__':

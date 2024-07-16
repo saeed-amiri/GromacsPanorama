@@ -182,9 +182,11 @@ class RadialAveragePotential:
         radial_average = []
 
         for radius in radii:
-            mask = (distances >= radius) & \
-                   (distances < radius + grid_spacing[0]) & \
-                   (grid_z <= self.average_index_from)
+            mask = self.create_mask(distances,
+                                    radius,
+                                    grid_spacing,
+                                    grid_z,
+                                    self.average_index_from)
             if np.sum(mask) > 0:
                 avg_potential = np.mean(data_arr[mask])
                 radial_average.append(avg_potential)
@@ -192,6 +194,18 @@ class RadialAveragePotential:
                 radial_average.append(0)
 
         return radii, radial_average
+
+    @staticmethod
+    def create_mask(distances: np.ndarray,
+                    radius: float,
+                    grid_spacing: list[float],
+                    grid_z: np.ndarray,
+                    average_index_from: int
+                    ) -> np.ndarray:
+        """Create a mask for the radial average"""
+        return (distances >= radius) & \
+               (distances < radius + grid_spacing[0]) & \
+               (grid_z <= average_index_from)
 
     @staticmethod
     def calculate_center(grid_points: list[int]

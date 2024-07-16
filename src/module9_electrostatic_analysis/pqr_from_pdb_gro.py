@@ -80,12 +80,20 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
-from common import logger, itp_to_df, pdb_to_df, gro_to_df, my_tools, \
-    cpuconfig, file_writer
+import common.logger as logger
+import common.my_tools as my_tools
+import common.itp_to_df as itp_to_df
+import common.pdb_to_df as pdb_to_df
+import common.gro_to_df as gro_to_df
+import common.cpuconfig as cpuconfig
+import common.file_writer as file_writer
+
 from common.colors_text import TextColor as bcolors
 
-from module9_electrostatic_analysis import parse_charmm_data, \
-    force_field_path_configure
+import module9_electrostatic_analysis.parse_charmm_data as \
+    parse_charmm_data
+import module9_electrostatic_analysis.force_field_path_configure \
+    as force_field_path_configure
 
 
 @dataclass

@@ -140,7 +140,7 @@ class RadialAveragePotential:
                        data_arr: np.ndarray,
                        grid_points: list[int],
                        grid_spacing: list[float],
-                       ) -> tuple[np.ndarray, list[float]]:
+                       ) -> tuple[np.ndarray, np.ndarray]:
         """Compute and plot the radial average of the potential from
         the center of the box."""
         # pylint: disable=too-many-locals
@@ -167,7 +167,7 @@ class RadialAveragePotential:
         radii, radial_average = self.calculate_radial_average(
             data_arr, distances, grid_spacing, max_radius, grid_xyz[2])
 
-        return radii, radial_average
+        return radii, np.array(radial_average)
 
     def calculate_radial_average(self,
                                  data_arr: np.ndarray,
@@ -231,7 +231,8 @@ class RadialAveragePotential:
 
     def _plot_radial_average(self,
                              radii: np.ndarray,
-                             radial_average: list[float]) -> None:
+                             radial_average: np.ndarray
+                             ) -> None:
         """Plot the radial average of the potential"""
         # Plot the radial average
         plt.figure(figsize=(10, 6))
@@ -248,7 +249,7 @@ class RadialAveragePotential:
 
     def write_radial_average(self,
                              radii: np.ndarray,
-                             radial_average: list[float],
+                             radial_average: np.ndarray,
                              log: logger.logging.Logger
                              ) -> None:
         """Write the radial average to a file"""

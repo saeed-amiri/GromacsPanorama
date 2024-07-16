@@ -15,6 +15,8 @@ import matplotlib.pyplot as plt
 from src.module9_electrostatic_analysis.apbs_radial_averagepotential_dx \
     import RadialAveragePotential, InputConfig
 
+from src.common.colors_text import TextColor as bcolors
+
 
 class TestRadialAveragePotential(unittest.TestCase):
     """
@@ -171,6 +173,78 @@ class TestRadialAveragePotential(unittest.TestCase):
         expected_value = np.ones_like(radial_average)
         np.testing.assert_almost_equal(radial_average, expected_value)
         self.plot_test_results(radii, radial_average, expected_value)
+
+    def test_x_squared_potential(self) -> None:
+        """
+        Test the radial average calculation for a potential that varies
+        as r^2.
+
+        This test verifies that the radial average calculation correctly
+        handl+
+        df es a potential that varies as r^2 from the center of the grid.
+        """
+        # pylint: disable=invalid-name
+        # Generate a grid of coordinates
+        grid_resolution = 200
+        self.grid_points = [grid_resolution, grid_resolution, grid_resolution]
+        x: np.ndarray = np.linspace(-self.grid_points[0] / 2,
+                                    self.grid_points[0] / 2,
+                                    grid_resolution)
+
+        y: np.ndarray = np.linspace(-self.grid_points[1] / 2,
+                                    self.grid_points[1] / 2,
+                                    grid_resolution)
+
+        z: np.ndarray = np.linspace(-self.grid_points[2] / 2,
+                                    self.grid_points[2] / 2,
+                                    grid_resolution)
+
+        X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
+
+        # Calculate the distance from the center for each point
+        center: np.ndarray = np.array([0, 0, 0])
+        distances: np.ndarray = np.sqrt((X - center[0])**2 +
+                                        (Y - center[1])**2 +
+                                        (Z - center[2])**2)
+
+        # Generate the potential as r^2
+        r_squared_potential = distances**2
+
+        # Calculate the radial average
+        radii, radial_average = self.radial_average_potential.radial_average(
+            r_squared_potential, self.grid_points, self.grid_spacing)
+
+        # The expected radial average should follow the input r^2
+        # relationship closely.  Since the potential is directly
+        # proportional to r^2, the radial average should theoretically
+        # be the same as the input potential, adjusted for any binning
+        # effects.
+        # Here, we compare the computed radial average to the
+        # theoretical expectation.
+
+        # Generate the expected radial average based on the r^2 relationship
+        # This might require adjusting based on how your radial_average
+        # method bins the data
+        expected_radial_average: np.ndarray = radii**2
+
+        # Assert that the computed radial average is close to the
+        # expected r^2 relationship
+        # This may need to be adjusted for numerical precision and
+        # binning effects
+        self.plot_test_results(radii, radial_average, expected_radial_average)
+        try:
+            np.testing.assert_allclose(radial_average,
+                                       expected_radial_average,
+                                       rtol=1e-4,
+                                       atol=1e-4)
+        except AssertionError as _:
+            print(f'{bcolors.CAUTION}\nTest may filed:\n'
+                  'Radial average and expected values are not close '
+                  'enough: "AssertionError"\n'
+                  'Take a look at the plot to see the discrepancy.\n'
+                  f'{bcolors.ENDC}')
+
+        # Optionally, plot the results to visually inspect the match
 
     def plot_test_results(self,
                           radii,

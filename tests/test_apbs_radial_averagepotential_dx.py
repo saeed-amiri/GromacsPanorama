@@ -185,8 +185,9 @@ class TestRadialAveragePotential(unittest.TestCase):
         """
         # pylint: disable=invalid-name
         # Generate a grid of coordinates
-        grid_resolution = 200
-        self.grid_points = [grid_resolution, grid_resolution, grid_resolution]
+        grid_resolution: int = 200
+        self.grid_points: list[int] = \
+            [grid_resolution, grid_resolution, grid_resolution]
         x: np.ndarray = np.linspace(-self.grid_points[0] / 2,
                                     self.grid_points[0] / 2,
                                     grid_resolution)
@@ -208,9 +209,11 @@ class TestRadialAveragePotential(unittest.TestCase):
                                         (Z - center[2])**2)
 
         # Generate the potential as r^2
-        r_squared_potential = distances**2
+        r_squared_potential: np.ndarray = distances**2
 
         # Calculate the radial average
+        radii: np.ndarray
+        radial_average: np.ndarray
         radii, radial_average = self.radial_average_potential.radial_average(
             r_squared_potential, self.grid_points, self.grid_spacing)
 
@@ -231,7 +234,13 @@ class TestRadialAveragePotential(unittest.TestCase):
         # expected r^2 relationship
         # This may need to be adjusted for numerical precision and
         # binning effects
-        self.plot_test_results(radii, radial_average, expected_radial_average)
+
+        # It is not good practice to assert within a try block. but this
+        # is done here to catch the AssertionError and print a message
+        # to the user to check the plot for discrepancies. But also the test
+        # does not conside all the aspects of the radial average calculation
+        # for example the setting to zero the average outside of the
+        # `average_index_from`.
         try:
             np.testing.assert_allclose(radial_average,
                                        expected_radial_average,
@@ -244,7 +253,8 @@ class TestRadialAveragePotential(unittest.TestCase):
                   'Take a look at the plot to see the discrepancy.\n'
                   f'{bcolors.ENDC}')
 
-        # Optionally, plot the results to visually inspect the match
+        self.plot_test_results(radii, radial_average, expected_radial_average)
+
 
     def plot_test_results(self,
                           radii,

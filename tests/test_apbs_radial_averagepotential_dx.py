@@ -253,10 +253,11 @@ class TestRadialAveragePotential(unittest.TestCase):
                                        rtol=1e-4,
                                        atol=1e-4)
         except AssertionError as _:
-            print(f'{bcolors.CAUTION}\nTest may filed:\n'
-                  'Radial average and expected values are not close '
+            print(f'{bcolors.CAUTION}\nTesting Potentail(r^2):\n'
+                  '\tTest may failed:\n'
+                  '\tRadial average and expected values are not close '
                   'enough: "AssertionError"\n'
-                  'Take a look at the plot to see the discrepancy.\n'
+                  '\tTake a look at the plot to see the discrepancy.\n'
                   f'{bcolors.ENDC}')
 
         self.plot_test_results(radii, radial_average, expected_radial_average)

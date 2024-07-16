@@ -185,16 +185,23 @@ class TestRadialAveragePotential(unittest.TestCase):
         - radial_average: The calculated radial average values.
         - expected_value: The expected uniform value for comparison.
         """
+        plt.close('all')
         _, ax_i = plt.subplots(figsize=(20, 12))
+
         ax_i.plot(radii,
                   radial_average,
                   label='Calculated Radial Average',
-                  marker='o')
-
-        ax_i.axhline(y=expected_value[0],
-                     color='r',
-                     linestyle='-',
-                     label='Expected Uniform Value')
+                  color='red',
+                  linestyle='-',
+                  marker='o',
+                  )
+        ax_i.plot(radii,
+                  expected_value,
+                  label='Expected Radial Average',
+                  color='grey',
+                  linestyle='--',
+                  marker='o',
+                  )
 
         ax_i.set_xlabel('Radius', fontsize=22)
         ax_i.set_ylabel('Radial Average Potential', fontsize=22)

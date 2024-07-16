@@ -152,6 +152,13 @@ class TestRadialAveragePotential(unittest.TestCase):
         # by pot_unit_conversion
         expected_value = np.ones_like(radial_average)
         np.testing.assert_almost_equal(radial_average, expected_value)
+        print(f'{bcolors.CAUTION}\nTesting uniform:\n'
+                  '\tTest may failed:\n'
+                  '\tRadial average and expected values are not close '
+                  'enough: "AssertionError"\n'
+                  '\tTake a look at the plot to see the discrepancy.\n'
+                  f'{bcolors.ENDC}')
+        self.plot_test_results(radii, radial_average, expected_value)
 
     def test_center_offset(self) -> None:
         """
@@ -172,7 +179,6 @@ class TestRadialAveragePotential(unittest.TestCase):
         # by pot_unit_conversion
         expected_value = np.ones_like(radial_average)
         np.testing.assert_almost_equal(radial_average, expected_value)
-        self.plot_test_results(radii, radial_average, expected_value)
 
     def test_x_squared_potential(self) -> None:
         """

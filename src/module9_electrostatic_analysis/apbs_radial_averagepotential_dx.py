@@ -203,9 +203,11 @@ class RadialAveragePotential:
                     average_index_from: int
                     ) -> np.ndarray:
         """Create a mask for the radial average"""
-        return (distances >= radius) & \
-               (distances < radius + grid_spacing[0]) & \
-               (grid_z <= average_index_from)
+        shell_thickness: int = grid_spacing[0]
+        shell_condition: np.ndarray = (distances >= radius) & \
+                                      (distances < radius + shell_thickness)
+        z_condition: np.ndarray = grid_z <= average_index_from
+        return shell_condition & z_condition
 
     @staticmethod
     def calculate_center(grid_points: list[int]

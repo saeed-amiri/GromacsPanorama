@@ -184,8 +184,9 @@ class PlotPotential:
                         x_type=float).xvg_df
                     apbs_files[item] = df_i
             except FileNotFoundError:
-                self.info_msg += ('\tRadial average file not found: '
-                                  f'{configs.radial_avg_file}\n')
+                self.info_msg += (msg := '\tRadial average file not found: '
+                                  f'{configs.radial_avg_files}\n')
+                print(f'{bcolors.WARNING}{msg}{bcolors.ENDC}')
                 return
             for j, (item, df_i) in enumerate(apbs_files.items()):
                 ax_i.plot(df_i.iloc[:, 0],

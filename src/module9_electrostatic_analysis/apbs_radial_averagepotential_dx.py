@@ -65,6 +65,9 @@ class InputConfig:
     number_of_header_lines: int = 11
     number_of_tail_lines: int = 5
     output_file: str = 'radial_average_potential_nonlinear.xvg'
+    bulk_averaging: bool = True  # if Bulk averaging else interface averaging
+    interface_low_index: int = 80
+    interface_high_index: int = 120
 
 
 class RadialAveragePotential:
@@ -74,9 +77,8 @@ class RadialAveragePotential:
     """
 
     info_msg: str = 'Message from RadialAveragePotential:\n'
-    average_index_from: int = 80
-    pot_unit_conversion: float = 25.2
-    dist_unit_conversion: float = 10.0
+    pot_unit_conversion: float = 25.2  # kT/e <-> mV
+    dist_unit_conversion: float = 10.0  # Angstrom <-> nm
 
     def __init__(self,
                  configs: InputConfig = InputConfig()
@@ -144,8 +146,8 @@ class RadialAveragePotential:
         """Compute and plot the radial average of the potential from
         the center of the box."""
         # pylint: disable=too-many-locals
-        self.info_msg += (
-            f'\tThe average index is set to {self.average_index_from}\n')
+        self.info_msg += ('\tThe average index is set to '
+                          f'{self.configs.interface_low_index}\n')
 
         # Calculate the center of the box in grid units
         center_xyz: tuple[float, float, float] = \
@@ -186,7 +188,9 @@ class RadialAveragePotential:
                                     radius,
                                     grid_spacing,
                                     grid_z,
-                                    self.average_index_from)
+                                    self.configs.interface_low_index,
+                                    self.configs.interface_high_index
+                                )
             if np.sum(mask) > 0:
                 avg_potential = np.mean(data_arr[mask])
                 radial_average.append(avg_potential)
@@ -275,11 +279,11 @@ class RadialAveragePotential:
                 'Average Potential [mV]': convert_to_kj,
                 'Average Potential [kT/e]': radial_average
                 }
-        extra_msg_0 = ('The radial average is set below the index: '
-                       f'{self.average_index_from}')
+        extra_msg_0 = ('# The radial average is set below the index: '
+                       f'{self.configs.interface_low_index}')
         extra_msg = \
             [extra_msg_0,
-             f'The conversion factor to [meV] is {self.pot_unit_conversion}']
+             f'# The conversion factor to [meV] is {self.pot_unit_conversion}']
         df_i = pd.DataFrame(data)
         df_i.set_index(df_i.columns[0], inplace=True)
         my_tools.write_xvg(
@@ -371,10 +375,10 @@ class RadialAveragePotential:
 
 
 if __name__ == '__main__':
-    try:
+    # try:
         RadialAveragePotential().process_file(
             sys.argv[1],
             log=logger.setup_logger('radial_average_potential.log'))
-    except IndexError:
-        print(f'{bcolors.FAIL}No file is provided!{bcolors.ENDC}')
-        sys.exit(1)
+    # except IndexError:
+        # print(f'{bcolors.FAIL}No file is provided!{bcolors.ENDC}')
+        # sys.exit(1)

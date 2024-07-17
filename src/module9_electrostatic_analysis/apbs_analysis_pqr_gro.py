@@ -99,6 +99,14 @@ class AnalysisStructure:
             sys.exit(f"{bcolors.FAIL}{msg}{bcolors.ENDC}")
         return ReadInputStructureFile(log, files, self.config).structure_dict
 
+    def _write_msg(self,
+                   log: logger.logging.Logger  # To log
+                   ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{ReadInputStructureFile.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
 
 class ReadInputStructureFile:
     """reading all the input structure files and return them in dict

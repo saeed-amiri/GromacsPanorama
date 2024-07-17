@@ -78,6 +78,7 @@ class AnalysisStructure:
     info_msg: str = "Message from AnalysisStructure:\n"
     config: AllConfig
     structure_data: dict[str, pd.DataFrame]
+    grid_spacing: tuple[float, float, float]
 
     def __init__(self,
                  files: list[str],
@@ -86,6 +87,73 @@ class AnalysisStructure:
                  ) -> None:
         self.config = config
         self.structure_data = self.validate_and_process_files(files, log)
+        self.get_indices()
+        self._write_msg(log)
+
+    def get_indices(self) -> None:
+        """Get the indices of the lowest and highest grid points in each
+        dimension for each residue
+        Each box has a diminsion which is defined in the APBS input file
+        That box should be used because the grids are based on the output
+        of the APBS calculations.
+        Each box is has specific number of grid points in each dimension
+        The min and max values of each residue should be found and then
+        the indices of the lowest and highest grid points in each dimension
+        should be reported.
+        """
+        # find the min and max of each residue
+        self.grid_spacing = self.calc_grid_spacing()
+        self.get_min_max_residue()
+
+    def get_min_max_residue(self) -> None:
+        """
+        Get the min and max of each residue
+        """
+        for fname, data in self.structure_data.items():
+            self.info_msg += f"\tFile: {fname}\n"
+            self.get_min_max_residue_file(data)
+
+    def calc_grid_spacing(self) -> tuple[float, float, float]:
+        """
+        Calculate the grid spacing
+        """
+        grid_number = self.config.grid_config.grid_number
+        box_size = self.config.grid_config.box_size
+        grid_spacing = (box_size[0] / (grid_number[0] - 1),
+                        box_size[1] / (grid_number[1] - 1),
+                        box_size[2] / (grid_number[2] - 1))
+        self.info_msg += f"\tGrid spacing: {grid_spacing}\n"
+        return grid_spacing
+
+    def get_min_max_residue_file(self,
+                                 data: pd.DataFrame,
+                                 ) -> None:
+        """
+        Get the min and max of each residue in a file
+        """
+        for residue_name in ResidueName:
+            residue_df = data[
+                data[ColumnName.RESIDUE_NAME.value] == residue_name.value]
+            # finding the resiude number of the residue with min x
+            min_x_residue = residue_df[ColumnName.Z.value].min()
+            # finding the resiude number of the residue with max x
+            max_x_residue = residue_df[ColumnName.Z.value].max()
+            if not pd.isna(min_x_residue) and not pd.isna(max_x_residue):
+                self._get_grid_indices(
+                    residue_name.value, min_x_residue, max_x_residue)
+
+    def _get_grid_indices(self,
+                          residue_name: str,
+                          min_x_residue: float,
+                          max_x_residue: float,
+                          ) -> None:
+        """
+        Get the grid indices
+        """
+        grid_min: int = int(min_x_residue / self.grid_spacing[0])
+        grid_max: int = int(max_x_residue / self.grid_spacing[0])
+        self.info_msg += \
+            f"\t\t{residue_name} -> Min: {grid_min}, Max: {grid_max}\n"
 
     def validate_and_process_files(self,
                                    files: list[str],

@@ -375,10 +375,10 @@ class RadialAveragePotential:
 
 
 if __name__ == '__main__':
-    # try:
+    try:
         RadialAveragePotential().process_file(
             sys.argv[1],
             log=logger.setup_logger('radial_average_potential.log'))
-    # except IndexError:
-        # print(f'{bcolors.FAIL}No file is provided!{bcolors.ENDC}')
-        # sys.exit(1)
+    except IndexError:
+        print(f'{bcolors.FAIL}No file is provided!{bcolors.ENDC}')
+        sys.exit(1)

@@ -190,7 +190,7 @@ class RadialAveragePotential:
                                     grid_z,
                                     self.configs.interface_low_index,
                                     self.configs.interface_high_index
-                                )
+                                    )
             if np.sum(mask) > 0:
                 avg_potential = np.mean(data_arr[mask])
                 radial_average.append(avg_potential)

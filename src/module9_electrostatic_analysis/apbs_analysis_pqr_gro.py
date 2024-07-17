@@ -46,6 +46,22 @@ class ResidueName(Enum):
     CL = "CLA"
 
 
+class ColumnName(Enum):
+    """
+    Enum class to hold column names
+    """
+    ATOM_ID = 'atom_id'
+    ATOM_NAME = 'atom_name'
+    RESIDUE_NAME = 'residue_name'
+    CHAIN_ID = 'chain_id'
+    RESIDUE_NUMBER = 'residue_number'
+    X = 'x'
+    Y = 'y'
+    Z = 'z'
+    CHARGE = 'charge'
+    RADIUS = 'radius'
+
+
 @dataclass
 class AllConfig:
     """

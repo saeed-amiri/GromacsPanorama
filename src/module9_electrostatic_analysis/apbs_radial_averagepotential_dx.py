@@ -199,19 +199,45 @@ class RadialAveragePotential:
 
         return radii, radial_average
 
-    @staticmethod
-    def create_mask(distances: np.ndarray,
+    def create_mask(self,
+                    distances: np.ndarray,
                     radius: float,
                     grid_spacing: list[float],
                     grid_z: np.ndarray,
-                    average_index_from: int
+                    interface_low_index: int,
+                    interface_high_index: int
                     ) -> np.ndarray:
         """Create a mask for the radial average"""
-        shell_thickness: int = grid_spacing[0]
+        shell_thickness: float = grid_spacing[0]
         shell_condition: np.ndarray = (distances >= radius) & \
                                       (distances < radius + shell_thickness)
-        z_condition: np.ndarray = grid_z <= average_index_from
+
+        if self.configs.bulk_averaging:
+            z_condition: np.ndarray = self.create_mask_bulk(
+                grid_z, interface_low_index)
+        else:
+            z_condition = self.create_mask_interface(
+                grid_z, interface_low_index, interface_high_index)
+
         return shell_condition & z_condition
+
+    @staticmethod
+    def create_mask_bulk(grid_z: np.ndarray,
+                         interface_low_index: int,
+                         ) -> np.ndarray:
+        """Create a mask for the radial average"""
+        z_condition: np.ndarray = (grid_z <= interface_low_index)
+        return z_condition
+
+    @staticmethod
+    def create_mask_interface(grid_z: np.ndarray,
+                              interface_low_index: int,
+                              interface_high_index: int
+                              ) -> np.ndarray:
+        """Create a mask for the radial average"""
+        z_condition: np.ndarray = (grid_z >= interface_low_index) & \
+                                  (grid_z <= interface_high_index)
+        return z_condition
 
     @staticmethod
     def calculate_center(grid_points: list[int]

@@ -240,7 +240,7 @@ class RadialAveragePotential:
                               interface_low_index: int,
                               interface_high_index: int
                               ) -> np.ndarray:
-        """Create a mask for the radial average"""
+        """Create a mask for the radial average from the interface"""
         z_condition: np.ndarray = (grid_z >= interface_low_index) & \
                                   (grid_z <= interface_high_index)
         return z_condition
@@ -264,6 +264,7 @@ class RadialAveragePotential:
     @staticmethod
     def create_distance_grid(grid_points: list[int],
                              ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Create the distance grid"""
         x_space = np.linspace(0, grid_points[0] - 1, grid_points[0])
         y_space = np.linspace(0, grid_points[1] - 1, grid_points[1])
         z_space = np.linspace(0, grid_points[2] - 1, grid_points[2])
@@ -277,6 +278,7 @@ class RadialAveragePotential:
                          grid_xyz: tuple[np.ndarray, np.ndarray, np.ndarray],
                          center_xyz: tuple[float, float, float],
                          ) -> np.ndarray:
+        """Calculate the distances from the center of the box"""
         return np.sqrt((grid_xyz[0] - center_xyz[0])**2 +
                        (grid_xyz[1] - center_xyz[1])**2 +
                        (grid_xyz[2] - center_xyz[2])**2) * grid_spacing[0]

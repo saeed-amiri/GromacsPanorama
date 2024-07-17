@@ -190,7 +190,7 @@ class PlotPotential:
                 return
             for j, (item, df_i) in enumerate(apbs_files.items()):
                 ax_i.plot(df_i.iloc[:, 0],
-                          df_i.iloc[:, 1],
+                          df_i.iloc[:, 2],
                           color=configs.colors[j+1],
                           linestyle=configs.line_styles[j*2],
                           linewidth=elsevier_plot_tools.LINE_WIDTH,

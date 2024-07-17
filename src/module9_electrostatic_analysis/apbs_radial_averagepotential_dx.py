@@ -68,6 +68,7 @@ class InputConfig:
     bulk_averaging: bool = True  # if Bulk averaging else interface averaging
     interface_low_index: int = 80
     interface_high_index: int = 120
+    lower_index_bulk: int = 10
 
 
 class RadialAveragePotential:
@@ -189,7 +190,8 @@ class RadialAveragePotential:
                                     grid_spacing,
                                     grid_z,
                                     self.configs.interface_low_index,
-                                    self.configs.interface_high_index
+                                    self.configs.interface_high_index,
+                                    self.configs.lower_index_bulk,
                                     )
             if np.sum(mask) > 0:
                 avg_potential = np.mean(data_arr[mask])
@@ -205,16 +207,18 @@ class RadialAveragePotential:
                     grid_spacing: list[float],
                     grid_z: np.ndarray,
                     interface_low_index: int,
-                    interface_high_index: int
+                    interface_high_index: int,
+                    low_index_bulk: int
                     ) -> np.ndarray:
         """Create a mask for the radial average"""
+        # pylint: disable=too-many-arguments
         shell_thickness: float = grid_spacing[0]
         shell_condition: np.ndarray = (distances >= radius) & \
                                       (distances < radius + shell_thickness)
 
         if self.configs.bulk_averaging:
             z_condition: np.ndarray = self.create_mask_bulk(
-                grid_z, interface_low_index)
+                grid_z, interface_low_index, low_index_bulk)
         else:
             z_condition = self.create_mask_interface(
                 grid_z, interface_low_index, interface_high_index)
@@ -224,9 +228,11 @@ class RadialAveragePotential:
     @staticmethod
     def create_mask_bulk(grid_z: np.ndarray,
                          interface_low_index: int,
+                         low_index_bulk: int,
                          ) -> np.ndarray:
-        """Create a mask for the radial average"""
-        z_condition: np.ndarray = (grid_z <= interface_low_index)
+        """Create a mask for the radial average from the bulk"""
+        z_condition: np.ndarray = (grid_z <= interface_low_index) & \
+                                  (grid_z >= low_index_bulk)
         return z_condition
 
     @staticmethod

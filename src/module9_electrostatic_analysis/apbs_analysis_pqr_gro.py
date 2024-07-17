@@ -7,17 +7,16 @@ Should be able to run standalone.
 
 import os
 import sys
-import typing
 from dataclasses import dataclass
 from dataclasses import field
 from enum import Enum
 
 import pandas as pd
 
-from  common import logger
-from  common import my_tools
-from  common import pqr_to_df
-from  common import gro_to_df
+from common import logger
+from common import my_tools
+from common import pqr_to_df
+from common import gro_to_df
 
 from common.colors_text import TextColor as bcolors
 
@@ -27,8 +26,11 @@ class GridConfig:
     """
     Class to hold configuration parameters
     """
-    grid_spacing: tuple[int, int, int] = field(default_factory=lambda: (
+    grid_number: tuple[int, int, int] = field(default_factory=lambda: (
         161, 161, 161))
+    # The size of the box in angstroms
+    box_size: tuple[float, float, float] = field(default_factory=lambda: (
+        230.0, 230.0, 227.1))
 
 
 class ResidueName(Enum):

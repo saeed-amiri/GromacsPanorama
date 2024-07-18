@@ -137,7 +137,10 @@ class RadialAveragePotential:
                                  data: list[float],
                                  grid_points: list[int]
                                  ) -> np.ndarray:
-        """reshape and reevaluate the data"""
+        """reshape and reevaluate the data.
+        In NumPy, the default order for reshaping (C order) is row-major,
+        which means the last index changes fastest. This aligns with
+        the way the data is ordered (z, y, x)."""
         return np.array(data).reshape(grid_points) * self.pot_unit_conversion
 
     def radial_average(self,

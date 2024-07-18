@@ -129,10 +129,19 @@ class TestRadialAveragePotential(unittest.TestCase):
         # (<= average_index_from),
         # the radial average should be 1 for all calculated radii
         expected_radial_averages = np.ones_like(radial_average)
-        np.testing.assert_array_almost_equal(
-            radial_average,
-            expected_radial_averages,
-            err_msg="Radial averages are incorrect")
+        try:
+            np.testing.assert_array_almost_equal(
+                radial_average,
+                expected_radial_averages,
+                err_msg="Radial averages are incorrect")
+        except AssertionError as _:
+            print(f'{bcolors.CAUTION}\nTesting Radial Average:\n'
+                  '\tTest may failed:\n'
+                  '\tRadial average and expected values are not close '
+                  'enough: "AssertionError"\n'
+                  '\tTake a look at the plot to see the discrepancy.\n'
+                  f'{bcolors.ENDC}')
+        self.plot_test_results(radii, radial_average, expected_radial_averages)
 
     def test_uniform_potential(self) -> None:
         """

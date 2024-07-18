@@ -148,8 +148,6 @@ class RadialAveragePotential:
         """Compute and plot the radial average of the potential from
         the center of the box."""
         # pylint: disable=too-many-locals
-        self.info_msg += ('\tThe average index is set to '
-                          f'{self.configs.interface_low_index}\n')
 
         # Calculate the center of the box in grid units
         center_xyz: tuple[float, float, float] = \
@@ -171,6 +169,9 @@ class RadialAveragePotential:
         radii, radial_average = self.calculate_radial_average(
             data_arr, distances, grid_spacing, max_radius, grid_xyz[2])
 
+        self.info_msg += ('\tThe average index is set to '
+                          f'{self.configs.interface_low_index}\n'
+                          f'\tThe maximum radius is {max_radius:.5f} [nm]\n')
         return radii, np.array(radial_average)
 
     def calculate_radial_average(self,

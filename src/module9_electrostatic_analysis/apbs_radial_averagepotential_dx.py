@@ -53,6 +53,7 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 
 from common import logger, my_tools
@@ -289,11 +290,19 @@ class RadialAveragePotential:
                              ) -> None:
         """Plot the radial average of the potential"""
         # Plot the radial average
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(20, 12))
+        matplotlib.rcParams.update({'font.size': 22})
 
         plt.plot(radii/self.dist_unit_conversion,
                  radial_average,
-                 label='Radial Average of Potential')
+                 label='Radial Average of Potential',
+                 color='grey',
+                 lw=3,
+                 )
+        y_lims: tuple[float, float] = plt.ylim()
+        plt.vlines(
+            3.6, y_lims[0], y_lims[1], color='red', lw=3, linestyle='--')
+        plt.ylim(y_lims)
         plt.xlabel('Radius [nm]')
         plt.ylabel('Average Potential')
         plt.title('Radial Average of Potential from the Center of the Box')

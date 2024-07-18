@@ -158,11 +158,15 @@ class TestRadialAveragePotential(unittest.TestCase):
         conversion factor.
         """
         # pylint: disable=unused-variable
+        # To test the bulk averaging, set the lower_index_bulk to 0 and
+        # interface_low_index to 50
+        self.radial_average_potential.configs.bulk_averaging = True
+        self.radial_average_potential.configs.interface_low_index = 50
+        self.radial_average_potential.configs.lower_index_bulk = 0
         # Test radial average on uniform potential
         data_arr = np.array(self.data).reshape(self.grid_points)
         radii, radial_average = self.radial_average_potential.radial_average(
             data_arr, self.grid_points, self.grid_spacing)
-
         # Expect uniform potential to have the same average value scaled
         # by pot_unit_conversion
         expected_value = np.ones_like(radial_average)

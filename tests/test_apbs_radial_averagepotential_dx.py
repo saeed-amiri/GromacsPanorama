@@ -292,8 +292,9 @@ class TestRadialAveragePotential(unittest.TestCase):
             # a larger tolerance in the comparison.
             np.testing.assert_allclose(radial_average,
                                        expected_radial_average,
-                                       rtol=1,
-                                       atol=1)
+                                       rtol=radial_average.max()*1e-4,
+                                       atol=radial_average.max()*1e-4,
+                                       )
         except AssertionError as _:
             print(f'{bcolors.CAUTION}\nTesting Potentail(r^2):\n'
                   '\tTest may failed:\n'

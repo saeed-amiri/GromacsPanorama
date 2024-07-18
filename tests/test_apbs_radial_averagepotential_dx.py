@@ -111,6 +111,12 @@ class TestRadialAveragePotential(unittest.TestCase):
         grid_z = np.zeros((10, 10, 10))
         grid_spacing = [1.0]
         max_radius = 5.0
+        # To test the bulk averaging, set the lower_index_bulk to 0 and
+        # interface_low_index to 50
+        self.radial_average_potential.configs.bulk_averaging = True
+        self.radial_average_potential.configs.interface_low_index = 50
+        self.radial_average_potential.configs.lower_index_bulk = 0
+
         radii, radial_average = \
             self.radial_average_potential.calculate_radial_average(
                 data,

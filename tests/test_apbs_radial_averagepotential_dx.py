@@ -160,7 +160,7 @@ class TestRadialAveragePotential(unittest.TestCase):
                       'enough: "AssertionError"\n'
                       '\tTake a look at the plot to see the discrepancy.\n'
                       f'{bcolors.ENDC}')
-            if self.radial_average_potential.average_index_from == 0:
+            if self.radial_average_potential.configs.interface_low_index == 0:
                 print(f'{bcolors.WARNING}\tThe `average_index_from` was '
                       f'set to zero!, it fails!{bcolors.ENDC}')
         self.plot_test_results(radii, radial_average, expected_value)
@@ -175,7 +175,7 @@ class TestRadialAveragePotential(unittest.TestCase):
         """
         # pylint: disable=unused-variable
         # Shift center to test handling of non-centered grids
-        self.radial_average_potential.average_index_from = 2
+        self.radial_average_potential.configs.interface_low_index = 2
         data_arr = np.array(self.data).reshape(self.grid_points)
         radii, radial_average = self.radial_average_potential.radial_average(
             data_arr, self.grid_points, self.grid_spacing)

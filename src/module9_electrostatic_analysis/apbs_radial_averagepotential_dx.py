@@ -170,7 +170,15 @@ class RadialAveragePotential:
 
         # Calculate the radial average
         radii, radial_average = self.calculate_radial_average(
-            data_arr, distances, grid_spacing, max_radius, grid_xyz[2])
+            data_arr,
+            distances,
+            grid_spacing,
+            max_radius,
+            grid_xyz[2],
+            self.configs.interface_low_index,
+            self.configs.interface_high_index,
+            self.configs.lower_index_bulk,
+            )
 
         self.info_msg += ('\tThe average index is set to '
                           f'{self.configs.interface_low_index}\n'
@@ -183,6 +191,9 @@ class RadialAveragePotential:
                                  grid_spacing: list[float],
                                  max_radius: float,
                                  grid_z: np.ndarray,
+                                 interface_low_index,
+                                 interface_high_index,
+                                 lower_index_bulk,
                                  ) -> tuple[np.ndarray, list[float]]:
         """Calculate the radial average of the potential"""
         # pylint: disable=too-many-arguments
@@ -194,9 +205,9 @@ class RadialAveragePotential:
                                     radius,
                                     grid_spacing,
                                     grid_z,
-                                    self.configs.interface_low_index,
-                                    self.configs.interface_high_index,
-                                    self.configs.lower_index_bulk,
+                                    interface_low_index,
+                                    interface_high_index,
+                                    lower_index_bulk,
                                     )
             if np.sum(mask) > 0:
                 avg_potential = np.mean(data_arr[mask])

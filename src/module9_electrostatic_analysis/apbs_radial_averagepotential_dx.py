@@ -132,6 +132,8 @@ class RadialAveragePotential:
             self.radial_average(data_arr, grid_points, grid_spacing)
         self._plot_radial_average(radii, radial_average)
         self.write_radial_average(radii, radial_average, log)
+        self.plot_potential_layers_z(
+                data_arr, grid_spacing, grid_points)
 
     def _reshape_reevaluate_data(self,
                                  data: list[float],
@@ -323,6 +325,61 @@ class RadialAveragePotential:
         plt.title('Radial Average of Potential from the Center of the Box')
         plt.legend()
         plt.grid(True)
+        plt.show()
+
+    def plot_potential_layers_z(self,
+                                data_arr: np.ndarray,
+                                grid_spacing: list[float],
+                                grid_points: list[int]
+                                ) -> None:
+        """
+        plot the average potential layers by changing z
+        """
+        # make sure the computation is in the plane not bulk
+        self.configs.bulk_averaging = False
+        delta_z: int = 0  # increment in z grid, it is index
+        highest_z: int = 130
+        lowest_z: int = 50
+        decrement_z: int = 10
+
+
+        center_xyz: tuple[float, float, float] = \
+            self.calculate_center(grid_points)
+        plt.figure(figsize=(20, 12))
+        matplotlib.rcParams.update({'font.size': 22})
+        for z_index in range(lowest_z, highest_z, decrement_z):
+            # Calculate the center of the box in grid units
+            center_xyz = (center_xyz[0], center_xyz[1], z_index)
+            # Calculate the maximum radius for the radial average
+            max_radius: float = \
+                self.calculate_max_radius(center_xyz, grid_spacing)
+
+            # Create the distance grid
+            grid_xyz: tuple[np.ndarray, np.ndarray, np.ndarray] = \
+                self.create_distance_grid(grid_points)
+
+            # Calculate the distances from the center of the box
+            distances: np.ndarray = self.compute_distance(
+                grid_spacing, grid_xyz, center_xyz)
+            radii, radial_average = self.calculate_radial_average(
+                data_arr,
+                distances,
+                grid_spacing,
+                max_radius,
+                grid_xyz[2],
+                interface_low_index=z_index,
+                interface_high_index=z_index+delta_z,
+                lower_index_bulk=0,
+                )
+            plt.plot(radii/self.dist_unit_conversion,
+                     radial_average,
+                     label=f'z-index: {z_index}',
+                     lw=2,
+                     )
+        plt.xlabel('Radius [nm]')
+        plt.ylabel('Average Potential')
+        plt.title('Radial Average of Potential from the Center of the Box')
+        plt.legend()
         plt.show()
 
     def write_radial_average(self,

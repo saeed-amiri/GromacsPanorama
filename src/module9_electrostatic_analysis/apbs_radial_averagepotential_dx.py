@@ -358,11 +358,13 @@ class RadialAveragePotential:
 
         center_xyz: tuple[float, float, float] = \
             self.calculate_center(grid_points)
-        plt.figure(figsize=(20, 12))
-        matplotlib.rcParams.update({'font.size': 22})
-        for z_index in range(self.configs.lowest_z,
-                             self.configs.highest_z,
-                             self.configs.decrement_z):
+
+        fig_i: plt.figure
+        ax_i: plt.Axes
+        fig_i, ax_i = elsevier_plot_tools.mk_canvas('single_column')
+        for i, z_index in enumerate(range(self.configs.lowest_z,
+                                          self.configs.highest_z,
+                                          self.configs.decrement_z)):
             # Calculate the center of the box in grid units
             center_xyz = (center_xyz[0], center_xyz[1], z_index)
             # Calculate the maximum radius for the radial average
@@ -386,16 +388,16 @@ class RadialAveragePotential:
                 interface_high_index=z_index+self.configs.delta_z,
                 lower_index_bulk=0,
                 )
-            plt.plot(radii/self.dist_unit_conversion,
-                     radial_average,
-                     label=f'z-index: {z_index}',
-                     lw=2,
-                     )
-        plt.xlabel('Radius [nm]')
-        plt.ylabel('Average Potential')
-        plt.title('Radial Average of Potential from the Center of the Box')
+            ax_i.plot(radii/self.dist_unit_conversion,
+                      radial_average,
+                      label=f'z-index: {z_index}',
+                      lw=1,
+                      c=elsevier_plot_tools.CLEAR_COLOR_GRADIENT[i],
+                      )
+        ax_i.set_xlabel('Radius [nm]')
+        ax_i.set_ylabel('Average Potential')
         plt.legend()
-        plt.show()
+        elsevier_plot_tools.save_close_fig(fig_i, 'potential_layers_z.jpg')
 
     def write_radial_average(self,
                              radii: np.ndarray,

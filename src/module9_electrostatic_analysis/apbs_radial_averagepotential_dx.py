@@ -295,7 +295,7 @@ class RadialAveragePotential:
                              grid_spacing: list[float]
                              ) -> float:
         """Calculate the maximum radius for the radial average"""
-        return min(center_xyz) * min(grid_spacing)
+        return min(center_xyz[:2]) * min(grid_spacing)
 
     @staticmethod
     def create_distance_grid(grid_points: list[int],

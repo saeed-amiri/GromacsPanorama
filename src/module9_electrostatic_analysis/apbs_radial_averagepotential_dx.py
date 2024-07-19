@@ -66,10 +66,25 @@ class InputConfig:
     number_of_header_lines: int = 11
     number_of_tail_lines: int = 5
     output_file: str = 'radial_average_potential_nonlinear.xvg'
-    bulk_averaging: bool = True  # if Bulk averaging else interface averaging
-    interface_low_index: int = 80
-    interface_high_index: int = 120
+    bulk_averaging: bool = False  # if Bulk averaging else interface averaging
+    interface_low_index: int = 89
+    interface_high_index: int = 90
     lower_index_bulk: int = 10
+
+
+@dataclass
+class MultilayerPlotConfig:
+    """set the parameters for the multilayer plot"""
+    delta_z: int = 0  # increment in z grid, it is index
+    highest_z: int = 130
+    lowest_z: int = 50
+    decrement_z: int = 10
+
+
+@dataclass
+class AllConfigs(InputConfig, MultilayerPlotConfig):
+    """set the parameters for the radial average potential"""
+
 
 
 class RadialAveragePotential:
@@ -81,9 +96,10 @@ class RadialAveragePotential:
     info_msg: str = 'Message from RadialAveragePotential:\n'
     pot_unit_conversion: float = 25.2  # kT/e <-> mV
     dist_unit_conversion: float = 10.0  # Angstrom <-> nm
+    configs: AllConfigs
 
     def __init__(self,
-                 configs: InputConfig = InputConfig()
+                 configs: AllConfigs = AllConfigs()
                  ) -> None:
         """write and log messages"""
         self.configs = configs
@@ -337,17 +353,14 @@ class RadialAveragePotential:
         """
         # make sure the computation is in the plane not bulk
         self.configs.bulk_averaging = False
-        delta_z: int = 0  # increment in z grid, it is index
-        highest_z: int = 130
-        lowest_z: int = 50
-        decrement_z: int = 10
-
 
         center_xyz: tuple[float, float, float] = \
             self.calculate_center(grid_points)
         plt.figure(figsize=(20, 12))
         matplotlib.rcParams.update({'font.size': 22})
-        for z_index in range(lowest_z, highest_z, decrement_z):
+        for z_index in range(self.configs.lowest_z,
+                             self.configs.highest_z,
+                             self.configs.decrement_z):
             # Calculate the center of the box in grid units
             center_xyz = (center_xyz[0], center_xyz[1], z_index)
             # Calculate the maximum radius for the radial average
@@ -368,7 +381,7 @@ class RadialAveragePotential:
                 max_radius,
                 grid_xyz[2],
                 interface_low_index=z_index,
-                interface_high_index=z_index+delta_z,
+                interface_high_index=z_index+self.configs.delta_z,
                 lower_index_bulk=0,
                 )
             plt.plot(radii/self.dist_unit_conversion,

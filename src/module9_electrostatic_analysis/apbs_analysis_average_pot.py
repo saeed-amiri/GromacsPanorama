@@ -316,8 +316,9 @@ class AverageAnalysis:
                                          ) -> np.ndarray:
         """Find the grid points within the NP"""
         grid_size: float = self.dx.BOX_SIZE[2] / self.dx.GRID_POINTS[2]
+        self.info_msg += f'\tGird size: {grid_size:.4f}\n'
         radius: float = self.configs.computation_radius
-        nr_grids_coveres_sphere_radius: int = int(radius / grid_size) + 1
+        nr_grids_coveres_sphere_radius: int = int(radius / grid_size) + 2
         lowest_z_index: int = center_xyz[2] - nr_grids_coveres_sphere_radius
         highest_z_index: int = center_xyz[2] + nr_grids_coveres_sphere_radius
         return np.arange(lowest_z_index, highest_z_index)

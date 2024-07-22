@@ -198,7 +198,8 @@ def save_close_fig(fig: plt.Figure,
                    dpi: int = DPI_HALFTONE,
                    loc: str = 'upper right',
                    horizontal_legend: bool = False,
-                   show_legend: bool = True
+                   show_legend: bool = True,
+                   close_fig: bool = True
                    ) -> None:
     """Save and close the figure"""
     if show_legend:
@@ -219,4 +220,5 @@ def save_close_fig(fig: plt.Figure,
                 pad_inches=0.1,
                 bbox_inches='tight'
                 )
-    plt.close(fig)
+    if close_fig:
+        plt.close(fig)

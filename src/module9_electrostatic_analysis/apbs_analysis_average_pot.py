@@ -150,6 +150,68 @@ class AverageAnalysis:
                           log: logger.logging.Logger
                           ) -> None:
         """analyse the potential"""
+        center_xyz: tuple[int, int, int] = \
+            self.calculate_center(self.dx.GRID_POINTS)
+
+        shpere_gride_range: np.ndarray = \
+            self.find_grid_inidices_covers_shpere(center_xyz)
+
+        self.info_msg += (
+            f'\tThe centeral grid is: {center_xyz}\n'
+            f'\tThe computation radius is: {self.configs.computation_radius}\n'
+            f'\tNr. grids cover the sphere: {len(shpere_gride_range)}\n'
+            f'\tThe lowest grid index: {shpere_gride_range[0]}\n'
+            f'\tThe highest grid index: {shpere_gride_range[-1]}\n'
+            )
+
+    @staticmethod
+    def calculate_center(grid_points: list[int]
+                         ) -> tuple[int, int, int]:
+        """Calculate the center of the box in grid units"""
+        center_x: int = grid_points[0] // 2
+        center_y: int = grid_points[1] // 2
+        center_z: int = grid_points[2] // 2
+        return center_x, center_y, center_z
+
+    @staticmethod
+    def calculate_max_radius(center_xyz: tuple[float, float, float],
+                             grid_spacing: list[float]
+                             ) -> float:
+        """Calculate the maximum radius for the radial average"""
+        return min(center_xyz[:2]) * min(grid_spacing)
+
+    @staticmethod
+    def create_distance_grid(grid_points: list[int],
+                             ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Create the distance grid"""
+        x_space = np.linspace(0, grid_points[0] - 1, grid_points[0])
+        y_space = np.linspace(0, grid_points[1] - 1, grid_points[1])
+        z_space = np.linspace(0, grid_points[2] - 1, grid_points[2])
+
+        grid_x, grid_y, grid_z = \
+            np.meshgrid(x_space, y_space, z_space, indexing='ij')
+        return grid_x, grid_y, grid_z
+
+    @staticmethod
+    def compute_distance(grid_spacing: list[float],
+                         grid_xyz: tuple[np.ndarray, np.ndarray, np.ndarray],
+                         center_xyz: tuple[float, float, float],
+                         ) -> np.ndarray:
+        """Calculate the distances from the center of the box"""
+        return np.sqrt((grid_xyz[0] - center_xyz[0])**2 +
+                       (grid_xyz[1] - center_xyz[1])**2 +
+                       (grid_xyz[2] - center_xyz[2])**2) * grid_spacing[0]
+
+    def find_grid_inidices_covers_shpere(self,
+                                         center_xyz: tuple[int, int, int],
+                                         ) -> np.ndarray:
+        """Find the grid points within the NP"""
+        grid_size: float = self.dx.BOX_SIZE[2] / self.dx.GRID_POINTS[2]
+        radius: float = self.configs.computation_radius
+        nr_grids_coveres_sphere_radius: int = int(radius / grid_size) + 1
+        lowest_z_index: int = center_xyz[2] - nr_grids_coveres_sphere_radius
+        highest_z_index: int = center_xyz[2] + nr_grids_coveres_sphere_radius
+        return np.arange(lowest_z_index, highest_z_index)
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

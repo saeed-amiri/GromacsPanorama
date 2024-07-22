@@ -157,12 +157,6 @@ class AverageAnalysis:
         shpere_gride_range: np.ndarray = \
             self.find_grid_inidices_covers_shpere(center_xyz)
 
-        for layer in shpere_gride_range:
-            center_xyz = (center_xyz[0], center_xyz[1], layer)
-            radii, radial_average = self.process_layer(center_xyz)
-            plt.plot(radii, radial_average)
-        plt.show()
-
         self.info_msg += (
             f'\tThe centeral grid is: {center_xyz}\n'
             f'\tThe computation radius is: {self.configs.computation_radius}\n'
@@ -170,6 +164,12 @@ class AverageAnalysis:
             f'\tThe lowest grid index: {shpere_gride_range[0]}\n'
             f'\tThe highest grid index: {shpere_gride_range[-1]}\n'
             )
+
+        for layer in shpere_gride_range:
+            center_xyz = (center_xyz[0], center_xyz[1], layer)
+            radii, radial_average = self.process_layer(center_xyz)
+            plt.plot(radii, radial_average)
+        plt.show()
 
     def process_layer(self,
                       center_xyz: tuple[int, int, int]

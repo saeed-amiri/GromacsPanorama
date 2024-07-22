@@ -96,6 +96,7 @@ class AverageAnalysis:
     # pylint: disable=invalid-name
     info_msg: str = 'Message from AverageAnalysis:\n'
     all_config: AllConfig
+    dx: DxAttributeWrapper  # The dx file
 
     def __init__(self,
                  fname_dx: str,

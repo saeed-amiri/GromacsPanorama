@@ -76,6 +76,16 @@ class DxAttributeWrapper:
     def GRID_POINTS(self) -> list[int]:
         return self._grid_points
 
+    @GRID_POINTS.setter
+    def GRID_POINTS(self,
+                    grid_points: list[int]
+                    ) -> None:
+        if not isinstance(grid_points, list):
+            raise TypeError('The grid_points should be a list!')
+        if not all(isinstance(i, int) for i in grid_points):
+            raise TypeError('All elements of the grid_points should be int!')
+        self._grid_points = grid_points
+
     @property
     def GRID_SPACING(self) -> list[float]:
         return self._grid_spacing

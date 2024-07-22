@@ -119,7 +119,7 @@ class AverageAnalysis:
                  ) -> None:
         self.configs = configs
         self.read_dx(fname_dx, log)
-        # self.analyse_potential(log)
+        self.analyse_potential(log)
         self.write_msg(log)
 
     def read_dx(self,
@@ -135,6 +135,11 @@ class AverageAnalysis:
             origin=read_dx.origin,
             data_arr=read_dx.data_arr
         )
+
+    def analyse_potential(self,
+                          log: logger.logging.Logger
+                          ) -> None:
+        """analyse the potential"""
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

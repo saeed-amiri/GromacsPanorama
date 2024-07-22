@@ -82,6 +82,10 @@ class DxAttributeWrapper:
 
     @property
     def ORIGIN(self) -> list[float]:
+        """
+        It is the origin of the box in the dx file NOT the origin of
+        the computational sphere
+        """
         return self._origin
 
     @property
@@ -113,7 +117,7 @@ class AverageAnalysis:
                 log: logger.logging.Logger
                 ) -> None:
         """read the dx file"""
-        self.info_msg += f'\Analysing the dx file: {fname_dx}\n'
+        self.info_msg += f'\tAnalysing the dx file: {fname_dx}\n'
         read_dx = ProcessDxFile(fname_dx, log, self.configs.dx_configs)
         self.dx = DxAttributeWrapper(
             grid_points=read_dx.grid_points,

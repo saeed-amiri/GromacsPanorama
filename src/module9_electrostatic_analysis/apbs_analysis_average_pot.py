@@ -62,16 +62,19 @@ class DxAttributeWrapper:
     """
     # pylint: disable=missing-function-docstring
     # pylint: disable=invalid-name
+    # pylint: disable=too-many-arguments
     def __init__(self,
                  grid_points: list[int],
                  grid_spacing: list[float],
                  origin: list[float],
+                 box_size: list[float],
                  data_arr: np.ndarray
                  ) -> None:
         self._grid_points = grid_points
         self._grid_spacing = grid_spacing
         self._origin = origin
         self._data_arr = data_arr
+        self._box_size = box_size
 
     @property
     def GRID_POINTS(self) -> list[int]:
@@ -79,7 +82,7 @@ class DxAttributeWrapper:
 
     @GRID_POINTS.setter
     def GRID_POINTS(self,
-                    grid_points: list[int] | typing.Any
+                    grid_points: typing.Union[list[int], typing.Any]
                     ) -> None:
         if not isinstance(grid_points, list):
             raise TypeError('The grid_points should be a list!')
@@ -102,6 +105,11 @@ class DxAttributeWrapper:
     @property
     def DATA_ARR(self) -> np.ndarray:
         return self._data_arr
+
+    @property
+    def BOX_SIZE(self) -> list[float]:
+        """Box sizes in Angstrom"""
+        return self._box_size
 
 
 class AverageAnalysis:
@@ -134,6 +142,7 @@ class AverageAnalysis:
             grid_points=read_dx.grid_points,
             grid_spacing=read_dx.grid_spacing,
             origin=read_dx.origin,
+            box_size=read_dx.box_size,
             data_arr=read_dx.data_arr
         )
 
@@ -160,6 +169,7 @@ class ProcessDxFile:
     grid_points: list[int]
     grid_spacing: list[float]
     origin: list[float]
+    box_size: list[float]
     data_arr: np.ndarray
 
     def __init__(self,
@@ -273,6 +283,7 @@ class ProcessDxFile:
             f'\t{x_size = :.5f} [nm]\n'
             f'\t{y_size = :.5f} [nm]\n'
             f'\t{z_size = :.5f} [nm]\n')
+        self.box_size: list[float] = [x_size, y_size, z_size]
 
     @staticmethod
     def _reshape_reevaluate_data(data: list[float],

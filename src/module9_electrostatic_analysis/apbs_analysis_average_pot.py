@@ -27,6 +27,8 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+import matplotlib.pyplot as plt
+
 from common import logger
 from common.colors_text import TextColor as bcolors
 
@@ -54,6 +56,7 @@ class AllConfig(ParameterConfig):
     """set all the configs and parameters"""
 
     dx_configs: DxFileConfig = field(default_factory=DxFileConfig)
+    bulk_averaging: bool = False  # if Bulk averaging else interface averaging
 
 
 class DxAttributeWrapper:
@@ -128,7 +131,7 @@ class AverageAnalysis:
                  ) -> None:
         self.configs = configs
         self.read_dx(fname_dx, log)
-        self.analyse_potential(log)
+        self.analyse_potential()
         self.write_msg(log)
 
     def read_dx(self,
@@ -146,15 +149,19 @@ class AverageAnalysis:
             data_arr=read_dx.data_arr
         )
 
-    def analyse_potential(self,
-                          log: logger.logging.Logger
-                          ) -> None:
+    def analyse_potential(self) -> None:
         """analyse the potential"""
         center_xyz: tuple[int, int, int] = \
             self.calculate_center(self.dx.GRID_POINTS)
 
         shpere_gride_range: np.ndarray = \
             self.find_grid_inidices_covers_shpere(center_xyz)
+
+        for layer in shpere_gride_range:
+            center_xyz = (center_xyz[0], center_xyz[1], layer)
+            radii, radial_average = self.process_layer(center_xyz)
+            plt.plot(radii, radial_average)
+        plt.show()
 
         self.info_msg += (
             f'\tThe centeral grid is: {center_xyz}\n'
@@ -163,6 +170,108 @@ class AverageAnalysis:
             f'\tThe lowest grid index: {shpere_gride_range[0]}\n'
             f'\tThe highest grid index: {shpere_gride_range[-1]}\n'
             )
+
+    def process_layer(self,
+                      center_xyz: tuple[int, int, int]
+                      ) -> tuple[np.ndarray, np.ndarray]:
+        """process the layer
+        The potential from the surface until the end of the diffuse layer
+        """
+        max_radius: float = self.calculate_max_radius(
+            center_xyz, self.dx.GRID_SPACING)
+        # Create the distance grid
+        grid_xyz: tuple[np.ndarray, np.ndarray, np.ndarray] = \
+            self.create_distance_grid(self.dx.GRID_POINTS)
+        # Calculate the distances from the center of the box
+        distances: np.ndarray = self.compute_distance(
+                self.dx.GRID_SPACING, grid_xyz, center_xyz)
+        radii, radial_average = self.calculate_radial_average(
+                self.dx.DATA_ARR,
+                distances,
+                self.dx.GRID_SPACING,
+                max_radius,
+                grid_xyz[2],
+                interface_low_index=grid_xyz[2],
+                interface_high_index=grid_xyz[2]+1,
+                lower_index_bulk=0,
+                )
+        return radii, np.asanyarray(radial_average)
+
+    def calculate_radial_average(self,
+                                 data_arr: np.ndarray,
+                                 distances: np.ndarray,
+                                 grid_spacing: list[float],
+                                 max_radius: float,
+                                 grid_z: np.ndarray,
+                                 interface_low_index,
+                                 interface_high_index,
+                                 lower_index_bulk,
+                                 ) -> tuple[np.ndarray, list[float]]:
+        """Calculate the radial average of the potential"""
+        # pylint: disable=too-many-arguments
+        radii = np.arange(0, max_radius, grid_spacing[0])
+        radial_average = []
+
+        for radius in radii:
+            mask = self.create_mask(distances,
+                                    radius,
+                                    grid_spacing,
+                                    grid_z,
+                                    interface_low_index,
+                                    interface_high_index,
+                                    lower_index_bulk,
+                                    )
+            if np.sum(mask) > 0:
+                avg_potential = np.mean(data_arr[mask])
+                radial_average.append(avg_potential)
+            else:
+                radial_average.append(0)
+
+        return radii, radial_average
+
+    def create_mask(self,
+                    distances: np.ndarray,
+                    radius: float,
+                    grid_spacing: list[float],
+                    grid_z: np.ndarray,
+                    interface_low_index: int,
+                    interface_high_index: int,
+                    low_index_bulk: int
+                    ) -> np.ndarray:
+        """Create a mask for the radial average"""
+        # pylint: disable=too-many-arguments
+        shell_thickness: float = grid_spacing[0]
+        shell_condition: np.ndarray = (distances >= radius) & \
+                                      (distances < radius + shell_thickness)
+
+        if self.configs.bulk_averaging:
+            z_condition: np.ndarray = self.create_mask_bulk(
+                grid_z, interface_low_index, low_index_bulk)
+        else:
+            z_condition = self.create_mask_interface(
+                grid_z, interface_low_index, interface_high_index)
+
+        return shell_condition & z_condition
+
+    @staticmethod
+    def create_mask_bulk(grid_z: np.ndarray,
+                         interface_low_index: int,
+                         low_index_bulk: int,
+                         ) -> np.ndarray:
+        """Create a mask for the radial average from the bulk"""
+        z_condition: np.ndarray = (grid_z <= interface_low_index) & \
+                                  (grid_z >= low_index_bulk)
+        return z_condition
+
+    @staticmethod
+    def create_mask_interface(grid_z: np.ndarray,
+                              interface_low_index: int,
+                              interface_high_index: int
+                              ) -> np.ndarray:
+        """Create a mask for the radial average from the interface"""
+        z_condition: np.ndarray = (grid_z >= interface_low_index) & \
+                                  (grid_z <= interface_high_index)
+        return z_condition
 
     @staticmethod
     def calculate_center(grid_points: list[int]

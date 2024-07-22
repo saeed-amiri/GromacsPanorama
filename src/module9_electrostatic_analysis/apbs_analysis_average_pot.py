@@ -105,12 +105,15 @@ class AverageAnalysis:
                  ) -> None:
         self.configs = configs
         self.read_dx(fname_dx, log)
+        # self.analyse_potential(log)
+        self.write_msg(log)
 
     def read_dx(self,
                 fname_dx: str,
                 log: logger.logging.Logger
                 ) -> None:
         """read the dx file"""
+        self.info_msg += f'\Analysing the dx file: {fname_dx}\n'
         read_dx = ProcessDxFile(fname_dx, log, self.configs.dx_configs)
         self.dx = DxAttributeWrapper(
             grid_points=read_dx.grid_points,
@@ -118,6 +121,14 @@ class AverageAnalysis:
             origin=read_dx.origin,
             data_arr=read_dx.data_arr
         )
+
+    def write_msg(self,
+                  log: logger.logging.Logger  # To log
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{AverageAnalysis.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 class ProcessDxFile:

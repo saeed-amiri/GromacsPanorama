@@ -173,7 +173,7 @@ class RadialAveragePotential:
         # pylint: disable=too-many-locals
 
         # Calculate the center of the box in grid units
-        center_xyz: tuple[float, float, float] = \
+        center_xyz: tuple[int, int, int] = \
             self.calculate_center(grid_points)
 
         # Calculate the maximum radius for the radial average
@@ -283,7 +283,7 @@ class RadialAveragePotential:
 
     @staticmethod
     def calculate_center(grid_points: list[int]
-                         ) -> tuple[float, float, float]:
+                         ) -> tuple[int, int, int]:
         """Calculate the center of the box in grid units"""
         center_x = grid_points[0] // 2
         center_y = grid_points[1] // 2
@@ -356,12 +356,13 @@ class RadialAveragePotential:
         # make sure the computation is in the plane not bulk
         self.configs.bulk_averaging = False
 
-        center_xyz: tuple[float, float, float] = \
+        center_xyz: tuple[int, int, int] = \
             self.calculate_center(grid_points)
 
         fig_i: plt.figure
         ax_i: plt.Axes
         fig_i, ax_i = elsevier_plot_tools.mk_canvas('single_column')
+        min_z_value: list[float] = []
         for i, z_index in enumerate(range(self.configs.lowest_z,
                                           self.configs.highest_z,
                                           self.configs.decrement_z)):

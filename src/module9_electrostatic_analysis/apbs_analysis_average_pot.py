@@ -93,7 +93,7 @@ class AverageAnalysis:
     """
     Reading and analysing the potential along the z-axis
     """
-
+    # pylint: disable=invalid-name
     info_msg: str = 'Message from AverageAnalysis:\n'
     all_config: AllConfig
 
@@ -111,7 +111,12 @@ class AverageAnalysis:
                 ) -> None:
         """read the dx file"""
         read_dx = ProcessDxFile(fname_dx, log, self.configs.dx_configs)
-        print(read_dx.grid_points)
+        self.dx = DxAttributeWrapper(
+            grid_points=read_dx.grid_points,
+            grid_spacing=read_dx.grid_spacing,
+            origin=read_dx.origin,
+            data_arr=read_dx.data_arr
+        )
 
 
 class ProcessDxFile:

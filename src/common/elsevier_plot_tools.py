@@ -103,6 +103,33 @@ BLACK_SHADES = [
     "#FFFFFF"   # White (for the sake of gradient completion)
 ]
 
+# Python list containing a gradient palette from dark red to dark blue
+DARK_RGB_COLOR_GRADIENT = [
+    "#8B0000",  # Dark Red
+    "#9B111E",  # Firebrick
+    "#A52A2A",  # Brown
+    "#B22222",  # Firebrick4
+    "#CD5C5C",  # IndianRed3
+    "#006400",  # Dark Green
+    "#008000",  # Green
+    "#228B22",  # ForestGreen
+    "#2E8B57",  # SeaGreen
+    "#00688B",  # DeepSkyBlue4
+    "#00008B"   # Dark Blue
+]
+
+CLEAR_COLOR_GRADIENT = [
+    "#8B0000",  # Dark Red
+    "#9932CC",  # Dark Orchid
+    "#483D8B",  # Dark Slate Blue
+    "#00008B",  # Dark Blue
+    "#008B8B",  # Dark Cyan
+    "#2E8B57",  # Sea Green
+    "#556B2F",  # Dark Olive Green
+    "#FF8C00",  # Dark Orange
+    "#B22222",  # Firebrick
+    "#800000"   # Maroon
+]
 
 def set_figure_height(width: float,
                       aspect_ratio: float = 1.0

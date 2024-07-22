@@ -22,6 +22,7 @@ Saeed
 """
 
 import sys
+import typing
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -78,7 +79,7 @@ class DxAttributeWrapper:
 
     @GRID_POINTS.setter
     def GRID_POINTS(self,
-                    grid_points: list[int]
+                    grid_points: list[int] | typing.Any
                     ) -> None:
         if not isinstance(grid_points, list):
             raise TypeError('The grid_points should be a list!')

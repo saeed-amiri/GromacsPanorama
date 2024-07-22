@@ -55,6 +55,40 @@ class AllConfig(ParameterConfig):
     dx_configs: DxFileConfig = field(default_factory=DxFileConfig)
 
 
+class DxAttributeWrapper:
+    """
+    Wrapper for the attributes of the dx file
+    """
+    # pylint: disable=missing-function-docstring
+    # pylint: disable=invalid-name
+    def __init__(self,
+                 grid_points: list[int],
+                 grid_spacing: list[float],
+                 origin: list[float],
+                 data_arr: np.ndarray
+                 ) -> None:
+        self._grid_points = grid_points
+        self._grid_spacing = grid_spacing
+        self._origin = origin
+        self._data_arr = data_arr
+
+    @property
+    def GRID_POINTS(self) -> list[int]:
+        return self._grid_points
+
+    @property
+    def GRID_SPACING(self) -> list[float]:
+        return self._grid_spacing
+
+    @property
+    def ORIGIN(self) -> list[float]:
+        return self._origin
+
+    @property
+    def DATA_ARR(self) -> np.ndarray:
+        return self._data_arr
+
+
 class AverageAnalysis:
     """
     Reading and analysing the potential along the z-axis

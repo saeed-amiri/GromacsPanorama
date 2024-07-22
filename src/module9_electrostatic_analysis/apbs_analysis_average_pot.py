@@ -168,7 +168,8 @@ class AverageAnalysis:
         for layer in shpere_grid_range:
             center_xyz = (center_xyz[0], center_xyz[1], layer)
             radii, radial_average = self.process_layer(center_xyz)
-            plt.plot(radii, radial_average)
+            plt.plot(radii, radial_average, label=f'Layer: {layer}')
+        plt.legend()
         plt.show()
 
     def process_layer(self,

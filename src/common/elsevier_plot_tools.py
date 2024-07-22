@@ -131,6 +131,21 @@ CLEAR_COLOR_GRADIENT = [
     "#800000"   # Maroon
 ]
 
+LINESTYLE_TUPLE = [
+    ('loosely dotted',        (0, (1, 5))),
+    ('loosely dashed',        (0, (5, 5))),
+    ('densely dotted',        (0, (1, 1))),
+    ('densely dashed',        (0, (5, 1))),
+    ('long dash with offset', (5, (10, 3))),
+    ('loosely dashdotted',    (0, (3, 10, 1, 10))),
+    ('dashdotted',            (0, (3, 5, 1, 5))),
+    ('densely dashdotted',    (0, (3, 1, 1, 1))),
+    ('dashdotdotted',         (0, (3, 5, 1, 5, 1, 5))),
+    ('loosely dashdotdotted', (0, (3, 10, 1, 10, 1, 10))),
+    ('dashed',                (0, (5, 5))),
+    ('densely dashdotdotted', (0, (3, 1, 1, 1, 1, 1)))]
+
+
 def set_figure_height(width: float,
                       aspect_ratio: float = 1.0
                       ) -> int:
@@ -249,3 +264,19 @@ def save_close_fig(fig: plt.Figure,
                 )
     if close_fig:
         plt.close(fig)
+
+
+def set_custom_line_prop(
+        ax: plt.Axes,
+        color: str = 'black',
+        marker: str = 'o',
+        linestyle: str = ':',
+        markersize: float = 0,
+        linewidth: float = LINE_WIDTH
+) -> None:
+    """Set a custom line style for a matplotlib Axes"""
+    ax.set_prop_cycle(color=[color],
+                      marker=[marker],
+                      linestyle=[linestyle],
+                      markersize=[markersize],
+                      linewidth=[linewidth])

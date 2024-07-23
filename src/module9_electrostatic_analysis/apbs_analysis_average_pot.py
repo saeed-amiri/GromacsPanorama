@@ -154,23 +154,34 @@ class AverageAnalysis:
         center_xyz: tuple[int, int, int] = \
             self.calculate_center(self.dx.GRID_POINTS)
 
-        shpere_grid_range: np.ndarray = \
+        sphere_grid_range: np.ndarray = \
             self.find_grid_inidices_covers_shpere(center_xyz)
 
         self.info_msg += (
             f'\tThe centeral grid is: {center_xyz}\n'
             f'\tThe computation radius is: {self.configs.computation_radius}\n'
-            f'\tNr. grids cover the sphere: {len(shpere_grid_range)}\n'
-            f'\tThe lowest grid index: {shpere_grid_range[0]}\n'
-            f'\tThe highest grid index: {shpere_grid_range[-1]}\n'
+            f'\tNr. grids cover the sphere: {len(sphere_grid_range)}\n'
+            f'\tThe lowest grid index: {sphere_grid_range[0]}\n'
+            f'\tThe highest grid index: {sphere_grid_range[-1]}\n'
             )
+        radii_list: list[np.ndarray]
+        radial_average_list: list[np.ndarray]
+        radii_list, radial_average_list = \
+            self.compute_all_layers(center_xyz, sphere_grid_range)
 
-        for layer in shpere_grid_range:
+    def compute_all_layers(self,
+                           center_xyz: tuple[int, int, int],
+                           sphere_grid_range: np.ndarray
+                           ) -> tuple[list[np.ndarray], list[np.ndarray]]:
+        """Compute the radial average for all layers"""
+        radii_list: list[np.ndarray] = []
+        radial_average_list: list[np.ndarray] = []
+        for layer in sphere_grid_range:
             center_xyz = (center_xyz[0], center_xyz[1], layer)
             radii, radial_average = self.process_layer(center_xyz)
-            plt.plot(radii, radial_average, label=f'Layer: {layer}')
-        plt.legend()
-        plt.show()
+            radii_list.append(radii)
+            radial_average_list.append(radial_average)
+        return radii_list, radial_average_list
 
     def process_layer(self,
                       center_xyz: tuple[int, int, int]

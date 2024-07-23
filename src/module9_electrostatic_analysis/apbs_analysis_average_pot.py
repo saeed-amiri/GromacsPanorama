@@ -168,6 +168,8 @@ class AverageAnalysis:
         radial_average_list: list[np.ndarray]
         radii_list, radial_average_list = \
             self.compute_all_layers(center_xyz, sphere_grid_range)
+        self.cut_average_from_surface(
+            radial_average_list, sphere_grid_range, center_xyz)
 
     def compute_all_layers(self,
                            center_xyz: tuple[int, int, int],
@@ -182,6 +184,38 @@ class AverageAnalysis:
             radii_list.append(radii)
             radial_average_list.append(radial_average)
         return radii_list, radial_average_list
+
+    def cut_average_from_surface(self,
+                                 radial_average_list: list[np.ndarray],
+                                 sphere_grid_range: np.ndarray,
+                                 center_xyz: tuple[int, int, int]
+                                 ) -> tuple[list[np.ndarray],
+                                            list[np.ndarray]]:
+        """Cut the average from the surface based on the circle's radius
+        of the intesection of the sphere with the grid in z-axis"""
+        radius: float = self.configs.computation_radius
+        center_z: int = center_xyz[2]
+        interset_radius: np.ndarray = \
+            self._calculate_grid_sphere_intersect_radius(radius,
+                                                         center_z,
+                                                         sphere_grid_range)
+
+    def _calculate_grid_sphere_intersect_radius(self,
+                                                radius: float,
+                                                center_z: int,
+                                                sphere_grid_range: np.ndarray
+                                                ) -> np.ndarray:
+        """Get radius of the intersection between the sphere and the
+        grid plane"""
+        radius_index: np.ndarray = np.zeros(len(sphere_grid_range))
+        for i, z_index in enumerate(sphere_grid_range):
+            height: float = \
+                np.abs(center_z - z_index) * self.dx.GRID_SPACING[2]
+
+            radius_i_squre: float = radius**2 - height**2
+            if radius_i_squre > 0:
+                radius_index[i] = np.sqrt(radius_i_squre)
+        return radius_index
 
     def process_layer(self,
                       center_xyz: tuple[int, int, int]

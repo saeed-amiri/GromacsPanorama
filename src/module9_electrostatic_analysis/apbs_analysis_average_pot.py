@@ -169,8 +169,11 @@ class AverageAnalysis:
         radial_average_list: list[np.ndarray]
         radii_list, radial_average_list = \
             self.compute_all_layers(center_xyz, sphere_grid_range)
-        cut_radii, cut_radial_average = self.cut_average_from_surface(
-                sphere_grid_range, center_xyz, radii_list, radial_average_list)
+        cut_radii, cut_radial_average, cut_indices = \
+            self.cut_average_from_surface(sphere_grid_range,
+                                          center_xyz,
+                                          radii_list,
+                                          radial_average_list)
         self._plot_debug(cut_radii, cut_radial_average, radii_list,
                          radial_average_list, sphere_grid_range)
 
@@ -220,7 +223,8 @@ class AverageAnalysis:
                                  radii_list: list[np.ndarray],
                                  radial_average_list: list[np.ndarray]
                                  ) -> tuple[list[np.ndarray],
-                                            list[np.ndarray]]:
+                                            list[np.ndarray],
+                                            np.ndarray]:
         """Cut the average from the surface based on the circle's radius
         of the intesection of the sphere with the grid in z-axis"""
         radius: float = self.configs.computation_radius
@@ -238,7 +242,7 @@ class AverageAnalysis:
             cut_ind = int(cut_indices[i])
             cut_radial_average.append(radial_average[cut_ind:])
             cut_radii.append(radii[cut_ind:])
-        return cut_radii, cut_radial_average
+        return cut_radii, cut_radial_average, cut_indices
 
     def _calculate_grid_sphere_intersect_radius(self,
                                                 radius: float,

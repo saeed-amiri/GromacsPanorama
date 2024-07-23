@@ -55,9 +55,9 @@ class ParameterConfig:
 @dataclass
 class AllConfig(ParameterConfig):
     """set all the configs and parameters"""
-
     dx_configs: DxFileConfig = field(default_factory=DxFileConfig)
     bulk_averaging: bool = False  # if Bulk averaging else interface averaging
+    debug_plot: bool = False
 
 
 class DxAttributeWrapper:
@@ -169,16 +169,29 @@ class AverageAnalysis:
         radial_average_list: list[np.ndarray]
         radii_list, radial_average_list = \
             self.compute_all_layers(center_xyz, sphere_grid_range)
-        cut_radii, cut_radial_average = \
-            self.cut_average_from_surface(
+        cut_radii, cut_radial_average = self.cut_average_from_surface(
                 sphere_grid_range, center_xyz, radii_list, radial_average_list)
+        self._plot_debug(cut_radii, cut_radial_average, radii_list,
+                         radial_average_list, sphere_grid_range)
+
+    def _plot_debug(self,
+                    cut_radii: list[np.ndarray],
+                    cut_radial_average: list[np.ndarray],
+                    radii_list: list[np.ndarray],
+                    radial_average_list: list[np.ndarray],
+                    sphere_grid_range: np.ndarray
+                    ) -> None:
+        """Plot for debugging"""
+        # pylint: disable=too-many-arguments
+        if not self.configs.debug_plot:
+            return
         for average, ind in zip(cut_radial_average, sphere_grid_range):
             average -= average[0]
             average += ind
-        mpl.rcParams[f'font.size'] = 20
+        mpl.rcParams['font.size'] = 20
 
         for i, radial_average in enumerate(cut_radial_average):
-            fig, ax = plt.subplots(figsize=(30, 16))
+            _, ax = plt.subplots(figsize=(30, 16))
             ax.plot(radii_list[i], radial_average_list[i], 'r:')
             ax.plot(cut_radii[i],
                     radial_average,

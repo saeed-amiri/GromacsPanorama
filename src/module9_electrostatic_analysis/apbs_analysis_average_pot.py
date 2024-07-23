@@ -28,6 +28,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 from common import logger
 from common.colors_text import TextColor as bcolors
@@ -168,8 +169,23 @@ class AverageAnalysis:
         radial_average_list: list[np.ndarray]
         radii_list, radial_average_list = \
             self.compute_all_layers(center_xyz, sphere_grid_range)
-        self.cut_average_from_surface(
-            sphere_grid_range, center_xyz, radii_list, radial_average_list)
+        cut_radii, cut_radial_average = \
+            self.cut_average_from_surface(
+                sphere_grid_range, center_xyz, radii_list, radial_average_list)
+        for average, ind in zip(cut_radial_average, sphere_grid_range):
+            average -= average[0]
+            average += ind
+        mpl.rcParams[f'font.size'] = 20
+
+        for i, radial_average in enumerate(cut_radial_average):
+            fig, ax = plt.subplots(figsize=(30, 16))
+            ax.plot(radii_list[i], radial_average_list[i], 'r:')
+            ax.plot(cut_radii[i],
+                    radial_average,
+                    'k-',
+                    label=f'z={sphere_grid_range[i]}')
+            plt.legend()
+            plt.show()
 
     def compute_all_layers(self,
                            center_xyz: tuple[int, int, int],
@@ -202,6 +218,14 @@ class AverageAnalysis:
                                                          sphere_grid_range)
         cut_indices: np.ndarray = \
             self._find_inidices_of_surface(interset_radius, radii_list)
+        cut_radial_average: list[np.ndarray] = []
+        cut_radii: list[np.ndarray] = []
+        for i, (radial_average, radii) in enumerate(zip(radial_average_list,
+                                                        radii_list)):
+            cut_ind = int(cut_indices[i])
+            cut_radial_average.append(radial_average[cut_ind:])
+            cut_radii.append(radii[cut_ind:])
+        return cut_radii, cut_radial_average
 
     def _calculate_grid_sphere_intersect_radius(self,
                                                 radius: float,
@@ -214,10 +238,8 @@ class AverageAnalysis:
         for i, z_index in enumerate(sphere_grid_range):
             height: float = \
                 np.abs(center_z - z_index) * self.dx.GRID_SPACING[2]
-
-            radius_i_squre: float = radius**2 - height**2
-            if radius_i_squre > 0:
-                radius_index[i] = np.sqrt(radius_i_squre)
+            if height <= radius:
+                radius_index[i] = np.sqrt(radius**2 - height**2)
         return radius_index
 
     def _find_inidices_of_surface(self,

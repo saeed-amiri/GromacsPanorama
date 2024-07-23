@@ -169,7 +169,7 @@ class AverageAnalysis:
         radii_list, radial_average_list = \
             self.compute_all_layers(center_xyz, sphere_grid_range)
         self.cut_average_from_surface(
-            radial_average_list, sphere_grid_range, center_xyz)
+            sphere_grid_range, center_xyz, radii_list, radial_average_list)
 
     def compute_all_layers(self,
                            center_xyz: tuple[int, int, int],
@@ -186,9 +186,10 @@ class AverageAnalysis:
         return radii_list, radial_average_list
 
     def cut_average_from_surface(self,
-                                 radial_average_list: list[np.ndarray],
                                  sphere_grid_range: np.ndarray,
-                                 center_xyz: tuple[int, int, int]
+                                 center_xyz: tuple[int, int, int],
+                                 radii_list: list[np.ndarray],
+                                 radial_average_list: list[np.ndarray]
                                  ) -> tuple[list[np.ndarray],
                                             list[np.ndarray]]:
         """Cut the average from the surface based on the circle's radius
@@ -199,6 +200,8 @@ class AverageAnalysis:
             self._calculate_grid_sphere_intersect_radius(radius,
                                                          center_z,
                                                          sphere_grid_range)
+        cut_indices: np.ndarray = \
+            self._find_inidices_of_surface(interset_radius, radii_list)
 
     def _calculate_grid_sphere_intersect_radius(self,
                                                 radius: float,
@@ -216,6 +219,17 @@ class AverageAnalysis:
             if radius_i_squre > 0:
                 radius_index[i] = np.sqrt(radius_i_squre)
         return radius_index
+
+    def _find_inidices_of_surface(self,
+                                  interset_radius: np.ndarray,
+                                  radii_list: list[np.ndarray]
+                                  ) -> np.ndarray:
+        """Find the indices of the surface by finding the index of the
+        closest radius to the intersection radius"""
+        cut_indices: np.ndarray = np.zeros(len(interset_radius))
+        for i, radius in enumerate(interset_radius):
+            cut_indices[i] = np.argmin(np.abs(radii_list[i] - radius))
+        return cut_indices
 
     def process_layer(self,
                       center_xyz: tuple[int, int, int]

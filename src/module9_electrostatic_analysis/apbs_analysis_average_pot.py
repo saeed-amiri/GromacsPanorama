@@ -23,6 +23,7 @@ Saeed
 
 import sys
 import typing
+import inspect
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -65,8 +66,9 @@ class AllConfig(ParameterConfig):
     dx_configs: DxFileConfig = field(default_factory=DxFileConfig)
     bulk_averaging: bool = False  # if Bulk averaging else interface averaging
     debug_plot: bool = False
-    fit_function: str = 'linear_sphere'
+    fit_function: str = 'exponential_decay'
     fit_comparisons: bool = False
+    debye_intial_guess: float = 75.0
 
 
 class DxAttributeWrapper:
@@ -200,7 +202,7 @@ class AverageAnalysis:
                                         ) -> None:
         """Compute the surface potential and the decay constant
         The potetial decay part is fitted to the exponential decay
-        \\psi = \\psi_0 * exp(-r/\\lambda_D)
+        \\psi = \\psi_0 * exp(-r/\\lambda_d)
         """
         # Drop the cut_radial_average which have zero cut_indices
         cut_radial_average = [cut_radial_average[i] for i in range(
@@ -219,22 +221,7 @@ class AverageAnalysis:
                        radial_average: np.ndarray,
                        ) -> None:
         """Fit the potential to the planar surface approximation"""
-        # Define the exponential decay function
-        def exp_decay(r, psi_0, lambda_D):
-            return psi_0 * np.exp(-r / lambda_D)
-
-        def linear_sphere(r, psi_0, lambda_D):
-            return psi_0 * np.exp(-(r - r_np) / lambda_D) * r_np / r
-
-        # Initial guess for the parameters [psi_0, lambda_D]
-        initial_guess = [radial_average[0], 75]
-
-        # Use curve_fit to find the best fitting parameters
-        # popt contains the optimal values for psi_0 and lambda_D
-        popt, *_ = curve_fit(linear_sphere,
-                            radii,
-                            radial_average,
-                            p0=initial_guess)
+        FitPotential(radii, radial_average, r_np, self.configs)
 
     def _plot_debug(self,
                     cut_radii: list[np.ndarray],
@@ -288,6 +275,7 @@ class AverageAnalysis:
                                             ]:
         """Cut the average from the surface based on the circle's radius
         of the intesection of the sphere with the grid in z-axis"""
+        # pylint: disable=too-many-locals
         radius: float = self.configs.computation_radius
         center_z: int = center_xyz[2]
         interset_radius: np.ndarray = \
@@ -503,6 +491,104 @@ class AverageAnalysis:
         print(f'{bcolors.OKCYAN}{AverageAnalysis.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
+
+
+class FitPotential:
+    """Fitting the decay of the potential"""
+    info_msg: str = 'Message from FitPotential:\n'
+    config: AllConfig
+
+    def __init__(self,
+                 radii: np.ndarray,
+                 radial_average: np.ndarray,
+                 r_np: float,
+                 config: AllConfig,
+                 ) -> None:
+        self.config = config
+        self.fit_potential(
+            radii, radial_average, r_np)
+
+    def fit_potential(self,
+                      radii: np.ndarray,
+                      radial_average: np.ndarray,
+                      r_np: float
+                      ) -> None:
+        """Fit the potential to the planar surface approximation"""
+        # Define the exponential decay function
+
+        # Initial guess for the parameters [psi_0, lambda_d]
+
+        # Use curve_fit to find the best fitting parameters
+        # popt contains the optimal values for psi_0 and lambda_d
+        fit_fun: typing.Callable[..., np.ndarray] = self.get_fit_function()
+
+        initial_guess: list[float] = self.get_initial_guess(
+            radial_average[0], self.config.debye_intial_guess, r_np)
+
+        popt, *_ = curve_fit(f=fit_fun,
+                             xdata=radii,
+                             ydata=radial_average[0],
+                             p0=initial_guess,
+                             )
+
+    def get_fit_function(self) -> typing.Callable[..., np.ndarray]:
+        """Get the fit function"""
+        fit_fun_type: str = self.validate_fit_function()
+        return {
+            'exponential_decay': self.exp_decay,
+            'linear_sphere': self.linear_sphere,
+        }[fit_fun_type]
+
+    def get_initial_guess(self,
+                          phi_0: float,
+                          lambda_d: float,
+                          r_np: float
+                          ) -> list[float]:
+        """Get the initial guess for the Debye length"""
+        fit_fun_type = self.validate_fit_function()
+        return {
+            'exponential_decay': [phi_0, lambda_d],
+            'linear_sphere': [phi_0, lambda_d, r_np],
+        }[fit_fun_type]
+
+    @staticmethod
+    def get_function_args(func: typing.Callable[..., np.ndarray]
+                          ) -> list[str]:
+        """
+        Get the list of argument names for a given function, excluding 'self'.
+        """
+        signature = inspect.signature(func)
+        return [
+            name for name, _ in signature.parameters.items() if name != 'self']
+
+    @staticmethod
+    def exp_decay(radius: np.ndarray,
+                  psi_0: float,
+                  lambda_d: float,
+                  ) -> np.ndarray:
+        """Exponential decay function"""
+        return psi_0 * np.exp(-radius / lambda_d)
+
+    @staticmethod
+    def linear_sphere(radius: np.ndarray,
+                      psi_0: float,
+                      lambda_d: float,
+                      r_np: float
+                      ) -> np.ndarray:
+        """Linear approximation of the potential"""
+        return psi_0 * np.exp(-(radius - r_np) / lambda_d) * r_np / radius
+
+    def validate_fit_function(self) -> str:
+        """Validate and return the fit function type from config"""
+        fit_fun_type = self.config.fit_function
+        valid_functions = [
+            'exponential_decay', 'linear_sphere', 'non_linear_sphere']
+        if fit_fun_type not in valid_functions:
+            raise ValueError(
+                f'\n\tThe fit function: `{fit_fun_type}` is not valid!\n'
+                f'\tThe valid options are: \n'
+                f'\t{" ,".join(valid_functions)}\n')
+        return fit_fun_type
 
 
 class ProcessDxFile:

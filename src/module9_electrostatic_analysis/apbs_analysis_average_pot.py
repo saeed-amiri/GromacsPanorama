@@ -26,6 +26,7 @@ import typing
 from dataclasses import dataclass, field
 
 import numpy as np
+from scipy.optimize import curve_fit
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -50,14 +51,22 @@ class ParameterConfig:
     computation of the average potential in Ångströms
     """
     computation_radius: float = 36.0
+    diffuse_layer_threshold: float = 75.0  # Threshold for the diffuse layer A
 
 
 @dataclass
 class AllConfig(ParameterConfig):
-    """set all the configs and parameters"""
+    """set all the configs and parameters
+    fit_function: the function used to fit the potential:
+        exponential_decay or linear_sphere or non_linear_sphere
+    Also possible of compare them:
+    fit_comparisons: bool = False or True
+    """
     dx_configs: DxFileConfig = field(default_factory=DxFileConfig)
     bulk_averaging: bool = False  # if Bulk averaging else interface averaging
     debug_plot: bool = False
+    fit_function: str = 'linear_sphere'
+    fit_comparisons: bool = False
 
 
 class DxAttributeWrapper:
@@ -169,13 +178,63 @@ class AverageAnalysis:
         radial_average_list: list[np.ndarray]
         radii_list, radial_average_list = \
             self.compute_all_layers(center_xyz, sphere_grid_range)
-        cut_radii, cut_radial_average, cut_indices = \
+        cut_radii, cut_radial_average, cut_indices, interset_radius = \
             self.cut_average_from_surface(sphere_grid_range,
                                           center_xyz,
                                           radii_list,
                                           radial_average_list)
         self._plot_debug(cut_radii, cut_radial_average, radii_list,
                          radial_average_list, sphere_grid_range)
+
+        self.compute_debye_surface_potential(cut_radii,
+                                             cut_radial_average,
+                                             cut_indices,
+                                             interset_radius,
+                                             )
+
+    def compute_debye_surface_potential(self,
+                                        cut_radii: list[np.ndarray],
+                                        cut_radial_average: list[np.ndarray],
+                                        cut_indices: np.ndarray,
+                                        interset_radius: np.ndarray,
+                                        ) -> None:
+        """Compute the surface potential and the decay constant
+        The potetial decay part is fitted to the exponential decay
+        \\psi = \\psi_0 * exp(-r/\\lambda_D)
+        """
+        # Drop the cut_radial_average which have zero cut_indices
+        cut_radial_average = [cut_radial_average[i] for i in range(
+            len(cut_radial_average)) if cut_indices[i] != 0]
+        cut_radii = [cut_radii[i] for i in range(
+            len(cut_radii)) if cut_indices[i] != 0]
+        # Fit the potential to the planar surface approximation
+        for r_np, radii, radial_average in zip(interset_radius,
+                                               cut_radii,
+                                               cut_radial_average):
+            self._fit_potential(r_np, radii, radial_average)
+
+    def _fit_potential(self,
+                       r_np: float,
+                       radii: np.ndarray,
+                       radial_average: np.ndarray,
+                       ) -> None:
+        """Fit the potential to the planar surface approximation"""
+        # Define the exponential decay function
+        def exp_decay(r, psi_0, lambda_D):
+            return psi_0 * np.exp(-r / lambda_D)
+
+        def linear_sphere(r, psi_0, lambda_D):
+            return psi_0 * np.exp(-(r - r_np) / lambda_D) * r_np / r
+
+        # Initial guess for the parameters [psi_0, lambda_D]
+        initial_guess = [radial_average[0], 75]
+
+        # Use curve_fit to find the best fitting parameters
+        # popt contains the optimal values for psi_0 and lambda_D
+        popt, *_ = curve_fit(linear_sphere,
+                            radii,
+                            radial_average,
+                            p0=initial_guess)
 
     def _plot_debug(self,
                     cut_radii: list[np.ndarray],
@@ -221,10 +280,12 @@ class AverageAnalysis:
                                  sphere_grid_range: np.ndarray,
                                  center_xyz: tuple[int, int, int],
                                  radii_list: list[np.ndarray],
-                                 radial_average_list: list[np.ndarray]
+                                 radial_average_list: list[np.ndarray],
                                  ) -> tuple[list[np.ndarray],
                                             list[np.ndarray],
-                                            np.ndarray]:
+                                            np.ndarray,
+                                            np.ndarray,
+                                            ]:
         """Cut the average from the surface based on the circle's radius
         of the intesection of the sphere with the grid in z-axis"""
         radius: float = self.configs.computation_radius
@@ -233,16 +294,19 @@ class AverageAnalysis:
             self._calculate_grid_sphere_intersect_radius(radius,
                                                          center_z,
                                                          sphere_grid_range)
-        cut_indices: np.ndarray = \
+        cut_indices_i: np.ndarray = \
             self._find_inidices_of_surface(interset_radius, radii_list)
+        cut_indices_f: np.ndarray = self._find_indices_of_diffuse_layer(
+            radii_list, self.configs.diffuse_layer_threshold)
         cut_radial_average: list[np.ndarray] = []
         cut_radii: list[np.ndarray] = []
         for i, (radial_average, radii) in enumerate(zip(radial_average_list,
                                                         radii_list)):
-            cut_ind = int(cut_indices[i])
-            cut_radial_average.append(radial_average[cut_ind:])
-            cut_radii.append(radii[cut_ind:])
-        return cut_radii, cut_radial_average, cut_indices
+            cut_i = int(cut_indices_i[i])
+            cut_f = int(cut_indices_f[i])
+            cut_radial_average.append(radial_average[cut_i:cut_f])
+            cut_radii.append(radii[cut_i:cut_f])
+        return cut_radii, cut_radial_average, cut_indices_i, interset_radius
 
     def _calculate_grid_sphere_intersect_radius(self,
                                                 radius: float,
@@ -268,6 +332,16 @@ class AverageAnalysis:
         cut_indices: np.ndarray = np.zeros(len(interset_radius))
         for i, radius in enumerate(interset_radius):
             cut_indices[i] = np.argmin(np.abs(radii_list[i] - radius))
+        return cut_indices
+
+    def _find_indices_of_diffuse_layer(self,
+                                       radii_list: list[np.ndarray],
+                                       threshold: float) -> np.ndarray:
+        """Find the indices of the diffuse layer by finding the index
+        of the radial average which is less than the threshold"""
+        cut_indices: np.ndarray = np.ones(len(radii_list)) * -1
+        for i, radii in enumerate(radii_list):
+            cut_indices[i] = np.argmin(radii - threshold <= 0)
         return cut_indices
 
     def process_layer(self,

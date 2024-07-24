@@ -213,15 +213,18 @@ class AverageAnalysis:
         for r_np, radii, radial_average in zip(interset_radius,
                                                cut_radii,
                                                cut_radial_average):
-            self._fit_potential(r_np, radii, radial_average)
+            fit: "FitPotential" = \
+                self._fit_potential(r_np, radii, radial_average)
+            fitted_pot: np.ndarray = fit.fitted_pot
+            popt: np.ndarray = fit.popt
 
     def _fit_potential(self,
                        r_np: float,
                        radii: np.ndarray,
                        radial_average: np.ndarray,
-                       ) -> None:
+                       ) -> "FitPotential":
         """Fit the potential to the planar surface approximation"""
-        FitPotential(radii, radial_average, r_np, self.configs)
+        return FitPotential(radii, radial_average, r_np, self.configs)
 
     def _plot_debug(self,
                     cut_radii: list[np.ndarray],
@@ -497,6 +500,8 @@ class FitPotential:
     """Fitting the decay of the potential"""
     info_msg: str = 'Message from FitPotential:\n'
     config: AllConfig
+    fitted_pot: np.ndarray
+    popt: np.ndarray
 
     def __init__(self,
                  radii: np.ndarray,
@@ -505,14 +510,16 @@ class FitPotential:
                  config: AllConfig,
                  ) -> None:
         self.config = config
-        self.fit_potential(
-            radii, radial_average, r_np)
+        fitted_func: typing.Callable[..., np.ndarray]
+        fitted_func, self.popt = \
+            self.fit_potential(radii, radial_average, r_np)
+        self.fitted_pot = fitted_func(radii, *self.popt)
 
     def fit_potential(self,
                       radii: np.ndarray,
                       radial_average: np.ndarray,
                       r_np: float
-                      ) -> None:
+                      ) -> tuple[typing.Callable[..., np.ndarray], np.ndarray]:
         """Fit the potential to the planar surface approximation"""
         # Define the exponential decay function
 
@@ -527,9 +534,10 @@ class FitPotential:
 
         popt, *_ = curve_fit(f=fit_fun,
                              xdata=radii,
-                             ydata=radial_average[0],
+                             ydata=radial_average,
                              p0=initial_guess,
-                             )
+                             maxfev=10000)
+        return fit_fun, popt
 
     def get_fit_function(self) -> typing.Callable[..., np.ndarray]:
         """Get the fit function"""

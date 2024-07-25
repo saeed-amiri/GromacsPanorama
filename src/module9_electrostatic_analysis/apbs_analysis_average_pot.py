@@ -66,7 +66,7 @@ class AllConfig(ParameterConfig):
     dx_configs: DxFileConfig = field(default_factory=DxFileConfig)
     bulk_averaging: bool = False  # if Bulk averaging else interface averaging
     debug_plot: bool = False
-    fit_function: str = 'exponential_decay'
+    fit_function: str = 'non_linear_sphere'
     fit_comparisons: bool = False
     debye_intial_guess: float = 75.0
 
@@ -545,6 +545,7 @@ class FitPotential:
         return {
             'exponential_decay': self.exp_decay,
             'linear_sphere': self.linear_sphere,
+            'non_linear_sphere': self.non_linear_sphere,
         }[fit_fun_type]
 
     def get_initial_guess(self,
@@ -557,6 +558,7 @@ class FitPotential:
         return {
             'exponential_decay': [phi_0, lambda_d],
             'linear_sphere': [phi_0, lambda_d, r_np],
+            'non_linear_sphere': [phi_0, lambda_d, r_np],
         }[fit_fun_type]
 
     @staticmethod
@@ -585,6 +587,29 @@ class FitPotential:
                       ) -> np.ndarray:
         """Linear approximation of the potential"""
         return psi_0 * np.exp(-(radius - r_np) / lambda_d) * r_np / radius
+
+    @staticmethod
+    def non_linear_sphere(radius: np.ndarray,
+                          psi_0: float,
+                          lambda_d: float,
+                          r_np: float
+                          ) -> np.ndarray:
+        """Non-linear approximation of the potential"""
+        parameters: dict[str, float] = {
+            'e_charge': 1.602176634e-19,
+            'epsilon_0': 8.854187817e-12,
+            'k_b': 1.380649e-23,
+            'T': 298.15,
+            'n_avogadro': 6.022e23,
+            }
+        alpha: float = np.arctanh(parameters['e_charge'] * psi_0 /
+                                  (4 * parameters['k_b'] * parameters['T']))
+        radial_term: np.ndarray = r_np / radius
+        power_term: np.ndarray = (radius - r_np) / lambda_d
+        alpha_term: np.ndarray = alpha * np.exp(-power_term) * radial_term
+        co_factor: float = parameters['k_b'] * parameters['T'] / \
+            parameters['e_charge']
+        return co_factor * np.log((1 + alpha_term) / (1 - alpha_term))
 
     def validate_fit_function(self) -> str:
         """Validate and return the fit function type from config"""

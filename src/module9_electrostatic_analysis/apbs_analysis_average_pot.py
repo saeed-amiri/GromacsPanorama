@@ -193,6 +193,7 @@ class AverageAnalysis:
                                              cut_radial_average,
                                              cut_indices,
                                              interset_radius,
+                                             sphere_grid_range,
                                              )
 
     def compute_debye_surface_potential(self,
@@ -200,11 +201,13 @@ class AverageAnalysis:
                                         cut_radial_average: list[np.ndarray],
                                         cut_indices: np.ndarray,
                                         interset_radius: np.ndarray,
+                                        sphere_grid_range: np.ndarray
                                         ) -> None:
         """Compute the surface potential and the decay constant
         The potetial decay part is fitted to the exponential decay
         \\psi = \\psi_0 * exp(-r/\\lambda_d)
         """
+        # pylint: disable=too-many-arguments
         if not self.configs.fit_potential:
             return
         # Drop the cut_radial_average which have zero cut_indices

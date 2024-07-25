@@ -66,6 +66,7 @@ class AllConfig(ParameterConfig):
     dx_configs: DxFileConfig = field(default_factory=DxFileConfig)
     bulk_averaging: bool = False  # if Bulk averaging else interface averaging
     debug_plot: bool = False
+    fit_potential: bool = False
     fit_function: str = 'non_linear_sphere'
     fit_comparisons: bool = False
     debye_intial_guess: float = 75.0
@@ -204,6 +205,8 @@ class AverageAnalysis:
         The potetial decay part is fitted to the exponential decay
         \\psi = \\psi_0 * exp(-r/\\lambda_d)
         """
+        if not self.configs.fit_potential:
+            return
         # Drop the cut_radial_average which have zero cut_indices
         cut_radial_average = [cut_radial_average[i] for i in range(
             len(cut_radial_average)) if cut_indices[i] != 0]

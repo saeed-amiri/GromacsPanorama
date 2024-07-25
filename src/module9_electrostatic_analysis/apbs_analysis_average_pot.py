@@ -216,13 +216,67 @@ class AverageAnalysis:
         cut_radii = [cut_radii[i] for i in range(
             len(cut_radii)) if cut_indices[i] != 0]
         # Fit the potential to the planar surface approximation
-        for r_np, radii, radial_average in zip(interset_radius,
-                                               cut_radii,
-                                               cut_radial_average):
+        plots_data = []
+        for r_np, radii, radial_average, grid in zip(interset_radius,
+                                                     cut_radii,
+                                                     cut_radial_average,
+                                                     sphere_grid_range,
+                                                     ):
             fit: "FitPotential" = \
                 self._fit_potential(r_np, radii, radial_average)
-            fitted_pot: np.ndarray = fit.fitted_pot
-            popt: np.ndarray = fit.popt
+            plots_data.append(
+                (radii, radial_average, fit.fitted_pot, fit.popt, grid)
+                )
+        self._interactive_plot(plots_data)
+
+    def _interactive_plot(self,
+                          plots_data: list[tuple[np.ndarray,
+                                                 np.ndarray,
+                                                 np.ndarray,
+                                                 np.ndarray,
+                                                 int]]
+                          ) -> None:
+        """Interactive plot for the fitted potential"""
+        mpl.rcParams['font.size'] = 20
+        fig, ax_i = plt.subplots(figsize=(20, 16))
+
+        def plot_index(idx):
+            ax_i.cla()  # Clear the current figure
+            radii, radial_average, fitted_pot, popt, grid = plots_data[idx]
+            ax_i.plot(radii, radial_average, 'k-')
+            ax_i.plot(radii, fitted_pot, 'r--')
+            ax_i.text(0.5, 0.5,
+                      f'$\\lambda_d$={popt[1]:.2f} Å',
+                      transform=ax_i.transAxes,
+                      )
+            ax_i.set_title(f'z_index={grid}')
+            ax_i.set_xlabel('r (Å)')
+            ax_i.set_ylabel('Potential')
+
+            fig.canvas.draw_idle()  # Use fig's canvas to redraw
+
+        current_index = [0]  # Use list for mutable integer
+
+        def on_key(event):
+            if event.key == 'right':
+                current_index[0] = min(len(plots_data) - 1,
+                                       current_index[0] + 1)
+                plot_index(current_index[0])
+            elif event.key == 'left':
+                current_index[0] = max(0, current_index[0] - 1)
+                plot_index(current_index[0])
+            elif event.key == 'up':
+                current_index[0] = min(len(plots_data) - 5,
+                                       current_index[0] + 5)
+                plot_index(current_index[0])
+            elif event.key == 'down':
+                current_index[0] = max(0, current_index[0] - 5)
+                plot_index(current_index[0])
+
+        fig.canvas.mpl_connect('key_press_event', on_key)
+
+        plot_index(0)
+        plt.show()
 
     def _fit_potential(self,
                        r_np: float,

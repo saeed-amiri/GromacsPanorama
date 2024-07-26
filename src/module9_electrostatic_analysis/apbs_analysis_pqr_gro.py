@@ -108,12 +108,13 @@ class AnalysisStructure:
         """
         # find the min and max of each residue
         self.grid_spacing = self.calc_grid_spacing()
-        residue_boundary_grid: pd.DataFrame = self.get_min_max_residue(log)
+        residue_boundary_grid: pd.DataFrame = \
+            self.calculate_residue_boundary(log)
         self.write_xvg_file(residue_boundary_grid)
 
-    def get_min_max_residue(self,
-                            log: logger.logging.Logger
-                            ) -> pd.DataFrame:
+    def calculate_residue_boundary(self,
+                                   log: logger.logging.Logger
+                                   ) -> pd.DataFrame:
         """
         Get the min and max of each residue
         """
@@ -135,7 +136,7 @@ class AnalysisStructure:
         """
         Get the min and max of each residue in a file
         """
-        return self.get_min_max_residue_file(pqr_df)
+        return self.get_min_max_residue_df(pqr_df)
 
     def calc_grid_spacing(self) -> tuple[float, float, float]:
         """
@@ -149,9 +150,9 @@ class AnalysisStructure:
         self.info_msg += f"\tGrid spacing: {grid_spacing}\n"
         return grid_spacing
 
-    def get_min_max_residue_file(self,
-                                 data: pd.DataFrame,
-                                 ) -> pd.DataFrame:
+    def get_min_max_residue_df(self,
+                               data: pd.DataFrame,
+                               ) -> pd.DataFrame:
         """
         Get the min and max of each residue in a file
         """

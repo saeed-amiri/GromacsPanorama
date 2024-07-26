@@ -110,8 +110,9 @@ class AnalysisStructure:
         self.grid_spacing = self.calc_grid_spacing()
         residue_boundary_grid: pd.DataFrame = \
             self.calculate_residue_boundary(log)
-        self.write_xvg_file(residue_boundary_grid)
-        self.calculate_columnwise_min_max(residue_boundary_grid)
+        global_min_max: pd.DataFrame = \
+            self.calculate_columnwise_min_max(residue_boundary_grid)
+        self.write_xvg_file(residue_boundary_grid, global_min_max)
 
     def calculate_residue_boundary(self,
                                    log: logger.logging.Logger
@@ -197,20 +198,6 @@ class AnalysisStructure:
             sys.exit(f"{bcolors.FAIL}{msg}{bcolors.ENDC}")
         return ReadInputStructureFile(log, files, self.config).structure_dict
 
-    def write_xvg_file(self,
-                       residue_boundary_grid: pd.DataFrame
-                       ) -> None:
-        """
-        Write the data into xvg format
-        """
-        file_writer.write_xvg(residue_boundary_grid,
-                              logger.setup_logger("residue_boundary_grid.log"),
-                              'residue_boundary_grid.xvg',
-                              'Residue boundary grid',
-                              'Residue',
-                              'Grid index',
-                              'Residue boundary grid')
-
     def calculate_columnwise_min_max(self,
                                      residue_boundary_grid: pd.DataFrame
                                      ) -> pd.DataFrame:
@@ -237,6 +224,33 @@ class AnalysisStructure:
         min_max_residue = pd.concat([column_min, column_max], axis=1)
         self.info_msg += f"\tColumn-wise min and max: {min_max_residue}\n"
         return min_max_residue
+
+    def write_xvg_file(self,
+                       residue_boundary_grid: pd.DataFrame,
+                       global_min_max: pd.DataFrame
+                       ) -> None:
+        """
+        Write the data into xvg format
+        """
+        extra_comments = "Residue boundary grid" + \
+            self.df_to_string(global_min_max)
+        file_writer.write_xvg(residue_boundary_grid,
+                              logger.setup_logger("residue_boundary_grid.log"),
+                              fname='residue_boundary_grid.xvg',
+                              extra_comments=extra_comments,
+                              xaxis_label='Residue',
+                              yaxis_label='Grid index',
+                              title='Residue boundary grid')
+
+    @staticmethod
+    def df_to_string(df_i
+                     ) -> str:
+        """Convert the DataFrame to a string"""
+        lines = ["Column-wise min and max:"]
+        for idx, row in df_i.iterrows():
+            line = f"#{idx}  {row[0]}  {row[1]}"
+            lines.append(line)
+        return "\n".join(lines)
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

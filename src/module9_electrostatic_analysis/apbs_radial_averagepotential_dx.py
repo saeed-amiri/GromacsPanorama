@@ -229,135 +229,25 @@ class RadialAveragePotential:
             grid_spacing, grid_xyz, center_xyz)
 
         # Calculate the radial average
-        radii, radial_average = self.calculate_radial_average(
-            data_arr,
-            distances,
-            grid_spacing,
-            max_radius,
-            grid_xyz[2],
-            self.configs.interface_low_index,
-            self.configs.interface_high_index,
-            self.configs.lower_index_bulk,
-            )
+        radii_average: "ClaculateRadialAveragePotential" = \
+            ClaculateRadialAveragePotential(
+                data_arr,
+                distances,
+                grid_spacing,
+                max_radius,
+                grid_xyz[2],
+                self.configs.interface_low_index,
+                self.configs.interface_high_index,
+                self.configs.lower_index_bulk,
+                self.configs)
+
+        radii, radial_average = \
+            radii_average.radii, radii_average.radial_average
 
         self.info_msg += ('\tThe average index is set to '
                           f'{self.configs.interface_low_index}\n'
                           f'\tThe maximum radius is {max_radius:.5f} [nm]\n')
-        return radii, np.array(radial_average)
-
-    def calculate_radial_average(self,
-                                 data_arr: np.ndarray,
-                                 distances: np.ndarray,
-                                 grid_spacing: list[float],
-                                 max_radius: float,
-                                 grid_z: np.ndarray,
-                                 interface_low_index,
-                                 interface_high_index,
-                                 lower_index_bulk,
-                                 ) -> tuple[np.ndarray, list[float]]:
-        """Calculate the radial average of the potential"""
-        # pylint: disable=too-many-arguments
-        radii = np.arange(0, max_radius, grid_spacing[0])
-        radial_average = []
-
-        for radius in radii:
-            mask = self.create_mask(distances,
-                                    radius,
-                                    grid_spacing,
-                                    grid_z,
-                                    interface_low_index,
-                                    interface_high_index,
-                                    lower_index_bulk,
-                                    )
-            if np.sum(mask) > 0:
-                avg_potential = np.mean(data_arr[mask])
-                radial_average.append(avg_potential)
-            else:
-                radial_average.append(0)
-
         return radii, radial_average
-
-    def create_mask(self,
-                    distances: np.ndarray,
-                    radius: float,
-                    grid_spacing: list[float],
-                    grid_z: np.ndarray,
-                    interface_low_index: int,
-                    interface_high_index: int,
-                    low_index_bulk: int
-                    ) -> np.ndarray:
-        """Create a mask for the radial average"""
-        # pylint: disable=too-many-arguments
-        shell_thickness: float = grid_spacing[0]
-        shell_condition: np.ndarray = (distances >= radius) & \
-                                      (distances < radius + shell_thickness)
-
-        if self.configs.bulk_averaging:
-            z_condition: np.ndarray = self.create_mask_bulk(
-                grid_z, interface_low_index, low_index_bulk)
-        else:
-            z_condition = self.create_mask_interface(
-                grid_z, interface_low_index, interface_high_index)
-
-        return shell_condition & z_condition
-
-    @staticmethod
-    def create_mask_bulk(grid_z: np.ndarray,
-                         interface_low_index: int,
-                         low_index_bulk: int,
-                         ) -> np.ndarray:
-        """Create a mask for the radial average from the bulk"""
-        z_condition: np.ndarray = (grid_z <= interface_low_index) & \
-                                  (grid_z >= low_index_bulk)
-        return z_condition
-
-    @staticmethod
-    def create_mask_interface(grid_z: np.ndarray,
-                              interface_low_index: int,
-                              interface_high_index: int
-                              ) -> np.ndarray:
-        """Create a mask for the radial average from the interface"""
-        z_condition: np.ndarray = (grid_z >= interface_low_index) & \
-                                  (grid_z <= interface_high_index)
-        return z_condition
-
-    @staticmethod
-    def calculate_center(grid_points: list[int]
-                         ) -> tuple[int, int, int]:
-        """Calculate the center of the box in grid units"""
-        center_x = grid_points[0] // 2
-        center_y = grid_points[1] // 2
-        center_z = grid_points[2] // 2
-        return center_x, center_y, center_z
-
-    @staticmethod
-    def calculate_max_radius(center_xyz: tuple[float, float, float],
-                             grid_spacing: list[float]
-                             ) -> float:
-        """Calculate the maximum radius for the radial average"""
-        return min(center_xyz[:2]) * min(grid_spacing)
-
-    @staticmethod
-    def create_distance_grid(grid_points: list[int],
-                             ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Create the distance grid"""
-        x_space = np.linspace(0, grid_points[0] - 1, grid_points[0])
-        y_space = np.linspace(0, grid_points[1] - 1, grid_points[1])
-        z_space = np.linspace(0, grid_points[2] - 1, grid_points[2])
-
-        grid_x, grid_y, grid_z = \
-            np.meshgrid(x_space, y_space, z_space, indexing='ij')
-        return grid_x, grid_y, grid_z
-
-    @staticmethod
-    def compute_distance(grid_spacing: list[float],
-                         grid_xyz: tuple[np.ndarray, np.ndarray, np.ndarray],
-                         center_xyz: tuple[float, float, float],
-                         ) -> np.ndarray:
-        """Calculate the distances from the center of the box"""
-        return np.sqrt((grid_xyz[0] - center_xyz[0])**2 +
-                       (grid_xyz[1] - center_xyz[1])**2 +
-                       (grid_xyz[2] - center_xyz[2])**2) * grid_spacing[0]
 
     def _plot_radial_average(self,
                              radii: np.ndarray,

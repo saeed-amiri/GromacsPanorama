@@ -111,6 +111,7 @@ class AnalysisStructure:
         residue_boundary_grid: pd.DataFrame = \
             self.calculate_residue_boundary(log)
         self.write_xvg_file(residue_boundary_grid)
+        self.calculate_columnwise_min_max(residue_boundary_grid)
 
     def calculate_residue_boundary(self,
                                    log: logger.logging.Logger
@@ -209,6 +210,33 @@ class AnalysisStructure:
                               'Residue',
                               'Grid index',
                               'Residue boundary grid')
+
+    def calculate_columnwise_min_max(self,
+                                     residue_boundary_grid: pd.DataFrame
+                                     ) -> pd.DataFrame:
+        """
+        Calculate the column-wise min and max from tuples, handling
+        empty iterables.
+        """
+        # Assuming a sensible default value can be defined.
+        default_min_value = float('inf')
+        default_max_value = float('-inf')
+
+        column_min = residue_boundary_grid.apply(
+            lambda col: min((tup[0] for tup in col if isinstance(tup, tuple)),
+                            default=default_min_value),
+            axis=0
+        )
+
+        column_max = residue_boundary_grid.apply(
+            lambda col: max((tup[1] for tup in col if isinstance(tup, tuple)),
+                            default=default_max_value),
+            axis=0
+        )
+
+        min_max_residue = pd.concat([column_min, column_max], axis=1)
+        self.info_msg += f"\tColumn-wise min and max: {min_max_residue}\n"
+        return min_max_residue
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

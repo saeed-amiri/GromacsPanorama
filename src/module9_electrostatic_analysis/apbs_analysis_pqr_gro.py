@@ -128,11 +128,11 @@ class AnalysisStructure:
 
     def get_min_max_residue_file(self,
                                  data: pd.DataFrame,
-                                 ) -> None:
+                                 ) -> pd.DataFrame:
         """
         Get the min and max of each residue in a file
         """
-        residue_boundary_grid: pd.DataFrame = pd.DataFrame(
+        residue_boundary_df: pd.DataFrame = pd.DataFrame(
             columns=[member.value for member in ResidueName])
         for residue_name in ResidueName:
             residue_df = data[
@@ -144,9 +144,9 @@ class AnalysisStructure:
             if not pd.isna(min_x_residue) and not pd.isna(max_x_residue):
                 grid_min, grid_max = \
                     self._get_grid_indices(min_x_residue, max_x_residue)
-                residue_boundary_grid[residue_name.value] = \
+                residue_boundary_df[residue_name.value] = \
                     [(grid_min, grid_max)]
-        return residue_boundary_grid
+        return residue_boundary_df
 
     def _get_grid_indices(self,
                           min_x_residue: float,

@@ -227,15 +227,16 @@ class AnalysisStructure:
 
     def write_xvg_file(self,
                        residue_boundary_grid: pd.DataFrame,
-                       global_min_max: pd.DataFrame
+                       global_min_max: pd.DataFrame,
+                       log: logger.logging.Logger
                        ) -> None:
         """
         Write the data into xvg format
         """
         extra_comments = "Residue boundary grid" + \
             self.df_to_string(global_min_max)
-        file_writer.write_xvg(residue_boundary_grid,
-                              logger.setup_logger("residue_boundary_grid.log"),
+        file_writer.write_xvg(df_i=residue_boundary_grid,
+                              log=log,
                               fname='residue_boundary_grid.xvg',
                               extra_comments=extra_comments,
                               xaxis_label='Residue',

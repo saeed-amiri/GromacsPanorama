@@ -284,51 +284,8 @@ class RadialAveragePotential:
         plot the average potential layers by changing z
         """
         # make sure the computation is in the plane not bulk
-        self.configs.bulk_averaging = False
 
-        center_xyz: tuple[int, int, int] = \
-            self.calculate_center(grid_points)
-
-        fig_i: plt.figure
-        ax_i: plt.Axes
-        fig_i, ax_i = elsevier_plot_tools.mk_canvas('single_column')
-        min_z_value: list[float] = []
-        for i, z_index in enumerate(range(self.configs.lowest_z,
-                                          self.configs.highest_z,
-                                          self.configs.decrement_z)):
-            # Calculate the center of the box in grid units
-            center_xyz = (center_xyz[0], center_xyz[1], z_index)
-            # Calculate the maximum radius for the radial average
-            max_radius: float = \
-                self.calculate_max_radius(center_xyz, grid_spacing)
-
-            # Create the distance grid
-            grid_xyz: tuple[np.ndarray, np.ndarray, np.ndarray] = \
-                self.create_distance_grid(grid_points)
-
-            # Calculate the distances from the center of the box
-            distances: np.ndarray = self.compute_distance(
-                grid_spacing, grid_xyz, center_xyz)
-            radii, radial_average = self.calculate_radial_average(
-                data_arr,
-                distances,
-                grid_spacing,
-                max_radius,
-                grid_xyz[2],
-                interface_low_index=z_index,
-                interface_high_index=z_index+self.configs.delta_z,
-                lower_index_bulk=0,
-                )
-            ax_i.plot(radii/self.dist_unit_conversion,
-                      radial_average,
-                      label=f'z-index: {z_index}',
-                      lw=1,
-                      c=elsevier_plot_tools.CLEAR_COLOR_GRADIENT[i],
-                      )
-        ax_i.set_xlabel('Radius [nm]')
-        ax_i.set_ylabel('Average Potential')
-        plt.legend()
-        elsevier_plot_tools.save_close_fig(fig_i, 'potential_layers_z.jpg')
+        PlotOverlayLayers(data_arr, grid_spacing, grid_points, self.configs)
 
     def write_radial_average(self,
                              radii: np.ndarray,
@@ -437,6 +394,225 @@ class RadialAveragePotential:
         print(f'{bcolors.OKCYAN}{RadialAveragePotential.__name__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
+
+
+class ClaculateRadialAveragePotential:
+    """Calculate the radial average potential"""
+    configs: AllConfigs
+    radii: np.ndarray
+    radial_average: np.ndarray
+
+    def __init__(self,
+                 data_arr: np.ndarray,
+                 distances: np.ndarray,
+                 grid_spacing: list[float],
+                 max_radius: float,
+                 grid_z: np.ndarray,
+                 interface_low_index,
+                 interface_high_index,
+                 lower_index_bulk,
+                 configs: AllConfigs
+                 ) -> None:
+        """write and log messages"""
+        # pylint: disable=too-many-arguments
+        self.configs = configs
+        self.radii, self.radial_average = \
+            self.calculate_radial_average(data_arr,
+                                          distances,
+                                          grid_spacing,
+                                          max_radius,
+                                          grid_z,
+                                          interface_low_index,
+                                          interface_high_index,
+                                          lower_index_bulk,
+                                          )
+
+    def calculate_radial_average(self,
+                                 data_arr: np.ndarray,
+                                 distances: np.ndarray,
+                                 grid_spacing: list[float],
+                                 max_radius: float,
+                                 grid_z: np.ndarray,
+                                 interface_low_index: int,
+                                 interface_high_index: int,
+                                 lower_index_bulk: int,
+                                 ) -> tuple[np.ndarray, np.ndarray]:
+        """Calculate the radial average of the potential"""
+        # pylint: disable=too-many-arguments
+        radii = np.arange(0, max_radius, grid_spacing[0])
+        radial_average = []
+
+        for radius in radii:
+            mask = self.create_mask(distances,
+                                    radius,
+                                    grid_spacing,
+                                    grid_z,
+                                    interface_low_index,
+                                    interface_high_index,
+                                    lower_index_bulk,
+                                    )
+            if np.sum(mask) > 0:
+                avg_potential = np.mean(data_arr[mask])
+                radial_average.append(avg_potential)
+            else:
+                radial_average.append(0)
+
+        return radii, np.asarray(radial_average)
+
+    def create_mask(self,
+                    distances: np.ndarray,
+                    radius: float,
+                    grid_spacing: list[float],
+                    grid_z: np.ndarray,
+                    interface_low_index: int,
+                    interface_high_index: int,
+                    low_index_bulk: int
+                    ) -> np.ndarray:
+        """Create a mask for the radial average"""
+        # pylint: disable=too-many-arguments
+        shell_thickness: float = grid_spacing[0]
+        shell_condition: np.ndarray = (distances >= radius) & \
+                                      (distances < radius + shell_thickness)
+
+        if self.configs.bulk_averaging:
+            z_condition: np.ndarray = self.create_mask_bulk(
+                grid_z, interface_low_index, low_index_bulk)
+        else:
+            z_condition = self.create_mask_interface(
+                grid_z, interface_low_index, interface_high_index)
+
+        return shell_condition & z_condition
+
+    @staticmethod
+    def create_mask_bulk(grid_z: np.ndarray,
+                         interface_low_index: int,
+                         low_index_bulk: int,
+                         ) -> np.ndarray:
+        """Create a mask for the radial average from the bulk"""
+        z_condition: np.ndarray = (grid_z <= interface_low_index) & \
+                                  (grid_z >= low_index_bulk)
+        return z_condition
+
+    @staticmethod
+    def create_mask_interface(grid_z: np.ndarray,
+                              interface_low_index: int,
+                              interface_high_index: int
+                              ) -> np.ndarray:
+        """Create a mask for the radial average from the interface"""
+        z_condition: np.ndarray = (grid_z >= interface_low_index) & \
+                                  (grid_z <= interface_high_index)
+        return z_condition
+
+
+class PlotOverlayLayers:
+    """plot potential selected layers"""
+    # pylint: disable=too-many-locals
+    info_msg: str = 'Message from PlotOverlayLayers:\n'
+    configs: AllConfigs
+
+    def __init__(self,
+                 data_arr: np.ndarray,
+                 grid_spacing: list[float],
+                 grid_points: list[int],
+                 configs: AllConfigs
+                 ) -> None:
+        """write and log messages"""
+        self.configs = configs
+        self.configs.bulk_averaging = False
+
+        self.plot_potential_layers_z(data_arr, grid_spacing, grid_points)
+
+    def plot_potential_layers_z(self,
+                                data_arr: np.ndarray,
+                                grid_spacing: list[float],
+                                grid_points: list[int]
+                                ) -> None:
+        """
+        plot the average potential layers by changing z
+        """
+        # make sure the computation is in the plane not bulk
+        self.configs.bulk_averaging = False
+
+        center_xyz: tuple[int, int, int] = calculate_center(grid_points)
+
+        fig_i: plt.figure
+        ax_i: plt.Axes
+        fig_i, ax_i = elsevier_plot_tools.mk_canvas('single_column')
+
+        min_z_value: list[float] = []
+
+        range_z: list[int] = self._get_zrange()
+        colors: list[str] = self._get_colors(range_z)
+
+        for i, z_index in enumerate(range_z):
+            # Calculate the center of the box in grid units
+            center_xyz = (center_xyz[0], center_xyz[1], z_index)
+            # Calculate the maximum radius for the radial average
+            max_radius: float = calculate_max_radius(center_xyz, grid_spacing)
+
+            # Create the distance grid
+            grid_xyz: tuple[np.ndarray, np.ndarray, np.ndarray] = \
+                create_distance_grid(grid_points)
+
+            # Calculate the distances from the center of the box
+            distances: np.ndarray = compute_distance(
+                grid_spacing, grid_xyz, center_xyz)
+
+            radii_average: "ClaculateRadialAveragePotential" = \
+                ClaculateRadialAveragePotential(
+                    data_arr,
+                    distances,
+                    grid_spacing,
+                    max_radius,
+                    grid_xyz[2],
+                    interface_low_index=z_index,
+                    interface_high_index=z_index+self.configs.delta_z,
+                    lower_index_bulk=0,
+                    configs=self.configs)
+
+            radii, radial_average = \
+                radii_average.radii, radii_average.radial_average
+
+            ax_i.plot(radii/self.configs.dist_unit_conversion,
+                      radial_average,
+                      label=f'z-index: {z_index}',
+                      lw=1,
+                      c=colors[i],
+                      ls=elsevier_plot_tools.LINESTYLE_TUPLE[i][1],
+                      )
+            min_z_value.append(min(radial_average))
+
+        ax_i.set_xlabel('Radius [nm]')
+        ax_i.set_ylabel('Average Potential')
+        plt.legend()
+        elsevier_plot_tools.save_close_fig(
+            fig_i, 'potential_layers_z.jpg', close_fig=False)
+
+        ax_i.set_xlim(self.configs.x_lims)
+        ax_i.set_ylim(min(min_z_value)-self.configs.y_lims[0],
+                      self.configs.y_lims[1])
+        elsevier_plot_tools.save_close_fig(
+            fig_i, 'potential_layers_z_zoom.jpg', close_fig=True)
+
+    def _get_zrange(self) -> list[int]:
+        """get the z range for plotting"""
+        z_range: list[int] = list(range(self.configs.lowest_z,
+                                        self.configs.highest_z,
+                                        self.configs.decrement_z))
+        if self.configs.drop_z:
+            for drop_z in self.configs.drop_z:
+                if drop_z in z_range:
+                    z_range.remove(drop_z)
+        self.info_msg += f'\t{z_range = }\n'
+        return z_range
+
+    def _get_colors(self,
+                    range_z: list[int]) -> list[str]:
+        """get the colors for plotting"""
+        colors: list[str] = elsevier_plot_tools.CLEAR_COLOR_GRADIENT
+        if len(range_z) > len(colors):
+            raise ValueError('The number of z layers is more than the colors!')
+        return colors
 
 
 if __name__ == '__main__':

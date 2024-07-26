@@ -49,6 +49,7 @@ Saeed
 """
 
 import sys
+import typing
 from dataclasses import field
 from dataclasses import dataclass
 
@@ -541,8 +542,11 @@ class PlotOverlayLayers:
 
         min_z_value: list[float] = []
 
-        range_z: list[int] = self._get_zrange()
-        colors: list[str] = self._get_colors(range_z)
+        range_z: list[int] = self.get_zrange()
+        colors: list[str]
+        line_styles: list[tuple[str, tuple[int, typing.Any]]]
+        long_list: bool
+        colors, line_styles, long_list = self._get_colors_linestyle(range_z)
 
         for i, z_index in enumerate(range_z):
             # Calculate the center of the box in grid units
@@ -572,13 +576,14 @@ class PlotOverlayLayers:
 
             radii, radial_average = \
                 radii_average.radii, radii_average.radial_average
-
+            label: typing.Union[str, None] = self._get_lable(
+                i, z_index, range_z, long_list)
             ax_i.plot(radii/self.configs.dist_unit_conversion,
                       radial_average,
-                      label=f'z-index: {z_index}',
                       lw=1,
                       c=colors[i],
-                      ls=elsevier_plot_tools.LINESTYLE_TUPLE[i][1],
+                      ls=line_styles[i][1],
+                      label=label,
                       )
             min_z_value.append(min(radial_average))
 
@@ -594,7 +599,20 @@ class PlotOverlayLayers:
         elsevier_plot_tools.save_close_fig(
             fig_i, 'potential_layers_z_zoom.jpg', close_fig=True)
 
-    def _get_zrange(self) -> list[int]:
+    def _get_lable(self,
+                   iteration: int,
+                   z_index: int,
+                   range_z: list[int],
+                   long_list: bool
+                   ) -> typing.Union[str, None]:
+        """get the label"""
+        if long_list:
+            return (
+                f'index = {z_index}' if (iteration in [0, len(range_z)-1])
+                else None)
+        return f'index = {z_index}'
+
+    def get_zrange(self) -> list[int]:
         """get the z range for plotting"""
         z_range: list[int] = list(range(self.configs.lowest_z,
                                         self.configs.highest_z,
@@ -606,13 +624,23 @@ class PlotOverlayLayers:
         self.info_msg += f'\t{z_range = }\n'
         return z_range
 
-    def _get_colors(self,
-                    range_z: list[int]) -> list[str]:
+    def _get_colors_linestyle(self,
+                              range_z: list[int]) -> tuple[
+                              list[str],
+                              list[tuple[str, tuple[int, typing.Any]]],
+                              bool]:
         """get the colors for plotting"""
         colors: list[str] = elsevier_plot_tools.CLEAR_COLOR_GRADIENT
+        line_styles: list[tuple[str, tuple[int, typing.Any]]] = \
+            elsevier_plot_tools.LINE_STYLES
+        long_list: bool = False
         if len(range_z) > len(colors):
-            raise ValueError('The number of z layers is more than the colors!')
-        return colors
+            colors = elsevier_plot_tools.generate_shades(len(range_z))
+            line_styles = [('solid', (0, ())) for _ in range(len(range_z))]
+            long_list = True
+            print(f'{bcolors.WARNING}The number of z layers is more than '
+                  f'the number of colors!{bcolors.ENDC}')
+        return colors, line_styles, long_list
 
 
 if __name__ == '__main__':

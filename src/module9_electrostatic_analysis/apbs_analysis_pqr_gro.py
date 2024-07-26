@@ -20,6 +20,7 @@ from common import my_tools
 from common import pqr_to_df
 from common import gro_to_df
 from common import cpuconfig
+from common import file_writer
 from common.colors_text import TextColor as bcolors
 
 
@@ -108,6 +109,7 @@ class AnalysisStructure:
         # find the min and max of each residue
         self.grid_spacing = self.calc_grid_spacing()
         residue_boundary_grid: pd.DataFrame = self.get_min_max_residue(log)
+        self.write_xvg_file(residue_boundary_grid)
 
     def get_min_max_residue(self,
                             log: logger.logging.Logger
@@ -123,7 +125,8 @@ class AnalysisStructure:
             results = pool.map(self.worker_get_min_max_residue,
                                self.structure_data.values())
         boundary_data_list.extend(results)
-        residue_boundary_grid: pd.DataFrame = pd.concat(boundary_data_list)
+        residue_boundary_grid: pd.DataFrame = pd.concat(boundary_data_list,
+                                                        ignore_index=True)
         return residue_boundary_grid
 
     def worker_get_min_max_residue(self,
@@ -191,6 +194,20 @@ class AnalysisStructure:
             log.error(msg := "\tNo structure files are provided!\n")
             sys.exit(f"{bcolors.FAIL}{msg}{bcolors.ENDC}")
         return ReadInputStructureFile(log, files, self.config).structure_dict
+
+    def write_xvg_file(self,
+                       residue_boundary_grid: pd.DataFrame
+                       ) -> None:
+        """
+        Write the data into xvg format
+        """
+        file_writer.write_xvg(residue_boundary_grid,
+                              logger.setup_logger("residue_boundary_grid.log"),
+                              'residue_boundary_grid.xvg',
+                              'Residue boundary grid',
+                              'Residue',
+                              'Grid index',
+                              'Residue boundary grid')
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

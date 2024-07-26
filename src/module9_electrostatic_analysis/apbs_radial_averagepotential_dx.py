@@ -49,6 +49,7 @@ Saeed
 """
 
 import sys
+from dataclasses import field
 from dataclasses import dataclass
 
 import numpy as np
@@ -78,15 +79,57 @@ class InputConfig:
 class MultilayerPlotConfig:
     """set the parameters for the multilayer plot"""
     delta_z: int = 0  # increment in z grid, it is index
-    highest_z: int = 130
-    lowest_z: int = 50
-    decrement_z: int = 10
+    highest_z: int = 90
+    lowest_z: int = 60
+    decrement_z: int = 3
+    drop_z: list[int] = field(default_factory=lambda: [70, 90])
+    x_lims: tuple[float, float] = field(default_factory=lambda: (2.8, 7))
+    y_lims: tuple[float, float] = field(default_factory=lambda: (10, 135))
 
 
 @dataclass
 class AllConfigs(InputConfig, MultilayerPlotConfig):
     """set the parameters for the radial average potential"""
+    pot_unit_conversion: float = 25.2  # kT/e <-> mV
+    dist_unit_conversion: float = 10.0  # Angstrom <-> nm
 
+
+def compute_distance(grid_spacing: list[float],
+                     grid_xyz: tuple[np.ndarray, np.ndarray, np.ndarray],
+                     center_xyz: tuple[float, float, float],
+                     ) -> np.ndarray:
+    """Calculate the distances from the center of the box"""
+    return np.sqrt((grid_xyz[0] - center_xyz[0])**2 +
+                   (grid_xyz[1] - center_xyz[1])**2 +
+                   (grid_xyz[2] - center_xyz[2])**2) * grid_spacing[0]
+
+
+def calculate_max_radius(center_xyz: tuple[float, float, float],
+                         grid_spacing: list[float]
+                         ) -> float:
+    """Calculate the maximum radius for the radial average"""
+    return min(center_xyz[:2]) * min(grid_spacing)
+
+
+def create_distance_grid(grid_points: list[int],
+                         ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Create the distance grid"""
+    x_space = np.linspace(0, grid_points[0] - 1, grid_points[0])
+    y_space = np.linspace(0, grid_points[1] - 1, grid_points[1])
+    z_space = np.linspace(0, grid_points[2] - 1, grid_points[2])
+
+    grid_x, grid_y, grid_z = \
+        np.meshgrid(x_space, y_space, z_space, indexing='ij')
+    return grid_x, grid_y, grid_z
+
+
+def calculate_center(grid_points: list[int]
+                     ) -> tuple[int, int, int]:
+    """Calculate the center of the box in grid units"""
+    center_x = grid_points[0] // 2
+    center_y = grid_points[1] // 2
+    center_z = grid_points[2] // 2
+    return center_x, center_y, center_z
 
 
 class RadialAveragePotential:
@@ -96,8 +139,6 @@ class RadialAveragePotential:
     """
 
     info_msg: str = 'Message from RadialAveragePotential:\n'
-    pot_unit_conversion: float = 25.2  # kT/e <-> mV
-    dist_unit_conversion: float = 10.0  # Angstrom <-> nm
     configs: AllConfigs
 
     def __init__(self,
@@ -148,7 +189,7 @@ class RadialAveragePotential:
         data_arr: np.ndarray = self._reshape_reevaluate_data(data, grid_points)
         radii, radial_average = \
             self.radial_average(data_arr, grid_points, grid_spacing)
-        self._plot_radial_average(radii, radial_average)
+        # self._plot_radial_average(radii, radial_average)
         self.write_radial_average(radii, radial_average, log)
         self.plot_potential_layers_z(
                 data_arr, grid_spacing, grid_points)

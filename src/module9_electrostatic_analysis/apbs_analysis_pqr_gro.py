@@ -7,6 +7,7 @@ Should be able to run standalone.
 
 import os
 import sys
+import typing
 from dataclasses import dataclass
 from dataclasses import field
 from enum import Enum
@@ -131,6 +132,8 @@ class AnalysisStructure:
         """
         Get the min and max of each residue in a file
         """
+        residue_boundary_grid: pd.DataFrame = pd.DataFrame(
+            columns=[member.value for member in ResidueName])
         for residue_name in ResidueName:
             residue_df = data[
                 data[ColumnName.RESIDUE_NAME.value] == residue_name.value]
@@ -139,21 +142,23 @@ class AnalysisStructure:
             # finding the resiude number of the residue with max x
             max_x_residue = residue_df[ColumnName.Z.value].max()
             if not pd.isna(min_x_residue) and not pd.isna(max_x_residue):
-                self._get_grid_indices(
-                    residue_name.value, min_x_residue, max_x_residue)
+                grid_min, grid_max = \
+                    self._get_grid_indices(min_x_residue, max_x_residue)
+                residue_boundary_grid[residue_name.value] = \
+                    [(grid_min, grid_max)]
+        return residue_boundary_grid
 
     def _get_grid_indices(self,
-                          residue_name: str,
                           min_x_residue: float,
                           max_x_residue: float,
-                          ) -> None:
+                          ) -> typing.Union[tuple[int, int],
+                                            tuple[None, None]]:
         """
         Get the grid indices
         """
         grid_min: int = int(min_x_residue / self.grid_spacing[0])
         grid_max: int = int(max_x_residue / self.grid_spacing[0])
-        self.info_msg += \
-            f"\t\t{residue_name} -> Min: {grid_min}, Max: {grid_max}\n"
+        return grid_min, grid_max
 
     def validate_and_process_files(self,
                                    files: list[str],

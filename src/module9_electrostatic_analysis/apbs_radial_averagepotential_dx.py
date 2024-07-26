@@ -215,19 +215,17 @@ class RadialAveragePotential:
         # pylint: disable=too-many-locals
 
         # Calculate the center of the box in grid units
-        center_xyz: tuple[int, int, int] = \
-            self.calculate_center(grid_points)
+        center_xyz: tuple[int, int, int] = calculate_center(grid_points)
 
         # Calculate the maximum radius for the radial average
-        max_radius: float = \
-            self.calculate_max_radius(center_xyz, grid_spacing)
+        max_radius: float = calculate_max_radius(center_xyz, grid_spacing)
 
         # Create the distance grid
         grid_xyz: tuple[np.ndarray, np.ndarray, np.ndarray] = \
-            self.create_distance_grid(grid_points)
+            create_distance_grid(grid_points)
 
         # Calculate the distances from the center of the box
-        distances: np.ndarray = self.compute_distance(
+        distances: np.ndarray = compute_distance(
             grid_spacing, grid_xyz, center_xyz)
 
         # Calculate the radial average

@@ -59,4 +59,7 @@ def write_xvg(df_i: pd.DataFrame,
                     index=True,
                     header=None,
                     na_rep='NaN',
-                    float_format='%.3f')
+                    float_format='%.3f',
+                    quoting=3,
+                    escapechar=" ",
+                    )

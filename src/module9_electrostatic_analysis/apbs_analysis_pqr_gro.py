@@ -11,6 +11,7 @@ import typing
 from dataclasses import dataclass
 from dataclasses import field
 from enum import Enum
+import multiprocessing as mp
 
 import pandas as pd
 
@@ -18,7 +19,7 @@ from common import logger
 from common import my_tools
 from common import pqr_to_df
 from common import gro_to_df
-
+from common import cpuconfig
 from common.colors_text import TextColor as bcolors
 
 
@@ -88,10 +89,12 @@ class AnalysisStructure:
                  ) -> None:
         self.config = config
         self.structure_data = self.validate_and_process_files(files, log)
-        self.get_indices()
+        self.get_indices(log)
         self._write_msg(log)
 
-    def get_indices(self) -> None:
+    def get_indices(self,
+                    log: logger.logging.Logger
+                    ) -> None:
         """Get the indices of the lowest and highest grid points in each
         dimension for each residue
         Each box has a diminsion which is defined in the APBS input file
@@ -104,15 +107,32 @@ class AnalysisStructure:
         """
         # find the min and max of each residue
         self.grid_spacing = self.calc_grid_spacing()
-        self.get_min_max_residue()
+        residue_boundary_grid: pd.DataFrame = self.get_min_max_residue(log)
 
-    def get_min_max_residue(self) -> None:
+    def get_min_max_residue(self,
+                            log: logger.logging.Logger
+                            ) -> pd.DataFrame:
         """
         Get the min and max of each residue
         """
-        for fname, data in self.structure_data.items():
-            self.info_msg += f"\tFile: {fname}\n"
-            self.get_min_max_residue_file(data)
+        boundary_data_list: list[pd.DataFrame] = []
+        nr_cores = cpuconfig.ConfigCpuNr(log).cores_nr
+        if (nr_files := len(self.structure_data)) < nr_cores:
+            nr_cores = nr_files
+        with mp.Pool(nr_cores) as pool:
+            results = pool.map(self.worker_get_min_max_residue,
+                               self.structure_data.values())
+        boundary_data_list.extend(results)
+        residue_boundary_grid: pd.DataFrame = pd.concat(boundary_data_list)
+        return residue_boundary_grid
+
+    def worker_get_min_max_residue(self,
+                                   pqr_df: pd.DataFrame,
+                                   ) -> pd.DataFrame:
+        """
+        Get the min and max of each residue in a file
+        """
+        return self.get_min_max_residue_file(pqr_df)
 
     def calc_grid_spacing(self) -> tuple[float, float, float]:
         """

@@ -202,7 +202,8 @@ class RadialAveragePotential:
         In NumPy, the default order for reshaping (C order) is row-major,
         which means the last index changes fastest. This aligns with
         the way the data is ordered (z, y, x)."""
-        return np.array(data).reshape(grid_points) * self.pot_unit_conversion
+        return np.array(data).reshape(grid_points) * \
+            self.configs.pot_unit_conversion
 
     def radial_average(self,
                        data_arr: np.ndarray,
@@ -369,7 +370,7 @@ class RadialAveragePotential:
         plt.figure(figsize=(20, 12))
         matplotlib.rcParams.update({'font.size': 22})
 
-        plt.plot(radii/self.dist_unit_conversion,
+        plt.plot(radii/self.configs.dist_unit_conversion,
                  radial_average,
                  label='Radial Average of Potential',
                  color='grey',
@@ -448,8 +449,9 @@ class RadialAveragePotential:
                              ) -> None:
         """Write the radial average to a file"""
         # Write the radial average to a file
-        convert_to_kj = [i*self.pot_unit_conversion for i in radial_average]
-        data = {'Radius [nm]': radii/self.dist_unit_conversion,
+        convert_to_kj = [i*self.configs.pot_unit_conversion for i in
+                         radial_average]
+        data = {'Radius [nm]': radii/self.configs.dist_unit_conversion,
                 'Average Potential [mV]': convert_to_kj,
                 'Average Potential [kT/e]': radial_average
                 }
@@ -457,7 +459,8 @@ class RadialAveragePotential:
                        f'{self.configs.interface_low_index}')
         extra_msg = \
             [extra_msg_0,
-             f'# The conversion factor to [meV] is {self.pot_unit_conversion}']
+             '# The conversion factor to [meV] is ',
+             f'{self.configs.pot_unit_conversion}']
         df_i = pd.DataFrame(data)
         df_i.set_index(df_i.columns[0], inplace=True)
         my_tools.write_xvg(

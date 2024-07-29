@@ -246,7 +246,7 @@ class AverageAnalysis:
             ax_i.plot(radii, radial_average, 'k-')
             ax_i.plot(radii, fitted_pot, 'r--')
             ax_i.text(0.5, 0.5,
-                      f'$\\lambda_d$={popt[1]:.2f} Å',
+                      f'$\\lambda_d$={popt[0]:.2f} Å',
                       transform=ax_i.transAxes,
                       )
             ax_i.set_title((f'z_index={grid}, '
@@ -572,13 +572,42 @@ class FitPotential:
                  ) -> None:
         self.config = config
         fitted_func: typing.Callable[..., np.ndarray]
+        min_abs_pot: tuple[np.ndarray, np.float64, np.float64] = \
+            self.transform_radial_average(radial_average)
         fitted_func, self.popt = \
-            self.fit_potential(radii, radial_average, r_np)
-        self.fitted_pot = fitted_func(radii, *self.popt)
+            self.fit_potential(radii, min_abs_pot[0], r_np)
+        fitted_pot: np.ndarray = \
+            fitted_func(radii, *self.popt) * radial_average[0]
+        self.fitted_pot = \
+            self.reverse_transform_radial_average(min_abs_pot, fitted_pot)
+
+    def transform_radial_average(self,
+                                 radial_average: np.ndarray
+                                 ) -> tuple[np.ndarray,
+                                            np.float64,
+                                            np.float64]:
+        """Modify the radial average"""
+        pot_min: np.float64 = np.min(radial_average)
+
+        shifted_pot: np.ndarray = radial_average - pot_min
+        pot_zero: np.float64 = shifted_pot[0]
+        modified_pot = shifted_pot / pot_zero
+        return modified_pot, pot_min, pot_zero
+
+    def reverse_transform_radial_average(self,
+                                         min_abs_pot: tuple[np.ndarray,
+                                                            np.float64,
+                                                            np.float64],
+                                         fitted_pot: np.ndarray
+                                         ) -> None:
+        """Reverse the transformation"""
+        fitted_pot *= min_abs_pot[2]
+        fitted_pot += min_abs_pot[1]
+        return fitted_pot
 
     def fit_potential(self,
                       radii: np.ndarray,
-                      radial_average: np.ndarray,
+                      shifted_pot: np.ndarray,
                       r_np: float
                       ) -> tuple[typing.Callable[..., np.ndarray], np.ndarray]:
         """Fit the potential to the planar surface approximation"""
@@ -591,13 +620,13 @@ class FitPotential:
         fit_fun: typing.Callable[..., np.ndarray] = self.get_fit_function()
 
         initial_guess: list[float] = self.get_initial_guess(
-            radial_average[0], self.config.debye_intial_guess, r_np)
+            shifted_pot[0], self.config.debye_intial_guess, r_np)
 
         popt, *_ = curve_fit(f=fit_fun,
                              xdata=radii,
-                             ydata=radial_average,
+                             ydata=shifted_pot,
                              p0=initial_guess,
-                             maxfev=10000)
+                             maxfev=1000)
         return fit_fun, popt
 
     def get_fit_function(self) -> typing.Callable[..., np.ndarray]:
@@ -617,7 +646,7 @@ class FitPotential:
         """Get the initial guess for the Debye length"""
         fit_fun_type = self.validate_fit_function()
         return {
-            'exponential_decay': [phi_0, lambda_d],
+            'exponential_decay': [lambda_d],
             'linear_sphere': [phi_0, lambda_d, r_np],
             'non_linear_sphere': [phi_0, lambda_d, r_np],
         }[fit_fun_type]
@@ -634,11 +663,10 @@ class FitPotential:
 
     @staticmethod
     def exp_decay(radius: np.ndarray,
-                  psi_0: float,
                   lambda_d: float,
                   ) -> np.ndarray:
         """Exponential decay function"""
-        return psi_0 * np.exp(-radius / lambda_d)
+        return np.exp(-radius / lambda_d)
 
     @staticmethod
     def linear_sphere(radius: np.ndarray,

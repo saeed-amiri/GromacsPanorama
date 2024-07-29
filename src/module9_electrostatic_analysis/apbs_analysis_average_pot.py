@@ -29,8 +29,12 @@ from dataclasses import dataclass, field
 import numpy as np
 from scipy.optimize import curve_fit
 
-import matplotlib.pyplot as plt
+from sklearn.metrics import r2_score
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
+
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 from common import logger
 from common.colors_text import TextColor as bcolors
@@ -563,6 +567,7 @@ class FitPotential:
     config: AllConfig
     fitted_pot: np.ndarray
     popt: np.ndarray
+    evaluate_fit: tuple[float, float, float]
 
     def __init__(self,
                  radii: np.ndarray,
@@ -580,6 +585,8 @@ class FitPotential:
             fitted_func(radii, *self.popt) * radial_average[0]
         self.fitted_pot = \
             self.reverse_transform_radial_average(min_abs_pot, fitted_pot)
+        self.evaluate_fit = self.analyze_fit_quality(radial_average,
+                                                     self.fitted_pot)
 
     def transform_radial_average(self,
                                  radial_average: np.ndarray
@@ -711,6 +718,37 @@ class FitPotential:
                 f'\tThe valid options are: \n'
                 f'\t{" ,".join(valid_functions)}\n')
         return fit_fun_type
+
+    def analyze_fit_quality(self,
+                            y_true: np.ndarray,
+                            y_fitted: np.ndarray
+                            ) -> tuple[float, float, float]:
+        """Compute the fit metrics
+        r2_score: Coefficient of Determination:
+            Measures how well the observed outcomes are replicated by
+            the model.
+            (R^2 = 1 - \\frac{SS_{res}}{SS_{tot}}), where (SS_{res}) is
+            the sum of squares of residuals and (SS_{tot}) is the total
+            sum of squares.
+            An (R^2) value close to 1 indicates a good fit.
+
+        Root Mean Square Error (RMSE):
+            Measures the square root of the average of the squares of
+            the errors.
+            (RMSE = \\sqrt{\\frac{1}{n}\\sum_{i=1}^{n}(observed_i -
+                                                    predicted_i)^2}).
+            Lower RMSE values indicate a better fit.
+
+        Mean Absolute Error (MAE):
+            Measures the average magnitude of the errors in a set of
+            predictions, without considering their direction.
+            (MAE = \\frac{1}{n}\\sum_{i=1}^{n}|observed_i - predicted_i|).
+            Like RMSE, lower MAE values indicate a better fit.
+        """
+        r2_scored: float = r2_score(y_true, y_fitted)
+        mean_squre_err: float = mean_squared_error(y_true, y_fitted)
+        mean_absolute_err: float = mean_absolute_error(y_true, y_fitted)
+        return r2_scored, mean_squre_err, mean_absolute_err
 
 
 class ProcessDxFile:

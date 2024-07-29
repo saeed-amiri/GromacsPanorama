@@ -121,16 +121,37 @@ class AnalysisStructure:
         """
         Get the min and max of each residue, optimized for memory usage.
         """
-        boundary_data_list: list[pd.DataFrame] = []
         nr_cores = cpuconfig.ConfigCpuNr(log).cores_nr
-        if (nr_files := len(self.structure_data)) < nr_cores:
+        structure_data_values = list(self.structure_data.values())
+        nr_files = len(structure_data_values)
+
+        if nr_files < nr_cores:
             nr_cores = nr_files
-        with mp.Pool(nr_cores) as pool:
-            results = pool.map(self.worker_get_min_max_residue,
-                               self.structure_data.values())
-        boundary_data_list.extend(results)
-        residue_boundary_grid: pd.DataFrame = pd.concat(boundary_data_list,
-                                                        ignore_index=True)
+
+        # Process in chunks if necessary
+        # Ensure at least one file per chunk
+        chunk_size = max(nr_files // nr_cores, 1)
+
+        # Placeholder for aggregated results
+        aggregated_results = []
+
+        for i in range(0, nr_files, chunk_size):
+            chunk = structure_data_values[i:i + chunk_size]
+
+            with mp.Pool(nr_cores) as pool:
+                results = pool.map(self.worker_get_min_max_residue, chunk)
+
+            # Optionally, directly append/concatenate to a DataFrame
+            # to avoid large intermediate lists
+            aggregated_results.extend(results)
+
+            # Explicitly call garbage collection
+            gc.collect()
+
+        # Concatenate all results into a single DataFrame
+        residue_boundary_grid = pd.concat(aggregated_results,
+                                          ignore_index=True)
+        del aggregated_results
         return residue_boundary_grid
 
     def worker_get_min_max_residue(self,

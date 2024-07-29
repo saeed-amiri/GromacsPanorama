@@ -214,7 +214,8 @@ def mk_canvas_multi(size_type: str,
                     n_cols: int = 1,
                     aspect_ratio: float = 1.0,
                     dpi: int = DPI_HALFTONE
-                    ) -> tuple[plt.Figure, plt.Axes]:
+                    ) -> tuple[plt.Figure, plt.Axes |
+                               np.ndarray[typing.Any, typing.Any]]:
     """Create a canvas for a multi-panel figure"""
     fig_i, axs_i = \
         plt.subplots(n_rows,
@@ -226,7 +227,7 @@ def mk_canvas_multi(size_type: str,
     return fig_i, axs_i
 
 
-def remove_mirror_axes(ax: plt.axes
+def remove_mirror_axes(ax: plt.Axes
                        ) -> None:
     """Remove the top and right spines and ticks from a matplotlib Axes"""
     ax.spines['right'].set_visible(False)

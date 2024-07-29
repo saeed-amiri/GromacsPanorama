@@ -119,7 +119,7 @@ class AnalysisStructure:
                                    log: logger.logging.Logger
                                    ) -> pd.DataFrame:
         """
-        Get the min and max of each residue
+        Get the min and max of each residue, optimized for memory usage.
         """
         boundary_data_list: list[pd.DataFrame] = []
         nr_cores = cpuconfig.ConfigCpuNr(log).cores_nr
@@ -173,6 +173,7 @@ class AnalysisStructure:
                     self._get_grid_indices(min_x_residue, max_x_residue)
                 residue_boundary_df[residue_name.value] = \
                     [(grid_min, grid_max)]
+        del data
         return residue_boundary_df
 
     def _get_grid_indices(self,
@@ -224,6 +225,7 @@ class AnalysisStructure:
 
         min_max_residue = pd.concat([column_min, column_max], axis=1)
         self.info_msg += f"\tColumn-wise min and max: {min_max_residue}\n"
+        del residue_boundary_grid
         return min_max_residue
 
     def write_xvg_file(self,
@@ -243,6 +245,7 @@ class AnalysisStructure:
                               xaxis_label='Residue',
                               yaxis_label='Grid index',
                               title='Residue boundary grid')
+        del residue_boundary_grid
 
     @staticmethod
     def df_to_string(df_i
@@ -252,6 +255,7 @@ class AnalysisStructure:
         for idx, row in df_i.iterrows():
             line = f"#{idx}  {row[0]}  {row[1]}"
             lines.append(line)
+        del df_i
         return "\n".join(lines)
 
     def _write_msg(self,
@@ -320,7 +324,7 @@ class ReadInputStructureFile:
                               log: logger.logging.Logger
                               ) -> str:
         """check the files' extension, they all should be same gro or
-        pdb"""
+        pqr"""
         file_extension: list[str] = \
             [os.path.splitext(item)[1][1:] for item in strucure_files]
         if (l_list := len(set_ext := set(file_extension))) > 1:

@@ -59,7 +59,10 @@ for combination art; 1000 DPI for line art.
 
 """
 
+import typing
+import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 
 # Constants for Elsevier's guidelines
 # Fig sizes in points
@@ -283,3 +286,48 @@ def set_custom_line_prop(
                       linestyle=[linestyle],
                       markersize=[markersize],
                       linewidth=[linewidth])
+
+
+def generate_shades(nr_shade: int,
+                    color_hex: str = '#000000',
+                    min_shade: int = 0,
+                    ) -> list[str]:
+    """
+    Generate shades of a color in hex
+    black: #000000
+    white: #FFFFFF
+    red: #FF0000
+    green: #00FF00
+    blue: #0000FF
+    yellow: #FFFF00
+    cyan: #00FFFF
+    magenta: #FF00FF
+    Dark red: #8B0000
+    Dark green: #006400
+    Dark blue: #00008B
+    Dark orange: #FF8C00
+    Dark cyan: #008B8B
+    Royal blue: #4169E1
+    """
+    # For black, generate shades of gray up to white
+    if color_hex == '#000000':
+        shades = []
+        step = 255 // (nr_shade - 1)  # Ensure the last shade is white
+        for i in range(nr_shade):
+            gray_value = min(i * step, 255)
+            shades.append(mcolors.to_hex([gray_value / 255] * 3))
+    else:
+        # Convert hex color to RGB for other colors
+        rgb = mcolors.hex2color(color_hex)
+        # Convert RGB to 0-255 scale
+        rgb = tuple(int(255 * x) for x in rgb)
+
+        shades = []
+        for i in range(nr_shade):
+            # Calculate shade
+            shade = [
+                max(min(c - (c // nr_shade) * i, 255), min_shade) for c in rgb]
+            # Convert shade back to hex and append to list
+            shades.append(mcolors.to_hex([x / 255 for x in shade]))
+
+    return shades[::-1]

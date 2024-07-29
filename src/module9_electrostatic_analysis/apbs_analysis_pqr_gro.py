@@ -81,7 +81,6 @@ class AnalysisStructure:
     """
     info_msg: str = "Message from AnalysisStructure:\n"
     config: AllConfig
-    structure_data: dict[str, pd.DataFrame]
     grid_spacing: tuple[float, float, float]
 
     def __init__(self,
@@ -90,11 +89,11 @@ class AnalysisStructure:
                  config: AllConfig = AllConfig(),
                  ) -> None:
         self.config = config
-        self.structure_data = self.validate_and_process_files(files, log)
-        self.get_indices(log)
+        self.get_indices(files, log)
         self._write_msg(log)
 
     def get_indices(self,
+                    files: list[str],
                     log: logger.logging.Logger
                     ) -> None:
         """Get the indices of the lowest and highest grid points in each
@@ -110,41 +109,44 @@ class AnalysisStructure:
         # find the min and max of each residue
         self.grid_spacing = self.calc_grid_spacing()
         residue_boundary_grid: pd.DataFrame = \
-            self.calculate_residue_boundary(log)
+            self.calculate_residue_boundary(files, log)
         global_min_max: pd.DataFrame = \
             self.calculate_columnwise_min_max(residue_boundary_grid)
         self.write_xvg_file(residue_boundary_grid, global_min_max, log)
 
     def calculate_residue_boundary(self,
+                                   files: list[str],
                                    log: logger.logging.Logger
                                    ) -> pd.DataFrame:
         """
         Get the min and max of each residue, optimized for memory usage.
         """
-        nr_cores = cpuconfig.ConfigCpuNr(log).cores_nr
-        structure_data_values = list(self.structure_data.values())
-        nr_files = len(structure_data_values)
+        nr_files: int = len(files)
+        core_count: int = cpuconfig.ConfigCpuNr(log).cores_nr
 
-        if nr_files < nr_cores:
-            nr_cores = nr_files
+        nr_cores: int = min(nr_files, core_count)
 
-        # Process in chunks if necessary
-        # Ensure at least one file per chunk
-        chunk_size = max(nr_files // nr_cores, 1)
+        chunk_size: int = nr_cores
 
         # Placeholder for aggregated results
         aggregated_results = []
+        structure_data: dict[str, pd.DataFrame]
 
         for i in range(0, nr_files, chunk_size):
-            chunk = structure_data_values[i:i + chunk_size]
+            chunk_files = files[i:i + chunk_size]
+            structure_data = self.validate_and_process_files(
+                chunk_files, log)
+            structure_data_values = list(structure_data.values())
 
-            with mp.Pool(nr_cores) as pool:
-                results = pool.map(self.worker_get_min_max_residue, chunk)
+            with mp.Pool(processes=nr_cores) as pool:
+                results = pool.map(self.worker_get_min_max_residue,
+                                   structure_data_values)
 
-            # Optionally, directly append/concatenate to a DataFrame
-            # to avoid large intermediate lists
             aggregated_results.extend(results)
 
+            del results
+            del structure_data
+            del structure_data_values
             # Explicitly call garbage collection
             gc.collect()
 

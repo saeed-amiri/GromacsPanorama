@@ -536,7 +536,7 @@ class PlotOverlayLayers:
 
         center_xyz: tuple[int, int, int] = calculate_center(grid_points)
 
-        fig_i: plt.figure
+        fig_i: plt.Figure
         ax_i: plt.Axes
         fig_i, ax_i = elsevier_plot_tools.mk_canvas('single_column')
 

@@ -129,7 +129,7 @@ class AnalysisStructure:
         chunk_size: int = nr_cores
 
         # Placeholder for aggregated results
-        aggregated_results = []
+        aggregated_results: list[pd.DataFrame] = []
         structure_data: dict[str, pd.DataFrame]
 
         for i in range(0, nr_files, chunk_size):

@@ -245,6 +245,7 @@ def save_close_fig(fig: plt.Figure,
                    close_fig: bool = True
                    ) -> None:
     """Save and close the figure"""
+    # pylint: disable=too-many-arguments
     if show_legend:
         if horizontal_legend:
             ncol = len(fig.axes[0].get_legend_handles_labels()[0])
@@ -276,6 +277,7 @@ def set_custom_line_prop(
         linewidth: float = LINE_WIDTH
 ) -> None:
     """Set a custom line style for a matplotlib Axes"""
+    # pylint: disable=too-many-arguments
     ax.set_prop_cycle(color=[color],
                       marker=[marker],
                       linestyle=[linestyle],

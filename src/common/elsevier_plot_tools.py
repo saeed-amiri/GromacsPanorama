@@ -127,21 +127,21 @@ CLEAR_COLOR_GRADIENT = [
     "#2E8B57",  # Sea Green
     "#556B2F",  # Dark Olive Green
     "#FF8C00",  # Dark Orange
+    "#800000",  # Maroon
     "#B22222",  # Firebrick
-    "#800000"   # Maroon
 ]
 
 LINESTYLE_TUPLE = [
-    ('loosely dotted',        (0, (1, 5))),
+    ('loosely dotted',        (0, (1, 3))),
     ('loosely dashed',        (0, (5, 5))),
     ('densely dotted',        (0, (1, 1))),
     ('densely dashed',        (0, (5, 1))),
-    ('long dash with offset', (5, (10, 3))),
-    ('loosely dashdotted',    (0, (3, 10, 1, 10))),
+    ('long dash with offset', (5, (5, 3))),
+    ('loosely dashdotted',    (0, (3, 3, 1, 2))),
     ('dashdotted',            (0, (3, 5, 1, 5))),
     ('densely dashdotted',    (0, (3, 1, 1, 1))),
-    ('dashdotdotted',         (0, (3, 5, 1, 5, 1, 5))),
-    ('loosely dashdotdotted', (0, (3, 10, 1, 10, 1, 10))),
+    ('dashdotdotted',         (0, (3, 3, 1, 3, 1, 3))),
+    ('loosely dashdotdotted', (0, (3, 7, 1, 7, 1, 7))),
     ('dashed',                (0, (5, 5))),
     ('densely dashdotdotted', (0, (3, 1, 1, 1, 1, 1)))]
 

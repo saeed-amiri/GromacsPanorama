@@ -80,10 +80,13 @@ class InputConfig:
 class MultilayerPlotConfig:
     """set the parameters for the multilayer plot"""
     delta_z: int = 0  # increment in z grid, it is index
-    highest_z: int = 90
-    lowest_z: int = 60
-    decrement_z: int = 3
-    drop_z: list[int] = field(default_factory=lambda: [70, 90])
+    highest_z: int = 100
+    lowest_z: int = 90
+    decrement_z: int = 1
+    main_z: int = 90
+    main_z_linestyle: list[tuple[str, tuple[int, typing.Any]]] = field(
+        default_factory=lambda: [('solid', (0, ())),])
+    drop_z: list[int] = field(default_factory=lambda: [])
     x_lims: tuple[float, float] = field(default_factory=lambda: (2.8, 7))
     y_lims: tuple[float, float] = field(default_factory=lambda: (10, 135))
 
@@ -578,11 +581,15 @@ class PlotOverlayLayers:
                 radii_average.radii, radii_average.radial_average
             label: typing.Union[str, None] = self._get_lable(
                 i, z_index, range_z, long_list)
+            if z_index == self.configs.main_z:
+                line_style = self.configs.main_z_linestyle[0][1]
+            else:
+                line_style = line_styles[i][1]
             ax_i.plot(radii/self.configs.dist_unit_conversion,
                       radial_average,
                       lw=1,
                       c=colors[i],
-                      ls=line_styles[i][1],
+                      ls=line_style,
                       label=label,
                       )
             min_z_value.append(min(radial_average))
@@ -632,7 +639,7 @@ class PlotOverlayLayers:
         """get the colors for plotting"""
         colors: list[str] = elsevier_plot_tools.CLEAR_COLOR_GRADIENT
         line_styles: list[tuple[str, tuple[int, typing.Any]]] = \
-            elsevier_plot_tools.LINE_STYLES
+            elsevier_plot_tools.LINESTYLE_TUPLE
         long_list: bool = False
         if len(range_z) > len(colors):
             colors = elsevier_plot_tools.generate_shades(len(range_z))

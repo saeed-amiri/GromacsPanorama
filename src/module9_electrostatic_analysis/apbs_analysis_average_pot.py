@@ -617,7 +617,7 @@ class FitPotential:
                                                             np.float64,
                                                             np.float64],
                                          fitted_pot: np.ndarray
-                                         ) -> None:
+                                         ) -> np.ndarray:
         """Reverse the transformation"""
         fitted_pot *= min_abs_pot[2]
         fitted_pot += min_abs_pot[1]

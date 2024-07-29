@@ -249,7 +249,8 @@ class AverageAnalysis:
                       f'$\\lambda_d$={popt[1]:.2f} Å',
                       transform=ax_i.transAxes,
                       )
-            ax_i.set_title(f'z_index={grid}')
+            ax_i.set_title((f'z_index={grid}, '
+                            f'z={grid*self.dx.GRID_SPACING[2]:.3f}'))
             ax_i.set_xlabel('r (Å)')
             ax_i.set_ylabel('Potential')
 
@@ -382,7 +383,7 @@ class AverageAnalysis:
         closest radius to the intersection radius"""
         cut_indices: np.ndarray = np.zeros(len(interset_radius))
         for i, radius in enumerate(interset_radius):
-            cut_indices[i] = np.argmin(np.abs(radii_list[i] - radius))
+            cut_indices[i] = np.argmin(np.abs(radii_list[i] - radius)) + 5
         return cut_indices
 
     def _find_indices_of_diffuse_layer(self,

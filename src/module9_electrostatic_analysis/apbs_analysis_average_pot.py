@@ -231,14 +231,16 @@ class AverageAnalysis:
             plots_data.append(
                 (radii, radial_average, fit.fitted_pot, fit.popt, grid)
                 )
-        self._interactive_plot(plots_data)
+            fit_metrics: tuple[float, float, float] = fit.evaluate_fit
+        self._interactive_plot(plots_data, fit_metrics)
 
     def _interactive_plot(self,
                           plots_data: list[tuple[np.ndarray,
                                                  np.ndarray,
                                                  np.ndarray,
                                                  np.ndarray,
-                                                 int]]
+                                                 int]],
+                          fit_metrics: tuple[float, float, float]
                           ) -> None:
         """Interactive plot for the fitted potential"""
         mpl.rcParams['font.size'] = 20
@@ -249,10 +251,19 @@ class AverageAnalysis:
             radii, radial_average, fitted_pot, popt, grid = plots_data[idx]
             ax_i.plot(radii, radial_average, 'k-')
             ax_i.plot(radii, fitted_pot, 'r--')
-            ax_i.text(0.5, 0.5,
+            ax_i.text(0.5,
+                      0.5,
                       f'$\\lambda_d$={popt[0]:.2f} Å',
                       transform=ax_i.transAxes,
                       )
+            ax_i.text(0.5,
+                      0.6,
+                      s=(f'$R^2$={fit_metrics[0]:.2f}',
+                         f'MSE={fit_metrics[1]:.2f}',
+                         f'MAE={fit_metrics[2]:.2f}'),
+                      transform=ax_i.transAxes,
+                      )
+
             ax_i.set_title((f'z_index={grid}, '
                             f'z={grid*self.dx.GRID_SPACING[2]:.3f}'))
             ax_i.set_xlabel('r (Å)')

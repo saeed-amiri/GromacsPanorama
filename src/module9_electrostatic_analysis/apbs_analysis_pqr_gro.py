@@ -6,13 +6,14 @@ Should be able to run standalone.
 """
 
 import os
+import gc
 import sys
 import typing
 from dataclasses import dataclass
 from dataclasses import field
 from enum import Enum
-import multiprocessing as mp
 
+import multiprocessing as mp
 import pandas as pd
 
 from common import logger
@@ -112,7 +113,7 @@ class AnalysisStructure:
             self.calculate_residue_boundary(log)
         global_min_max: pd.DataFrame = \
             self.calculate_columnwise_min_max(residue_boundary_grid)
-        self.write_xvg_file(residue_boundary_grid, global_min_max)
+        self.write_xvg_file(residue_boundary_grid, global_min_max, log)
 
     def calculate_residue_boundary(self,
                                    log: logger.logging.Logger

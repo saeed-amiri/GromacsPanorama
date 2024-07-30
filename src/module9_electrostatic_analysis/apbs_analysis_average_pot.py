@@ -21,6 +21,8 @@ Opt. by ChatGpt
 Saeed
 """
 
+# pylint: disable=too-many-lines
+
 import sys
 import typing
 import inspect
@@ -257,6 +259,7 @@ class AverageAnalysis:
         The potetial decay part is fitted to the exponential decay
         \\psi = \\psi_0 * exp(-r/\\lambda_d)
         """
+        # pylint: disable=too-many-locals
         # pylint: disable=too-many-arguments
         if not self.configs.fit_potential:
             return

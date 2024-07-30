@@ -39,6 +39,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from common import logger
+from common import elsevier_plot_tools
 from common.colors_text import TextColor as bcolors
 
 
@@ -138,6 +139,43 @@ class DxAttributeWrapper:
         return self._box_size
 
 
+class PlotParameterFittedPotential:
+    """parameter for plottinge the Debye length and surface potential"""
+    # pylint: disable=missing-function-docstring
+    # pylint: disable=invalid-name
+    # pylint: disable=too-many-arguments
+
+    @property
+    def LAMBDA_D(self) -> dict[str, str | tuple[float, float] | list[float]]:
+        return {'label': r'$\lambda_d$',
+                'ylable': 'Debye length (Å)',
+                'output_file': 'debye_length.jpg',
+                'legend_loc': 'upper left',
+                'y_lim': (14, 24),
+                'y_ticks': [15, 19, 23]}
+
+    @property
+    def PSI_0(self) -> dict[str, str | tuple[float, float] | list[float]]:
+        return {'label': r'$\psi_0$',
+                'ylable': 'potential (mV)',
+                'output_file': 'surface_potential.jpg',
+                'legend_loc': 'upper right',
+                'y_lim': (-10, 130),
+                'y_ticks': [0, 60, 120]}
+
+    @property
+    def X_LABEL(self) -> str:
+        return 'z (Å)'
+
+    @property
+    def MARKSIZE(self) -> float:
+        return 2.0
+
+    @property
+    def LINEWIDTH(self) -> float:
+        return 0.75
+
+
 class AverageAnalysis:
     """
     Reading and analysing the potential along the z-axis
@@ -229,6 +267,8 @@ class AverageAnalysis:
             len(cut_radii)) if cut_indices[i] != 0]
         # Fit the potential to the planar surface approximation
         plots_data = []
+        lambda_d_dict: dict[str, float] = {}
+        psi_zero_dict: dict[str, float] = {}
         for r_np, radii, radial_average, grid, uncut_psi in zip(
            interset_radius,
            cut_radii,
@@ -245,7 +285,13 @@ class AverageAnalysis:
                                fit.popt,
                                fit.evaluate_fit,
                                grid))
-        self._interactive_plot(plots_data)
+            if fit.evaluate_fit[0] > 0.99:
+                lambda_d_dict[grid] = fit.popt[0]
+                psi_zero_dict[grid] = fit.popt[1]
+
+        # self._interactive_plot(plots_data)
+        self.plot_debye_surface_potential(lambda_d_dict, 'lambda_d')
+        self.plot_debye_surface_potential(psi_zero_dict, 'psi_0')
 
     def _interactive_plot(self,
                           plots_data: list[tuple[np.ndarray,
@@ -344,6 +390,50 @@ class AverageAnalysis:
                     label=f'z={sphere_grid_range[i]}')
             plt.legend()
             plt.show()
+
+    def plot_debye_surface_potential(self,
+                                     data: dict[str, float],
+                                     type_data: str
+                                     ) -> None:
+        """Plot the Debye length and surface potential"""
+        figure: tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
+            'single_column')
+        fig_i, ax_i = figure
+
+        plot_config: "PlotParameterFittedPotential" = \
+            PlotParameterFittedPotential()
+
+        if type_data == 'lambda_d':
+            plot_parameters: dict[str, str | tuple[float, float] | list[float]
+                                  ] = plot_config.LAMBDA_D
+        else:
+            plot_parameters = plot_config.PSI_0
+
+        xdata: list[float] = [float(i)*self.dx.GRID_SPACING[2] for i in
+                              data.keys()]
+        ydata: list[float] = list(data.values())
+
+        ax_i.plot(xdata,
+                  ydata,
+                  ls=elsevier_plot_tools.LINE_STYLES[3],
+                  color=elsevier_plot_tools.DARK_RGB_COLOR_GRADIENT[0],
+                  marker=elsevier_plot_tools.MARKER_SHAPES[0],
+                  lw=plot_config.LINEWIDTH,
+                  markersize=plot_config.MARKSIZE,
+                  label=plot_parameters['label'])
+
+        ax_i.set_xlabel(plot_config.X_LABEL)
+        ax_i.set_ylabel(plot_parameters['ylable'])
+        ax_i.set_ylim(plot_parameters['y_lim'])
+        ax_i.set_yticks(plot_parameters['y_ticks'])
+
+        ax_i.grid(True, ls='--', lw=0.5, alpha=0.5, color='grey')
+
+        ax_i.legend()
+
+        elsevier_plot_tools.save_close_fig(fig_i,
+                                           plot_parameters['output_file'],
+                                           loc=plot_parameters['legend_loc'])
 
     def compute_all_layers(self,
                            center_xyz: tuple[int, int, int],

@@ -601,46 +601,27 @@ class FitPotential:
                  radii: np.ndarray,
                  radial_average: np.ndarray,
                  r_np: float,
+                 psi_inf: float,
                  config: AllConfig,
                  ) -> None:
+        # pylint: disable=too-many-arguments
         self.config = config
-        fitted_func: typing.Callable[..., np.ndarray]
-        min_abs_pot: tuple[np.ndarray, np.float64, np.float64] = \
-            self.transform_radial_average(radial_average)
+        self.config.psi_infty_init_guess = psi_inf
+        fitted_func: typing.Callable[..., np.ndarray | float]
+
         interpolate_data: tuple[np.ndarray, np.ndarray] = \
-            self.interpolate_radial_average(radii, min_abs_pot[0])
+            self.interpolate_radial_average(radii, radial_average)
+
         fitted_func, self.popt = \
             self.fit_potential(interpolate_data[0], interpolate_data[1], r_np)
-        fitted_pot: np.ndarray = \
+        self.fitted_pot: np.ndarray | float = \
             fitted_func(radii, *self.popt)
-        self.fitted_pot = \
-            self.reverse_transform_radial_average(min_abs_pot, fitted_pot)
+        surface_pot: np.ndarray | float = \
+            fitted_func(radii[0], *self.popt)
+        self.popt[1] = surface_pot
+
         self.evaluate_fit = self.analyze_fit_quality(radial_average,
                                                      self.fitted_pot)
-
-    def transform_radial_average(self,
-                                 radial_average: np.ndarray
-                                 ) -> tuple[np.ndarray,
-                                            np.float64,
-                                            np.float64]:
-        """Modify the radial average"""
-        pot_min: np.float64 = np.min(radial_average)
-
-        shifted_pot: np.ndarray = radial_average - pot_min
-        pot_zero: np.float64 = shifted_pot[0]
-        modified_pot = shifted_pot / pot_zero
-        return modified_pot, pot_min, pot_zero
-
-    def reverse_transform_radial_average(self,
-                                         min_abs_pot: tuple[np.ndarray,
-                                                            np.float64,
-                                                            np.float64],
-                                         fitted_pot: np.ndarray
-                                         ) -> np.ndarray:
-        """Reverse the transformation"""
-        fitted_pot *= min_abs_pot[2]
-        fitted_pot += min_abs_pot[1]
-        return fitted_pot
 
     def interpolate_radial_average(self,
                                    radii: np.ndarray,

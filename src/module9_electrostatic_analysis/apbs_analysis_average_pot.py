@@ -711,8 +711,8 @@ class FitPotential:
 
     @staticmethod
     def linear_sphere(radius: np.ndarray,
-                      psi_0: float,
                       lambda_d: float,
+                      psi_0: float,
                       r_np: float
                       ) -> np.ndarray:
         """Linear approximation of the potential"""
@@ -720,8 +720,8 @@ class FitPotential:
 
     @staticmethod
     def non_linear_sphere(radius: np.ndarray,
-                          psi_0: float,
                           lambda_d: float,
+                          psi_0: float,
                           r_np: float
                           ) -> np.ndarray:
         """Non-linear approximation of the potential"""

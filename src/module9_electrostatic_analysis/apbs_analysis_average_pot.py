@@ -663,7 +663,7 @@ class FitPotential:
                              xdata=radii,
                              ydata=shifted_pot,
                              p0=initial_guess,
-                             maxfev=1000)
+                             maxfev=5000)
         return fit_fun, popt
 
     def get_fit_function(self) -> typing.Callable[...,

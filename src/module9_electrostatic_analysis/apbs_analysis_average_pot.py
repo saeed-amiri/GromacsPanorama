@@ -31,9 +31,9 @@ import numpy as np
 from scipy.optimize import curve_fit
 from scipy.interpolate import interp1d
 
-from sklearn.metrics import r2_score
-from sklearn.metrics import mean_squared_error
-from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import r2_score  # type: ignore
+from sklearn.metrics import mean_squared_error  # type: ignore
+from sklearn.metrics import mean_absolute_error  # type: ignore
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt

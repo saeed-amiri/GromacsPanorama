@@ -24,10 +24,12 @@ Saeed
 import sys
 import typing
 import inspect
-from dataclasses import dataclass, field
+from dataclasses import field
+from dataclasses import dataclass
 
 import numpy as np
 from scipy.optimize import curve_fit
+from scipy.interpolate import interp1d
 
 from sklearn.metrics import r2_score
 from sklearn.metrics import mean_squared_error
@@ -67,12 +69,15 @@ class AllConfig(ParameterConfig):
     Also possible of compare them:
     fit_comparisons: bool = False or True
     """
+    # pylint: disable=too-many-instance-attributes
     dx_configs: DxFileConfig = field(default_factory=DxFileConfig)
     bulk_averaging: bool = False  # if Bulk averaging else interface averaging
     debug_plot: bool = False
-    fit_potential: bool = False
-    fit_function: str = 'non_linear_sphere'
+    fit_potential: bool = True
+    fit_function: str = 'exponential_decay'
     fit_comparisons: bool = False
+    fit_interpolate_method: str = 'cubic'  # 'linear', 'nearest', 'cubic'
+    fit_interpolate_points: int = 1000
     debye_intial_guess: float = 75.0
 
 
@@ -228,19 +233,21 @@ class AverageAnalysis:
                                                      ):
             fit: "FitPotential" = \
                 self._fit_potential(r_np, radii, radial_average)
-            plots_data.append(
-                (radii, radial_average, fit.fitted_pot, fit.popt, grid)
-                )
-            fit_metrics: tuple[float, float, float] = fit.evaluate_fit
-        self._interactive_plot(plots_data, fit_metrics)
+            plots_data.append((radii,
+                               radial_average,
+                               fit.fitted_pot,
+                               fit.popt,
+                               fit.evaluate_fit,
+                               grid))
+        self._interactive_plot(plots_data)
 
     def _interactive_plot(self,
                           plots_data: list[tuple[np.ndarray,
                                                  np.ndarray,
                                                  np.ndarray,
                                                  np.ndarray,
+                                                 tuple[float, float, float],
                                                  int]],
-                          fit_metrics: tuple[float, float, float]
                           ) -> None:
         """Interactive plot for the fitted potential"""
         mpl.rcParams['font.size'] = 20
@@ -248,7 +255,8 @@ class AverageAnalysis:
 
         def plot_index(idx):
             ax_i.cla()  # Clear the current figure
-            radii, radial_average, fitted_pot, popt, grid = plots_data[idx]
+            radii, radial_average, fitted_pot, popt, fit_metrics, grid = \
+                plots_data[idx]
             ax_i.plot(radii, radial_average, 'k-')
             ax_i.plot(radii, fitted_pot, 'r--')
             ax_i.text(0.5,
@@ -590,10 +598,12 @@ class FitPotential:
         fitted_func: typing.Callable[..., np.ndarray]
         min_abs_pot: tuple[np.ndarray, np.float64, np.float64] = \
             self.transform_radial_average(radial_average)
+        interpolate_data: tuple[np.ndarray, np.ndarray] = \
+            self.interpolate_radial_average(radii, min_abs_pot[0])
         fitted_func, self.popt = \
-            self.fit_potential(radii, min_abs_pot[0], r_np)
+            self.fit_potential(interpolate_data[0], interpolate_data[1], r_np)
         fitted_pot: np.ndarray = \
-            fitted_func(radii, *self.popt) * radial_average[0]
+            fitted_func(radii, *self.popt)
         self.fitted_pot = \
             self.reverse_transform_radial_average(min_abs_pot, fitted_pot)
         self.evaluate_fit = self.analyze_fit_quality(radial_average,
@@ -622,6 +632,20 @@ class FitPotential:
         fitted_pot *= min_abs_pot[2]
         fitted_pot += min_abs_pot[1]
         return fitted_pot
+
+    def interpolate_radial_average(self,
+                                   radii: np.ndarray,
+                                   radial_average: np.ndarray
+                                   ) -> tuple[np.ndarray, np.ndarray]:
+        """Interpolate the radii and radial average"""
+        func = interp1d(radii,
+                        radial_average,
+                        kind=self.config.fit_interpolate_method)
+        radii_new = np.linspace(radii[0],
+                                radii[-1],
+                                self.config.fit_interpolate_points)
+        radial_average_new = func(radii_new)
+        return radii_new, radial_average_new
 
     def fit_potential(self,
                       radii: np.ndarray,

@@ -77,8 +77,9 @@ class AllConfig(ParameterConfig):
     fit_function: str = 'exponential_decay'
     fit_comparisons: bool = False
     fit_interpolate_method: str = 'cubic'  # 'linear', 'nearest', 'cubic'
-    fit_interpolate_points: int = 1000
-    debye_intial_guess: float = 75.0
+    fit_interpolate_points: int = 100
+    debye_intial_guess: float = 12.0
+    psi_infty_init_guess: float = field(init=False)
 
 
 class DxAttributeWrapper:
@@ -203,6 +204,7 @@ class AverageAnalysis:
                                              cut_indices,
                                              interset_radius,
                                              sphere_grid_range,
+                                             radial_average_list
                                              )
 
     def compute_debye_surface_potential(self,
@@ -210,7 +212,8 @@ class AverageAnalysis:
                                         cut_radial_average: list[np.ndarray],
                                         cut_indices: np.ndarray,
                                         interset_radius: np.ndarray,
-                                        sphere_grid_range: np.ndarray
+                                        sphere_grid_range: np.ndarray,
+                                        radial_average_list: list[np.ndarray]
                                         ) -> None:
         """Compute the surface potential and the decay constant
         The potetial decay part is fitted to the exponential decay
@@ -226,13 +229,16 @@ class AverageAnalysis:
             len(cut_radii)) if cut_indices[i] != 0]
         # Fit the potential to the planar surface approximation
         plots_data = []
-        for r_np, radii, radial_average, grid in zip(interset_radius,
-                                                     cut_radii,
-                                                     cut_radial_average,
-                                                     sphere_grid_range,
-                                                     ):
+        for r_np, radii, radial_average, grid, uncut_psi in zip(
+           interset_radius,
+           cut_radii,
+           cut_radial_average,
+           sphere_grid_range,
+           radial_average_list):
+
+            psi_inf: float = np.min(uncut_psi)
             fit: "FitPotential" = \
-                self._fit_potential(r_np, radii, radial_average)
+                self._fit_potential(r_np, radii, radial_average, psi_inf)
             plots_data.append((radii,
                                radial_average,
                                fit.fitted_pot,
@@ -261,7 +267,9 @@ class AverageAnalysis:
             ax_i.plot(radii, fitted_pot, 'r--')
             ax_i.text(0.5,
                       0.5,
-                      f'$\\lambda_d$={popt[0]:.2f} Å',
+                      s=(rf'$\lambda_d$={popt[0]:.2f} A',
+                         rf'$\psi_0$={popt[1]:.2f}$ mV',
+                         rf'$\psi_{{inf}}$={popt[2]:.2f} mV'),
                       transform=ax_i.transAxes,
                       )
             ax_i.text(0.5,
@@ -306,9 +314,10 @@ class AverageAnalysis:
                        r_np: float,
                        radii: np.ndarray,
                        radial_average: np.ndarray,
+                       psi_inf: float
                        ) -> "FitPotential":
         """Fit the potential to the planar surface approximation"""
-        return FitPotential(radii, radial_average, r_np, self.configs)
+        return FitPotential(radii, radial_average, r_np, psi_inf, self.configs)
 
     def _plot_debug(self,
                     cut_radii: list[np.ndarray],
@@ -651,7 +660,8 @@ class FitPotential:
                       radii: np.ndarray,
                       shifted_pot: np.ndarray,
                       r_np: float
-                      ) -> tuple[typing.Callable[..., np.ndarray], np.ndarray]:
+                      ) -> tuple[typing.Callable[..., np.ndarray | float],
+                                 np.ndarray]:
         """Fit the potential to the planar surface approximation"""
         # Define the exponential decay function
 
@@ -659,10 +669,14 @@ class FitPotential:
 
         # Use curve_fit to find the best fitting parameters
         # popt contains the optimal values for psi_0 and lambda_d
-        fit_fun: typing.Callable[..., np.ndarray] = self.get_fit_function()
+        fit_fun: typing.Callable[..., np.ndarray | float] = \
+            self.get_fit_function()
 
         initial_guess: list[float] = self.get_initial_guess(
-            shifted_pot[0], self.config.debye_intial_guess, r_np)
+            shifted_pot[0],
+            self.config.debye_intial_guess,
+            r_np,
+            self.config.psi_infty_init_guess)
 
         popt, *_ = curve_fit(f=fit_fun,
                              xdata=radii,
@@ -671,7 +685,8 @@ class FitPotential:
                              maxfev=1000)
         return fit_fun, popt
 
-    def get_fit_function(self) -> typing.Callable[..., np.ndarray]:
+    def get_fit_function(self) -> typing.Callable[...,
+                                                  np.ndarray | float]:
         """Get the fit function"""
         fit_fun_type: str = self.validate_fit_function()
         return {
@@ -683,18 +698,19 @@ class FitPotential:
     def get_initial_guess(self,
                           phi_0: float,
                           lambda_d: float,
-                          r_np: float
+                          r_np: float,
+                          psi_infty: float
                           ) -> list[float]:
         """Get the initial guess for the Debye length"""
         fit_fun_type = self.validate_fit_function()
         return {
-            'exponential_decay': [lambda_d],
+            'exponential_decay': [phi_0, lambda_d, psi_infty],
             'linear_sphere': [phi_0, lambda_d, r_np],
             'non_linear_sphere': [phi_0, lambda_d, r_np],
         }[fit_fun_type]
 
     @staticmethod
-    def get_function_args(func: typing.Callable[..., np.ndarray]
+    def get_function_args(func: typing.Callable[..., np.ndarray | float]
                           ) -> list[str]:
         """
         Get the list of argument names for a given function, excluding 'self'.
@@ -706,9 +722,11 @@ class FitPotential:
     @staticmethod
     def exp_decay(radius: np.ndarray,
                   lambda_d: float,
-                  ) -> np.ndarray:
+                  phi_0: float,
+                  psi_infty: float
+                  ) -> np.ndarray | float:
         """Exponential decay function"""
-        return np.exp(-radius / lambda_d)
+        return phi_0 * np.exp(-radius / lambda_d) + psi_infty
 
     @staticmethod
     def linear_sphere(radius: np.ndarray,

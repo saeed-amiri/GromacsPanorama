@@ -136,6 +136,11 @@ class PlotConfig(FileConfig):
     isosurface_fig_name: str = 'electrostatic_potential/isosurface.png'
     isosurface_fig: str = f'{isosurface_fig_path}{isosurface_fig_name}'
 
+    def __post_init__(self) -> None:
+        if self.if_experiment:
+            self.phi_r_exprimental_avg = \
+                ExperimetnalConfigs().zeta_average[str(200)].mean()
+
 
 @dataclass
 class SolvingConfig(FileConfig, ParameterConfig):

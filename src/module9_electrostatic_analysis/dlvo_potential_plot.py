@@ -190,7 +190,7 @@ class PlotPotential:
                 return
             for j, (item, df_i) in enumerate(apbs_files.items()):
                 ax_i.plot(df_i.iloc[:, 0],
-                          df_i.iloc[:, 2],
+                          df_i.iloc[:, 1],
                           color=configs.colors[j+1],
                           linestyle=configs.line_styles[j*2],
                           linewidth=elsevier_plot_tools.LINE_WIDTH,
@@ -198,8 +198,8 @@ class PlotPotential:
                 self._get_debye_potential(df_i, item, debye_d)
                 idx_closest = np.abs(df_i.iloc[:, 0] - debye_d).argmin()
                 try:
-                    phi_value = (df_i.iloc[:, 2][idx_closest] +
-                                 df_i.iloc[:, 2][idx_closest+1])/2
+                    phi_value = (df_i.iloc[:, 1][idx_closest] +
+                                 df_i.iloc[:, 1][idx_closest+1])/2
                 except IndexError:
                     phi_value = df_i.iloc[:, 1][idx_closest]
                 except KeyError:

@@ -21,7 +21,6 @@ Opt. by ChatGpt
 Saeed
 """
 
-# pylint: disable=too-many-lines
 
 import sys
 import typing

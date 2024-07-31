@@ -48,7 +48,6 @@ from common.colors_text import TextColor as bcolors
 @dataclass
 class DxFileConfig:
     """set the name of the input files"""
-    average_potential: str = 'average_potential.dx'
     number_of_header_lines: int = 11
     number_of_tail_lines: int = 5
     pot_unit_conversion: float = 25.2  # Conversion factor to mV
@@ -1046,5 +1045,5 @@ class ProcessDxFile:
 
 
 if __name__ == '__main__':
-    AverageAnalysis('average_potential.dx',
+    AverageAnalysis(sys.argv[1],
                     logger.setup_logger('avarge_potential_analysis.log'))

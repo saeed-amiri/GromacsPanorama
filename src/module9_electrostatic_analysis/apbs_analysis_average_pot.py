@@ -149,25 +149,25 @@ class PlotParameterFittedPotential:
 
     @property
     def LAMBDA_D(self) -> dict[str, str | tuple[float, float] | list[float]]:
-        return {'label': r'$\lambda_d$',
-                'ylable': 'Debye length (Å)',
+        return {'label': r'$\lambda_d$ (from surface)',
+                'ylable': 'Debye length [nm]',
                 'output_file': 'debye_length.jpg',
                 'legend_loc': 'upper left',
-                'y_lim': (14, 24),
-                'y_ticks': [15, 19, 23]}
+                'y_lim': (1.4, 2.4),
+                'y_ticks': [1.5, 1.9, 2.3]}
 
     @property
     def PSI_0(self) -> dict[str, str | tuple[float, float] | list[float]]:
         return {'label': r'$\psi_0$',
-                'ylable': 'potential (mV)',
+                'ylable': 'potential [mV]',
                 'output_file': 'surface_potential.jpg',
-                'legend_loc': 'upper right',
+                'legend_loc': 'lower left',
                 'y_lim': (-10, 130),
                 'y_ticks': [0, 60, 120]}
 
     @property
     def X_LABEL(self) -> str:
-        return 'z (Å)'
+        return 'z [nm] (of Box)'
 
     @property
     def MARKSIZE(self) -> float:
@@ -176,6 +176,10 @@ class PlotParameterFittedPotential:
     @property
     def LINEWIDTH(self) -> float:
         return 0.75
+
+    @property
+    def INTERFACE_LOC(self) -> int:
+        return 90
 
 
 class AverageAnalysis:

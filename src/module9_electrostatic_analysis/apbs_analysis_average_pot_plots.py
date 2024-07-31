@@ -3,17 +3,55 @@ plots the ouputs of the APBS analysis (average potential plots)
 
 """
 
-import os
-import typing
-
 import numpy as np
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-from common import logger
 from common import elsevier_plot_tools
-from common.colors_text import TextColor as bcolors
+
+
+class PlotParameterFittedPotential:
+    """parameter for plottinge the Debye length and surface potential"""
+    # pylint: disable=missing-function-docstring
+    # pylint: disable=invalid-name
+    # pylint: disable=too-many-arguments
+
+    @property
+    def LAMBDA_D(self) -> dict[str, str | tuple[float, float] | list[float]]:
+        return {'label': r'$\lambda_d$ (from Sphere`s surface)',
+                'ylable': 'Debye length [nm]',
+                'output_file': 'debye_length.jpg',
+                'legend_loc': 'upper left',
+                'y_lim': (1.4, 2.4),
+                'y_ticks': [1.5, 1.9, 2.3],
+                'x_ticks': [9, 10, 11, 12, 13]}
+
+    @property
+    def PSI_0(self) -> dict[str, str | tuple[float, float] | list[float]]:
+        return {'label': r'$\psi_0$',
+                'ylable': 'potential [mV]',
+                'output_file': 'surface_potential.jpg',
+                'legend_loc': 'lower left',
+                'y_lim': (-10, 130),
+                'y_ticks': [0, 60, 120],
+                'x_ticks': [9, 10, 11, 12, 13]}
+
+    @property
+    def X_LABEL(self) -> str:
+        return 'z [nm] (of Box)'
+
+    @property
+    def MARKSIZE(self) -> float:
+        return 2.0
+
+    @property
+    def LINEWIDTH(self) -> float:
+        return 0.75
+
+    @property
+    def ODA_BOUND(self) -> tuple[int, int]:
+        return (90, 95)
 
 
 def interactive_plot(plots_data: list[tuple[np.ndarray,
@@ -105,9 +143,9 @@ def plot_debug(cut_radii: list[np.ndarray],
 def plot_debye_surface_potential(data: dict[str, float],
                                  type_data: str,
                                  z_grid_spacing: float,
-                                 plot_config
                                  ) -> None:
     """Plot the Debye length and surface potential"""
+    plot_config: PlotParameterFittedPotential = PlotParameterFittedPotential()
     figure: tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
         'single_column')
     fig_i, ax_i = figure

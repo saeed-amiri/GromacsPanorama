@@ -83,6 +83,7 @@ class AllConfig(ParameterConfig):
     fit_interpolate_points: int = 100
     debye_intial_guess: float = 12.0
     psi_infty_init_guess: float = field(init=False)
+    plot_interactive: bool = False
 
 
 class DxAttributeWrapper:
@@ -298,7 +299,9 @@ class AverageAnalysis:
                 lambda_d_dict[grid] = fit.popt[0]
                 psi_zero_dict[grid] = fit.popt[1]
 
-        # self._interactive_plot(plots_data)
+        if self.configs.plot_interactive:
+            self._interactive_plot(plots_data)
+
         self.plot_debye_surface_potential(lambda_d_dict, 'lambda_d')
         self.plot_debye_surface_potential(psi_zero_dict, 'psi_0')
 

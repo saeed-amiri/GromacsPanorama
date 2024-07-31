@@ -100,3 +100,60 @@ def plot_debug(cut_radii: list[np.ndarray],
                 label=f'z={sphere_grid_range[i]}')
         plt.legend()
         plt.show()
+
+
+def plot_debye_surface_potential(data: dict[str, float],
+                                 type_data: str,
+                                 z_grid_spacing: float,
+                                 plot_config
+                                 ) -> None:
+    """Plot the Debye length and surface potential"""
+    figure: tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
+        'single_column')
+    fig_i, ax_i = figure
+
+    xdata: np.ndarray = np.asanyarray(
+        [float(i)*z_grid_spacing[2] for i in data.keys()])
+    ydata: np.ndarray = np.asanyarray(list(data.values()))
+
+    if type_data == 'lambda_d':
+        plot_parameters: dict[str, str | tuple[float, float] | list[float]] = \
+            plot_config.LAMBDA_D
+        ydata /= 10.0  # Convert to nm
+    else:
+        plot_parameters = plot_config.PSI_0
+
+    ax_i.plot(xdata / 10.0,  # Convert to nm
+              ydata,
+              ls=elsevier_plot_tools.LINE_STYLES[3],
+              color=elsevier_plot_tools.DARK_RGB_COLOR_GRADIENT[0],
+              marker=elsevier_plot_tools.MARKER_SHAPES[0],
+              lw=plot_config.LINEWIDTH,
+              markersize=plot_config.MARKSIZE,
+              label=plot_parameters['label'])
+
+    ax_i.set_xlabel(plot_config.X_LABEL)
+    ax_i.set_xticks(plot_parameters['x_ticks'])
+    ax_i.set_ylabel(plot_parameters['ylable'])
+    ax_i.set_ylim(plot_parameters['y_lim'])
+    ax_i.set_yticks(plot_parameters['y_ticks'])
+
+    ax_i.grid(True, ls='--', lw=0.5, alpha=0.5, color='grey')
+
+    ax_i.legend()
+
+    oda_bound: tuple[float, float] = (
+        plot_config.ODA_BOUND[0] * z_grid_spacing[2] / 10.0,
+        plot_config.ODA_BOUND[1] * z_grid_spacing[2] / 10.0)
+    # Shade the area between ODA_BOUND
+    ax_i.fill_betweenx(ax_i.get_ylim(),
+                       oda_bound[0],
+                       oda_bound[1],
+                       color='gray',
+                       edgecolor=None,
+                       alpha=0.5,
+                       label='ODA`s N locations',
+                       )
+    elsevier_plot_tools.save_close_fig(fig_i,
+                                       plot_parameters['output_file'],
+                                       loc=plot_parameters['legend_loc'])

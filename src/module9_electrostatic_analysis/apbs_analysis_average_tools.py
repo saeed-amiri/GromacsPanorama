@@ -82,3 +82,82 @@ def compute_distance(grid_spacing: list[float],
     return np.sqrt((grid_xyz[0] - center_xyz[0])**2 +
                    (grid_xyz[1] - center_xyz[1])**2 +
                    (grid_xyz[2] - center_xyz[2])**2) * grid_spacing[0]
+
+
+def calculate_radial_average(data_arr: np.ndarray,
+                             distances: np.ndarray,
+                             grid_spacing: list[float],
+                             max_radius: float,
+                             grid_z: np.ndarray,
+                             interface_low_index,
+                             interface_high_index,
+                             lower_index_bulk,
+                             bulk_averaging
+                             ) -> tuple[np.ndarray, list[float]]:
+    """Calculate the radial average of the potential"""
+    # pylint: disable=too-many-arguments
+    radii = np.arange(0, max_radius, grid_spacing[0])
+    radial_average = []
+
+    for radius in radii:
+        mask = create_mask(distances,
+                                radius,
+                                grid_spacing,
+                                grid_z,
+                                interface_low_index,
+                                interface_high_index,
+                                lower_index_bulk,
+                                bulk_averaging
+                                )
+        if np.sum(mask) > 0:
+            avg_potential = np.mean(data_arr[mask])
+            radial_average.append(avg_potential)
+        else:
+            radial_average.append(0)
+
+    return radii, radial_average
+
+
+def create_mask(distances: np.ndarray,
+                radius: float,
+                grid_spacing: list[float],
+                grid_z: np.ndarray,
+                interface_low_index: int,
+                interface_high_index: int,
+                low_index_bulk: int,
+                bulk_averaging: bool,
+                ) -> np.ndarray:
+    """Create a mask for the radial average"""
+    # pylint: disable=too-many-arguments
+    shell_thickness: float = grid_spacing[0]
+    shell_condition: np.ndarray = (distances >= radius) & \
+                                    (distances < radius + shell_thickness)
+
+    if bulk_averaging:
+        z_condition: np.ndarray = create_mask_bulk(
+            grid_z, interface_low_index, low_index_bulk)
+    else:
+        z_condition = create_mask_interface(
+            grid_z, interface_low_index, interface_high_index)
+
+    return shell_condition & z_condition
+
+
+def create_mask_bulk(grid_z: np.ndarray,
+                        interface_low_index: int,
+                        low_index_bulk: int,
+                        ) -> np.ndarray:
+    """Create a mask for the radial average from the bulk"""
+    z_condition: np.ndarray = (grid_z <= interface_low_index) & \
+                                (grid_z >= low_index_bulk)
+    return z_condition
+
+
+def create_mask_interface(grid_z: np.ndarray,
+                            interface_low_index: int,
+                            interface_high_index: int
+                            ) -> np.ndarray:
+    """Create a mask for the radial average from the interface"""
+    z_condition: np.ndarray = (grid_z >= interface_low_index) & \
+                                (grid_z <= interface_high_index)
+    return z_condition

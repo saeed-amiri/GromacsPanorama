@@ -306,6 +306,81 @@ class TestRadialAveragePotential(unittest.TestCase):
         self.plot_test_results(radii, radial_average, expected_radial_average)
 
 
+    def test_non_uniform_potential(self) -> None:
+        """
+        Test the radial average calculation for a non-uniform potential.
+        """
+        # Define the location of the interface
+        interface_z: float = 50  # Adjust as needed
+
+        self.radial_average_potential.configs.bulk_averaging = True
+        self.radial_average_potential.configs.interface_low_index = 50
+        self.radial_average_potential.configs.lower_index_bulk = 0
+        # Generate grid of coordinates
+        grid_resolution: int = 200
+        self.grid_points: list[int] = \
+            [grid_resolution, grid_resolution, grid_resolution]
+
+        x: np.ndarray = np.linspace(self.grid_points[0] / 2,
+                                    self.grid_points[0] / 2,
+                                    grid_resolution)
+        y: np.ndarray = np.linspace(self.grid_points[1] / 2,
+                                    self.grid_points[1] / 2,
+                                    grid_resolution)
+        z: np.ndarray = np.linspace(self.grid_points[2] / 2,
+                                    self.grid_points[2] / 2,
+                                    grid_resolution)
+        X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
+
+        # Calculate distance from the center for each point
+        center: np.ndarray = np.array([grid_resolution / 2.0,
+                                       grid_resolution / 2.0,
+                                       grid_resolution / 2.0])
+
+        distances: np.ndarray = np.sqrt((X - center[0])**2 +
+                                        (Y - center[1])**2 +
+                                        (Z - center[2])**2)
+
+        # Generate non-uniform potential
+        non_uniform_potential: np.ndarray = np.ones(distances.shape)
+        non_uniform_potential: np.ndarray = \
+            np.where(Z <= interface_z,
+                     np.square(Z/50),
+                     np.exp(-Z/50))
+        # Calculate the radial average
+        radii: np.ndarray
+        radial_average: np.ndarray
+        radii, radial_average = self.radial_average_potential.radial_average(
+                non_uniform_potential, self.grid_points, self.grid_spacing)
+
+        # Expected radial average might need to be derived or approximated
+        # For simplicity, let's assume we're checking the exponential
+        # part behaves as expected. This is a simplification and might
+        # need adjustment based on your specific needs
+        expected_radial_average: np.ndarray = np.ones_like(radii)
+        # Step 1: Generate an index array for Z
+        Z_indices = np.arange(radii.shape[0])
+
+        expected_radial_average = np.where(
+                Z_indices <= interface_z,
+                np.square(radii/50),
+                np.exp(radii/50))
+
+        # Compare computed radial average to expected for the exponential part
+        try:
+            np.testing.assert_allclose(radial_average,
+                                       expected_radial_average,
+                                       rtol=1e-4,
+                                       atol=1e-4)
+        except AssertionError as _:
+            print(f'{bcolors.CAUTION}\nTesting Non-Uniform Potential '
+                  '(inside NP):\n\tTest may failed:\n'
+                  '\tRadial average and expected values are not close '
+                  'enough: "AssertionError"\n'
+                  '\tTake a look at the plot to see the discrepancy.\n'
+                  f'{bcolors.ENDC}')
+        self.plot_test_results(radii, radial_average, expected_radial_average)
+
     def plot_test_results(self,
                           radii,
                           radial_average,

@@ -410,17 +410,18 @@ class AverageAnalysis:
         plot_config: "PlotParameterFittedPotential" = \
             PlotParameterFittedPotential()
 
+        xdata: np.ndarray = np.asanyarray(
+            [float(i)*self.dx.GRID_SPACING[2] for i in data.keys()])
+        ydata: np.ndarray = np.asanyarray(list(data.values()))
+
         if type_data == 'lambda_d':
             plot_parameters: dict[str, str | tuple[float, float] | list[float]
                                   ] = plot_config.LAMBDA_D
+            ydata /= 10.0  # Convert to nm
         else:
             plot_parameters = plot_config.PSI_0
 
-        xdata: list[float] = [float(i)*self.dx.GRID_SPACING[2] for i in
-                              data.keys()]
-        ydata: list[float] = list(data.values())
-
-        ax_i.plot(xdata,
+        ax_i.plot(xdata / 10.0,  # Convert to nm
                   ydata,
                   ls=elsevier_plot_tools.LINE_STYLES[3],
                   color=elsevier_plot_tools.DARK_RGB_COLOR_GRADIENT[0],

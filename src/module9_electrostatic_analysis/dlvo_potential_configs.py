@@ -157,7 +157,7 @@ class SolvingConfig(FileConfig, ParameterConfig):
         salt: use the slac concentration
         all: compute it from all charge groups in the system
     phi_euation_aprx: (Poission-Boltzmann approximation eqution for phi)
-        simple: simple linearized Poission-Boltzmann equation
+        Grahame: simple linearized Poission-Boltzmann equation
         Loeb: Loeb equation
         Ohshima: Ohshima equation
     solver:
@@ -171,7 +171,7 @@ class SolvingConfig(FileConfig, ParameterConfig):
 
     ionic_strength: str = 'salt'
 
-    phi_equation_aprx: str = 'Ohshima'
+    phi_equation_aprx: str = 'loeb'
 
     solver: str = '_fsolve'
 
@@ -189,13 +189,13 @@ class PhiZeroSigmaConfig:
     exp_salt_concentration: list[float] = field(default_factory=lambda: [
         0.0048, 0.01, 0.1, 0.5, 1.0])
     exp_np_radii: list[float] = \
-        field(default_factory=lambda: [30.0, 40.0, 50.0])
+        field(default_factory=lambda: [30, 50, 100, 150, 200])
     exp_temperature: float = 298.15
 
     nr_density_points: float = 1000
     plot_bare_equation: bool = True
 
-    y_lims: tuple[float, float] = field(default_factory=lambda: (1, 1.6))
+    y_lims: tuple[float, float] = field(default_factory=lambda: (-6, 152))
     x_lims: tuple[float, float] = field(default_factory=lambda: (-0.001, 0.02))
 
 
@@ -217,6 +217,8 @@ class ComparisonConfigs:
         '3.6': 'radial_average_potential_nonlinear_3_6.xvg',
         })
 
+    plot_brocken_graph: bool = False
+
 
 @dataclass
 class ExperimetnalConfigs:
@@ -237,7 +239,7 @@ class ExperimetnalConfigs:
     zeta_average: dict[str, np.ndarray] = field(default_factory=lambda: {
         '200': np.asarray([36.0, 39.3, 39.5])})
 
-    density_computatin_style: str = 'loeb'
+    density_computatin_style: str = 'grahame'
 
 
 @dataclass

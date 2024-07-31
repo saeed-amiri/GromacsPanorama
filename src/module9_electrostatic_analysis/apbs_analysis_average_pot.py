@@ -339,13 +339,13 @@ class AverageAnalysis:
         """process the layer
         The potential from the surface until the end of the diffuse layer
         """
-        max_radius: float = self.calculate_max_radius(
+        max_radius: float = pot_tools.calculate_max_radius(
             center_xyz, self.dx.GRID_SPACING)
         # Create the distance grid
         grid_xyz: tuple[np.ndarray, np.ndarray, np.ndarray] = \
-            self.create_distance_grid(self.dx.GRID_POINTS)
+            pot_tools.create_distance_grid(self.dx.GRID_POINTS)
         # Calculate the distances from the center of the box
-        distances: np.ndarray = self.compute_distance(
+        distances: np.ndarray = pot_tools.compute_distance(
                 self.dx.GRID_SPACING, grid_xyz, center_xyz)
         radii, radial_average = self.calculate_radial_average(
                 self.dx.DATA_ARR,
@@ -443,35 +443,6 @@ class AverageAnalysis:
         center_y: int = grid_points[1] // 2
         center_z: int = grid_points[2] // 2
         return center_x, center_y, center_z
-
-    @staticmethod
-    def calculate_max_radius(center_xyz: tuple[float, float, float],
-                             grid_spacing: list[float]
-                             ) -> float:
-        """Calculate the maximum radius for the radial average"""
-        return min(center_xyz[:2]) * min(grid_spacing)
-
-    @staticmethod
-    def create_distance_grid(grid_points: list[int],
-                             ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Create the distance grid"""
-        x_space = np.linspace(0, grid_points[0] - 1, grid_points[0])
-        y_space = np.linspace(0, grid_points[1] - 1, grid_points[1])
-        z_space = np.linspace(0, grid_points[2] - 1, grid_points[2])
-
-        grid_x, grid_y, grid_z = \
-            np.meshgrid(x_space, y_space, z_space, indexing='ij')
-        return grid_x, grid_y, grid_z
-
-    @staticmethod
-    def compute_distance(grid_spacing: list[float],
-                         grid_xyz: tuple[np.ndarray, np.ndarray, np.ndarray],
-                         center_xyz: tuple[float, float, float],
-                         ) -> np.ndarray:
-        """Calculate the distances from the center of the box"""
-        return np.sqrt((grid_xyz[0] - center_xyz[0])**2 +
-                       (grid_xyz[1] - center_xyz[1])**2 +
-                       (grid_xyz[2] - center_xyz[2])**2) * grid_spacing[0]
 
     def find_grid_inidices_covers_shpere(self,
                                          center_xyz: tuple[int, int, int],

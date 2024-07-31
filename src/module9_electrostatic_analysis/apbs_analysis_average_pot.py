@@ -1010,9 +1010,9 @@ class ProcessDxFile:
         z_size: float = grid_points[2] * grid_spacing[2] - origin[2]
         self.info_msg += (
             f'\tThe box size is:\n'
-            f'\t{x_size = :.5f} [nm]\n'
-            f'\t{y_size = :.5f} [nm]\n'
-            f'\t{z_size = :.5f} [nm]\n')
+            f'\t{x_size/10.0 = :.5f} [nm]\n'
+            f'\t{y_size/10.0 = :.5f} [nm]\n'
+            f'\t{z_size/10.0 = :.5f} [nm]\n')
         self.box_size: list[float] = [x_size, y_size, z_size]
 
     @staticmethod

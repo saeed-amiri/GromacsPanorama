@@ -76,3 +76,27 @@ def interactive_plot(plots_data: list[tuple[np.ndarray,
 
     plot_index(0)
     plt.show()
+
+
+def plot_debug(cut_radii: list[np.ndarray],
+               cut_radial_average: list[np.ndarray],
+               radii_list: list[np.ndarray],
+               radial_average_list: list[np.ndarray],
+               sphere_grid_range: np.ndarray,
+               ) -> None:
+    """Plot for debugging"""
+    # pylint: disable=too-many-arguments
+    for average, ind in zip(cut_radial_average, sphere_grid_range):
+        average -= average[0]
+        average += ind
+    mpl.rcParams['font.size'] = 20
+
+    for i, radial_average in enumerate(cut_radial_average):
+        _, ax = plt.subplots(figsize=(30, 16))
+        ax.plot(radii_list[i], radial_average_list[i], 'r:')
+        ax.plot(cut_radii[i],
+                radial_average,
+                'k-',
+                label=f'z={sphere_grid_range[i]}')
+        plt.legend()
+        plt.show()

@@ -439,6 +439,14 @@ class AverageAnalysis:
 
         ax_i.legend()
 
+        interface_loc: float = plot_config.INTERFACE_LOC * \
+            self.dx.GRID_SPACING[2] / 10.0  # Convert to nm
+        ax_i.axvline(interface_loc,
+                     color='k',
+                     linestyle='--',
+                     label='Interface location',
+                     zorder=0)
+
         elsevier_plot_tools.save_close_fig(fig_i,
                                            plot_parameters['output_file'],
                                            loc=plot_parameters['legend_loc'])

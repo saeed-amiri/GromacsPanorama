@@ -25,17 +25,10 @@ Saeed
 
 import sys
 import typing
-import inspect
 from dataclasses import field
 from dataclasses import dataclass
 
 import numpy as np
-from scipy.optimize import curve_fit
-from scipy.interpolate import interp1d
-
-from sklearn.metrics import r2_score  # type: ignore
-from sklearn.metrics import mean_squared_error  # type: ignore
-from sklearn.metrics import mean_absolute_error  # type: ignore
 
 import module9_electrostatic_analysis.apbs_analysis_average_pot_plots as \
     pot_plots

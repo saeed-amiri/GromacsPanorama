@@ -30,6 +30,10 @@ import numpy as np
 
 import module9_electrostatic_analysis.apbs_analysis_average_pot_plots as \
     pot_plots
+
+import module9_electrostatic_analysis.apbs_analysis_average_tools as \
+    pot_tools
+
 from module9_electrostatic_analysis.apbs_analysis_average_pot_fits import \
     FitPotential
 from module9_electrostatic_analysis.apbs_analysis_average_pot_read_dx import \
@@ -313,12 +317,11 @@ class AverageAnalysis:
         radius: float = self.configs.computation_radius
         center_z: int = center_xyz[2]
         interset_radius: np.ndarray = \
-            self._calculate_grid_sphere_intersect_radius(radius,
-                                                         center_z,
-                                                         sphere_grid_range)
+            pot_tools.calculate_grid_sphere_intersect_radius(
+                radius, center_z, sphere_grid_range, self.dx.GRID_SPACING[2])
         cut_indices_i: np.ndarray = \
-            self._find_inidices_of_surface(interset_radius, radii_list)
-        cut_indices_f: np.ndarray = self._find_indices_of_diffuse_layer(
+            pot_tools.find_inidices_of_surface(interset_radius, radii_list)
+        cut_indices_f: np.ndarray = pot_tools.find_indices_of_diffuse_layer(
             radii_list, self.configs.diffuse_layer_threshold)
         cut_radial_average: list[np.ndarray] = []
         cut_radii: list[np.ndarray] = []
@@ -329,42 +332,6 @@ class AverageAnalysis:
             cut_radial_average.append(radial_average[cut_i:cut_f])
             cut_radii.append(radii[cut_i:cut_f])
         return cut_radii, cut_radial_average, cut_indices_i, interset_radius
-
-    def _calculate_grid_sphere_intersect_radius(self,
-                                                radius: float,
-                                                center_z: int,
-                                                sphere_grid_range: np.ndarray
-                                                ) -> np.ndarray:
-        """Get radius of the intersection between the sphere and the
-        grid plane"""
-        radius_index: np.ndarray = np.zeros(len(sphere_grid_range))
-        for i, z_index in enumerate(sphere_grid_range):
-            height: float = \
-                np.abs(center_z - z_index) * self.dx.GRID_SPACING[2]
-            if height <= radius:
-                radius_index[i] = np.sqrt(radius**2 - height**2)
-        return radius_index
-
-    def _find_inidices_of_surface(self,
-                                  interset_radius: np.ndarray,
-                                  radii_list: list[np.ndarray]
-                                  ) -> np.ndarray:
-        """Find the indices of the surface by finding the index of the
-        closest radius to the intersection radius"""
-        cut_indices: np.ndarray = np.zeros(len(interset_radius))
-        for i, radius in enumerate(interset_radius):
-            cut_indices[i] = np.argmin(np.abs(radii_list[i] - radius)) + 5
-        return cut_indices
-
-    def _find_indices_of_diffuse_layer(self,
-                                       radii_list: list[np.ndarray],
-                                       threshold: float) -> np.ndarray:
-        """Find the indices of the diffuse layer by finding the index
-        of the radial average which is less than the threshold"""
-        cut_indices: np.ndarray = np.ones(len(radii_list)) * -1
-        for i, radii in enumerate(radii_list):
-            cut_indices[i] = np.argmin(radii - threshold <= 0)
-        return cut_indices
 
     def process_layer(self,
                       center_xyz: tuple[int, int, int]

@@ -142,49 +142,6 @@ class DxAttributeWrapper:
         return self._box_size
 
 
-class PlotParameterFittedPotential:
-    """parameter for plottinge the Debye length and surface potential"""
-    # pylint: disable=missing-function-docstring
-    # pylint: disable=invalid-name
-    # pylint: disable=too-many-arguments
-
-    @property
-    def LAMBDA_D(self) -> dict[str, str | tuple[float, float] | list[float]]:
-        return {'label': r'$\lambda_d$ (from Sphere`s surface)',
-                'ylable': 'Debye length [nm]',
-                'output_file': 'debye_length.jpg',
-                'legend_loc': 'upper left',
-                'y_lim': (1.4, 2.4),
-                'y_ticks': [1.5, 1.9, 2.3],
-                'x_ticks': [9, 10, 11, 12, 13]}
-
-    @property
-    def PSI_0(self) -> dict[str, str | tuple[float, float] | list[float]]:
-        return {'label': r'$\psi_0$',
-                'ylable': 'potential [mV]',
-                'output_file': 'surface_potential.jpg',
-                'legend_loc': 'lower left',
-                'y_lim': (-10, 130),
-                'y_ticks': [0, 60, 120],
-                'x_ticks': [9, 10, 11, 12, 13]}
-
-    @property
-    def X_LABEL(self) -> str:
-        return 'z [nm] (of Box)'
-
-    @property
-    def MARKSIZE(self) -> float:
-        return 2.0
-
-    @property
-    def LINEWIDTH(self) -> float:
-        return 0.75
-
-    @property
-    def ODA_BOUND(self) -> tuple[int, int]:
-        return (90, 95)
-
-
 class AverageAnalysis:
     """
     Reading and analysing the potential along the z-axis
@@ -347,12 +304,9 @@ class AverageAnalysis:
                                      type_data: str
                                      ) -> None:
         """Plot the Debye length and surface potential"""
-        plot_config: PlotParameterFittedPotential = \
-            PlotParameterFittedPotential()
         pot_plots.plot_debye_surface_potential(data,
                                                type_data,
-                                               self.dx.GRID_SPACING,
-                                               plot_config)
+                                               self.dx.GRID_SPACING)
 
     def compute_all_layers(self,
                            center_xyz: tuple[int, int, int],

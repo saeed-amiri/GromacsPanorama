@@ -54,21 +54,12 @@ class ParameterConfig:
 @dataclass
 class AllConfig(ParameterConfig):
     """set all the configs and parameters
-    fit_function: the function used to fit the potential:
-        exponential_decay or linear_sphere or non_linear_sphere
     Also possible of compare them:
-    fit_comparisons: bool = False or True
     """
     # pylint: disable=too-many-instance-attributes
     bulk_averaging: bool = False  # if Bulk averaging else interface averaging
     debug_plot: bool = False
     fit_potential: bool = True
-    fit_function: str = 'exponential_decay'
-    fit_comparisons: bool = False
-    fit_interpolate_method: str = 'cubic'  # 'linear', 'nearest', 'cubic'
-    fit_interpolate_points: int = 100
-    debye_intial_guess: float = 12.0
-    psi_infty_init_guess: float = field(init=False)
     plot_interactive: bool = False
 
 
@@ -266,7 +257,7 @@ class AverageAnalysis:
                        psi_inf: float
                        ) -> "FitPotential":
         """Fit the potential to the planar surface approximation"""
-        return FitPotential(radii, radial_average, r_np, psi_inf, self.configs)
+        return FitPotential(radii, radial_average, r_np, psi_inf)
 
     def _plot_debug(self,
                     cut_radii: list[np.ndarray],

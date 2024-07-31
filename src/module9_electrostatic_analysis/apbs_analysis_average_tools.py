@@ -6,6 +6,16 @@ They were statimehotd in the module apbs_analysis_average_pot_plots.py.
 import numpy as np
 
 
+# tools for method: analyse_potential
+def calculate_center(grid_points: list[int]
+                     ) -> tuple[int, int, int]:
+    """Calculate the center of the box in grid units"""
+    center_x: int = grid_points[0] // 2
+    center_y: int = grid_points[1] // 2
+    center_z: int = grid_points[2] // 2
+    return center_x, center_y, center_z
+
+
 # tools for method: cut_average_from_surface
 def calculate_grid_sphere_intersect_radius(radius: float,
                                            center_z: int,
@@ -70,5 +80,5 @@ def compute_distance(grid_spacing: list[float],
                      ) -> np.ndarray:
     """Calculate the distances from the center of the box"""
     return np.sqrt((grid_xyz[0] - center_xyz[0])**2 +
-                    (grid_xyz[1] - center_xyz[1])**2 +
-                    (grid_xyz[2] - center_xyz[2])**2) * grid_spacing[0]
+                   (grid_xyz[1] - center_xyz[1])**2 +
+                   (grid_xyz[2] - center_xyz[2])**2) * grid_spacing[0]

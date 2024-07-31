@@ -31,7 +31,7 @@ import numpy as np
 import module9_electrostatic_analysis.apbs_analysis_average_pot_plots as \
     pot_plots
 
-import module9_electrostatic_analysis.apbs_analysis_average_tools as \
+import module9_electrostatic_analysis.apbs_analysis_average_pot_tools as \
     pot_tools
 
 from module9_electrostatic_analysis.apbs_analysis_average_pot_fits import \

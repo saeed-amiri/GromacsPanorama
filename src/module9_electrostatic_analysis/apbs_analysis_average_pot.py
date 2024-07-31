@@ -149,12 +149,13 @@ class PlotParameterFittedPotential:
 
     @property
     def LAMBDA_D(self) -> dict[str, str | tuple[float, float] | list[float]]:
-        return {'label': r'$\lambda_d$ (from surface)',
+        return {'label': r'$\lambda_d$ (from Sphere`s surface)',
                 'ylable': 'Debye length [nm]',
                 'output_file': 'debye_length.jpg',
                 'legend_loc': 'upper left',
                 'y_lim': (1.4, 2.4),
-                'y_ticks': [1.5, 1.9, 2.3]}
+                'y_ticks': [1.5, 1.9, 2.3],
+                'x_ticks': [9, 10, 11, 12, 13]}
 
     @property
     def PSI_0(self) -> dict[str, str | tuple[float, float] | list[float]]:
@@ -163,7 +164,8 @@ class PlotParameterFittedPotential:
                 'output_file': 'surface_potential.jpg',
                 'legend_loc': 'lower left',
                 'y_lim': (-10, 130),
-                'y_ticks': [0, 60, 120]}
+                'y_ticks': [0, 60, 120],
+                'x_ticks': [9, 10, 11, 12, 13]}
 
     @property
     def X_LABEL(self) -> str:
@@ -178,8 +180,8 @@ class PlotParameterFittedPotential:
         return 0.75
 
     @property
-    def INTERFACE_LOC(self) -> int:
-        return 90
+    def ODA_BOUND(self) -> tuple[int, int]:
+        return (90, 95)
 
 
 class AverageAnalysis:
@@ -431,6 +433,7 @@ class AverageAnalysis:
                   label=plot_parameters['label'])
 
         ax_i.set_xlabel(plot_config.X_LABEL)
+        ax_i.set_xticks(plot_parameters['x_ticks'])
         ax_i.set_ylabel(plot_parameters['ylable'])
         ax_i.set_ylim(plot_parameters['y_lim'])
         ax_i.set_yticks(plot_parameters['y_ticks'])

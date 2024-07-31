@@ -442,14 +442,18 @@ class AverageAnalysis:
 
         ax_i.legend()
 
-        interface_loc: float = plot_config.INTERFACE_LOC * \
-            self.dx.GRID_SPACING[2] / 10.0  # Convert to nm
-        ax_i.axvline(interface_loc,
-                     color='k',
-                     linestyle='--',
-                     label='Interface location',
-                     zorder=0)
-
+        oda_bound: tuple[float, float] = (
+            plot_config.ODA_BOUND[0] * self.dx.GRID_SPACING[2] / 10.0,
+            plot_config.ODA_BOUND[1] * self.dx.GRID_SPACING[2] / 10.0)
+        # Shade the area between ODA_BOUND
+        ax_i.fill_betweenx(ax_i.get_ylim(),
+                           oda_bound[0],
+                           oda_bound[1],
+                           color='gray',
+                           edgecolor=None,
+                           alpha=0.5,
+                           label='ODA`s N locations',
+                           )
         elsevier_plot_tools.save_close_fig(fig_i,
                                            plot_parameters['output_file'],
                                            loc=plot_parameters['legend_loc'])

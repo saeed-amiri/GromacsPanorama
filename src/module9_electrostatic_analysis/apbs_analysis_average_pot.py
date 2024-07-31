@@ -720,8 +720,7 @@ class FitPotential:
 
         fitted_func, self.popt = \
             self.fit_potential(interpolate_data[0], interpolate_data[1], r_np)
-        self.fitted_pot: np.ndarray | float = \
-            fitted_func(radii, *self.popt)
+        self.fitted_pot: np.ndarray | float = fitted_func(radii, *self.popt)
         surface_pot: np.ndarray | float = \
             fitted_func(radii[0], *self.popt)
         self.popt[1] = surface_pot

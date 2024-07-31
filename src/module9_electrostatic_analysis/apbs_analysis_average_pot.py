@@ -158,7 +158,7 @@ class AverageAnalysis:
     def analyse_potential(self) -> None:
         """analyse the potential"""
         center_xyz: tuple[int, int, int] = \
-            self.calculate_center(self.dx.GRID_POINTS)
+            pot_tools.calculate_center(self.dx.GRID_POINTS)
 
         sphere_grid_range: np.ndarray = \
             self.find_grid_inidices_covers_shpere(center_xyz)
@@ -434,15 +434,6 @@ class AverageAnalysis:
         z_condition: np.ndarray = (grid_z >= interface_low_index) & \
                                   (grid_z <= interface_high_index)
         return z_condition
-
-    @staticmethod
-    def calculate_center(grid_points: list[int]
-                         ) -> tuple[int, int, int]:
-        """Calculate the center of the box in grid units"""
-        center_x: int = grid_points[0] // 2
-        center_y: int = grid_points[1] // 2
-        center_z: int = grid_points[2] // 2
-        return center_x, center_y, center_z
 
     def find_grid_inidices_covers_shpere(self,
                                          center_xyz: tuple[int, int, int],

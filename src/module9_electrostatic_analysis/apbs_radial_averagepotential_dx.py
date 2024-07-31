@@ -577,22 +577,20 @@ class PlotOverlayLayers:
                     lower_index_bulk=0,
                     configs=self.configs)
 
-            radii, radial_average = \
-                radii_average.radii, radii_average.radial_average
             label: typing.Union[str, None] = self._get_lable(
                 i, z_index, range_z, long_list)
             if z_index == self.configs.main_z:
                 line_style = self.configs.main_z_linestyle[0][1]
             else:
                 line_style = line_styles[i][1]
-            ax_i.plot(radii/self.configs.dist_unit_conversion,
-                      radial_average,
+            ax_i.plot(radii_average.radii/self.configs.dist_unit_conversion,
+                      radii_average.radial_average,
                       lw=1,
                       c=colors[i],
                       ls=line_style,
                       label=label,
                       )
-            min_z_value.append(min(radial_average))
+            min_z_value.append(min(radii_average.radial_average))
 
         ax_i.set_xlabel('Radius [nm]')
         ax_i.set_ylabel('Average Potential')

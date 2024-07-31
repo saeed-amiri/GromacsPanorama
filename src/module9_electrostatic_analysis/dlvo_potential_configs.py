@@ -17,8 +17,8 @@ class FileConfig:
     contact_fname: str = 'contact.xvg'
     fout: str = 'potential.xvg'
     radial_avg_files: dict[str, str] = field(default_factory=lambda: {
-        'numerical, 3.6': 'radial_average_potential_nonlinear_3_6.xvg',
-        'numerical, 3.2': 'radial_average_potential_nonlinear_3_2.xvg'})
+        'numerical, 3.6': 'radial_average_potential_nonlinear_3_6.xvg'
+        })
 
 
 @dataclass
@@ -102,21 +102,24 @@ class PlotConfig(FileConfig):
                                        'darkgreen',
                                        'dimgrey'])
 
-    angstrom_to_nm: float = 0.1
-    voltage_to_mV: float = 1000
+    angstrom_to_nm: float = 1e-1
+    voltage_to_mV: float = 1e3
 
     y_unit: str = ''
-    y_lims: tuple[float, float] = (0, 200)
-    x_lims: tuple[float, float] = (2.8, 7.7)
+    x_lims: tuple[float, float] = (2.8, 7.0)
+    y_lims: tuple[float, float] = (0, 135)
 
-    x_ticks: list[float] = field(default_factory=lambda: [3, 5])
+    phi_r_exprimental_avg: float = field(init=False)
+
+    x_ticks: list[float] = field(default_factory=lambda: [5, 7])
     y_ticks: list[float] = field(default_factory=lambda: [])
 
-    legend_loc: str = 'upper right'
+    legend_loc: str = 'center right'
     if_np_radius_line: bool = True
-    if_stern_line: bool = False
+    if_stern_line: bool = True
     if_debye_line: bool = False
     if_2nd_debye: bool = False
+    if_experiment: bool = False
 
     if_title: bool = False
     if_grid: bool = False

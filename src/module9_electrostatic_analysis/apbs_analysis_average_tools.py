@@ -101,14 +101,14 @@ def calculate_radial_average(data_arr: np.ndarray,
 
     for radius in radii:
         mask = create_mask(distances,
-                                radius,
-                                grid_spacing,
-                                grid_z,
-                                interface_low_index,
-                                interface_high_index,
-                                lower_index_bulk,
-                                bulk_averaging
-                                )
+                           radius,
+                           grid_spacing,
+                           grid_z,
+                           interface_low_index,
+                           interface_high_index,
+                           lower_index_bulk,
+                           bulk_averaging
+                           )
         if np.sum(mask) > 0:
             avg_potential = np.mean(data_arr[mask])
             radial_average.append(avg_potential)
@@ -131,7 +131,7 @@ def create_mask(distances: np.ndarray,
     # pylint: disable=too-many-arguments
     shell_thickness: float = grid_spacing[0]
     shell_condition: np.ndarray = (distances >= radius) & \
-                                    (distances < radius + shell_thickness)
+                                  (distances < radius + shell_thickness)
 
     if bulk_averaging:
         z_condition: np.ndarray = create_mask_bulk(
@@ -144,20 +144,20 @@ def create_mask(distances: np.ndarray,
 
 
 def create_mask_bulk(grid_z: np.ndarray,
-                        interface_low_index: int,
-                        low_index_bulk: int,
-                        ) -> np.ndarray:
+                     interface_low_index: int,
+                     low_index_bulk: int,
+                     ) -> np.ndarray:
     """Create a mask for the radial average from the bulk"""
     z_condition: np.ndarray = (grid_z <= interface_low_index) & \
-                                (grid_z >= low_index_bulk)
+                              (grid_z >= low_index_bulk)
     return z_condition
 
 
 def create_mask_interface(grid_z: np.ndarray,
-                            interface_low_index: int,
-                            interface_high_index: int
-                            ) -> np.ndarray:
+                          interface_low_index: int,
+                          interface_high_index: int
+                          ) -> np.ndarray:
     """Create a mask for the radial average from the interface"""
     z_condition: np.ndarray = (grid_z >= interface_low_index) & \
-                                (grid_z <= interface_high_index)
+                              (grid_z <= interface_high_index)
     return z_condition

@@ -206,7 +206,9 @@ class AverageAnalysis:
         self.plot_debye_surface_potential(lambda_d, 'lambda_d')
         self.plot_debye_surface_potential(psi_zero, 'psi_0')
         self.plot_debye_surface_potential(sigma, 'sigma')
-        self.write_xvg({'lambda_d [A]': lambda_d, 'psi_0 [mV]': psi_zero}, log)
+        self.write_xvg({'lambda_d [A]': lambda_d,
+                        'psi_0 [mV]': psi_zero,
+                        'sigma [C/m^2]': sigma}, log)
 
     def compute_debye_surface_potential(self,
                                         cut_radii: list[np.ndarray],
@@ -397,7 +399,9 @@ class AverageAnalysis:
             'index': z_index,
             'z': z_loc,
             column_names[0]: list(data[column_names[0]].values()),
-            column_names[1]: list(data[column_names[1]].values())}
+            column_names[1]: list(data[column_names[1]].values()),
+            column_names[2]: list(data[column_names[2]].values())
+            }
         df_i: pd.DataFrame = pd.DataFrame.from_dict(single_data)
         file_writer.write_xvg(df_i=df_i,
                               log=log,

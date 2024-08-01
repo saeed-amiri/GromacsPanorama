@@ -56,7 +56,7 @@ class ParameterConfig:
     """
     computation_radius: float = 36.0
     diffuse_layer_threshold: float = 75.0  # Threshold for the diffuse layer A
-    highest_np_grid_index: int = 96  # The highest grid index of the NP
+    highest_np_grid_index: int = 99  # The highest grid index of the NP
 
 
 @dataclass

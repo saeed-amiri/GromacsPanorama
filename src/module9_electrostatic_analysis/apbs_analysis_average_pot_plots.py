@@ -150,9 +150,9 @@ def plot_debug(cut_radii: list[np.ndarray],
         plt.show()
 
 
-def plot_debye_surface_potential(data: dict[str, float],
+def plot_debye_surface_potential(data: dict[np.int64, float],
                                  type_data: str,
-                                 z_grid_spacing: float,
+                                 z_grid_spacing: tuple[float, float, float]
                                  ) -> None:
     """Plot the Debye length and surface potential"""
     plot_config: PlotParameterFittedPotential = PlotParameterFittedPotential()

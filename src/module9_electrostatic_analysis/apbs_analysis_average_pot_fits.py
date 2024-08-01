@@ -31,7 +31,7 @@ class FitConfig:
     fit_comparisons: bool = False
     fit_interpolate_method: str = 'cubic'  # 'linear', 'nearest', 'cubic'
     fit_interpolate_points: int = 100
-    debye_intial_guess: float = 12.0
+    debye_intial_guess: float = 20.0
     psi_infty_init_guess: float = field(init=False)
 
 
@@ -84,7 +84,7 @@ class FitPotential:
 
     def fit_potential(self,
                       radii: np.ndarray,
-                      shifted_pot: np.ndarray,
+                      interpolated_pot: np.ndarray,
                       r_np: float
                       ) -> tuple[typing.Callable[..., np.ndarray | float],
                                  np.ndarray]:
@@ -99,14 +99,13 @@ class FitPotential:
             self.get_fit_function()
 
         initial_guess: list[float] = self.get_initial_guess(
-            shifted_pot[0],
+            interpolated_pot[0],
             self.config.debye_intial_guess,
             r_np,
             self.config.psi_infty_init_guess)
-
         popt, *_ = curve_fit(f=fit_fun,
                              xdata=radii,
-                             ydata=shifted_pot,
+                             ydata=interpolated_pot,
                              p0=initial_guess,
                              maxfev=5000)
         return fit_fun, popt
@@ -129,8 +128,10 @@ class FitPotential:
                           ) -> list[float]:
         """Get the initial guess for the Debye length"""
         fit_fun_type = self.validate_fit_function()
+        if abs(phi_0) < 1:
+            phi_0 = 10 * abs(phi_0)
         return {
-            'exponential_decay': [phi_0, lambda_d, psi_infty],
+            'exponential_decay': [abs(phi_0), lambda_d, psi_infty],
             'linear_sphere': [phi_0, lambda_d, r_np],
             'non_linear_sphere': [phi_0, lambda_d, r_np],
         }[fit_fun_type]

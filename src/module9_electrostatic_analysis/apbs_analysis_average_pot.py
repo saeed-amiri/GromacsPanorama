@@ -39,6 +39,9 @@ from module9_electrostatic_analysis.apbs_analysis_average_pot_fits import \
     FitPotential
 from module9_electrostatic_analysis.apbs_analysis_average_pot_read_dx import \
     ProcessDxFile
+from module9_electrostatic_analysis.apbs_analysis_average_pot_sigma import \
+    ComputeSigma
+
 
 from common import logger
 from common import file_writer
@@ -197,8 +200,10 @@ class AverageAnalysis:
         if computed_dicts is None:
             return
         lambda_d, psi_zero = computed_dicts
+        sigma = self.compute_charge_density(lambda_d, psi_zero, log)
         self.plot_debye_surface_potential(lambda_d, 'lambda_d')
         self.plot_debye_surface_potential(psi_zero, 'psi_0')
+        self.plot_debye_surface_potential(sigma, 'sigma')
         self.write_xvg({'lambda_d [A]': lambda_d, 'psi_0 [mV]': psi_zero}, log)
 
     def compute_debye_surface_potential(self,

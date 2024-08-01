@@ -38,6 +38,16 @@ class PlotParameterFittedPotential:
                 'x_ticks': [9, 10, 11, 12, 13]}
 
     @property
+    def SIGMA(self) -> dict[str, str | tuple[float, float] | list[float]]:
+        return {'label': r'$\sigma$',
+                'ylable': r'charge density [e/m$^2$]',
+                'output_file': 'sigma.jpg',
+                'legend_loc': 'lower left',
+                'y_lim': (-0.001, 0.013),
+                'y_ticks': [0, 0.006, 0.012],
+                'x_ticks': [9, 10, 11, 12, 13]}
+
+    @property
     def X_LABEL(self) -> str:
         return 'z [nm] (of Box)'
 
@@ -158,8 +168,12 @@ def plot_debye_surface_potential(data: dict[str, float],
         plot_parameters: dict[str, str | tuple[float, float] | list[float]] = \
             plot_config.LAMBDA_D
         ydata /= 10.0  # Convert to nm
-    else:
+    elif type_data == 'psi_0':
         plot_parameters = plot_config.PSI_0
+    elif type_data == 'sigma':
+        plot_parameters = plot_config.SIGMA
+    else:
+        raise ValueError(f'Unknown type_data: {type_data}')
 
     ax_i.plot(xdata / 10.0,  # Convert to nm
               ydata,

@@ -55,6 +55,37 @@ def find_indices_of_diffuse_layer(radii_list: list[np.ndarray],
 
 
 # tools for method: process_layer
+def process_layer(center_xyz: tuple[int, int, int],
+                  grid_spacing: list[float],
+                  grid_points: list[int],
+                  data_arr: np.ndarray,
+                  bulk_averaging: bool,
+                  ) -> tuple[np.ndarray, np.ndarray]:
+    """process the layer
+    The potential from the surface until the end of the diffuse layer
+    """
+    max_radius: float = calculate_max_radius(
+        center_xyz, grid_spacing)
+    # Create the distance grid
+    grid_xyz: tuple[np.ndarray, np.ndarray, np.ndarray] = \
+        create_distance_grid(grid_points)
+    # Calculate the distances from the center of the box
+    distances: np.ndarray = compute_distance(
+            grid_spacing, grid_xyz, center_xyz)
+    radii, radial_average = calculate_radial_average(
+            data_arr,
+            distances,
+            grid_spacing,
+            max_radius,
+            grid_xyz[2],
+            interface_low_index=center_xyz[2],
+            interface_high_index=center_xyz[2],
+            lower_index_bulk=0,
+            bulk_averaging=bulk_averaging
+            )
+    return radii, np.asanyarray(radial_average)
+
+
 def calculate_max_radius(center_xyz: tuple[float, float, float],
                          grid_spacing: list[float]
                          ) -> float:

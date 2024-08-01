@@ -296,7 +296,13 @@ class AverageAnalysis:
         radial_average_list: list[np.ndarray] = []
         for layer in sphere_grid_range:
             center_xyz = (center_xyz[0], center_xyz[1], layer)
-            radii, radial_average = self.process_layer(center_xyz)
+            radii, radial_average = pot_tools.process_layer(
+                center_xyz=center_xyz,
+                grid_spacing=self.dx.GRID_SPACING,
+                grid_points=self.dx.GRID_POINTS,
+                data_arr=self.dx.DATA_ARR,
+                bulk_averaging=self.configs.bulk_averaging,
+                )
             radii_list.append(radii)
             radial_average_list.append(radial_average)
         return radii_list, radial_average_list
@@ -332,33 +338,6 @@ class AverageAnalysis:
             cut_radial_average.append(radial_average[cut_i:cut_f])
             cut_radii.append(radii[cut_i:cut_f])
         return cut_radii, cut_radial_average, cut_indices_i, interset_radius
-
-    def process_layer(self,
-                      center_xyz: tuple[int, int, int]
-                      ) -> tuple[np.ndarray, np.ndarray]:
-        """process the layer
-        The potential from the surface until the end of the diffuse layer
-        """
-        max_radius: float = pot_tools.calculate_max_radius(
-            center_xyz, self.dx.GRID_SPACING)
-        # Create the distance grid
-        grid_xyz: tuple[np.ndarray, np.ndarray, np.ndarray] = \
-            pot_tools.create_distance_grid(self.dx.GRID_POINTS)
-        # Calculate the distances from the center of the box
-        distances: np.ndarray = pot_tools.compute_distance(
-                self.dx.GRID_SPACING, grid_xyz, center_xyz)
-        radii, radial_average = pot_tools.calculate_radial_average(
-                self.dx.DATA_ARR,
-                distances,
-                self.dx.GRID_SPACING,
-                max_radius,
-                grid_xyz[2],
-                interface_low_index=center_xyz[2],
-                interface_high_index=center_xyz[2],
-                lower_index_bulk=0,
-                bulk_averaging=self.configs.bulk_averaging
-                )
-        return radii, np.asanyarray(radial_average)
 
     def find_grid_inidices_covers_shpere(self,
                                          center_xyz: tuple[int, int, int],

@@ -23,7 +23,7 @@ class PlotParameterFittedPotential:
                 'ylable': 'Debye length [nm]',
                 'output_file': 'debye_length.jpg',
                 'legend_loc': 'upper left',
-                'y_lim': (1.4, 2.4),
+                'y_lim': (1.35, 2.45),
                 'y_ticks': [1.5, 1.9, 2.3],
                 'x_ticks': [9, 10, 11, 12, 13]}
 
@@ -33,7 +33,7 @@ class PlotParameterFittedPotential:
                 'ylable': 'potential [mV]',
                 'output_file': 'surface_potential.jpg',
                 'legend_loc': 'lower left',
-                'y_lim': (-10, 130),
+                'y_lim': (-15, 130),
                 'y_ticks': [0, 60, 120],
                 'x_ticks': [9, 10, 11, 12, 13]}
 

@@ -27,6 +27,7 @@ import typing
 from dataclasses import dataclass
 
 import numpy as np
+import pandas as pd
 
 import module9_electrostatic_analysis.apbs_analysis_average_pot_plots as \
     pot_plots
@@ -40,6 +41,7 @@ from module9_electrostatic_analysis.apbs_analysis_average_pot_read_dx import \
     ProcessDxFile
 
 from common import logger
+from common import file_writer
 from common.colors_text import TextColor as bcolors
 
 
@@ -137,7 +139,7 @@ class AverageAnalysis:
                  ) -> None:
         self.configs = configs
         self.read_dx(fname_dx, log)
-        self.analyse_potential()
+        self.analyse_potential(log)
         self.write_msg(log)
 
     def read_dx(self,
@@ -155,7 +157,9 @@ class AverageAnalysis:
             data_arr=read_dx.data_arr
         )
 
-    def analyse_potential(self) -> None:
+    def analyse_potential(self,
+                          log: logger.logging.Logger
+                          ) -> None:
         """analyse the potential"""
         center_xyz: tuple[int, int, int] = \
             pot_tools.calculate_center(self.dx.GRID_POINTS)
@@ -182,13 +186,20 @@ class AverageAnalysis:
         self._plot_debug(cut_radii, cut_radial_average, radii_list,
                          radial_average_list, sphere_grid_range)
 
-        self.compute_debye_surface_potential(cut_radii,
-                                             cut_radial_average,
-                                             cut_indices,
-                                             interset_radius,
-                                             sphere_grid_range,
-                                             radial_average_list
-                                             )
+        computed_dicts: tuple[dict[str, float], dict[str, float]] | None = \
+            self.compute_debye_surface_potential(cut_radii,
+                                                 cut_radial_average,
+                                                 cut_indices,
+                                                 interset_radius,
+                                                 sphere_grid_range,
+                                                 radial_average_list
+                                                 )
+        if computed_dicts is None:
+            return
+        lambda_d, psi_zero = computed_dicts
+        self.plot_debye_surface_potential(lambda_d, 'lambda_d')
+        self.plot_debye_surface_potential(psi_zero, 'psi_0')
+        self.write_xvg({'lambda_d [A]': lambda_d, 'psi_0 [mV]': psi_zero}, log)
 
     def compute_debye_surface_potential(self,
                                         cut_radii: list[np.ndarray],
@@ -197,7 +208,8 @@ class AverageAnalysis:
                                         interset_radius: np.ndarray,
                                         sphere_grid_range: np.ndarray,
                                         radial_average_list: list[np.ndarray]
-                                        ) -> None:
+                                        ) -> tuple[dict[str, float],
+                                                   dict[str, float]] | None:
         """Compute the surface potential and the decay constant
         The potetial decay part is fitted to the exponential decay
         \\psi = \\psi_0 * exp(-r/\\lambda_d)
@@ -205,7 +217,7 @@ class AverageAnalysis:
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-arguments
         if not self.configs.fit_potential:
-            return
+            return None
         # Drop the cut_radial_average which have zero cut_indices
         cut_radial_average = [cut_radial_average[i] for i in range(
             len(cut_radial_average)) if cut_indices[i] != 0]
@@ -238,8 +250,7 @@ class AverageAnalysis:
         if self.configs.plot_interactive:
             self._interactive_plot(plots_data)
 
-        self.plot_debye_surface_potential(lambda_d_dict, 'lambda_d')
-        self.plot_debye_surface_potential(psi_zero_dict, 'psi_0')
+        return lambda_d_dict, psi_zero_dict
 
     def _interactive_plot(self,
                           plots_data: list[tuple[np.ndarray,
@@ -350,6 +361,29 @@ class AverageAnalysis:
         lowest_z_index: int = center_xyz[2] - nr_grids_coveres_sphere_radius
         highest_z_index: int = center_xyz[2] + nr_grids_coveres_sphere_radius
         return np.arange(lowest_z_index, highest_z_index)
+
+    def write_xvg(self,
+                  data: dict[str, dict[str, float]],
+                  log: logger.logging.Logger
+                  ) -> None:
+        """Write the data to xvg file"""
+        column_names: list[str] = list(data.keys())
+        z_index: list[int] = [
+            int(i) for i in list(data[column_names[0]].keys())]
+        z_loc: list[float] = [
+            float(i)*self.dx.GRID_SPACING[2] for i in z_index]
+        single_data: dict[str, list[float] | list[int]] = {
+            'index': z_index,
+            'z': z_loc,
+            column_names[0]: list(data[column_names[0]].values()),
+            column_names[1]: list(data[column_names[1]].values())}
+        df_i: pd.DataFrame = pd.DataFrame.from_dict(single_data)
+        file_writer.write_xvg(df_i=df_i,
+                              log=log,
+                              fname='debye_surface_pot.xvg',
+                              extra_comments='# Debye surface potential data',
+                              xaxis_label='z index',
+                              )
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

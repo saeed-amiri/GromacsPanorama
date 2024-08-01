@@ -56,6 +56,7 @@ class ParameterConfig:
     """
     computation_radius: float = 36.0
     diffuse_layer_threshold: float = 75.0  # Threshold for the diffuse layer A
+    highest_np_grid_index: int = 96  # The highest grid index of the NP
 
 
 @dataclass
@@ -366,7 +367,7 @@ class AverageAnalysis:
         radius: float = self.configs.computation_radius
         nr_grids_coveres_sphere_radius: int = int(radius / grid_size)
         lowest_z_index: int = center_xyz[2] - nr_grids_coveres_sphere_radius
-        highest_z_index: int = center_xyz[2] + nr_grids_coveres_sphere_radius
+        highest_z_index: int = self.configs.highest_np_grid_index
         return np.arange(lowest_z_index, highest_z_index)
 
     def compute_charge_density(self,

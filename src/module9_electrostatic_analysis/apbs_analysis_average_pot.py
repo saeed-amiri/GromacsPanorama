@@ -189,7 +189,8 @@ class AverageAnalysis:
         self._plot_debug(cut_radii, cut_radial_average, radii_list,
                          radial_average_list, sphere_grid_range)
 
-        computed_dicts: tuple[dict[str, float], dict[str, float]] | None = \
+        computed_dicts: tuple[dict[np.int64, float],
+                              dict[np.int64, float]] | None = \
             self.compute_debye_surface_potential(cut_radii,
                                                  cut_radial_average,
                                                  cut_indices,
@@ -213,8 +214,9 @@ class AverageAnalysis:
                                         interset_radius: np.ndarray,
                                         sphere_grid_range: np.ndarray,
                                         radial_average_list: list[np.ndarray]
-                                        ) -> tuple[dict[str, float],
-                                                   dict[str, float]] | None:
+                                        ) -> tuple[
+                                            dict[np.int64, float],
+                                            dict[np.int64, float]] | None:
         """Compute the surface potential and the decay constant
         The potetial decay part is fitted to the exponential decay
         \\psi = \\psi_0 * exp(-r/\\lambda_d)
@@ -230,8 +232,8 @@ class AverageAnalysis:
             len(cut_radii)) if cut_indices[i] != 0]
         # Fit the potential to the planar surface approximation
         plots_data = []
-        lambda_d_dict: dict[str, float] = {}
-        psi_zero_dict: dict[str, float] = {}
+        lambda_d_dict: dict[np.int64, float] = {}
+        psi_zero_dict: dict[np.int64, float] = {}
         for r_np, radii, radial_average, grid, uncut_psi in zip(
            interset_radius,
            cut_radii,
@@ -295,7 +297,7 @@ class AverageAnalysis:
                              sphere_grid_range)
 
     def plot_debye_surface_potential(self,
-                                     data: dict[str, float],
+                                     data: dict[np.int64, float],
                                      type_data: str
                                      ) -> None:
         """Plot the Debye length and surface potential"""
@@ -367,17 +369,30 @@ class AverageAnalysis:
         highest_z_index: int = center_xyz[2] + nr_grids_coveres_sphere_radius
         return np.arange(lowest_z_index, highest_z_index)
 
+    def compute_charge_density(self,
+                               lambda_d: dict[np.int64, float],
+                               psi_zero: dict[np.int64, float],
+                               log: logger.logging.Logger
+                               ) -> dict[np.int64, float]:
+        """Compute the charge density"""
+        lambda_d_arr: np.ndarray = np.array(list(lambda_d.values()))
+        psi_arr: np.ndarray = np.array(list(psi_zero.values()))
+        sigma: ComputeSigma = ComputeSigma(psi_arr, lambda_d_arr, log)
+        z_index: list[np.int64] = list(lambda_d.keys())
+        sigma_dict: dict[np.int64, float] = {}
+        sigma_dict = {z: sigma.sigma[i] for i, z in enumerate(z_index)}
+        return sigma_dict
+
     def write_xvg(self,
-                  data: dict[str, dict[str, float]],
+                  data: dict[str, dict[np.int64, float]],
                   log: logger.logging.Logger
                   ) -> None:
         """Write the data to xvg file"""
         column_names: list[str] = list(data.keys())
-        z_index: list[int] = [
-            int(i) for i in list(data[column_names[0]].keys())]
+        z_index: list[np.int64] = list(data[column_names[0]].keys())
         z_loc: list[float] = [
             float(i)*self.dx.GRID_SPACING[2] for i in z_index]
-        single_data: dict[str, list[float] | list[int]] = {
+        single_data: dict[str, list[float] | list[np.int64]] = {
             'index': z_index,
             'z': z_loc,
             column_names[0]: list(data[column_names[0]].values()),

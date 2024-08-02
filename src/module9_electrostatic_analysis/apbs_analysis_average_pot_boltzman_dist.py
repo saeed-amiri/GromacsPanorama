@@ -42,7 +42,7 @@ class ComputeBoltzmanDistribution:
     # pylint: disable=too-many-arguments
     info_msg: str = 'Message from ComputeBoltzmanDistribution:\n'
     config: BoltzmanConfig
-    boltzman_distribution: np.ndarray
+    boltzman_distribution: list[tuple[np.ndarray, np.ndarray]]
 
     def __init__(self,
                  cut_radial_average: list[np.ndarray],

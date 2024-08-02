@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # type: ignore
 
 from common import logger
 from common.colors_text import TextColor as bcolors

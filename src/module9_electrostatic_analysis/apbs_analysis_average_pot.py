@@ -407,8 +407,11 @@ class AverageAnalysis:
                                            radii_list,
                                            log)
         dist_radii: dict[int, tuple[np.ndarray, np.ndarray]] = \
-            dist.boltzman_distribution
-        pot_plots.plot_boltzman_distribution(dist_radii)
+            dist.boltzmann_distribution
+        # get arg of clooses radii to 100
+        cut_ind = np.argmin(np.abs(radii_list[0] - 100))
+
+        pot_plots.plot_boltzman_distribution(dist_radii, cut_ind)
 
     def write_xvg(self,
                   data: dict[str, dict[np.int64, float]],

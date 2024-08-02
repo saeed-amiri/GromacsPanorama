@@ -35,12 +35,14 @@ import module9_electrostatic_analysis.apbs_analysis_average_pot_plots as \
 import module9_electrostatic_analysis.apbs_analysis_average_pot_tools as \
     pot_tools
 
-from module9_electrostatic_analysis.apbs_analysis_average_pot_fits import \
-    FitPotential
-from module9_electrostatic_analysis.apbs_analysis_average_pot_read_dx import \
-    ProcessDxFile
-from module9_electrostatic_analysis.apbs_analysis_average_pot_sigma import \
-    ComputeSigma
+from module9_electrostatic_analysis.apbs_analysis_average_pot_fits \
+    import FitPotential
+from module9_electrostatic_analysis.apbs_analysis_average_pot_read_dx \
+    import ProcessDxFile
+from module9_electrostatic_analysis.apbs_analysis_average_pot_sigma \
+    import ComputeSigma
+from module9_electrostatic_analysis.apbs_analysis_average_pot_boltzman_dist \
+    import ComputeBoltzmanDistribution
 
 
 from common import logger

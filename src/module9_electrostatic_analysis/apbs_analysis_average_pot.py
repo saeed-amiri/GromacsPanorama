@@ -402,10 +402,13 @@ class AverageAnalysis:
                                           log: logger.logging.Logger
                                           ) -> None:
         """Compute the Boltzman distribution"""
-        ComputeBoltzmanDistribution(cut_radial_average,
-                                    sphere_grid_range,
-                                    radii_list,
-                                    log)
+        dist = ComputeBoltzmanDistribution(cut_radial_average,
+                                           sphere_grid_range,
+                                           radii_list,
+                                           log)
+        dist_radii: dict[int, tuple[np.ndarray, np.ndarray]] = \
+            dist.boltzman_distribution
+        pot_plots.plot_boltzman_distribution(dist_radii)
 
     def write_xvg(self,
                   data: dict[str, dict[np.int64, float]],

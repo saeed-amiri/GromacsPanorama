@@ -255,14 +255,14 @@ def plot_boltzman_distribution(dist_radii: dict[int,  # z index
 
     for i, (ind, phi_i_radii) in enumerate(dist_radii.items()):
         ax_i.plot(phi_i_radii[1][:cut_ind],
-                  phi_i_radii[0][:cut_ind],
+                  phi_i_radii[0][:cut_ind]/10.0,  # Convert to nm
                   label=f'Grid: {ind}',
                   color=colors[i],
                   ls=lstyles[i],
                   )
-    # ax_i.set_xlabel(plot_parameters['x_label'])
+    ax_i.set_xlabel(plot_parameters['x_label'])
     # ax_i.set_xticks(plot_parameters['x_ticks'])
-    # ax_i.set_ylabel(plot_parameters['ylable'])
+    ax_i.set_ylabel(plot_parameters['ylable'])
     # ax_i.set_ylim(plot_parameters['y_lim'])
     # ax_i.set_yticks(plot_parameters['y_ticks'])
     ax_i.grid(True, ls='--', lw=0.5, alpha=0.5, color='grey')

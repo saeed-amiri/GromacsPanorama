@@ -222,6 +222,7 @@ class PlotBoltzmanDistribution:
     def PSI_R(self) -> dict[str, str | tuple[float, float] | list[float]]:
         return {'label': 'Distribution',
                 'ylable': 'Distribution, a.u.',
+                'xlable': 'z [nm] (COM of the circle)',
                 'output_file': 'oda_distribution.jpg',
                 'legend_loc': 'upper left',
                 'y_lim': (1.35, 2.45),

@@ -2,6 +2,7 @@
 Tools for computing averages of APBS analysis results.
 They were statimehotd in the module apbs_analysis_average_pot_plots.py.
 """
+import typing
 
 import numpy as np
 
@@ -192,3 +193,14 @@ def create_mask_interface(grid_z: np.ndarray,
     z_condition: np.ndarray = (grid_z >= interface_low_index) & \
                               (grid_z <= interface_high_index)
     return z_condition
+
+
+# Other tools
+def get_arr_from_dict(data_dict: dict[typing.Any,
+                                      int | float | np.int64 | np.float64],
+                      key_i: str,
+                      ) -> np.ndarray:
+    """Get the array from the dictionary"""
+    if key_i not in data_dict:
+        raise KeyError(f'The key {key_i} is not in the dictionary.')
+    return np.array(list(data_dict[key_i].values()))

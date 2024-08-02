@@ -209,3 +209,64 @@ def plot_debye_surface_potential(data: dict[np.int64, float],
     elsevier_plot_tools.save_close_fig(fig_i,
                                        plot_parameters['output_file'],
                                        loc=plot_parameters['legend_loc'])
+
+
+# Boltzman distribution plots
+class PlotBoltzmanDistribution:
+    """parameter for plottinge the Debye length and surface potential"""
+    # pylint: disable=missing-function-docstring
+    # pylint: disable=invalid-name
+    # pylint: disable=too-many-arguments
+
+    @property
+    def PSI_R(self) -> dict[str, str | tuple[float, float] | list[float]]:
+        return {'label': 'Distribution',
+                'ylable': 'Distribution, a.u.',
+                'output_file': 'oda_distribution.jpg',
+                'legend_loc': 'upper left',
+                'y_lim': (1.35, 2.45),
+                'y_ticks': [1.5, 1.9, 2.3],
+                'x_ticks': [9, 10, 11, 12, 13]}
+
+    @property
+    def COLOR(self) -> list[str]:
+        return elsevier_plot_tools.LINE_COLORS
+
+    @property
+    def LINESTYLE(self) -> str:
+        return elsevier_plot_tools.LINE_STYLES
+
+
+def plot_boltzman_distribution(dist_radii: dict[int,  # z index
+                                                tuple[np.ndarray,  # phi
+                                                      np.ndarray]  # radii
+                                                ],
+                               cut_ind: int  # cut of radius
+                               ) -> None:
+    """Plot the Boltzman distribution"""
+    configs: PlotBoltzmanDistribution = PlotBoltzmanDistribution()
+    figure: tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
+            'single_column')
+    fig_i, ax_i = figure
+    plot_parameters: dict[str, str | tuple[float, float] | list[float]] = \
+        configs.PSI_R
+    colors: list[str] = configs.COLOR
+    lstyles: str = configs.LINESTYLE
+
+    for i, (ind, phi_i_radii) in enumerate(dist_radii.items()):
+        ax_i.plot(phi_i_radii[1][:cut_ind],
+                  phi_i_radii[0][:cut_ind],
+                  label=f'Grid: {ind}',
+                  color=colors[i],
+                  ls=lstyles[i],
+                  )
+    # ax_i.set_xlabel(plot_parameters['x_label'])
+    # ax_i.set_xticks(plot_parameters['x_ticks'])
+    # ax_i.set_ylabel(plot_parameters['ylable'])
+    # ax_i.set_ylim(plot_parameters['y_lim'])
+    # ax_i.set_yticks(plot_parameters['y_ticks'])
+    ax_i.grid(True, ls='--', lw=0.5, alpha=0.5, color='grey')
+    ax_i.legend()
+    elsevier_plot_tools.save_close_fig(fig_i,
+                                       plot_parameters['output_file'],
+                                       loc=plot_parameters['legend_loc'])

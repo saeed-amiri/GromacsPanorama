@@ -7,8 +7,6 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-import matplotlib.pyplot as plt  # type: ignore
-
 from common import logger
 from common.colors_text import TextColor as bcolors
 
@@ -42,7 +40,7 @@ class ComputeBoltzmanDistribution:
     # pylint: disable=too-many-arguments
     info_msg: str = 'Message from ComputeBoltzmanDistribution:\n'
     config: BoltzmanConfig
-    boltzman_distribution: list[tuple[np.ndarray, np.ndarray]]
+    boltzman_distribution: dict[int, tuple[np.ndarray, np.ndarray]]
 
     def __init__(self,
                  cut_radial_average: list[np.ndarray],
@@ -63,17 +61,14 @@ class ComputeBoltzmanDistribution:
     def compute_boltzman_distribution(self,
                                       dict_index_phi: dict[
                                           int, tuple[np.ndarray, ...]],
-                                      ) -> list[tuple[np.ndarray, ...]]:
+                                      ) -> dict[int, tuple[np.ndarray, ...]]:
         """Compute the Boltzman distribution"""
-        boltzman_list: list[tuple[np.ndarray, ...]] = []
+        boltzman_dict: dict[int, tuple[np.ndarray, ...]] = {}
         for i, phi_i_radii in dict_index_phi.items():
             if i in self.config.selected_grid:
                 dist = self.compute_distribution(phi_i_radii[0])
-                boltzman_list.append((dist, phi_i_radii[1]))
-                plt.plot(phi_i_radii[1], dist, label=f'Grid: {i}')
-        plt.legend()
-        plt.show()
-        return boltzman_list
+                boltzman_dict[i] = (dist, phi_i_radii[1])
+        return boltzman_dict
 
     def compute_distribution(self,
                              phi_i: np.float64

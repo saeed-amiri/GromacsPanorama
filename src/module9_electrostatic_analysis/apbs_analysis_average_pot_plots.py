@@ -261,7 +261,7 @@ def plot_boltzman_distribution(dist_radii: dict[int,  # z index
                   color=colors[i],
                   ls=lstyles[i],
                   )
-    ax_i.set_xlabel(plot_parameters['xlabel'])
+    ax_i.set_xlabel(plot_parameters['xlable'])
     # ax_i.set_xticks(plot_parameters['x_ticks'])
     ax_i.set_ylabel(plot_parameters['ylable'])
     # ax_i.set_ylim(plot_parameters['y_lim'])

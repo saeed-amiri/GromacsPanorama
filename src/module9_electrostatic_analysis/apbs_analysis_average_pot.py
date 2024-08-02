@@ -204,7 +204,14 @@ class AverageAnalysis:
         if computed_dicts is None:
             return
         lambda_d, psi_zero = computed_dicts
+
+        self.compute_oda_boltzman_distribution(radial_average_list,
+                                               sphere_grid_range,
+                                               radii_list,
+                                               log)
+
         sigma = self.compute_charge_density(lambda_d, psi_zero, log)
+
         self.plot_debye_surface_potential(lambda_d, 'lambda_d')
         self.plot_debye_surface_potential(psi_zero, 'psi_0')
         self.plot_debye_surface_potential(sigma, 'sigma')
@@ -387,6 +394,18 @@ class AverageAnalysis:
         sigma_dict: dict[np.int64, float] = {}
         sigma_dict = {z: sigma.sigma[i] for i, z in enumerate(z_index)}
         return sigma_dict
+
+    def compute_oda_boltzman_distribution(self,
+                                          cut_radial_average: list[np.ndarray],
+                                          sphere_grid_range: np.ndarray,
+                                          radii_list: list[np.ndarray],
+                                          log: logger.logging.Logger
+                                          ) -> None:
+        """Compute the Boltzman distribution"""
+        ComputeBoltzmanDistribution(cut_radial_average,
+                                    sphere_grid_range,
+                                    radii_list,
+                                    log)
 
     def write_xvg(self,
                   data: dict[str, dict[np.int64, float]],

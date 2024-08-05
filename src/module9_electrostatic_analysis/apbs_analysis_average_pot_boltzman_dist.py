@@ -38,7 +38,7 @@ class ComputeBoltzmanDistribution:
     Compute the Boltzman distribution for the input parameters
     """
     # pylint: disable=too-many-arguments
-    __slots__ = ('info_msg', 'config', 'boltzmann_distribution')
+    __slots__ = ['info_msg', 'config', 'boltzmann_distribution']
     info_msg: str
     config: BoltzmanConfig
     boltzmann_distribution: dict[int, tuple[np.ndarray, np.ndarray]]

@@ -287,8 +287,8 @@ class AverageAnalysis:
         """Interactive plot for the fitted potential"""
         pot_plots.interactive_plot(plots_data, self.dx.GRID_SPACING[2])
 
-    def _fit_potential(self,
-                       r_np: float,
+    @staticmethod
+    def _fit_potential(r_np: float,
                        radii: np.ndarray,
                        radial_average: np.ndarray,
                        psi_inf: float
@@ -386,8 +386,8 @@ class AverageAnalysis:
         highest_z_index: int = self.configs.highest_np_grid_index
         return np.arange(lowest_z_index, highest_z_index)
 
-    def compute_charge_density(self,
-                               lambda_d: dict[np.int64, float],
+    @staticmethod
+    def compute_charge_density(lambda_d: dict[np.int64, float],
                                psi_zero: dict[np.int64, float],
                                log: logger.logging.Logger
                                ) -> dict[np.int64, float]:
@@ -400,8 +400,8 @@ class AverageAnalysis:
         sigma_dict = {z: sigma.sigma[i] for i, z in enumerate(z_index)}
         return sigma_dict
 
-    def compute_oda_boltzman_distribution(self,
-                                          cut_radial_average: list[np.ndarray],
+    @staticmethod
+    def compute_oda_boltzman_distribution(cut_radial_average: list[np.ndarray],
                                           sphere_grid_range: np.ndarray,
                                           radii_list: list[np.ndarray],
                                           log: logger.logging.Logger

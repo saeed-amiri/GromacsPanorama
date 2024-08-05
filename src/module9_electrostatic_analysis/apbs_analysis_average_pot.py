@@ -134,8 +134,9 @@ class AverageAnalysis:
     Reading and analysing the potential along the z-axis
     """
     # pylint: disable=invalid-name
-    info_msg: str = 'Message from AverageAnalysis:\n'
-    all_config: AllConfig
+    __slots__ = ['info_msg', 'configs', 'dx']
+    info_msg: str
+    configs: AllConfig
     dx: DxAttributeWrapper  # The dx file
 
     def __init__(self,
@@ -144,6 +145,7 @@ class AverageAnalysis:
                  configs: AllConfig = AllConfig()
                  ) -> None:
         self.configs = configs
+        self.info_msg = 'Message from AverageAnalysis:\n'
         self.read_dx(fname_dx, log)
         self.analyse_potential(log)
         self.write_msg(log)

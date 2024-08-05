@@ -134,9 +134,7 @@ def plot_debug(cut_radii: list[np.ndarray],
                ) -> None:
     """Plot for debugging"""
     # pylint: disable=too-many-arguments
-    for average, ind in zip(cut_radial_average, sphere_grid_range):
-        average -= average[0]
-        average += ind
+
     mpl.rcParams['font.size'] = 20
 
     for i, radial_average in enumerate(cut_radial_average):

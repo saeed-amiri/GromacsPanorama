@@ -38,7 +38,8 @@ class ComputeBoltzmanDistribution:
     Compute the Boltzman distribution for the input parameters
     """
     # pylint: disable=too-many-arguments
-    info_msg: str = 'Message from ComputeBoltzmanDistribution:\n'
+    __slots__ = ('info_msg', 'config', 'boltzmann_distribution')
+    info_msg: str
     config: BoltzmanConfig
     boltzmann_distribution: dict[int, tuple[np.ndarray, np.ndarray]]
 
@@ -49,6 +50,7 @@ class ComputeBoltzmanDistribution:
                  log: logger.logging.Logger,
                  config: BoltzmanConfig = BoltzmanConfig()
                  ) -> None:
+        self.info_msg = 'Message from ComputeBoltzmanDistribution:\n'
         self.config = config
         dict_index_phi: dict[int, tuple[np.ndarray, ...]] = \
             self.make_dict_index_phi(cut_radial_average,

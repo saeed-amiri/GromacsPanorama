@@ -23,7 +23,9 @@ class ProcessDxFile:
     """
     read the dx file and return the info from it
     """
-    info_msg: str = 'Message from ProcessDxFile:\n'
+    __slots__ = ['info_msg', 'configs', 'grid_points', 'grid_spacing',
+                 'origin', 'box_size', 'data_arr']
+    info_msg: str
     configs: DxFileConfig
     grid_points: list[int]
     grid_spacing: list[float]
@@ -36,6 +38,7 @@ class ProcessDxFile:
                  log: logger.logging.Logger,
                  configs: DxFileConfig = DxFileConfig()
                  ) -> None:
+        self.info_msg = 'Message from ProcessDxFile:\n'
         self.configs = configs
         self.process_dx_file(fname_dx, log)
         self.write_msg(log)

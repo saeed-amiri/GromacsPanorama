@@ -21,6 +21,7 @@ Opt. by ChatGpt
 Saeed
 """
 
+# pylint: disable=import-error
 
 import sys
 import typing

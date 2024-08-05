@@ -189,8 +189,11 @@ class AverageAnalysis:
                                           center_xyz,
                                           radii_list,
                                           radial_average_list)
-        self._plot_debug(cut_radii, cut_radial_average, radii_list,
-                         radial_average_list, sphere_grid_range)
+        self._plot_debug(cut_radii.copy(),
+                         cut_radial_average.copy(),
+                         radii_list.copy(),
+                         radial_average_list.copy(),
+                         sphere_grid_range.copy())
 
         computed_dicts: tuple[dict[np.int64, float],
                               dict[np.int64, float]] | None = \

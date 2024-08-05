@@ -33,7 +33,8 @@ class ComputeSigmaConfig:
 
 class ComputeSigma:
     """Compute the charge density"""
-    info_msg: str = 'Message from ComputeSigma:\n'
+    __slots__ = ['info_msg', 'config', 'sigma']
+    info_msg: str
     config: ComputeSigmaConfig
     sigma: np.ndarray
 
@@ -44,6 +45,8 @@ class ComputeSigma:
                  config: ComputeSigmaConfig = ComputeSigmaConfig()
                  ) -> None:
         self.config = config
+        self.info_msg = 'Message from ComputeSigma:\n'
+
         self.sigma = self.compute_sigma(psi_zero, lambda_d)
         self.write_msg(log)
 

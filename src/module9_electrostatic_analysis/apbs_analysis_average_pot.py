@@ -189,11 +189,6 @@ class AverageAnalysis:
                                           center_xyz,
                                           radii_list,
                                           radial_average_list)
-        self._plot_debug(cut_radii.copy(),
-                         cut_radial_average.copy(),
-                         radii_list.copy(),
-                         radial_average_list.copy(),
-                         sphere_grid_range.copy())
 
         computed_dicts: tuple[dict[np.int64, float],
                               dict[np.int64, float]] | None = \
@@ -221,6 +216,11 @@ class AverageAnalysis:
         self.write_xvg({'lambda_d [A]': lambda_d,
                         'psi_0 [mV]': psi_zero,
                         'sigma [C/m^2]': sigma}, log)
+        self._plot_debug(cut_radii.copy(),
+                         cut_radial_average.copy(),
+                         radii_list.copy(),
+                         radial_average_list.copy(),
+                         sphere_grid_range.copy())
 
     def compute_debye_surface_potential(self,
                                         cut_radii: list[np.ndarray],

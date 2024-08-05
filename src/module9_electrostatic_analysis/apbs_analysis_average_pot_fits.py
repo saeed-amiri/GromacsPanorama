@@ -37,7 +37,8 @@ class FitConfig:
 
 class FitPotential:
     """Fitting the decay of the potential"""
-    info_msg: str = 'Message from FitPotential:\n'
+    __slots__ = ['info_msg', 'config', 'fitted_pot', 'popt', 'evaluate_fit']
+    info_msg: str
     config: "FitConfig"
     fitted_pot: np.ndarray
     popt: np.ndarray
@@ -51,6 +52,8 @@ class FitPotential:
                  config: "FitConfig" = FitConfig(),
                  ) -> None:
         # pylint: disable=too-many-arguments
+        self.info_msg = 'Message from FitPotential:\n'
+
         self.config = config
         self.config.psi_infty_init_guess = psi_inf
         fitted_func: typing.Callable[..., np.ndarray | float]

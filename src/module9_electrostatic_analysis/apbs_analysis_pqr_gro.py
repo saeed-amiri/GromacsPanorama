@@ -162,7 +162,7 @@ class AnalysisStructure:
         """
         Get the min and max of each residue in a file
         """
-        return self.get_min_max_residue_df(pqr_df)
+        return self.compute_residue_bounds_and_charge(pqr_df)
 
     def calc_grid_spacing(self) -> tuple[float, float, float]:
         """
@@ -176,11 +176,12 @@ class AnalysisStructure:
         self.info_msg += f"\tGrid spacing: {grid_spacing}\n"
         return grid_spacing
 
-    def get_min_max_residue_df(self,
-                               data: pd.DataFrame,
-                               ) -> pd.DataFrame:
+    def compute_residue_bounds_and_charge(self,
+                                          data: pd.DataFrame,
+                                          ) -> pd.DataFrame:
         """
-        Get the min and max of each residue in a file
+        Get the min and max of each residue in a file, and compute the
+        charge of each data
         """
         residue_boundary_df: pd.DataFrame = pd.DataFrame(
             columns=[member.value for member in ResidueName])
@@ -191,11 +192,13 @@ class AnalysisStructure:
             min_x_residue = residue_df[ColumnName.Z.value].min()
             # finding the resiude number of the residue with max x
             max_x_residue = residue_df[ColumnName.Z.value].max()
+            portion_charge = residue_df[ColumnName.CHARGE.value].sum()
             if not pd.isna(min_x_residue) and not pd.isna(max_x_residue):
                 grid_min, grid_max = \
                     self._get_grid_indices(min_x_residue, max_x_residue)
                 residue_boundary_df[residue_name.value] = \
                     [(grid_min, grid_max)]
+                residue_boundary_df['charge'] = [portion_charge]
         del data
         return residue_boundary_df
 

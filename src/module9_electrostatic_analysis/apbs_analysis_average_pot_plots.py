@@ -233,8 +233,9 @@ class PlotBoltzmanDistribution:
         return elsevier_plot_tools.LINE_COLORS
 
     @property
-    def LINESTYLE(self) -> str:
-        return elsevier_plot_tools.LINE_STYLES
+    def LINESTYLE(self) -> list[
+       tuple[str, tuple[None] | tuple[int, tuple[int, ...]]]]:
+        return elsevier_plot_tools.LINESTYLE_TUPLE[::-1]
 
 
 def plot_boltzman_distribution(dist_radii: dict[int,  # z index
@@ -251,14 +252,15 @@ def plot_boltzman_distribution(dist_radii: dict[int,  # z index
     plot_parameters: dict[str, str | tuple[float, float] | list[float]] = \
         configs.BOLTZMANN
     colors: list[str] = configs.COLOR
-    lstyles: str = configs.LINESTYLE
+    lstyles: list[tuple[str, tuple[None] | tuple[int, tuple[int, ...]]]] = \
+        configs.LINESTYLE
 
     for i, (ind, phi_i_radii) in enumerate(dist_radii.items()):
         ax_i.plot(phi_i_radii[1][:cut_ind]/10.0,  # Convert to nm
                   phi_i_radii[0][:cut_ind],
                   label=f'Grid: {ind}',
                   color=colors[i],
-                  ls=lstyles[i],
+                  ls=lstyles[i][1],
                   )
     ax_i.set_xlabel(plot_parameters['xlable'])
     ax_i.set_xticks(plot_parameters['x_ticks'])

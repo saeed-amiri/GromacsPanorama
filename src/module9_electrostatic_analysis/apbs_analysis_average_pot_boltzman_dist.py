@@ -6,8 +6,10 @@ grid where NP cut threogh the oil phase
 from dataclasses import dataclass, field
 
 import numpy as np
+import pandas as pd
 
 from common import logger
+from common import file_writer
 from common.colors_text import TextColor as bcolors
 
 
@@ -59,22 +61,27 @@ class ComputeBoltzmanDistribution:
             self.make_dict_index_phi(cut_radial_average,
                                      radii_list,
                                      sphere_grid_range)
-        self.boltzmann_distribution = \
+        self.boltzmann_distribution, dist_to_write = \
             self.compute_boltzmann_distribution(dict_index_phi)
+        self.write_xvg(dist_to_write, log)
         self.write_msg(log)
 
     def compute_boltzmann_distribution(self,
                                        dict_index_phi: dict[
                                           int, tuple[np.ndarray, np.ndarray]],
-                                       ) -> dict[int, tuple[np.ndarray,
-                                                            np.ndarray]]:
+                                       ) -> tuple[
+                                           dict[int, tuple[np.ndarray,
+                                                           np.ndarray]],
+                                           dict[int, np.ndarray]]:
         """Compute the Boltzman distribution"""
         boltzmann_dict: dict[int, tuple[np.ndarray, np.ndarray]] = {}
+        boltzmann_dict_to_write: dict[int, np.ndarray] = {}
         for i, phi_i_radii in dict_index_phi.items():
+            dist = self.compute_distribution(phi_i_radii[0])
+            boltzmann_dict_to_write[i] = dist
             if i in self.config.selected_grid:
-                dist = self.compute_distribution(phi_i_radii[0])
                 boltzmann_dict[i] = (dist, phi_i_radii[1])
-        return boltzmann_dict
+        return boltzmann_dict, boltzmann_dict_to_write
 
     def compute_distribution(self,
                              phi_i: np.ndarray
@@ -123,6 +130,21 @@ class ComputeBoltzmanDistribution:
         constant during the determination.
 
         """
+
+    def write_xvg(self,
+                  dist_to_write: dict[int, np.ndarray],
+                  log: logger.logging.Logger) -> None:
+        """Write the distribution to the xvg file
+        """
+        df_i: pd.DataFrame = pd.DataFrame.from_dict(dist_to_write,
+                                                    orient='columns')
+        file_writer.write_xvg(df_i=df_i,
+                              log=log,
+                              fname='boltzman_distribution.xvg',
+                              extra_comments=['# c/c_0'],
+                              xaxis_label='r [nm]',
+                              yaxis_label='c/c_0'
+                              )
 
     def write_msg(self, log: logger.logging.Logger) -> None:
         """Write the message to the log

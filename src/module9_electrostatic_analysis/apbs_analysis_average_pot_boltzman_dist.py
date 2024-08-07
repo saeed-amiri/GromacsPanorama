@@ -18,9 +18,9 @@ class BoltzmanConfig:
     parameters: dict[str, float] = field(default_factory=lambda: {
         'T': 298.15,  # Temperature of the system
         'e_charge': 1.602e-19,  # Elementary charge [C]
-        'c_salt': 0.00479,   # Bulk concentration of the salt in M(=mol/l)
+        'c_salt': 0.00479,  # Bulk concentration of the salt in M(=mol/l)
         'epsilon': 78.5,  # medium  permittivity,
-        'epsilon_0': 8.854187817e-12,   # vacuum permittivity, farads per meter
+        'epsilon_0': 8.854187817e-12,  # vacuum permittivity, farads per meter
         'n_avogadro': 6.022e23,  # Avogadro's number
         'k_boltzmann_JK': 1.380649e-23,  # Joules per Kelvin (J/K)
         'k_boltzmann_eVK': 8.617333262145e-5,  # Electronvolts per Kelvin, eV/K

@@ -31,6 +31,9 @@ class BoltzmanConfig:
         'oda_concentration': 0.003  # Molar concentration of the ODA!!
         })
     selected_grid: list[int] = field(default_factory=lambda: [90, 91, 92])
+    # if True, the boltzmann coefficient will be calculated, otherwise
+    # the concentration will be cnsidered as the input
+    if_boltzmann_coeff: bool = True
 
 
 class ComputeBoltzmanDistribution:
@@ -82,8 +85,11 @@ class ComputeBoltzmanDistribution:
         # Calculate thermal energy k_B * T
         kbt: float = param['T'] * param['k_boltzmann_JK']
 
-        co_eff: float = param['oda_concentration'] * 1e3 * \
-            param['n_avogadro'] * param['e_charge']
+        if not self.config.if_boltzmann_coeff:
+            co_eff: float = param['oda_concentration'] * 1e3 * \
+                param['n_avogadro'] * param['e_charge']
+        else:
+            co_eff = 1.0
         arg: np.ndarray = param['e_charge'] * phi_i * 1e-3 / kbt
         return co_eff * np.exp(-arg)
 

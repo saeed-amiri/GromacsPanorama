@@ -84,21 +84,39 @@ class ComputeBoltzmanDistribution:
 
         co_eff: float = param['oda_concentration'] * 1e3 * \
             param['n_avogadro'] * param['e_charge']
-        arg: float = param['e_charge'] * phi_i * 1e-3 / kbt
+        arg: np.ndarray = param['e_charge'] * phi_i * 1e-3 / kbt
         return co_eff * np.exp(-arg)
 
     def make_dict_index_phi(self,
                             cut_radial_average: list[np.ndarray],
                             radii_list: list[np.ndarray],
                             sphere_grid_range: np.ndarray
-                            ) -> dict[int, tuple[np.ndarray, ...]]:
+                            ) -> dict[int, tuple[np.ndarray, np.ndarray]]:
         """Make a dictionary with the index of the sphere grid range
         and the corresponding phi_i"""
-        dict_index_phi: dict[int, tuple[np.ndarray, ...]] = {}
+        dict_index_phi: dict[int, tuple[np.ndarray, np.ndarray]] = {}
         for i, (phi_i, radii) in enumerate(zip(cut_radial_average,
                                                radii_list)):
             dict_index_phi[sphere_grid_range[i]] = (phi_i, radii)
         return dict_index_phi
+
+    def compute_concentration_from_surface_adsorption(self) -> None:
+        """Compute the concentration from the surface adsorption
+        https://pubs.acs.org/doi/pdf/10.1021/j100873a020
+
+        The surface excess concentration, S_c, can be defined as the
+        total surface excess of surfactant, E_s, divided by the total
+        surface generated during the determination, S_c = E_a/S, where
+        E_B is expressed in moles and S is in square centimeters. The
+        total surface excess, in turn, is given by:
+        E_a = W_t(C_i — C_b)*10-3,
+        where W_t is the weight of the collapsed foam in grams, and C_t
+        and C_b are the concentrations of surfactant in moles per liter,
+        in the collapsed foam and the bulk solution, respectively.
+        This expression assumes that the bulk concentration remains
+        constant during the determination.
+
+        """
 
     def write_msg(self, log: logger.logging.Logger) -> None:
         """Write the message to the log

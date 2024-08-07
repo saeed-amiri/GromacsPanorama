@@ -79,7 +79,8 @@ class AnalysisStructure:
     """
     Read PQR or GRO files and based on the grid spacing, report the index
     """
-    info_msg: str = "Message from AnalysisStructure:\n"
+    __slots__ = ['info_msg', 'config', 'grid_spacing']
+    info_msg: str
     config: AllConfig
     grid_spacing: tuple[float, float, float]
 
@@ -89,6 +90,7 @@ class AnalysisStructure:
                  config: AllConfig = AllConfig(),
                  ) -> None:
         self.config = config
+        self.info_msg = "Message from AnalysisStructure:\n"
         self.get_indices(files, log)
         self._write_msg(log)
 
@@ -297,8 +299,8 @@ class ReadInputStructureFile:
     """reading all the input structure files and return them in dict
     with the name of the file as key"""
     # pylint: disable=too-few-public-methods
-
-    info_msg: str = '\nMessage from ReadInputStructureFile:\n'
+    __slots__ = ['info_msg', 'file_type', '_configs', 'structure_dict']
+    info_msg: str
     file_type: str  # Type of extension of the files
     _configs: AllConfig
     structure_dict: dict[str, pd.DataFrame]
@@ -309,6 +311,7 @@ class ReadInputStructureFile:
                  configs: AllConfig = AllConfig()
                  ) -> None:
         self._configs = configs
+        self.info_msg = '\nMessage from ReadInputStructureFile:\n'
         strucure_files = [
             file for file in strucure_files
             if my_tools.check_int_in_filename(os.path.basename(file))]

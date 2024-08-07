@@ -23,7 +23,7 @@ class BoltzmanConfig:
         'epsilon_0': 8.854187817e-12,   # vacuum permittivity, farads per meter
         'n_avogadro': 6.022e23,  # Avogadro's number
         'k_boltzmann_JK': 1.380649e-23,  # Joules per Kelvin (J/K)
-        'k_boltzmann_eVK': 8.617333262145e-5,  # Electronvolts per Kelvin (eV/K)
+        'k_boltzmann_eVK': 8.617333262145e-5,  # Electronvolts per Kelvin, eV/K
         'box_xlim': 21.8,  # Length of the box in x direction [nm]
         'box_ylim': 21.8,  # Length of the box in y direction [nm]
         'box_zlim': 22.5,  # Length of the box in z direction [nm] whole box
@@ -52,7 +52,7 @@ class ComputeBoltzmanDistribution:
                  ) -> None:
         self.info_msg = 'Message from ComputeBoltzmanDistribution:\n'
         self.config = config
-        dict_index_phi: dict[int, tuple[np.ndarray, ...]] = \
+        dict_index_phi: dict[int, tuple[np.ndarray, np.ndarray]] = \
             self.make_dict_index_phi(cut_radial_average,
                                      radii_list,
                                      sphere_grid_range)
@@ -61,11 +61,12 @@ class ComputeBoltzmanDistribution:
         self.write_msg(log)
 
     def compute_boltzmann_distribution(self,
-                                      dict_index_phi: dict[
-                                          int, tuple[np.ndarray, ...]],
-                                      ) -> dict[int, tuple[np.ndarray, ...]]:
+                                       dict_index_phi: dict[
+                                          int, tuple[np.ndarray, np.ndarray]],
+                                       ) -> dict[int, tuple[np.ndarray,
+                                                            np.ndarray]]:
         """Compute the Boltzman distribution"""
-        boltzmann_dict: dict[int, tuple[np.ndarray, ...]] = {}
+        boltzmann_dict: dict[int, tuple[np.ndarray, np.ndarray]] = {}
         for i, phi_i_radii in dict_index_phi.items():
             if i in self.config.selected_grid:
                 dist = self.compute_distribution(phi_i_radii[0])
@@ -73,7 +74,7 @@ class ComputeBoltzmanDistribution:
         return boltzmann_dict
 
     def compute_distribution(self,
-                             phi_i: np.float64
+                             phi_i: np.ndarray
                              ) -> np.ndarray:
         """Compute the distribution based on the equation 4.3, pp. 95"""
         param: dict[str, float] = self.config.parameters

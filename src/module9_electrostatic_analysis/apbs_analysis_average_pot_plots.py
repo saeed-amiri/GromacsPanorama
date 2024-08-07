@@ -217,15 +217,16 @@ class PlotBoltzmanDistribution:
     # pylint: disable=too-many-arguments
 
     @property
-    def PSI_R(self) -> dict[str, str | tuple[float, float] | list[float]]:
+    def BOLTZMANN(self) -> dict[str, str | tuple[float, float] | list[float]]:
         return {'label': 'Distribution',
-                'ylable': 'Distribution, a.u.',
+                'ylable': r'$c^+/c_0$',
                 'xlable': 'r [nm] (COM of the circle)',
                 'output_file': 'oda_distribution.jpg',
                 'legend_loc': 'upper left',
-                'y_lim': (1.35, 2.45),
-                'y_ticks': [1.5, 1.9, 2.3],
-                'x_ticks': [9, 10, 11, 12, 13]}
+                'y_lim': (-0.1, 1.1),
+                'y_ticks': [0.0, 0.5, 1.0],
+                'x_lim': (-0.5, 10.5),
+                'x_ticks': [0, 2, 4, 6, 8, 10]}
 
     @property
     def COLOR(self) -> list[str]:
@@ -248,22 +249,22 @@ def plot_boltzman_distribution(dist_radii: dict[int,  # z index
             'single_column')
     fig_i, ax_i = figure
     plot_parameters: dict[str, str | tuple[float, float] | list[float]] = \
-        configs.PSI_R
+        configs.BOLTZMANN
     colors: list[str] = configs.COLOR
     lstyles: str = configs.LINESTYLE
 
     for i, (ind, phi_i_radii) in enumerate(dist_radii.items()):
-        ax_i.plot(phi_i_radii[1][:cut_ind],
-                  phi_i_radii[0][:cut_ind]/10.0,  # Convert to nm
+        ax_i.plot(phi_i_radii[1][:cut_ind]/10.0,  # Convert to nm
+                  phi_i_radii[0][:cut_ind],
                   label=f'Grid: {ind}',
                   color=colors[i],
                   ls=lstyles[i],
                   )
     ax_i.set_xlabel(plot_parameters['xlable'])
-    # ax_i.set_xticks(plot_parameters['x_ticks'])
+    ax_i.set_xticks(plot_parameters['x_ticks'])
     ax_i.set_ylabel(plot_parameters['ylable'])
-    # ax_i.set_ylim(plot_parameters['y_lim'])
-    # ax_i.set_yticks(plot_parameters['y_ticks'])
+    ax_i.set_ylim(plot_parameters['y_lim'])
+    ax_i.set_yticks(plot_parameters['y_ticks'])
     ax_i.grid(True, ls='--', lw=0.5, alpha=0.5, color='grey')
     ax_i.legend()
     elsevier_plot_tools.save_close_fig(fig_i,

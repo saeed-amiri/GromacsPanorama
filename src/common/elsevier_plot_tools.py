@@ -134,19 +134,21 @@ CLEAR_COLOR_GRADIENT = [
     "#B22222",  # Firebrick
 ]
 
-LINESTYLE_TUPLE = [
-    ('loosely dotted',        (0, (1, 3))),
-    ('loosely dashed',        (0, (5, 5))),
-    ('densely dotted',        (0, (1, 1))),
-    ('densely dashed',        (0, (5, 1))),
+LINESTYLE_TUPLE: \
+   list[tuple[str, tuple[None] | tuple[int, tuple[int, ...]]]] = [
     ('long dash with offset', (5, (5, 3))),
     ('loosely dashdotted',    (0, (3, 3, 1, 2))),
     ('dashdotted',            (0, (3, 5, 1, 5))),
     ('densely dashdotted',    (0, (3, 1, 1, 1))),
     ('dashdotdotted',         (0, (3, 3, 1, 3, 1, 3))),
-    ('loosely dashdotdotted', (0, (3, 7, 1, 7, 1, 7))),
+    ('loosely dashdotdotted', (0, (3, 4, 3, 4, 3, 4))),
+    ('densely dashdotdotted', (0, (3, 1, 1, 1, 1, 1))),
+    ('loosely dotted',        (0, (1, 3))),
     ('dashed',                (0, (5, 5))),
-    ('densely dashdotdotted', (0, (3, 1, 1, 1, 1, 1)))]
+    ('densely dashed',        (0, (5, 1))),
+    ('densely dotted',        (0, (1, 1))),
+    ('solid',                 (0, ())),
+    ]
 
 
 def set_figure_height(width: float,

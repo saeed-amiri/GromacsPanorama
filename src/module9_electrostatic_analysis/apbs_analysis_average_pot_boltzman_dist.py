@@ -64,8 +64,10 @@ class ComputeBoltzmanDistribution:
             self.make_dict_index_phi(cut_radial_average,
                                      radii_list,
                                      sphere_grid_range)
-        self.boltzmann_distribution, self.all_distribution = \
+        self.boltzmann_distribution, all_distribution = \
             self.compute_boltzmann_distribution(dict_index_phi)
+        self.all_distribution = self.select_all_distribution_to_plot(
+            all_distribution)
         self.write_xvg(log)
         self.write_msg(log)
 
@@ -82,8 +84,7 @@ class ComputeBoltzmanDistribution:
         boltzmann_dict_to_write: dict[int, tuple[np.ndarray, np.ndarray]] = {}
         for i, phi_i_radii in dict_index_phi.items():
             dist = self.compute_distribution(phi_i_radii[0])
-            if i > self.config.min_grid_to_write:
-                boltzmann_dict_to_write[i] = (dist, phi_i_radii[1])
+            boltzmann_dict_to_write[i] = (dist, phi_i_radii[1])
             if i in self.config.selected_grid:
                 boltzmann_dict[i] = (dist, phi_i_radii[1])
         return boltzmann_dict, boltzmann_dict_to_write
@@ -153,6 +154,18 @@ class ComputeBoltzmanDistribution:
                               )
         del df_i
         del dist_dist
+
+    def select_all_distribution_to_plot(self,
+                                        all_distribution: dict[
+                                            int, tuple[np.ndarray, np.ndarray]]
+                                        ) -> dict[int, tuple[np.ndarray,
+                                                             np.ndarray]]:
+        """Select the distribution to plot"""
+        all_distribution_to_plot: dict[int, tuple[np.ndarray, np.ndarray]] = {}
+        for i, (dist, phi) in all_distribution.items():
+            if i >= self.config.min_grid_to_write:
+                all_distribution_to_plot[i] = (dist, phi)
+        return all_distribution_to_plot
 
     def write_msg(self, log: logger.logging.Logger) -> None:
         """Write the message to the log

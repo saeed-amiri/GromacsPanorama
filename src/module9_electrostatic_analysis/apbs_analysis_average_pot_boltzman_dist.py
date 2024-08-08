@@ -43,11 +43,12 @@ class ComputeBoltzmanDistribution:
     Compute the Boltzman distribution for the input parameters
     """
     # pylint: disable=too-many-arguments
-    __slots__ = ['info_msg', 'config', 'boltzmann_distribution', 'all_dist']
+    __slots__ = [
+        'info_msg', 'config', 'boltzmann_distribution', 'all_distribution']
     info_msg: str
     config: BoltzmanConfig
     boltzmann_distribution: dict[int, tuple[np.ndarray, np.ndarray]]
-    all_dist: dict[int, np.ndarray]
+    all_distribution: dict[int, tuple[np.ndarray, np.ndarray]]
 
     def __init__(self,
                  cut_radial_average: list[np.ndarray],
@@ -62,7 +63,7 @@ class ComputeBoltzmanDistribution:
             self.make_dict_index_phi(cut_radial_average,
                                      radii_list,
                                      sphere_grid_range)
-        self.boltzmann_distribution, self.all_dist = \
+        self.boltzmann_distribution, self.all_distribution = \
             self.compute_boltzmann_distribution(dict_index_phi)
         self.write_xvg(log)
         self.write_msg(log)
@@ -73,13 +74,14 @@ class ComputeBoltzmanDistribution:
                                        ) -> tuple[
                                            dict[int, tuple[np.ndarray,
                                                            np.ndarray]],
-                                           dict[int, np.ndarray]]:
+                                           dict[int, tuple[np.ndarray,
+                                                           np.ndarray]]]:
         """Compute the Boltzman distribution"""
         boltzmann_dict: dict[int, tuple[np.ndarray, np.ndarray]] = {}
-        boltzmann_dict_to_write: dict[int, np.ndarray] = {}
+        boltzmann_dict_to_write: dict[int, tuple[np.ndarray, np.ndarray]] = {}
         for i, phi_i_radii in dict_index_phi.items():
             dist = self.compute_distribution(phi_i_radii[0])
-            boltzmann_dict_to_write[i] = dist
+            boltzmann_dict_to_write[i] = (dist, phi_i_radii[1])
             if i in self.config.selected_grid:
                 boltzmann_dict[i] = (dist, phi_i_radii[1])
         return boltzmann_dict, boltzmann_dict_to_write
@@ -136,7 +138,9 @@ class ComputeBoltzmanDistribution:
                   log: logger.logging.Logger) -> None:
         """Write the distribution to the xvg file
         """
-        df_i: pd.DataFrame = pd.DataFrame.from_dict(self.all_dist,
+        dist_dist: dict[int, np.ndarray] = \
+            {k: v[1] for k, v in self.all_distribution.items()}
+        df_i: pd.DataFrame = pd.DataFrame.from_dict(dist_dist,
                                                     orient='columns')
         file_writer.write_xvg(df_i=df_i,
                               log=log,
@@ -145,6 +149,8 @@ class ComputeBoltzmanDistribution:
                               xaxis_label='r [nm]',
                               yaxis_label='c/c_0'
                               )
+        del df_i
+        del dist_dist
 
     def write_msg(self, log: logger.logging.Logger) -> None:
         """Write the message to the log

@@ -43,10 +43,11 @@ class ComputeBoltzmanDistribution:
     Compute the Boltzman distribution for the input parameters
     """
     # pylint: disable=too-many-arguments
-    __slots__ = ['info_msg', 'config', 'boltzmann_distribution']
+    __slots__ = ['info_msg', 'config', 'boltzmann_distribution', 'all_dist']
     info_msg: str
     config: BoltzmanConfig
     boltzmann_distribution: dict[int, tuple[np.ndarray, np.ndarray]]
+    all_dist: dict[int, np.ndarray]
 
     def __init__(self,
                  cut_radial_average: list[np.ndarray],
@@ -61,9 +62,9 @@ class ComputeBoltzmanDistribution:
             self.make_dict_index_phi(cut_radial_average,
                                      radii_list,
                                      sphere_grid_range)
-        self.boltzmann_distribution, dist_to_write = \
+        self.boltzmann_distribution, self.all_dist = \
             self.compute_boltzmann_distribution(dict_index_phi)
-        self.write_xvg(dist_to_write, log)
+        self.write_xvg(log)
         self.write_msg(log)
 
     def compute_boltzmann_distribution(self,
@@ -132,11 +133,10 @@ class ComputeBoltzmanDistribution:
         """
 
     def write_xvg(self,
-                  dist_to_write: dict[int, np.ndarray],
                   log: logger.logging.Logger) -> None:
         """Write the distribution to the xvg file
         """
-        df_i: pd.DataFrame = pd.DataFrame.from_dict(dist_to_write,
+        df_i: pd.DataFrame = pd.DataFrame.from_dict(self.all_dist,
                                                     orient='columns')
         file_writer.write_xvg(df_i=df_i,
                               log=log,

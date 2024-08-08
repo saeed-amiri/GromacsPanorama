@@ -418,6 +418,7 @@ class AverageAnalysis:
         cut_ind = np.argmin(np.abs(radii_list[0] - 100))
 
         pot_plots.plot_boltzman_distribution(dist_radii, cut_ind)
+        pot_plots.plot_all_boltman_distribution(dist.all_distribution, cut_ind)
 
     def write_xvg(self,
                   data: dict[str, dict[np.int64, float]],

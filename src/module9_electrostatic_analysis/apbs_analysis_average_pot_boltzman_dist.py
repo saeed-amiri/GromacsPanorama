@@ -33,6 +33,7 @@ class BoltzmanConfig:
         'oda_concentration': 0.003  # Molar concentration of the ODA!!
         })
     selected_grid: list[int] = field(default_factory=lambda: [90, 91, 92])
+    min_grid_to_write: int = 85
     # if True, the boltzmann coefficient will be calculated, otherwise
     # the concentration will be cnsidered as the input
     if_boltzmann_coeff: bool = True
@@ -81,7 +82,8 @@ class ComputeBoltzmanDistribution:
         boltzmann_dict_to_write: dict[int, tuple[np.ndarray, np.ndarray]] = {}
         for i, phi_i_radii in dict_index_phi.items():
             dist = self.compute_distribution(phi_i_radii[0])
-            boltzmann_dict_to_write[i] = (dist, phi_i_radii[1])
+            if i > self.config.min_grid_to_write:
+                boltzmann_dict_to_write[i] = (dist, phi_i_radii[1])
             if i in self.config.selected_grid:
                 boltzmann_dict[i] = (dist, phi_i_radii[1])
         return boltzmann_dict, boltzmann_dict_to_write

@@ -142,7 +142,7 @@ class ComputeBoltzmanDistribution:
         """Write the distribution to the xvg file
         """
         dist_dist: dict[int, np.ndarray] = \
-            {k: v[1] for k, v in self.all_distribution.items()}
+            {k: v[0] for k, v in self.all_distribution.items()}
         df_i: pd.DataFrame = pd.DataFrame.from_dict(dist_dist,
                                                     orient='columns')
         file_writer.write_xvg(df_i=df_i,

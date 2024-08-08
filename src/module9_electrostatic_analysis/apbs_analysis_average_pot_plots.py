@@ -2,6 +2,8 @@
 plots the ouputs of the APBS analysis (average potential plots)
 
 """
+from typing import Callable, Tuple, List, Dict, Union
+
 
 import numpy as np
 
@@ -217,7 +219,8 @@ class PlotBoltzmanDistribution:
     # pylint: disable=too-many-arguments
 
     @property
-    def BOLTZMANN(self) -> dict[str, str | tuple[float, float] | list[float]]:
+    def BOLTZMANN(self) -> Dict[
+       str, Union[str, Tuple[float, float], List[float]]]:
         return {'label': 'Distribution',
                 'ylable': r'$c^+/c_0$',
                 'xlable': 'r [nm] (COM of the circle)',
@@ -229,30 +232,36 @@ class PlotBoltzmanDistribution:
                 'x_ticks': [0, 2, 4, 6, 8, 10]}
 
     @property
-    def COLOR(self) -> list[str]:
+    def COLOR_STR(self) -> List[str]:
         return elsevier_plot_tools.LINE_COLORS
 
     @property
-    def LINESTYLE(self) -> list[
-       tuple[str, tuple[None] | tuple[int, tuple[int, ...]]]]:
+    def COLOR_GENERATE(self) -> Callable[[int, str, int], List[str]]:
+        return elsevier_plot_tools.generate_shades
+
+    @property
+    def LINESTYLE(self) -> List[
+       Tuple[str, Tuple[None] | Tuple[int, Tuple[int, ...]]]]:
         return elsevier_plot_tools.LINESTYLE_TUPLE[::-1]
 
 
-def plot_boltzman_distribution(dist_radii: dict[int,  # z index
-                                                tuple[np.ndarray,  # phi
+def plot_boltzman_distribution(dist_radii: Dict[int,  # z index
+                                                Tuple[np.ndarray,  # phi
                                                       np.ndarray]  # radii
                                                 ],
                                cut_ind: int  # cut of radius
                                ) -> None:
     """Plot the Boltzman distribution"""
     configs: PlotBoltzmanDistribution = PlotBoltzmanDistribution()
-    figure: tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
+    figure: Tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
             'single_column')
     fig_i, ax_i = figure
-    plot_parameters: dict[str, str | tuple[float, float] | list[float]] = \
+    plot_parameters: Dict[
+       str, Union[str, Tuple[float, float], List[float]]] = \
         configs.BOLTZMANN
-    colors: list[str] = configs.COLOR
-    lstyles: list[tuple[str, tuple[None] | tuple[int, tuple[int, ...]]]] = \
+    colors: list[str] = configs.COLOR_STR
+    lstyles: List[
+       Tuple[str, Union[Tuple[None], Tuple[int, Tuple[int, ...]]]]] = \
         configs.LINESTYLE
 
     for i, (ind, phi_i_radii) in enumerate(dist_radii.items()):
@@ -272,3 +281,39 @@ def plot_boltzman_distribution(dist_radii: dict[int,  # z index
     elsevier_plot_tools.save_close_fig(fig_i,
                                        plot_parameters['output_file'],
                                        loc=plot_parameters['legend_loc'])
+
+
+def plot_all_boltman_distribution(all_dist_radii: Dict[int, Tuple[np.ndarray,
+                                                                  np.ndarray]],
+                                  cut_ind: int  # cut of radius
+                                  ) -> None:
+    """Plot all the Boltzman distribution"""
+    configs: PlotBoltzmanDistribution = PlotBoltzmanDistribution()
+    figure: Tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
+            'single_column')
+    fig_i, ax_i = figure
+    plot_parameters: Dict[
+       str, Union[str, Tuple[float, float], List[float]]] = \
+        configs.BOLTZMANN
+    colors: List[str] = configs.COLOR_GENERATE(len(all_dist_radii),)
+
+    for i, (ind, phi_i_radii) in enumerate(all_dist_radii.items()):
+        if i in (0, len(all_dist_radii) - 1):
+            label: str | None = f'Grid: {ind}'
+        else:
+            label = None
+        ax_i.plot(phi_i_radii[1][:cut_ind]/10.0,  # Convert to nm
+                  phi_i_radii[0][:cut_ind],
+                  label=label,
+                  color=colors[i],
+                  ls='-',
+                  )
+    ax_i.set_xlabel(plot_parameters['xlable'])
+    ax_i.set_xticks(plot_parameters['x_ticks'])
+    ax_i.set_ylabel(plot_parameters['ylable'])
+    ax_i.grid(True, ls='--', lw=0.5, alpha=0.5, color='grey')
+    ax_i.legend()
+    elsevier_plot_tools.save_close_fig(
+        fig_i,
+        fname='all_' + plot_parameters['output_file'],
+        loc=plot_parameters['legend_loc'])

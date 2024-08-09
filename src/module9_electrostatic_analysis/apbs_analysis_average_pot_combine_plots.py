@@ -34,6 +34,49 @@ class FileConfig:
               })
 
 
+@dataclass
+class FitParameres:
+    """
+    paramters from the fit of the rdf and the size of the contact
+    radius at the interface
+    """
+    add_fit_vlines: bool = True
+    fit_pram: dict[str, float] = field(default_factory=lambda: {
+        'contact_radius': 1.75,
+        'a': 3.04,
+        'b': 4.62,
+        'c': 6.14,
+        })
+
+    line_style: dict[str, str] = field(default_factory=lambda: {
+        'contact_radius': '-',
+        'a': ':',
+        'b': '--',
+        'c': '-.',
+        })
+
+    line_width: dict[str, float] = field(default_factory=lambda: {
+        'contact_radius': 1.0,
+        'a': 1.0,
+        'b': 1.0,
+        'c': 1.0,
+        })
+
+    colors: dict[str, str] = field(default_factory=lambda: {
+        'contact_radius': 'black',
+        'a': 'darkred',
+        'b': 'darkred',
+        'c': 'darkred',
+        })
+
+    labels: dict[str, str] = field(default_factory=lambda: {
+        'contact_radius': r'$r^*_c$',
+        'a': 'a',
+        'b': 'b',
+        'c': 'c',
+        })
+
+
 class PlotBolzmannRdfConfiguratio:
     """
     set all the configs and parameters and properties for the plot
@@ -151,13 +194,17 @@ class PlotBolzmannRdf:
 
     def plot_data(self) -> None:
         """plot the data"""
-        plt_config = PlotBolzmannRdfConfiguratio()
         figure: Tuple[plt.Figure, plt.Axes] = \
             elsevier_plot_tools.mk_canvas('single_column')
         fig_i, ax_i = figure
-        elsevier_plot_tools.remove_mirror_axes(ax_i)
+
+        plt_config = PlotBolzmannRdfConfiguratio()
         self.plot_rdf(ax_i, plt_config.RDF_PROP)
         self.plot_boltzman(ax_i, plt_config.BOLTZMAN_PROP)
+        self.plot_vlines(ax_i)
+
+        self.set_axis_properties(ax_i, plt_config)
+
         elsevier_plot_tools.save_close_fig(
             fig=fig_i,
             loc=plt_config.PLOT_PROPERTIES['legend_loc'],
@@ -186,6 +233,29 @@ class PlotBolzmannRdf:
                   scalex=True,
                   scaley=True,
                   **kwargs)
+
+    def set_axis_properties(self,
+                            ax_i: plt.Axes,
+                            plt_config: PlotBolzmannRdfConfiguratio
+                            ) -> None:
+        """set the axis properties"""
+        elsevier_plot_tools.remove_mirror_axes(ax_i)
+        ax_i.set_xlabel(plt_config.PLOT_PROPERTIES['xlabel'])
+        ax_i.set_ylabel(plt_config.PLOT_PROPERTIES['y_label'])
+        ax_i.set_yticks(plt_config.PLOT_PROPERTIES['y_ticks'])
+        ax_i.set_xticks(plt_config.PLOT_PROPERTIES['x_ticks'])
+
+    def plot_vlines(self,
+                    ax_i: plt.Axes
+                    ) -> None:
+        """plot the vertical lines"""
+        fit_param = FitParameres()
+        for key_i, value_i in fit_param.fit_pram.items():
+            ax_i.axvline(x=value_i,
+                         linestyle=fit_param.line_style[key_i],
+                         color=fit_param.colors[key_i],
+                         linewidth=fit_param.line_width[key_i],
+                         label=fit_param.labels[key_i])
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

@@ -30,7 +30,7 @@ class FileConfig:
     boltzman_file: Dict[str, str | List[float]] = field(
          default_factory=lambda: {
               'fname': 'boltzman_distribution.xvg',
-              'data': [90, 91, 92],
+              'data': [90, 91, 92, 93, 94, 95, 96],
               'radii': 'r_nm',
               })
 
@@ -276,7 +276,6 @@ class PlotBolzmannRdf:
         """plot the vertical lines"""
         fit_param = FitParameres()
         ylims: Tuple[float, float] = ax_i.get_ylim()
-        print(ylims)
         for key_i, value_i in fit_param.fit_pram.items():
             if key_i == 'contact_radius':
                 ylo = ylims[0]

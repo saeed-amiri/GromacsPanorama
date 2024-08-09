@@ -137,33 +137,39 @@ class PlotBolzmannRdf:
 
     def __init__(self,
                  log: logger.logging.Logger,
+                 cut_radius: float | None = None,
                  config: FileConfig = FileConfig()
                  ) -> None:
         self.info_msg = 'Message from PlotBolzmannRdf:\n'
         self.config = config
-        self.process_files(log)
+        self.process_files(cut_radius, log)
         self.plot_data()
         self.write_msg(log)
 
     def process_files(self,
+                      cut_radius: float | None,
                       log: logger.logging.Logger
                       ) -> None:
         """process the files"""
-        self.set_rdf_data(log)
-        self.set_boltzman_data(log)
+        self.set_rdf_data(cut_radius, log)
+        self.set_boltzman_data(cut_radius, log)
 
     def set_rdf_data(self,
+                     cut_radius: float | None,
                      log: logger.logging.Logger
                      ) -> None:
         """set the RDF data"""
-        rdf_data, self.rdf_radii = self.parse_xvg(
+        rdf_data, rdf_radii = self.parse_xvg(
             fname=self.config.rdf_file['fname'],
             data_column=self.config.rdf_file['data'],
             radii_column=self.config.rdf_file['radii'],
             log=log)
-        self.rdf_data = rdf_data / np.max(rdf_data)
+        rdf_data /= np.max(rdf_data)
+        self.rdf_radii, self.rdf_data = \
+            self.cut_radii(rdf_radii, rdf_data, cut_radius)
 
     def set_boltzman_data(self,
+                          cut_radius: float | None,
                           log: logger.logging.Logger
                           ) -> None:
         """set the Boltzman factor data"""
@@ -176,8 +182,20 @@ class PlotBolzmannRdf:
                 log=log)
             boltzman_data_list.append(boltzman_data)
         boltzman_data = np.mean(boltzman_data_list, axis=0)
+        self.boltzman_radii, boltzman_data = self.cut_radii(
+            boltzman_radii, boltzman_data, cut_radius)
         self.boltzman_data = boltzman_data / np.max(boltzman_data)
-        self.boltzman_radii = boltzman_radii
+
+    @staticmethod
+    def cut_radii(radii: np.ndarray,
+                  data: np.ndarray,
+                  cut_radius: float | None
+                  ) -> Tuple[np.ndarray, np.ndarray]:
+        """cut the radii and data"""
+        if cut_radius is None:
+            return radii, data
+        cut_index = np.argmin(np.abs(radii - cut_radius))
+        return radii[:cut_index], data[:cut_index]
 
     @staticmethod
     def parse_xvg(fname: str,
@@ -268,4 +286,4 @@ class PlotBolzmannRdf:
 
 
 if __name__ == '__main__':
-    PlotBolzmannRdf(logger.setup_logger('combine_plots.log'))
+    PlotBolzmannRdf(logger.setup_logger('combine_plots.log'), cut_radius=9.8)

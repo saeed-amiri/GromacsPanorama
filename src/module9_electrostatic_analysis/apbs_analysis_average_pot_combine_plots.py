@@ -10,7 +10,6 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 
 from common import logger
 from common import xvg_to_dataframe
@@ -100,7 +99,8 @@ class PlotBolzmannRdf:
         self.info_msg = 'Message from PlotBolzmannRdf:\n'
         self.config = config
         self.process_files(log)
-        self.plot_data(log)
+        self.plot_data()
+        self.write_msg(log)
 
     def process_files(self,
                       log: logger.logging.Logger
@@ -149,21 +149,21 @@ class PlotBolzmannRdf:
         radii = np.asanyarray(df_i[radii_column].values)
         return data, radii / 10.0  # convert to nm
 
-    def plot_data(self,
-                  log: logger.logging.Logger
-                  ) -> None:
+    def plot_data(self) -> None:
         """plot the data"""
         plt_config = PlotBolzmannRdfConfiguratio()
         figure: Tuple[plt.Figure, plt.Axes] = \
             elsevier_plot_tools.mk_canvas('single_column')
         fig_i, ax_i = figure
+        elsevier_plot_tools.remove_mirror_axes(ax_i)
         self.plot_rdf(ax_i, plt_config.RDF_PROP)
         self.plot_boltzman(ax_i, plt_config.BOLTZMAN_PROP)
         elsevier_plot_tools.save_close_fig(
             fig=fig_i,
-            fname=plt_config.PLOT_PROPERTIES['output_fname'],
             loc=plt_config.PLOT_PROPERTIES['legend_loc'],
+            fname=(fname := plt_config.PLOT_PROPERTIES['output_fname']),
             )
+        self.info_msg += f'\tThe plot is saved as {fname}\n'
 
     def plot_rdf(self,
                  ax_i: plt.Axes,
@@ -186,6 +186,14 @@ class PlotBolzmannRdf:
                   scalex=True,
                   scaley=True,
                   **kwargs)
+
+    def write_msg(self,
+                  log: logger.logging.Logger  # To log
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{PlotBolzmannRdf.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == '__main__':

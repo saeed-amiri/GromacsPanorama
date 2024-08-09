@@ -141,10 +141,14 @@ class ComputeBoltzmanDistribution:
                   log: logger.logging.Logger) -> None:
         """Write the distribution to the xvg file
         """
-        dist_dist: dict[int, np.ndarray] = \
-            {k: v[0] for k, v in self.all_distribution.items()}
-        df_i: pd.DataFrame = pd.DataFrame.from_dict(dist_dist,
+        dist_dict: dict[str | int, np.ndarray] = {}
+        dist_dict = {k: v[0] for k, v in self.all_distribution.items()}
+        dist_dict['radii'] = \
+            self.all_distribution[self.config.min_grid_to_write][1]
+
+        df_i: pd.DataFrame = pd.DataFrame.from_dict(dist_dict,
                                                     orient='columns')
+        df_i.set_index('radii', inplace=True)
         file_writer.write_xvg(df_i=df_i,
                               log=log,
                               fname='boltzman_distribution.xvg',
@@ -153,7 +157,7 @@ class ComputeBoltzmanDistribution:
                               yaxis_label='c/c_0'
                               )
         del df_i
-        del dist_dist
+        del dist_dict
 
     def select_all_distribution_to_plot(self,
                                         all_distribution: dict[

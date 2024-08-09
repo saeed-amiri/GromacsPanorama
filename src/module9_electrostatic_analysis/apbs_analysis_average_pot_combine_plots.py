@@ -51,38 +51,29 @@ class PlotBolzmannRdfConfiguratio:
                 'y_lims': [-0.1, 1.1],
                 'x_ticks': [0, 2, 4, 6, 8, 10],
                 'y_ticks': [0, 0.5, 1],
-                'legend_loc': 'upper right',
+                'legend_loc': 'lower right',
+                'output_fname': 'boltzman_rdf.jpg',
                 }
 
     @property
-    def RDF_LS(self) -> str:
+    def RDF_PROP(self) -> Dict[str, str | float]:
         """set the line style for RDF"""
-        return '-'
+        return {
+            'linestyle': '-',
+            'color': 'darkblue',
+            'label': r'$g^*(r^*)$, a.u.',
+            'linewidth': 1.5,
+            }
 
     @property
-    def RDF_COLOR(self) -> str:
-        """set the color for RDF"""
-        return 'darkblue'
-
-    @property
-    def RDF_LABEL(self) -> str:
-        """set the label for RDF"""
-        return 'RDF'
-
-    @property
-    def BOLTZMAN_LS(self) -> str:
+    def BOLTZMAN_PROP(self) -> Dict[str, str | float]:
         """set the line style for Boltzman factor"""
-        return ':'
-
-    @property
-    def BOLTZMAN_COLOR(self) -> str:
-        """set the color for Boltzman factor"""
-        return 'darkred'
-
-    @property
-    def BOLTZMAN_LABEL(self) -> str:
-        """set the label for Boltzman factor"""
-        return 'Boltzman factor'
+        return {
+            'linestyle': ':',
+            'color': 'darkred',
+            'label': r'c/c$_0$, a.u.',
+            'linewidth': 1.5,
+            }
 
 
 class PlotBolzmannRdf:
@@ -156,29 +147,45 @@ class PlotBolzmannRdf:
             fname=fname, log=log, x_type=float).xvg_df
         data = np.asanyarray(df_i[data_column].values)
         radii = np.asanyarray(df_i[radii_column].values)
-        return data, radii
+        return data, radii / 10.0  # convert to nm
 
     def plot_data(self,
                   log: logger.logging.Logger
                   ) -> None:
         """plot the data"""
-        fig, ax = plt.subplots()
-        self.plot_rdf(ax)
-        self.plot_boltzman(ax)
-        # self.set_plot_properties(ax)
-        plt.show()
+        plt_config = PlotBolzmannRdfConfiguratio()
+        figure: Tuple[plt.Figure, plt.Axes] = \
+            elsevier_plot_tools.mk_canvas('single_column')
+        fig_i, ax_i = figure
+        self.plot_rdf(ax_i, plt_config.RDF_PROP)
+        self.plot_boltzman(ax_i, plt_config.BOLTZMAN_PROP)
+        elsevier_plot_tools.save_close_fig(
+            fig=fig_i,
+            fname=plt_config.PLOT_PROPERTIES['output_fname'],
+            loc=plt_config.PLOT_PROPERTIES['legend_loc'],
+            )
 
     def plot_rdf(self,
-                 ax: mpl.axes.Axes
+                 ax_i: plt.Axes,
+                 kwargs: Dict[str, str | float]
                  ) -> None:
         """plot the RDF"""
-        ax.plot(self.rdf_radii, self.rdf_data)
+        ax_i.plot(self.rdf_radii,
+                  self.rdf_data,
+                  scalex=True,
+                  scaley=True,
+                  **kwargs)
 
     def plot_boltzman(self,
-                      ax: mpl.axes.Axes
+                      ax_i: plt.Axes,
+                      kwargs: Dict[str, str | float]
                       ) -> None:
         """plot the Boltzman factor"""
-        ax.plot(self.boltzman_radii, self.boltzman_data,)
+        ax_i.plot(self.boltzman_radii,
+                  self.boltzman_data,
+                  scalex=True,
+                  scaley=True,
+                  **kwargs)
 
 
 if __name__ == '__main__':

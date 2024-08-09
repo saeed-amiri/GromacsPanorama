@@ -103,7 +103,7 @@ class PlotBolzmannRdfConfiguratio:
         return {
             'linestyle': '-',
             'color': 'darkred',
-            'label': r'$g^*(r^*)$, a.u.',
+            'label': r'$g^*_{fitted}(r^*)$, a.u.',
             'linewidth': 1.5,
             }
 
@@ -255,7 +255,8 @@ class PlotBolzmannRdf:
                          linestyle=fit_param.line_style[key_i],
                          color=fit_param.colors[key_i],
                          linewidth=fit_param.line_width[key_i],
-                         label=fit_param.labels[key_i])
+                         label=f'{fit_param.labels[key_i]} = {value_i}',
+                         )
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

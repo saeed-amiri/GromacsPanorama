@@ -21,6 +21,7 @@ from common.colors_text import TextColor as bcolors
 class FileConfig:
     """set all the configs and parameters
     """
+    oda_concentration: float = 0.003  # ODA/nm^2
     rdf_file: Dict[str, str] = field(default_factory=lambda: {
         'fname': '15_oda_densities.xvg',
         'data': 'fitted_rdf',
@@ -87,7 +88,7 @@ class PlotBolzmannRdfConfiguratio:
     def PLOT_PROPERTIES(self) -> Dict[str, Union[str, int, float]]:
         """set the plot properties"""
         return {'y_label': None,
-                'xlabel': 'r (nm)',
+                'xlabel': r'r$^*$ (nm)',
                 'title': 'Boltzman factor and RDF',
                 'x_lims': [-0.5, 10.5],
                 'y_lims': [-0.1, 1.1],
@@ -116,6 +117,11 @@ class PlotBolzmannRdfConfiguratio:
             'label': r'c/c$_0$, a.u.',
             'linewidth': 1.5,
             }
+
+    @property
+    def ADD_TEXT(self) -> bool:
+        """add text for ODA concentration to the plot"""
+        return True
 
 
 class PlotBolzmannRdf:
@@ -222,6 +228,7 @@ class PlotBolzmannRdf:
         self.plot_vlines(ax_i)
 
         self.set_axis_properties(ax_i, plt_config)
+        self.add_text(ax_i, plt_config)
 
         elsevier_plot_tools.save_close_fig(
             fig=fig_i,
@@ -268,13 +275,38 @@ class PlotBolzmannRdf:
                     ) -> None:
         """plot the vertical lines"""
         fit_param = FitParameres()
+        ylims: Tuple[float, float] = ax_i.get_ylim()
+        print(ylims)
         for key_i, value_i in fit_param.fit_pram.items():
+            if key_i == 'contact_radius':
+                ylo = ylims[0]
+                yhi = ylims[1] * 0.86
+            else:
+                ylo = ylims[0]
+                yhi = ylims[1]
             ax_i.axvline(x=value_i,
+                         ymin=ylo,
+                         ymax=yhi,
                          linestyle=fit_param.line_style[key_i],
                          color=fit_param.colors[key_i],
                          linewidth=fit_param.line_width[key_i],
                          label=f'{fit_param.labels[key_i]} = {value_i}',
                          )
+
+    def add_text(self,
+                 ax_i: plt.Axes,
+                 plt_config: PlotBolzmannRdfConfiguratio
+                 ) -> None:
+        """add text to the plot"""
+        if plt_config.ADD_TEXT:
+            ax_i.text(0.16,
+                      1.0,
+                      f'{self.config.oda_concentration} ODA/nm$^2$',
+                      transform=ax_i.transAxes,
+                      fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT - 3,
+                      verticalalignment='top',
+                      horizontalalignment='center',
+                      )
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

@@ -59,7 +59,7 @@ class PlotBolzmannRdfConfiguratio:
         """set the line style for RDF"""
         return {
             'linestyle': '-',
-            'color': 'darkblue',
+            'color': 'darkred',
             'label': r'$g^*(r^*)$, a.u.',
             'linewidth': 1.5,
             }
@@ -69,7 +69,7 @@ class PlotBolzmannRdfConfiguratio:
         """set the line style for Boltzman factor"""
         return {
             'linestyle': ':',
-            'color': 'darkred',
+            'color': 'darkblue',
             'label': r'c/c$_0$, a.u.',
             'linewidth': 1.5,
             }

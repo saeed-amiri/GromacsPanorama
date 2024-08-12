@@ -204,7 +204,9 @@ class AverageAnalysis:
                                                  )
         if computed_dicts is None:
             return
+
         lambda_d, psi_zero = computed_dicts
+        del computed_dicts
 
         self.compute_oda_boltzman_distribution(radial_average_list,
                                                sphere_grid_range,
@@ -224,6 +226,10 @@ class AverageAnalysis:
                          radii_list.copy(),
                          radial_average_list.copy(),
                          sphere_grid_range.copy())
+        del sigma
+        del cut_radii
+        del radii_list
+        del cut_radial_average
 
     def compute_debye_surface_potential(self,
                                         cut_radii: list[np.ndarray],
@@ -274,6 +280,13 @@ class AverageAnalysis:
 
         if self.configs.plot_interactive:
             self._interactive_plot(plots_data)
+
+        del cut_radii
+        del cut_indices
+        del interset_radius
+        del sphere_grid_range
+        del cut_radial_average
+        del radial_average_list
 
         return lambda_d_dict, psi_zero_dict
 
@@ -419,6 +432,9 @@ class AverageAnalysis:
 
         pot_plots.plot_boltzman_distribution(dist_radii, cut_ind)
         pot_plots.plot_all_boltman_distribution(dist.all_distribution, cut_ind)
+
+        del radii_list
+        del cut_radial_average
 
     def write_xvg(self,
                   data: dict[str, dict[np.int64, float]],

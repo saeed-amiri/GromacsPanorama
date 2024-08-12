@@ -87,6 +87,7 @@ class ComputeBoltzmanDistribution:
             boltzmann_dict_to_write[i] = (dist, phi_i_radii[1])
             if i in self.config.selected_grid:
                 boltzmann_dict[i] = (dist, phi_i_radii[1])
+        del dict_index_phi
         return boltzmann_dict, boltzmann_dict_to_write
 
     def compute_distribution(self,
@@ -104,6 +105,7 @@ class ComputeBoltzmanDistribution:
         else:
             co_eff = 1.0
         arg: np.ndarray = param['e_charge'] * phi_i * 1e-3 / kbt
+        del phi_i
         return co_eff * np.exp(-arg)
 
     def make_dict_index_phi(self,
@@ -117,6 +119,9 @@ class ComputeBoltzmanDistribution:
         for i, (phi_i, radii) in enumerate(zip(cut_radial_average,
                                                radii_list)):
             dict_index_phi[sphere_grid_range[i]] = (phi_i, radii)
+        del cut_radial_average
+        del sphere_grid_range
+        del radii_list
         return dict_index_phi
 
     def compute_concentration_from_surface_adsorption(self) -> None:
@@ -169,6 +174,7 @@ class ComputeBoltzmanDistribution:
         for i, (dist, phi) in all_distribution.items():
             if i >= self.config.min_grid_to_write:
                 all_distribution_to_plot[i] = (dist, phi)
+        del all_distribution
         return all_distribution_to_plot
 
     def write_msg(self, log: logger.logging.Logger) -> None:

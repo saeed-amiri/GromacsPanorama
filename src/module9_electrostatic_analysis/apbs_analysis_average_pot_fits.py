@@ -68,8 +68,8 @@ class FitPotential:
             fitted_func(radii[0], *self.popt)
         self.popt[1] = surface_pot
 
-        self.evaluate_fit = self.analyze_fit_quality(radial_average,
-                                                     self.fitted_pot)
+        self.evaluate_fit = self.evaluate_fit_quality(radial_average,
+                                                      self.fitted_pot)
 
     def interpolate_radial_average(self,
                                    radii: np.ndarray,
@@ -116,7 +116,7 @@ class FitPotential:
     def get_fit_function(self) -> typing.Callable[...,
                                                   np.ndarray | float]:
         """Get the fit function"""
-        fit_fun_type: str = self.validate_fit_function()
+        fit_fun_type: str = self.check_fit_function_validity()
         return {
             'exponential_decay': self.exp_decay,
             'linear_sphere': self.linear_sphere,
@@ -130,7 +130,7 @@ class FitPotential:
                           psi_infty: float
                           ) -> list[float]:
         """Get the initial guess for the Debye length"""
-        fit_fun_type = self.validate_fit_function()
+        fit_fun_type = self.check_fit_function_validity()
         if abs(phi_0) < 1:
             phi_0 = 10 * abs(phi_0)
         return {
@@ -190,7 +190,7 @@ class FitPotential:
             parameters['e_charge']
         return co_factor * np.log((1 + alpha_term) / (1 - alpha_term))
 
-    def validate_fit_function(self) -> str:
+    def check_fit_function_validity(self) -> str:
         """Validate and return the fit function type from config"""
         fit_fun_type = self.config.fit_function
         valid_functions = [
@@ -202,10 +202,10 @@ class FitPotential:
                 f'\t{" ,".join(valid_functions)}\n')
         return fit_fun_type
 
-    def analyze_fit_quality(self,
-                            y_true: np.ndarray,
-                            y_fitted: np.ndarray
-                            ) -> tuple[float, float, float]:
+    def evaluate_fit_quality(self,
+                             y_true: np.ndarray,
+                             y_fitted: np.ndarray
+                             ) -> tuple[float, float, float]:
         """Compute the fit metrics
         r2_score: Coefficient of Determination:
             Measures how well the observed outcomes are replicated by

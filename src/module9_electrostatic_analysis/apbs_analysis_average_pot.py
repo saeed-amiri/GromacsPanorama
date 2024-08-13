@@ -24,6 +24,7 @@ Saeed
 # pylint: disable=import-error
 
 import sys
+import json
 import typing
 from dataclasses import dataclass
 
@@ -281,6 +282,8 @@ class AverageAnalysis:
         if self.configs.plot_interactive:
             self._interactive_plot(plots_data)
 
+        self._log_fit_config(fit)
+
         del cut_radii
         del cut_indices
         del interset_radius
@@ -309,6 +312,13 @@ class AverageAnalysis:
                        ) -> "FitPotential":
         """Fit the potential to the planar surface approximation"""
         return FitPotential(radii, radial_average, r_np, psi_inf)
+
+    def _log_fit_config(self,
+                        fit: "FitPotential"
+                        ) -> None:
+        """Log the fit configuraion"""
+        formated_config: str = json.dumps(fit.config.__dict__, indent=8)
+        self.info_msg += f'\tFit config: {formated_config}\n'
 
     def _plot_debug(self,
                     cut_radii: list[np.ndarray],

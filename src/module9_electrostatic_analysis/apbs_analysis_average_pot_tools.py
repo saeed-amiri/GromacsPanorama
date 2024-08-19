@@ -121,15 +121,15 @@ def calculate_radial_average(data_arr: np.ndarray,
                              grid_spacing: list[float],
                              max_radius: float,
                              grid_z: np.ndarray,
-                             interface_low_index,
-                             interface_high_index,
-                             lower_index_bulk,
-                             bulk_averaging
+                             interface_low_index: int,
+                             interface_high_index: int,
+                             lower_index_bulk: int,
+                             bulk_averaging: bool,
                              ) -> tuple[np.ndarray, list[float]]:
     """Calculate the radial average of the potential"""
     # pylint: disable=too-many-arguments
-    radii = np.arange(0, max_radius, grid_spacing[0])
-    radial_average = []
+    radii: np.ndarray = np.arange(0, max_radius, grid_spacing[0])
+    radial_average: list[float] = []
 
     for radius in radii:
         mask = create_mask(distances,

@@ -288,13 +288,21 @@ class ComparePhiZero:
         # Add diagonal lines to indicate the 'break' in the axis
         d_size = .015  # how big to make the diagonal lines in axes coordinates
         kwargs = {"transform": ax1.transAxes, "color": 'k', "clip_on": False}
-        ax1.plot((-d_size, +d_size), (-d_size, +d_size), **kwargs)
-        ax1.plot((1 - d_size, 1 + d_size), (-d_size, +d_size), **kwargs)
+        ax1.plot((-d_size, +d_size),
+                 (-d_size, +d_size),
+                 **kwargs)
+        ax1.plot((1 - d_size, 1 + d_size),
+                 (-d_size, +d_size),
+                  **kwargs)
 
         # switch to the bottom axes
         kwargs.update(transform=ax2.transAxes)
-        ax2.plot((-d_size, +d_size), (1 - d_size, 1 + d_size), **kwargs)
-        ax2.plot((1 - d_size, 1 + d_size), (1 - d_size, 1 + d_size), **kwargs)
+        ax2.plot((-d_size, +d_size),
+                 (1 - d_size, 1 + d_size),
+                 **kwargs)
+        ax2.plot((1 - d_size, 1 + d_size),
+                 (1 - d_size, 1 + d_size),
+                 **kwargs)
 
         # Labels, titles, and legends
         ax2.set_xlabel('Cut off radius [nm]')
@@ -323,6 +331,7 @@ class ComparePhiZero:
         fig_i: plt.Figure
         ax_i: plt.Axes
         fig_i, ax_i = elsevier_plot_tools.mk_canvas(size_type='single_column')
+        # Plot the Loeb approximation
         ax_i.plot(densities_ave,
                   phi_loeb_mv,
                   'o:',
@@ -330,6 +339,7 @@ class ComparePhiZero:
                   color='black',
                   lw=0.5,
                   markersize=3)
+        # Plot the Grahame approximation
         ax_i.plot(densities_ave,
                   phi_grahame_mv,
                   '^:',
@@ -337,8 +347,10 @@ class ComparePhiZero:
                   color='grey',
                   lw=0.5,
                   markersize=3)
+        # Set the labels
         ax_i.set_xlabel(r'$\sigma$ [C/m$^2$]')
         ax_i.set_ylabel(r'$\psi_0$ [mV]')
+        # Save the figure
         elsevier_plot_tools.save_close_fig(
             fig_i, fname := 'phi_0_vs_density_comparison.jpg',
             loc='lower right')

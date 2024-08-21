@@ -8,7 +8,8 @@ import numpy as np
 import pandas as pd
 
 
-from common import logger, xvg_to_dataframe
+from common import logger
+from common import xvg_to_dataframe
 from common.colors_text import TextColor as bcolors
 from module9_electrostatic_analysis.dlvo_potential_configs import \
     AllConfig

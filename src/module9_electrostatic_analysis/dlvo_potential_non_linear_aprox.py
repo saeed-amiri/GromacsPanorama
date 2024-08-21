@@ -23,7 +23,8 @@ Saeed
 """
 
 import typing
-from dataclasses import dataclass, field
+from dataclasses import field
+from dataclasses import dataclass
 
 import numpy as np
 import matplotlib.pyplot as plt

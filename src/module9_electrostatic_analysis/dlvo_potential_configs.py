@@ -4,7 +4,8 @@ This module contains the configurations for the DLVO potential calculation.
 
 import typing
 import numpy as np
-from dataclasses import dataclass, field
+from dataclasses import field
+from dataclasses import dataclass
 
 from common import elsevier_plot_tools
 

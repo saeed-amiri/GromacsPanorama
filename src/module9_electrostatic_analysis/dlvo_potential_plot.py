@@ -10,7 +10,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 
-from common import logger, elsevier_plot_tools, xvg_to_dataframe
+from common import logger
+from common import xvg_to_dataframe
+from common import elsevier_plot_tools
 from common.colors_text import TextColor as bcolors
 from module9_electrostatic_analysis.dlvo_potential_configs import \
     AllConfig, PlotConfig

@@ -7,7 +7,8 @@ from Possion-Boltzmann equation.
 from datetime import datetime
 
 import numpy as np
-from scipy.optimize import fsolve, root
+from scipy.optimize import root
+from scipy.optimize import fsolve
 
 
 from common import logger

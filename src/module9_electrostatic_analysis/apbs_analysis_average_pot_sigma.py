@@ -3,7 +3,8 @@ Compute the charge density based on the Grahame, Loeb, and Ohshima equations
 and compare the results with the experimental data
 """
 
-from dataclasses import dataclass, field
+from dataclasses import field
+from dataclasses import dataclass
 
 import numpy as np
 

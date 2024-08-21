@@ -9,9 +9,9 @@ import os
 import gc
 import sys
 import typing
-from dataclasses import dataclass
-from dataclasses import field
 from enum import Enum
+from dataclasses import field
+from dataclasses import dataclass
 
 import multiprocessing as mp
 import pandas as pd

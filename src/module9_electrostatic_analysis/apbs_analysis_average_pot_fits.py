@@ -4,7 +4,8 @@ Fittign the average potential data to a polynomial function
 
 
 import typing
-from dataclasses import dataclass, field
+from dataclasses import field
+from dataclasses import dataclass
 import inspect
 
 import numpy as np

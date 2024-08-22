@@ -27,7 +27,8 @@ import os
 import sys
 import typing
 import subprocess
-from dataclasses import dataclass, field
+from dataclasses import field
+from dataclasses import dataclass
 
 from common import logger
 from common.colors_text import TextColor as bcolors

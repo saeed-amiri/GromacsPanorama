@@ -75,7 +75,8 @@ import datetime
 from collections import Counter
 from multiprocessing import Pool
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field
+from dataclasses import field
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd

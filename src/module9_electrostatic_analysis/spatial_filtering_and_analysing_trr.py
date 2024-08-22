@@ -55,16 +55,20 @@ import os
 import sys
 import typing
 from datetime import datetime
+from dataclasses import field
+from dataclasses import dataclass
 from collections import Counter
 from multiprocessing import Pool
-from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
 
 import MDAnalysis as mda
 
-from common import logger, itp_to_df, my_tools, cpuconfig
+from common import logger
+from common import my_tools
+from common import cpuconfig
+from common import itp_to_df
 from common.colors_text import TextColor as bcolors
 
 from module9_electrostatic_analysis import force_field_path_configure

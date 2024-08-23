@@ -97,9 +97,12 @@ def calculate_max_radius(center_xyz: tuple[float, float, float],
 def create_distance_grid(grid_points: list[int],
                          ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Create the distance grid"""
-    x_space = np.linspace(0, grid_points[0] - 1, grid_points[0])
-    y_space = np.linspace(0, grid_points[1] - 1, grid_points[1])
-    z_space = np.linspace(0, grid_points[2] - 1, grid_points[2])
+    x_space: np.ndarray = \
+        np.linspace(0, grid_points[0] - 1, grid_points[0])
+    y_space: np.ndarray = \
+        np.linspace(0, grid_points[1] - 1, grid_points[1])
+    z_space: np.ndarray = \
+        np.linspace(0, grid_points[2] - 1, grid_points[2])
 
     grid_x, grid_y, grid_z = \
         np.meshgrid(x_space, y_space, z_space, indexing='ij')

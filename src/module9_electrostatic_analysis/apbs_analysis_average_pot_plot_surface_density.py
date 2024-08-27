@@ -72,16 +72,17 @@ class SurfacePotentialAndDensityPlot:
                  ) -> None:
         self.file_configs = configs
         self.plot_density(log)
+        self.write_msg(log)
 
     def plot_density(self,
                      log: logger.logging.Logger
                      ) -> None:
         """plot the density of the system"""
-        density_dict: dict[str, pd.DataFrame] = self.read_files(log)
+        density_dict: dict[str, pd.DataFrame] = self.procces_file(log)
 
-    def read_files(self,
-                   log: logger.logging.Logger
-                   ) -> dict[str, pd.DataFrame]:
+    def procces_file(self,
+                     log: logger.logging.Logger
+                     ) -> dict[str, pd.DataFrame]:
         """read the files and return the normalized density"""
         density_dict: dict[str, pd.DataFrame] = {}
         for i in self.file_configs.plot_list:
@@ -91,6 +92,15 @@ class SurfacePotentialAndDensityPlot:
             denity_i: pd.DataFrame = df[[y_col]]
             density_dict[y_col] = denity_i/np.max(denity_i)
         return density_dict
+
+
+    def write_msg(self,
+                  log: logger.logging.Logger  # To log
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{SurfacePotentialAndDensityPlot.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == '__main__':

@@ -153,6 +153,7 @@ def plot_debug(cut_radii: list[np.ndarray],
 def plot_debye_surface_potential(data: dict[np.int64, float],
                                  type_data: str,
                                  z_grid_spacing: tuple[float, float, float],
+                                 np_z_offset: float,
                                  close_fig: bool = True,
                                  ) -> None | Tuple[plt.Figure, plt.Axes]:
     """Plot the Debye length and surface potential"""
@@ -176,7 +177,7 @@ def plot_debye_surface_potential(data: dict[np.int64, float],
     else:
         raise ValueError(f'Unknown type_data: {type_data}')
 
-    ax_i.plot(xdata / 10.0,  # Convert to nm
+    ax_i.plot(xdata / 10.0 - np_z_offset,  # Convert to nm
               ydata,
               ls=elsevier_plot_tools.LINE_STYLES[3],
               color=elsevier_plot_tools.DARK_RGB_COLOR_GRADIENT[0],
@@ -200,8 +201,8 @@ def plot_debye_surface_potential(data: dict[np.int64, float],
         plot_config.ODA_BOUND[1] * z_grid_spacing[2] / 10.0)
     # Shade the area between ODA_BOUND
     ax_i.fill_betweenx(ax_i.get_ylim(),
-                       oda_bound[0],
-                       oda_bound[1],
+                       oda_bound[0] - np_z_offset,
+                       oda_bound[1] - np_z_offset,
                        color='gray',
                        edgecolor=None,
                        alpha=0.5,
@@ -213,7 +214,7 @@ def plot_debye_surface_potential(data: dict[np.int64, float],
                                        plot_parameters['output_file'],
                                        loc=plot_parameters['legend_loc'],
                                        )
-
+    return None
 
 # Boltzman distribution plots
 class PlotBoltzmanDistribution:

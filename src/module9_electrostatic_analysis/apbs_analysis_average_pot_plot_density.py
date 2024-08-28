@@ -16,11 +16,11 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from common import logger
 from common import xvg_to_dataframe
+from common import elsevier_plot_tools
 from common.colors_text import TextColor as bcolors
 
 from module9_electrostatic_analysis.apbs_analysis_average_pot_plots import \
@@ -51,6 +51,7 @@ class DensityFileConfig:
         field(default_factory=lambda: [0, 1, 7, 8])
 
 
+@dataclass
 class DenityPlotConfiguration:
     """The configuration for the density plot"""
     # pylint: disable=missing-function-docstring
@@ -104,5 +105,4 @@ class SurfacePotentialAndDensityPlot:
 
 
 if __name__ == '__main__':
-    SurfacePotentialAndDensityPlot(
-        logger.setup_logger('plot_surface_density.log'))
+    pass

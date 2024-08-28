@@ -45,7 +45,8 @@ from module9_electrostatic_analysis.apbs_analysis_average_pot_sigma \
     import ComputeSigma
 from module9_electrostatic_analysis.apbs_analysis_average_pot_boltzman_dist \
     import ComputeBoltzmanDistribution
-
+from module9_electrostatic_analysis.apbs_analysis_average_pot_plot_density \
+    import SurfacePotentialAndDensityPlot
 
 from common import logger
 from common import file_writer
@@ -87,13 +88,15 @@ class DxAttributeWrapper:
                  grid_spacing: list[float],
                  origin: list[float],
                  box_size: list[float],
-                 data_arr: np.ndarray
+                 data_arr: np.ndarray,
+                 z_offset: float,
                  ) -> None:
         self._grid_points = grid_points
         self._grid_spacing = grid_spacing
         self._origin = origin
         self._data_arr = data_arr
         self._box_size = box_size
+        self._z_offset = z_offset
 
     @property
     def GRID_POINTS(self) -> list[int]:
@@ -229,6 +232,7 @@ class AverageAnalysis:
         self.plot_debye_surface_potential(lambda_d, 'lambda_d')
         self.plot_debye_surface_potential(psi_zero, 'psi_0')
         self.plot_debye_surface_potential(sigma, 'sigma')
+        self.plot_debye_surface_potential_with_density(psi_zero, 'psi_0', log)
         self.write_xvg({'lambda_d [A]': lambda_d,
                         'psi_0 [mV]': psi_zero,
                         'sigma [C/m^2]': sigma}, log)
@@ -354,7 +358,21 @@ class AverageAnalysis:
         """Plot the Debye length and surface potential"""
         pot_plots.plot_debye_surface_potential(data,
                                                type_data,
-                                               self.dx.GRID_SPACING)
+                                               self.dx.GRID_SPACING,
+                                               self.dx.Z_OFFSET,
+                                               )
+
+    def plot_debye_surface_potential_with_density(self,
+                                                  data: dict[np.int64, float],
+                                                  type_data: str,
+                                                  log: logger.logging
+                                                  ) -> None:
+        """Plot the Debye length and surface potential"""
+        SurfacePotentialAndDensityPlot(data,
+                                       type_data,
+                                       self.dx.GRID_SPACING,
+                                       self.dx.Z_OFFSET,
+                                       log)
 
     def compute_all_layers(self,
                            center_xyz: tuple[int, int, int],

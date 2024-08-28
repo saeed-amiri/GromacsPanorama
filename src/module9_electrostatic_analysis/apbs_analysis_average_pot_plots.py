@@ -152,8 +152,9 @@ def plot_debug(cut_radii: list[np.ndarray],
 
 def plot_debye_surface_potential(data: dict[np.int64, float],
                                  type_data: str,
-                                 z_grid_spacing: tuple[float, float, float]
-                                 ) -> None:
+                                 z_grid_spacing: tuple[float, float, float],
+                                 close_fig: bool = True,
+                                 ) -> None | Tuple[plt.Figure, plt.Axes]:
     """Plot the Debye length and surface potential"""
     plot_config: PlotParameterFittedPotential = PlotParameterFittedPotential()
     figure: tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
@@ -206,9 +207,12 @@ def plot_debye_surface_potential(data: dict[np.int64, float],
                        alpha=0.5,
                        label='ODA`s N locations',
                        )
+    if not close_fig:
+        return fig_i, ax_i
     elsevier_plot_tools.save_close_fig(fig_i,
                                        plot_parameters['output_file'],
-                                       loc=plot_parameters['legend_loc'])
+                                       loc=plot_parameters['legend_loc'],
+                                       )
 
 
 # Boltzman distribution plots

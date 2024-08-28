@@ -2,7 +2,7 @@
 plots the ouputs of the APBS analysis (average potential plots)
 
 """
-from typing import Callable, Tuple, List, Dict, Union
+from typing import Callable, Tuple, List, Dict, Union, Any
 
 
 import numpy as np
@@ -155,8 +155,12 @@ def plot_debye_surface_potential(data: dict[np.int64, float],
                                  z_grid_spacing: tuple[float, float, float],
                                  np_z_offset: float,
                                  close_fig: bool = True,
-                                 ) -> None | Tuple[plt.Figure, plt.Axes]:
+                                 return_data: bool = False,
+                                 ) -> None | \
+                                    Tuple[plt.Figure, plt.Axes] | \
+                                    dict[str, Any]:
     """Plot the Debye length and surface potential"""
+    # pylint: disable=too-many-arguments
     plot_config: PlotParameterFittedPotential = PlotParameterFittedPotential()
     figure: tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
         'single_column')
@@ -208,6 +212,11 @@ def plot_debye_surface_potential(data: dict[np.int64, float],
                        alpha=0.5,
                        label='ODA`s N locations',
                        )
+    if return_data:
+        return {'xdata': xdata / 10.0 - np_z_offset,
+                'ydata': ydata,
+                'oda_bound': oda_bound,
+                }
     if not close_fig:
         return fig_i, ax_i
     elsevier_plot_tools.save_close_fig(fig_i,
@@ -215,6 +224,7 @@ def plot_debye_surface_potential(data: dict[np.int64, float],
                                        loc=plot_parameters['legend_loc'],
                                        )
     return None
+
 
 # Boltzman distribution plots
 class PlotBoltzmanDistribution:

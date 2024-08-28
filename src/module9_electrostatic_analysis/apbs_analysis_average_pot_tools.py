@@ -2,9 +2,15 @@
 Tools for computing averages of APBS analysis results.
 They were statimehotd in the module apbs_analysis_average_pot_plots.py.
 """
+import os
 import typing
 
 import numpy as np
+import pandas as pd
+
+from common import logger
+from common import xvg_to_dataframe
+from common.colors_text import TextColor as bcolors
 
 
 # tools for method: analyse_potential
@@ -207,3 +213,36 @@ def get_arr_from_dict(data_dict: dict[typing.Any,
     if key_i not in data_dict:
         raise KeyError(f'The key {key_i} is not in the dictionary.')
     return np.array(list(data_dict[key_i].values()))
+
+
+def get_average_z_palce_nanoparticle(log: logger.logging.Logger,
+                                     fname: str = 'COR_COM.xvg'
+                                     ) -> float:
+    """
+    Get the average z place of the nanoparticle from the uncentered
+    trajectory
+    """
+    if not os.path.exists(fname):
+        log.info(msg := f'\tFile `{fname}` does not exist!, return `0.0`\n')
+        print(f'{bcolors.WARNING}{msg}{bcolors.ENDC}')
+        return 0.0
+    df: pd.DataFrame = xvg_to_dataframe.XvgParser(fname, log).xvg_df
+    try:
+        return df['COR_Z'].mean()
+    except KeyError:
+        log.error(
+            msg := '\tThe column `COR_Z` does not exist!, return `0.0`\n')
+        print(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+        return 0.0
+
+
+def compute_z_offset_nanoparticles(box_size_z: float,
+                                   log: logger.logging.Logger,
+                                   ) -> float:
+    """
+    Compute the offset of the nanoparticles after centering the
+    nanoparticle in the box
+    """
+    box_center: float = box_size_z / 2 / 10.0  # Convert to nm
+    np_com_z: float = get_average_z_palce_nanoparticle(log)
+    return box_center - np_com_z

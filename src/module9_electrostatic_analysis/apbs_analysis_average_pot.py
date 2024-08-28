@@ -130,6 +130,13 @@ class DxAttributeWrapper:
         """Box sizes in Angstrom"""
         return self._box_size
 
+    @property
+    def Z_OFFSET(self) -> float:
+        """The z of the nanoaprticle because of the centering the np
+        in the box
+        """
+        return self._z_offset
+
 
 class AverageAnalysis:
     """
@@ -159,12 +166,15 @@ class AverageAnalysis:
         """read the dx file"""
         self.info_msg += f'\tAnalysing the dx file: {fname_dx}\n'
         read_dx = ProcessDxFile(fname_dx, log)
+        z_offset: float = \
+            pot_tools.compute_z_offset_nanoparticles(read_dx.box_size[2], log)
         self.dx = DxAttributeWrapper(
             grid_points=read_dx.grid_points,
             grid_spacing=read_dx.grid_spacing,
             origin=read_dx.origin,
             box_size=read_dx.box_size,
-            data_arr=read_dx.data_arr
+            data_arr=read_dx.data_arr,
+            z_offset=z_offset
         )
 
     def analyse_potential(self,

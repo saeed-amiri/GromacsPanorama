@@ -68,18 +68,60 @@ class SurfacePotentialAndDensityPlot:
     configs: DensityFileConfig
 
     def __init__(self,
+                 potentials: dict[np.int64, float],
+                 type_data: str,
+                 z_grid_spacing: tuple[float, float, float],
+                 np_z_offset: float,
                  log: logger.logging.Logger,
                  configs: DensityFileConfig = DensityFileConfig()
                  ) -> None:
         self.file_configs = configs
-        self.plot_density(log)
+        self.plot_density(
+            potentials, type_data, z_grid_spacing, np_z_offset, log)
         self.write_msg(log)
 
     def plot_density(self,
-                     log: logger.logging.Logger
+                     potentials: dict[np.int64, float],
+                     type_data: str,
+                     z_grid_spacing: tuple[float, float, float],
+                     np_z_offset: float,
+                     log: logger.logging.Logger,
                      ) -> None:
         """plot the density of the system"""
+        max_potential: np.float64 = self.get_max_potential(potentials)
         density_dict: dict[str, pd.DataFrame] = self.procces_file(log)
+        fig_i, ax_i = plot_debye_surface_potential(potentials,
+                                                   type_data,
+                                                   z_grid_spacing,
+                                                   np_z_offset,
+                                                   close_fig=False)
+        for i in self.file_configs.plot_list:
+            y_col: str = self.file_configs.files[f'dens_{i}']['y_col']
+            self.plot_density_i(ax_i,
+                                density_dict[y_col],
+                                y_col,
+                                max_potential)
+        # plt.legend()
+        ax_i.xaxis.set_major_locator(plt.MaxNLocator())
+        ax_i.set_xlim(5, 12)
+        plt.savefig(f'density_{type_data}.png')
+
+    def get_max_potential(self,
+                          potentials: dict[np.int64, float]
+                          ) -> float:
+        """get the max potential"""
+        return np.max(list(potentials.values()))
+
+    def plot_density_i(self,
+                       ax_i: plt.Axes,
+                       density_dict: pd.DataFrame,
+                       y_col: str,
+                       max_potential: np.float64
+                       ) -> None:
+        """plot the density of the system"""
+        ax_i.plot(density_dict.iloc[:, 0],
+                  density_dict.iloc[:, 1] * float(max_potential),
+                  label=f'{y_col}')
 
     def procces_file(self,
                      log: logger.logging.Logger
@@ -89,11 +131,11 @@ class SurfacePotentialAndDensityPlot:
         for i in self.file_configs.plot_list:
             fname: str = self.file_configs.files[f'dens_{i}']['fname']
             y_col: str = self.file_configs.files[f'dens_{i}']['y_col']
-            df: pd.DataFrame = xvg_to_dataframe.XvgParser(fname, log).xvg_df
-            denity_i: pd.DataFrame = df[[y_col]]
-            density_dict[y_col] = denity_i/np.max(denity_i)
+            df: pd.DataFrame = \
+                xvg_to_dataframe.XvgParser(fname, log, x_type=float).xvg_df
+            df[[y_col]] /= np.max(df[[y_col]])
+            density_dict[y_col] = df
         return density_dict
-
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

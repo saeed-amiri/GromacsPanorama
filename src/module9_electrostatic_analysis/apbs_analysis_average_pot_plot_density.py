@@ -147,4 +147,4 @@ class SurfacePotentialAndDensityPlot:
 
 
 if __name__ == '__main__':
-    pass
+    print('This script is not intended to be run independently!')

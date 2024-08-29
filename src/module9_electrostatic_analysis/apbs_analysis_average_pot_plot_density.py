@@ -75,7 +75,7 @@ class DenityPlotConfiguration:
                 'linewidth': 1.0,
                 'marker': 'o',
                 'marker_size': 2,
-                'color': 'darkred',
+                'color': 'darkgreen',
                 }
 
     @property
@@ -95,15 +95,15 @@ class DenityPlotConfiguration:
     @property
     def DENSITY_COLOR(self) -> dict[str, str]:
         return {
-            'SOL': 'blue',
-            'D10': 'green',
-            'ODN': 'red',
-            'APT': 'orange',
-            'CLA': 'purple',
-            'POT': 'black',
+            'SOL': 'darkred',
+            'D10': 'black',
+            'ODN': 'orange',
+            'APT': 'royalblue',
+            'CLA': 'darkgreen',
+            'POT': 'red',
             'COR': 'brown',
-            'COR_APT': 'cyan',
-            'NH2': 'gray',
+            'COR_APT': 'brown',
+            'NH2': 'royalblue',
         }
 
     @property

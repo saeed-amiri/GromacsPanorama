@@ -96,19 +96,22 @@ class SurfacePotentialAndDensityPlot:
                  log: logger.logging.Logger,
                  configs: DensityFileConfig = DensityFileConfig()
                  ) -> None:
+        # pylint: disable=too-many-arguments
         self.file_configs = configs
-        self.plot_density(
+        self.plot_config = DenityPlotConfiguration()
+        self.plot_density_phi_zero(
             potentials, type_data, z_grid_spacing, np_z_offset, log)
         self.write_msg(log)
 
-    def plot_density(self,
-                     potentials: dict[np.int64, float],
-                     type_data: str,
-                     z_grid_spacing: tuple[float, float, float],
-                     np_z_offset: float,
-                     log: logger.logging.Logger,
-                     ) -> None:
+    def plot_density_phi_zero(self,
+                              potentials: dict[np.int64, float],
+                              type_data: str,
+                              z_grid_spacing: tuple[float, float, float],
+                              np_z_offset: float,
+                              log: logger.logging.Logger,
+                              ) -> None:
         """plot the density of the system"""
+        # pylint: disable=too-many-arguments
         max_potential: np.float64 = self.get_max_potential(potentials)
         density_dict: dict[str, pd.DataFrame] = self.procces_file(log)
         fig_i, ax_i = plot_debye_surface_potential(potentials,
@@ -121,15 +124,12 @@ class SurfacePotentialAndDensityPlot:
             self.plot_density_i(ax_i,
                                 density_dict[y_col],
                                 y_col,
-                                max_potential)
-        # plt.legend()
-        ax_i.xaxis.set_major_locator(plt.MaxNLocator())
-        ax_i.set_xlim(5, 12)
-        plt.savefig(f'density_{type_data}.png')
+                                max_potential,
+                                ind)
 
     def get_max_potential(self,
                           potentials: dict[np.int64, float]
-                          ) -> float:
+                          ) -> np.float64:
         """get the max potential"""
         return np.max(list(potentials.values()))
 

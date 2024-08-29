@@ -114,13 +114,33 @@ class SurfacePotentialAndDensityPlot:
         # pylint: disable=too-many-arguments
         max_potential: np.float64 = self.get_max_potential(potentials)
         density_dict: dict[str, pd.DataFrame] = self.procces_file(log)
-        fig_i, ax_i = plot_debye_surface_potential(potentials,
-                                                   type_data,
-                                                   z_grid_spacing,
-                                                   np_z_offset,
-                                                   close_fig=False)
-        for i in self.file_configs.plot_list:
-            y_col: str = self.file_configs.files[f'dens_{i}']['y_col']
+        potential_data: dict[str, typing.Any] = \
+            plot_debye_surface_potential(potentials,
+                                         type_data,
+                                         z_grid_spacing,
+                                         np_z_offset,
+                                         return_data=True)
+
+        fig_i, ax_i = elsevier_plot_tools.mk_canvas('double_height')
+        self.plot_densities(ax_i, density_dict, max_potential)
+        self.plot_potential(ax_i, potential_data)
+        ax_i.set_xlim(5, 12)
+
+        plt.legend(bbox_to_anchor=(0.5, 1.5), loc='upper center', ncol=2)
+
+        fig_i.subplots_adjust(top=0.8)
+        ax_i.xaxis.set_major_locator(plt.MaxNLocator())
+        plt.tight_layout()
+        plt.savefig(f'density_{type_data}.png')
+
+    def plot_densities(self,
+                       ax_i: plt.Axes,
+                       density_dict: dict[str, pd.DataFrame],
+                       max_potential: np.float64,
+                       ) -> None:
+        """plot the density of the system"""
+        for ind in self.file_configs.plot_list:
+            y_col: str = self.file_configs.files[f'dens_{ind}']['y_col']
             self.plot_density_i(ax_i,
                                 density_dict[y_col],
                                 y_col,
@@ -137,12 +157,29 @@ class SurfacePotentialAndDensityPlot:
                        ax_i: plt.Axes,
                        density_dict: pd.DataFrame,
                        y_col: str,
-                       max_potential: np.float64
+                       max_potential: np.float64,
+                       ind: int
                        ) -> None:
         """plot the density of the system"""
+        # pylint: disable=too-many-arguments
+        label: str = rf'{self.plot_config.DENSITY["label"]}$_{{{y_col}}}$'
         ax_i.plot(density_dict.iloc[:, 0],
                   density_dict.iloc[:, 1] * float(max_potential),
-                  label=f'{y_col}')
+                  ls=elsevier_plot_tools.LINESTYLE_TUPLE[-ind][1],
+                  color=elsevier_plot_tools.CLEAR_COLOR_GRADIENT[-ind],
+                  lw=self.plot_config.LINEWIDTH,
+                  label=label
+                  )
+
+    def plot_potential(self,
+                       ax_i: plt.Axes,
+                       potential_data: dict[str, typing.Any],
+                       ) -> None:
+        """plot the potential of the system"""
+        xdata: np.ndarray = potential_data['xdata']
+        ydata: np.ndarray = potential_data['ydata']
+        oda_bound: tuple[float, float] = potential_data['oda_bound']
+        ax_i.plot(xdata, ydata)
 
     def procces_file(self,
                      log: logger.logging.Logger

@@ -217,6 +217,7 @@ def plot_debye_surface_potential(data: dict[np.int64, float],
         return {'xdata': xdata / 10.0 - np_z_offset,
                 'ydata': ydata,
                 'oda_bound': oda_bound,
+                'z_indicies': np.asanyarray(list(data.keys()))
                 }
     if not close_fig:
         return fig_i, ax_i

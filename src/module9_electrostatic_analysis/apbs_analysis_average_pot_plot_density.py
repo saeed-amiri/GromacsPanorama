@@ -16,6 +16,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from common import logger
@@ -189,16 +190,20 @@ class SurfacePotentialAndDensityPlot:
                                          np_z_offset,
                                          return_data=True)
 
-        fig_i, ax_i = elsevier_plot_tools.mk_canvas('double_height')
-        self.plot_densities(ax_i, density_dict, max_potential)
-        self.plot_potential(ax_i, potential_data)
-        self.set_axis_style(ax_i)
+        fig_i, ax_i = elsevier_plot_tools.mk_canvas('double_column')
 
-        plt.legend(bbox_to_anchor=(0.5, 1.5), loc='upper center', ncol=2)
-        fig_i.subplots_adjust(top=0.7)
+        self.plot_densities(ax_i, density_dict, max_potential)
+        z_indicies = self.plot_potential(ax_i, potential_data)
+        ax_j: mpl.axes._axes.Axes = self.set_mirror_xaxis(ax_i, z_indicies)
+        lgd: mpl.legend.Legend = self.handel_legend(ax_i, ax_j, fig_i)
+
+        self.set_axis_style(ax_i)
         self.set_mirror_axis(ax_i)
+
         plt.tight_layout()
-        plt.savefig(f'density_{type_data}.png')
+        plt.savefig(f'density_{type_data}.png',
+                    bbox_extra_artists=(lgd,),
+                    bbox_inches='tight')
 
     def set_axis_style(self,
                        ax_i: plt.Axes
@@ -272,11 +277,12 @@ class SurfacePotentialAndDensityPlot:
     def plot_potential(self,
                        ax_i: plt.Axes,
                        potential_data: dict[str, typing.Any],
-                       ) -> None:
+                       ) -> np.ndarray:
         """plot the potential of the system"""
         xdata: np.ndarray = potential_data['xdata']
         ydata: np.ndarray = potential_data['ydata']
         oda_bound: tuple[float, float] = potential_data['oda_bound']
+        z_indicies: np.ndarray = potential_data['z_indicies']
         _configs: dict[str, str | int | float] = self.plot_config.PSI_0
         ax_i.plot(xdata,
                   ydata,
@@ -297,6 +303,39 @@ class SurfacePotentialAndDensityPlot:
                            label='Water surface',
                            )
         ax_i.set_ylim(ylims)
+        return z_indicies
+
+    def set_mirror_xaxis(self,
+                         ax_i: plt.Axes,
+                         z_indicies: np.ndarray,
+                         ) -> mpl.axes._axes.Axes:
+        """set the mirror x-axis"""
+        ax_j = ax_i.twiny()
+        ax_j.plot(z_indicies, np.zeros_like(z_indicies), alpha=0.0)
+        ax_j.set_xticks([60, 70, 80, 90, 100])
+        ax_j.set_xticklabels([60, 70, 80, 90, 100],
+                             fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        return ax_j
+
+    def handel_legend(self,
+                      ax_i: plt.Axes,
+                      ax_j: plt.Axes,
+                      fig_i: plt.Figure,
+                      ) -> mpl.legend.Legend:
+        """handle the legend"""
+        handles_i, labels_i = ax_i.get_legend_handles_labels()
+        handles_j, labels_j = ax_j.get_legend_handles_labels()
+        handles = handles_i + handles_j
+        labels = labels_i + labels_j
+
+        # Set the combined legend on the primary axis
+        return ax_i.legend(handles,
+                           labels,
+                           bbox_to_anchor=(1.08, 0.5),
+                           loc='center right',
+                           bbox_transform=fig_i.transFigure,
+                           ncol=1,
+                           borderaxespad=0.4)
 
     def procces_file(self,
                      log: logger.logging.Logger

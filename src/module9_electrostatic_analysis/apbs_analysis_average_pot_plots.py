@@ -201,12 +201,13 @@ def plot_debye_surface_potential(data: dict[np.int64, float],
     ax_i.legend()
 
     oda_bound: tuple[float, float] = (
-        plot_config.ODA_BOUND[0] * z_grid_spacing[2] / 10.0,
-        plot_config.ODA_BOUND[1] * z_grid_spacing[2] / 10.0)
+        plot_config.ODA_BOUND[0] * z_grid_spacing[2] / 10.0 - np_z_offset,
+        plot_config.ODA_BOUND[1] * z_grid_spacing[2] / 10.0 - np_z_offset
+        )
     # Shade the area between ODA_BOUND
     ax_i.fill_betweenx(ax_i.get_ylim(),
-                       oda_bound[0] - np_z_offset,
-                       oda_bound[1] - np_z_offset,
+                       oda_bound[0],
+                       oda_bound[1],
                        color='gray',
                        edgecolor=None,
                        alpha=0.5,

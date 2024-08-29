@@ -68,8 +68,7 @@ class DenityPlotConfiguration:
     @property
     def PSI_0(self) -> dict[str, str | float | int]:
         return {'label': r'$\psi_0$',
-                'ylable': 'potential [mV]',
-                'output_file': 'surface_potential.jpg',
+                'ylable': r'Edge potential ($\psi_0$) [mV]',
                 'legend_loc': 'lower left',
                 'ls': ':',
                 'linewidth': 1.0,
@@ -262,6 +261,7 @@ class SurfacePotentialAndDensityPlot:
                   marker=_configs['marker'],
                   markersize=_configs['marker_size'],
                   color=_configs['color'],
+                  label=_configs['label']
                   )
 
     def procces_file(self,

@@ -63,9 +63,7 @@ class DenityPlotConfiguration:
                 'ylable': r'Density ($\rho$) a.u.',
                 'output_file': 'surface_potential.jpg',
                 'legend_loc': 'lower left',
-                'y_lim': (-15, 130),
-                'y_ticks': [0, 60, 120],
-                'x_ticks': [9, 10, 11, 12, 13]}
+                }
 
     @property
     def PSI_0(self) -> dict[str, str | float | int]:
@@ -81,8 +79,74 @@ class DenityPlotConfiguration:
                 }
 
     @property
-    def LINEWIDTH(self) -> float:
-        return 1.0
+    def DENSITY_RESIDUE(self) -> dict[str, str]:
+        return {
+            'SOL': 'Water',
+            'D10': 'Oil',
+            'ODN': 'ODA',
+            'APT': 'APTES',
+            'CLA': 'Cl',
+            'POT': 'Na',
+            'COR': 'COR',
+            'COR_APT': 'NP',
+            'NH2': 'N',
+        }
+
+    @property
+    def DENSITY_COLOR(self) -> dict[str, str]:
+        return {
+            'SOL': 'blue',
+            'D10': 'green',
+            'ODN': 'red',
+            'APT': 'orange',
+            'CLA': 'purple',
+            'POT': 'black',
+            'COR': 'brown',
+            'COR_APT': 'cyan',
+            'NH2': 'gray',
+        }
+
+    @property
+    def DENSITY_LINESTYLE(self) -> dict[str, str]:
+        return {
+            'SOL': ':',
+            'D10': '--',
+            'ODN': '-',
+            'APT': '-',
+            'CLA': '-.',
+            'POT': ':',
+            'COR': '-',
+            'COR_APT': '--',
+            'NH2': '-',
+        }
+
+    @property
+    def YLIMS(self) -> tuple[float, float]:
+        return (-15, 130)
+
+    @property
+    def XLIMS(self) -> tuple[float, float]:
+        return (5, 12)
+
+    @property
+    def XTIKS(self) -> list[float]:
+        return [9, 10, 11, 12, 13]
+
+    @property
+    def YTIKS(self) -> list[float]:
+        return [0, 60, 120]
+
+    @property
+    def X_LABEL(self) -> str:
+        return 'z [nm]'
+
+    @property
+    def Y_LABEL(self) -> str:
+        return r'Edge potential ($\psi_0$) [mV]'
+
+    @property
+    def Y_LABEL_DENSITY(self) -> str:
+        return r'Density ($\rho$) a.u.'
 
 
 class SurfacePotentialAndDensityPlot:
@@ -170,9 +234,6 @@ class SurfacePotentialAndDensityPlot:
         label: str = rf'{self.plot_config.DENSITY["label"]}$_{{{y_col}}}$'
         ax_i.plot(density_dict.iloc[:, 0],
                   density_dict.iloc[:, 1] * float(max_potential),
-                  ls=elsevier_plot_tools.LINESTYLE_TUPLE[-ind][1],
-                  color=elsevier_plot_tools.CLEAR_COLOR_GRADIENT[-ind],
-                  lw=self.plot_config.LINEWIDTH,
                   label=label
                   )
 

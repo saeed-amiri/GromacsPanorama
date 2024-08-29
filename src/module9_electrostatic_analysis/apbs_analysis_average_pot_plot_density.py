@@ -48,15 +48,36 @@ class DensityFileConfig:
             })
 
     plot_list: list[int] = \
-        field(default_factory=lambda: [0, 1, 7, 8])
+        field(default_factory=lambda: [0, 8, 1, 7])
 
 
-@dataclass
 class DenityPlotConfiguration:
     """The configuration for the density plot"""
     # pylint: disable=missing-function-docstring
     # pylint: disable=invalid-name
     # pylint: disable=too-many-arguments
+
+    @property
+    def DENSITY(self) -> dict[str, str | tuple[float, float] | list[float]]:
+        return {'label': r'$\rho$',
+                'ylable': r'Density ($\rho$) a.u.',
+                'output_file': 'surface_potential.jpg',
+                'legend_loc': 'lower left',
+                'y_lim': (-15, 130),
+                'y_ticks': [0, 60, 120],
+                'x_ticks': [9, 10, 11, 12, 13]}
+
+    @property
+    def PSI_0(self) -> dict[str, str | tuple[float, float] | list[float]]:
+        return {'label': r'$\psi_0$',
+                'ylable': 'potential [mV]',
+                'output_file': 'surface_potential.jpg',
+                'legend_loc': 'lower left',
+                }
+
+    @property
+    def LINEWIDTH(self) -> float:
+        return 1.0
 
 
 class SurfacePotentialAndDensityPlot:

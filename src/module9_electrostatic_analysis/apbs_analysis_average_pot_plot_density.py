@@ -72,9 +72,9 @@ class DenityPlotConfiguration:
                 'ylable': r'Edge potential ($\psi_0$) [mV]',
                 'legend_loc': 'lower left',
                 'ls': ':',
-                'linewidth': 1.0,
+                'linewidth': 2.0,
                 'marker': 'o',
-                'marker_size': 2,
+                'marker_size': 3,
                 'color': 'darkgreen',
                 }
 
@@ -191,7 +191,6 @@ class SurfacePotentialAndDensityPlot:
                                          return_data=True)
 
         fig_i, ax_i = elsevier_plot_tools.mk_canvas('double_column')
-
         self.plot_densities(ax_i, density_dict, max_potential)
         z_indicies = self.plot_potential(ax_i, potential_data)
         ax_j: mpl.axes._axes.Axes = self.set_mirror_xaxis(ax_i, z_indicies)
@@ -209,14 +208,22 @@ class SurfacePotentialAndDensityPlot:
                        ax_i: plt.Axes
                        ) -> None:
         """set the style of the axis"""
+        plt.rcParams.update({
+            'axes.labelsize': 10,  # Font size for x and y labels
+            'xtick.labelsize': 8,  # Font size for x tick labels
+            'ytick.labelsize': 8,  # Font size for y tick labels
+            'legend.fontsize': 10,  # Font size for legend
+            'font.size': 10  # General font size
+        })
         ax_i.set_xlim(self.plot_config.XLIMS)
         ax_i.set_ylim(self.plot_config.YLIMS)
 
-        ax_i.set_xlabel(self.plot_config.X_LABEL)
-        ax_i.set_ylabel(self.plot_config.Y_LABEL)
+        ax_i.set_xlabel(self.plot_config.X_LABEL, fontsize=10)
+        ax_i.set_ylabel(self.plot_config.Y_LABEL, fontsize=10)
 
         ax_i.set_yticks(self.plot_config.YTICKS)
         ax_i.set_xticks(self.plot_config.XTICKS)
+        ax_i.tick_params(axis='both', which='major', labelsize=10)
 
     def set_mirror_axis(self,
                         ax_i: plt.Axes
@@ -225,10 +232,9 @@ class SurfacePotentialAndDensityPlot:
         ax_f = ax_i.twinx()
         ax_f.tick_params(axis='y',
                          which='both',
-                         labelsize=ax_i.yaxis.get_label().get_size())
+                         )
         ax_f.set_yticks([])
-        ax_f.set_ylabel(self.plot_config.Y_LABEL_DENSITY,
-                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        ax_f.set_ylabel(self.plot_config.Y_LABEL_DENSITY)
 
     def get_max_potential(self,
                           potentials: dict[np.int64, float]
@@ -269,7 +275,7 @@ class SurfacePotentialAndDensityPlot:
         ax_i.plot(density_dict.iloc[:, 0],
                   density_dict.iloc[:, 1] * float(max_potential),
                   ls=linestyle,
-                  lw=1.0,
+                  lw=2.0,
                   color=color,
                   label=label
                   )
@@ -313,8 +319,6 @@ class SurfacePotentialAndDensityPlot:
         ax_j = ax_i.twiny()
         ax_j.plot(z_indicies, np.zeros_like(z_indicies), alpha=0.0)
         ax_j.set_xticks([60, 70, 80, 90, 100])
-        ax_j.set_xticklabels([60, 70, 80, 90, 100],
-                             fontsize=elsevier_plot_tools.FONT_SIZE_PT)
         return ax_j
 
     def handel_legend(self,

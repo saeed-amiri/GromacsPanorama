@@ -125,14 +125,14 @@ class DenityPlotConfiguration:
 
     @property
     def XLIMS(self) -> tuple[float, float]:
-        return (5, 12)
+        return (5.5, 12.5)
 
     @property
-    def XTIKS(self) -> list[float]:
-        return [9, 10, 11, 12, 13]
+    def XTICKS(self) -> list[float]:
+        return [6, 8, 10, 12]
 
     @property
-    def YTIKS(self) -> list[float]:
+    def YTICKS(self) -> list[float]:
         return [0, 60, 120]
 
     @property
@@ -141,11 +141,11 @@ class DenityPlotConfiguration:
 
     @property
     def Y_LABEL(self) -> str:
-        return r'Edge potential ($\psi_0$) [mV]'
+        return r'Edge Potential ($\psi_0$) [mV]'
 
     @property
     def Y_LABEL_DENSITY(self) -> str:
-        return r'Density ($\rho$) a.u.'
+        return r'Normalized Density ($\rho$) a.u.'
 
 
 class SurfacePotentialAndDensityPlot:
@@ -192,14 +192,38 @@ class SurfacePotentialAndDensityPlot:
         fig_i, ax_i = elsevier_plot_tools.mk_canvas('double_height')
         self.plot_densities(ax_i, density_dict, max_potential)
         self.plot_potential(ax_i, potential_data)
-        ax_i.set_xlim(5, 12)
+        self.set_axis_style(ax_i)
 
         plt.legend(bbox_to_anchor=(0.5, 1.5), loc='upper center', ncol=2)
-
         fig_i.subplots_adjust(top=0.7)
-        ax_i.xaxis.set_major_locator(plt.MaxNLocator())
+        self.set_mirror_axis(ax_i)
         plt.tight_layout()
         plt.savefig(f'density_{type_data}.png')
+
+    def set_axis_style(self,
+                       ax_i: plt.Axes
+                       ) -> None:
+        """set the style of the axis"""
+        ax_i.set_xlim(self.plot_config.XLIMS)
+        ax_i.set_ylim(self.plot_config.YLIMS)
+
+        ax_i.set_xlabel(self.plot_config.X_LABEL)
+        ax_i.set_ylabel(self.plot_config.Y_LABEL)
+
+        ax_i.set_yticks(self.plot_config.YTICKS)
+        ax_i.set_xticks(self.plot_config.XTICKS)
+
+    def set_mirror_axis(self,
+                        ax_i: plt.Axes
+                        ) -> None:
+        """set the mirror axis"""
+        ax_f = ax_i.twinx()
+        ax_f.tick_params(axis='y',
+                         which='both',
+                         labelsize=ax_i.yaxis.get_label().get_size())
+        ax_f.set_yticks([])
+        ax_f.set_ylabel(self.plot_config.Y_LABEL_DENSITY,
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
     def get_max_potential(self,
                           potentials: dict[np.int64, float]

@@ -197,24 +197,10 @@ class SurfacePotentialAndDensityPlot:
 
         plt.legend(bbox_to_anchor=(0.5, 1.5), loc='upper center', ncol=2)
 
-        fig_i.subplots_adjust(top=0.8)
+        fig_i.subplots_adjust(top=0.7)
         ax_i.xaxis.set_major_locator(plt.MaxNLocator())
         plt.tight_layout()
         plt.savefig(f'density_{type_data}.png')
-
-    def plot_densities(self,
-                       ax_i: plt.Axes,
-                       density_dict: dict[str, pd.DataFrame],
-                       max_potential: np.float64,
-                       ) -> None:
-        """plot the density of the system"""
-        for ind in self.file_configs.plot_list:
-            y_col: str = self.file_configs.files[f'dens_{ind}']['y_col']
-            self.plot_density_i(ax_i,
-                                density_dict[y_col],
-                                y_col,
-                                max_potential,
-                                ind)
 
     def get_max_potential(self,
                           potentials: dict[np.int64, float]
@@ -222,18 +208,41 @@ class SurfacePotentialAndDensityPlot:
         """get the max potential"""
         return np.max(list(potentials.values()))
 
+    def plot_densities(self,
+                       ax_i: plt.Axes,
+                       density_dict: dict[str, pd.DataFrame],
+                       max_potential: np.float64,
+                       ) -> None:
+        """plot the density of the system"""
+        colors: dict[str, str] = self.plot_config.DENSITY_COLOR
+        linestyles: dict[str, str] = self.plot_config.DENSITY_LINESTYLE
+        residue: dict[str, str] = self.plot_config.DENSITY_RESIDUE
+        for ind in self.file_configs.plot_list:
+            y_col: str = self.file_configs.files[f'dens_{ind}']['y_col']
+            self.plot_density_i(ax_i,
+                                density_dict[y_col],
+                                max_potential,
+                                colors[y_col],
+                                linestyles[y_col],
+                                residue[y_col]
+                                )
+
     def plot_density_i(self,
                        ax_i: plt.Axes,
                        density_dict: pd.DataFrame,
-                       y_col: str,
                        max_potential: np.float64,
-                       ind: int
+                       color: str,
+                       linestyle: str,
+                       residue: str,
                        ) -> None:
         """plot the density of the system"""
         # pylint: disable=too-many-arguments
-        label: str = rf'{self.plot_config.DENSITY["label"]}$_{{{y_col}}}$'
+        label: str = rf'$\rho_{{{residue}}}$'
         ax_i.plot(density_dict.iloc[:, 0],
                   density_dict.iloc[:, 1] * float(max_potential),
+                  ls=linestyle,
+                  lw=2.0,
+                  color=color,
                   label=label
                   )
 

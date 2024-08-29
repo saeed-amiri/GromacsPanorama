@@ -178,7 +178,11 @@ def set_figure_size(size_type: str,
         "double_column": (
             DOUBLE_COLUMN_PT / POINT_PER_INCH,
             set_figure_height(DOUBLE_COLUMN_PT / POINT_PER_INCH,
-                              aspect_ratio))
+                              aspect_ratio)),
+        "double_height": (
+            SINGLE_COLUMN_PT / POINT_PER_INCH,
+            set_figure_height(SINGLE_COLUMN_PT / POINT_PER_INCH,
+                              aspect_ratio/1.66)),
     }
     return sizes.get(size_type, (SINGLE_COLUMN_PT,
                      set_figure_height(SINGLE_COLUMN_PT, aspect_ratio)))

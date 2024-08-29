@@ -240,7 +240,7 @@ class SurfacePotentialAndDensityPlot:
         ax_i.plot(density_dict.iloc[:, 0],
                   density_dict.iloc[:, 1] * float(max_potential),
                   ls=linestyle,
-                  lw=2.0,
+                  lw=1.0,
                   color=color,
                   label=label
                   )
@@ -263,6 +263,16 @@ class SurfacePotentialAndDensityPlot:
                   color=_configs['color'],
                   label=_configs['label']
                   )
+        # Shade the area between ODA_BOUND
+        ax_i.fill_betweenx(ylims := ax_i.get_ylim(),
+                           oda_bound[0],
+                           oda_bound[1],
+                           color='gray',
+                           edgecolor=None,
+                           alpha=0.5,
+                           label='Water surface',
+                           )
+        ax_i.set_ylim(ylims)
 
     def procces_file(self,
                      log: logger.logging.Logger

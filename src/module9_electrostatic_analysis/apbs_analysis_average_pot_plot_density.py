@@ -68,11 +68,16 @@ class DenityPlotConfiguration:
                 'x_ticks': [9, 10, 11, 12, 13]}
 
     @property
-    def PSI_0(self) -> dict[str, str | tuple[float, float] | list[float]]:
+    def PSI_0(self) -> dict[str, str | float | int]:
         return {'label': r'$\psi_0$',
                 'ylable': 'potential [mV]',
                 'output_file': 'surface_potential.jpg',
                 'legend_loc': 'lower left',
+                'ls': ':',
+                'linewidth': 1.0,
+                'marker': 'o',
+                'marker_size': 2,
+                'color': 'darkred',
                 }
 
     @property
@@ -179,7 +184,15 @@ class SurfacePotentialAndDensityPlot:
         xdata: np.ndarray = potential_data['xdata']
         ydata: np.ndarray = potential_data['ydata']
         oda_bound: tuple[float, float] = potential_data['oda_bound']
-        ax_i.plot(xdata, ydata)
+        _configs: dict[str, str | int | float] = self.plot_config.PSI_0
+        ax_i.plot(xdata,
+                  ydata,
+                  ls=_configs['ls'],
+                  lw=_configs['linewidth'],
+                  marker=_configs['marker'],
+                  markersize=_configs['marker_size'],
+                  color=_configs['color'],
+                  )
 
     def procces_file(self,
                      log: logger.logging.Logger

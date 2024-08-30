@@ -74,7 +74,7 @@ class DenityPlotConfiguration:
                 'ls': ':',
                 'linewidth': 2.0,
                 'marker': 'o',
-                'marker_size': 3,
+                'marker_size': 4,
                 'color': 'darkgreen',
                 }
 
@@ -110,7 +110,7 @@ class DenityPlotConfiguration:
     def DENSITY_LINESTYLE(self) -> dict[str, str]:
         return {
             'SOL': ':',
-            'D10': '--',
+            'D10': '-.',
             'ODN': '-',
             'APT': '-',
             'CLA': '-.',

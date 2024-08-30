@@ -245,4 +245,8 @@ def compute_z_offset_nanoparticles(box_size_z: float,
     """
     box_center: float = box_size_z / 2 / 10.0  # Convert to nm
     np_com_z: float = get_average_z_palce_nanoparticle(log)
-    return box_center - np_com_z
+    offset: float = box_center - np_com_z
+    log.info(
+        msg := f'\tOff set of the nanoparticle in z is: {offset:.3f} [nm]\n')
+    print(f'{bcolors.WARNING}{msg}{bcolors.ENDC}')
+    return offset

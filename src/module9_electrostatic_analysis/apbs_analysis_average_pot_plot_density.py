@@ -192,8 +192,9 @@ class SurfacePotentialAndDensityPlot:
 
         fig_i, ax_i = elsevier_plot_tools.mk_canvas('double_column')
         self.plot_densities(ax_i, density_dict, max_potential)
-        z_indicies = self.plot_potential(ax_i, potential_data)
-        ax_j: mpl.axes._axes.Axes = self.set_mirror_xaxis(ax_i, z_indicies)
+        z_indicies, potential = self.plot_potential(ax_i, potential_data)
+        ax_j: mpl.axes._axes.Axes = \
+            self.set_mirror_xaxis(ax_i, z_indicies, potential)
         lgd: mpl.legend.Legend = self.handel_legend(ax_i, ax_j, fig_i)
 
         self.set_axis_style(ax_i)
@@ -283,7 +284,7 @@ class SurfacePotentialAndDensityPlot:
     def plot_potential(self,
                        ax_i: plt.Axes,
                        potential_data: dict[str, typing.Any],
-                       ) -> np.ndarray:
+                       ) -> tuple[np.ndarray, np.ndarray]:
         """plot the potential of the system"""
         xdata: np.ndarray = potential_data['xdata']
         ydata: np.ndarray = potential_data['ydata']
@@ -309,16 +310,18 @@ class SurfacePotentialAndDensityPlot:
                            label='Water surface',
                            )
         ax_i.set_ylim(ylims)
-        return z_indicies
+        return z_indicies, ydata
 
     def set_mirror_xaxis(self,
                          ax_i: plt.Axes,
                          z_indicies: np.ndarray,
+                         potential: np.ndarray,
                          ) -> mpl.axes._axes.Axes:
         """set the mirror x-axis"""
         ax_j = ax_i.twiny()
-        ax_j.plot(z_indicies, np.zeros_like(z_indicies), alpha=0.0)
-        ax_j.set_xticks([60, 70, 80, 90, 100])
+        ax_j.plot(z_indicies + 4, potential, alpha=0.0)
+        ax_j.set_xticks([70, 80, 90, 100])
+        ax_j.set_xlabel('z index')
         return ax_j
 
     def handel_legend(self,

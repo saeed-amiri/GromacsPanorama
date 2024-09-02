@@ -149,6 +149,10 @@ class DenityPlotConfiguration:
     def Y_LABEL_DENSITY(self) -> str:
         return r'Normalized Density ($\rho$) a.u.'
 
+    @property
+    def SHADE_INTERFACE(self) -> bool:
+        return False
+
 
 class SurfacePotentialAndDensityPlot:
     """
@@ -305,6 +309,8 @@ class SurfacePotentialAndDensityPlot:
                   color=_configs['color'],
                   label=_configs['label']
                   )
+        if not self.plot_config.SHADE_INTERFACE:
+            return z_indicies, ydata
         # Shade the area between ODA_BOUND
         ax_i.fill_betweenx(ylims := ax_i.get_ylim(),
                            oda_bound[0],

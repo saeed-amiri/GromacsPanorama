@@ -231,6 +231,8 @@ class SurfacePotentialAndDensityPlot:
                         ax_i: plt.Axes
                         ) -> None:
         """set the mirror axis"""
+        if not self.file_configs.plot_list:
+            return
         ax_f = ax_i.twinx()
         ax_f.tick_params(axis='y',
                          which='both',
@@ -250,6 +252,8 @@ class SurfacePotentialAndDensityPlot:
                        max_potential: np.float64,
                        ) -> None:
         """plot the density of the system"""
+        if not self.file_configs.plot_list:
+            return
         colors: dict[str, str] = self.plot_config.DENSITY_COLOR
         linestyles: dict[str, str] = self.plot_config.DENSITY_LINESTYLE
         residue: dict[str, str] = self.plot_config.DENSITY_RESIDUE

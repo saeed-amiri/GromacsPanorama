@@ -49,7 +49,7 @@ class DensityFileConfig:
             })
 
     plot_list: list[int] = \
-        field(default_factory=lambda: [0, 8, 1, 7])
+        field(default_factory=lambda: [0, 8, 1, 7, 4])
 
 
 class DenityPlotConfiguration:
@@ -89,7 +89,7 @@ class DenityPlotConfiguration:
             'POT': 'Na',
             'COR': 'COR',
             'COR_APT': 'NP',
-            'NH2': 'N',
+            'NH2': 'N-ODA',
         }
 
     @property
@@ -99,7 +99,7 @@ class DenityPlotConfiguration:
             'D10': 'black',
             'ODN': 'orange',
             'APT': 'royalblue',
-            'CLA': 'darkgreen',
+            'CLA': 'orange',
             'POT': 'red',
             'COR': 'brown',
             'COR_APT': 'brown',
@@ -107,13 +107,14 @@ class DenityPlotConfiguration:
         }
 
     @property
-    def DENSITY_LINESTYLE(self) -> dict[str, str]:
+    def DENSITY_LINESTYLE(self) -> dict[str,
+                                        str | tuple[int, tuple[int, ...]]]:
         return {
             'SOL': ':',
             'D10': '-.',
             'ODN': '-',
             'APT': '-',
-            'CLA': '-.',
+            'CLA': (0, (3, 1, 1, 1, 1, 1)),
             'POT': ':',
             'COR': '-',
             'COR_APT': '--',

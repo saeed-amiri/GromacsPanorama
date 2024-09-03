@@ -132,6 +132,7 @@ class PlotBolzmannRdf:
     __solts__ = ['rdf_radii',
                  'rdf_data',
                  'boltzman_radii',
+                 'boltzman_dict',
                  'boltzman_data',
                  'config',
                  'info_msg']
@@ -180,18 +181,20 @@ class PlotBolzmannRdf:
                           log: logger.logging.Logger
                           ) -> None:
         """set the Boltzman factor data"""
-        boltzman_data_list: List[np.ndarray] = []
+        boltzman_data_dict: dict[int, np.ndarray] = {}
         for i in self.config.boltzman_file['data']:
             boltzman_data, boltzman_radii = self.parse_xvg(
                 fname=self.config.boltzman_file['fname'],
                 data_column=f'{i}',
                 radii_column=self.config.boltzman_file['radii'],
                 log=log)
-            boltzman_data_list.append(boltzman_data)
-        boltzman_data = np.mean(boltzman_data_list, axis=0)
+            boltzman_data_dict[i] = boltzman_data
+        boltzman_data = np.mean(list(boltzman_data_dict.values()), axis=0)
         self.boltzman_radii, boltzman_data = self.cut_radii(
             boltzman_radii, boltzman_data, cut_radius)
         self.boltzman_data = boltzman_data / np.max(boltzman_data)
+        self.boltzman_dict = boltzman_data_dict
+        del boltzman_data_dict
 
     @staticmethod
     def cut_radii(radii: np.ndarray,
@@ -225,7 +228,7 @@ class PlotBolzmannRdf:
 
         plt_config = PlotBolzmannRdfConfiguratio()
         self.plot_rdf(ax_i, plt_config.RDF_PROP)
-        self.plot_boltzman(ax_i, plt_config.BOLTZMAN_PROP)
+        self.plot_boltzman(ax_i, self.boltzman_data, plt_config.BOLTZMAN_PROP)
         self.plot_vlines(ax_i)
 
         self.set_axis_properties(ax_i, plt_config)
@@ -251,11 +254,12 @@ class PlotBolzmannRdf:
 
     def plot_boltzman(self,
                       ax_i: plt.Axes,
+                      boltzman_data: np.ndarray,
                       kwargs: Dict[str, str | float]
                       ) -> None:
         """plot the Boltzman factor"""
         ax_i.plot(self.boltzman_radii,
-                  self.boltzman_data,
+                  boltzman_data,
                   scalex=True,
                   scaley=True,
                   **kwargs)

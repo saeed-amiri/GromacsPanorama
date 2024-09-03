@@ -49,7 +49,7 @@ class DensityFileConfig:
             })
 
     plot_list: list[int] = \
-        field(default_factory=lambda: [0, 8, 1, 7, 4])
+        field(default_factory=lambda: [0, 1, 7, 4, 8])
 
 
 class DenityPlotConfiguration:
@@ -151,7 +151,7 @@ class DenityPlotConfiguration:
 
     @property
     def SHADE_INTERFACE(self) -> bool:
-        return False
+        return True
 
 
 class SurfacePotentialAndDensityPlot:

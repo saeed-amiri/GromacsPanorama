@@ -25,6 +25,7 @@ class FileConfig:
     rdf_file: Dict[str, str] = field(default_factory=lambda: {
         'fname': '15_oda_densities.xvg',
         'data': 'fitted_rdf',
+        'raw_data': 'fitted_rdf',
         'radii': 'regions',
         })
     boltzman_file: Dict[str, str | List[float]] = field(
@@ -114,7 +115,7 @@ class PlotBolzmannRdfConfiguratio:
         return {
             'linestyle': ':',
             'color': 'darkblue',
-            'label': r'c/c$_0$, a.u.',
+            'label': r'c/c$_0$, norm.',
             'linewidth': 1.5,
             }
 

@@ -47,6 +47,8 @@ from module9_electrostatic_analysis.apbs_analysis_average_pot_boltzman_dist \
     import ComputeBoltzmanDistribution
 from module9_electrostatic_analysis.apbs_analysis_average_pot_plot_density \
     import SurfacePotentialAndDensityPlot
+from module9_electrostatic_analysis.apbs_analysis_average_pot_plot_layers \
+    import PlotPotentialLayer
 
 from common import logger
 from common import file_writer
@@ -71,7 +73,8 @@ class AllConfig(ParameterConfig):
     """
     # pylint: disable=too-many-instance-attributes
     bulk_averaging: bool = False  # if Bulk averaging else interface averaging
-    debug_plot: bool = False
+    debug_plot: bool = False  # plot and show the potential for debugging
+    layer_plot: bool = True  # plot the potential for each layer
     fit_potential: bool = True
     plot_interactive: bool = False
 
@@ -236,11 +239,19 @@ class AverageAnalysis:
         self.write_xvg({'lambda_d [A]': lambda_d,
                         'psi_0 [mV]': psi_zero,
                         'sigma [C/m^2]': sigma}, log)
+        # plot and show the potential for debugging
         self._plot_debug(cut_radii.copy(),
                          cut_radial_average.copy(),
                          radii_list.copy(),
                          radial_average_list.copy(),
                          sphere_grid_range.copy())
+        # plot and save the potential for each layer
+        self._plot_poteintal_layers(cut_radii.copy(),
+                                    cut_radial_average.copy(),
+                                    radii_list.copy(),
+                                    radial_average_list.copy(),
+                                    sphere_grid_range.copy(),
+                                    log)
         del sigma
         del cut_radii
         del radii_list
@@ -350,6 +361,25 @@ class AverageAnalysis:
                              radii_list,
                              radial_average_list,
                              sphere_grid_range)
+
+    def _plot_poteintal_layers(self,
+                               cut_radii: list[np.ndarray],
+                               cut_radial_average: list[np.ndarray],
+                               radii_list: list[np.ndarray],
+                               radial_average_list: list[np.ndarray],
+                               sphere_grid_range: np.ndarray,
+                               log: logger.logging.Logger
+                               ) -> None:
+        """Plot the potential for each layer"""
+        # pylint: disable=too-many-arguments
+        if not self.configs.layer_plot:
+            return
+        PlotPotentialLayer(cut_radii,
+                           cut_radial_average,
+                           radii_list,
+                           radial_average_list,
+                           sphere_grid_range,
+                           log)
 
     def plot_debye_surface_potential(self,
                                      data: dict[np.int64, float],

@@ -53,10 +53,26 @@ class PlotPotentialLayer:
         """write and log messages"""
         # pylint: disable=too-many-arguments
         self.configs = configs
+        self.plot_potentials(cut_radii,
+                             cut_radial_average,
+                             radii_list,
+                             radial_average_list,
+                             sphere_grid_range,
+                             log)
+        self.write_msg(log)
+
+    def plot_potentials(self,
+                        cut_radii: list[np.ndarray],
+                        cut_radial_average: list[np.ndarray],
+                        radii_list: list[np.ndarray],
+                        radial_average_list: list[np.ndarray],
+                        sphere_grid_range: np.ndarray,
+                        log: logger.logging.Logger
+                        ) -> None:
+        """plot the potentials"""
         self.plot_potential_layers(radii_list,
                                    radial_average_list,
                                    sphere_grid_range)
-        self.write_msg(log)
 
     def plot_potential_layers(self,
                               radii_list: list[np.ndarray],

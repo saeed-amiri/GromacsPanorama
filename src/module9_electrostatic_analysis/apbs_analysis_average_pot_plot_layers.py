@@ -32,6 +32,15 @@ class PlotPotentialLayerConfig:
             'ylabel': r'Potential ($\psi(r^*)$) [mV]',
         }
 
+    @property
+    def MULTI_LAYERS(self) -> dict[str, typing.Any]:
+        """set the name of the input files"""
+        return {
+            'indices': [85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95],
+            'xlabel': r'r$^*$ [nm]',
+            'ylabel': r'Potential ($\psi(r^*)$) [mV]',
+        }
+
 
 class PlotPotentialLayer:
     """
@@ -70,9 +79,15 @@ class PlotPotentialLayer:
                         log: logger.logging.Logger
                         ) -> None:
         """plot the potentials"""
+        # pylint: disable=too-many-arguments
         self.plot_potential_layers(radii_list,
                                    radial_average_list,
                                    sphere_grid_range)
+        self.plot_multi_layers(cut_radii,
+                               cut_radial_average,
+                               radii_list,
+                               radial_average_list,
+                               sphere_grid_range)
 
     def plot_potential_layers(self,
                               radii_list: list[np.ndarray],
@@ -105,6 +120,45 @@ class PlotPotentialLayer:
                                                f'potential_layer_{layer}',
                                                loc='lower left',
                                                )
+
+    def plot_multi_layers(self,
+                          cut_radii: list[np.ndarray],
+                          cut_radial_average: list[np.ndarray],
+                          radii_list: list[np.ndarray],
+                          radial_average_list: list[np.ndarray],
+                          sphere_grid_range: np.ndarray,
+                          ) -> None:
+        """plot the potentials of the layers"""
+        # pylint: disable=too-many-arguments
+        self.plot_multi_layers_whole(
+            radii_list, radial_average_list, sphere_grid_range)
+
+    def plot_multi_layers_whole(self,
+                                radii_list: list[np.ndarray],
+                                radial_average_list: list[np.ndarray],
+                                sphere_grid_range: np.ndarray,
+                                ) -> None:
+        """plot the potentials of the layers"""
+        fig_i: plt.Figure
+        ax_i: plt.Axes
+        _config: dict[str, typing.Any] = self.configs.MULTI_LAYERS
+        fig_i, ax_i = elsevier_plot_tools.mk_canvas('double_column')
+        for i, layer in enumerate(_config['indices']):
+            ind: int = sphere_grid_range.tolist().index(layer)
+            ax_i.plot(radii_list[ind] / 10.0,  # Convert to nm
+                      radial_average_list[ind],
+                      label=f'z index = {layer}',
+                      ls=elsevier_plot_tools.LINESTYLE_TUPLE[i][1],
+                      color=elsevier_plot_tools.DARK_RGB_COLOR_GRADIENT[i],
+                      )
+        ax_i.set_xlabel(_config['xlabel'])
+        ax_i.set_ylabel(_config['ylabel'])
+        self.add_text(ax_i, loc=(0.75, 1.0))
+        elsevier_plot_tools.remove_mirror_axes(ax_i)
+        elsevier_plot_tools.save_close_fig(fig_i,
+                                           'potential_layers_whole',
+                                           loc='upper right',
+                                           )
 
     def add_text(self,
                  ax_i: plt.Axes,

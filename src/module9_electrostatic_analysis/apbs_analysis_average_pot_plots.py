@@ -269,10 +269,14 @@ def plot_boltzman_distribution(dist_radii: Dict[int,  # z index
                                cut_ind: int  # cut of radius
                                ) -> None:
     """Plot the Boltzman distribution"""
+    # pylint: disable=too-many-locals
     configs: PlotBoltzmanDistribution = PlotBoltzmanDistribution()
-    figure: Tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
+    figure_i: Tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
             'single_column')
-    fig_i, ax_i = figure
+    fig_i, ax_i = figure_i
+    figure_j: Tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
+            'single_column')
+    fig_j, ax_j = figure_j
     plot_parameters: Dict[
        str, Union[str, Tuple[float, float], List[float]]] = \
         configs.BOLTZMANN
@@ -288,16 +292,30 @@ def plot_boltzman_distribution(dist_radii: Dict[int,  # z index
                   color=colors[i],
                   ls=lstyles[i][1],
                   )
-    ax_i.set_xlabel(plot_parameters['xlable'])
-    ax_i.set_xticks(plot_parameters['x_ticks'])
-    ax_i.set_ylabel(plot_parameters['ylable'])
+        ax_j.plot(phi_i_radii[1][:cut_ind]/10.0,  # Convert to nm
+                  phi_i_radii[0][:cut_ind]/np.max(phi_i_radii[0][:cut_ind]),
+                  label=f'z index = {ind}',
+                  color=colors[i],
+                  ls=lstyles[i][1],
+                  )
+    for ax_ in (ax_i, ax_j):
+        ax_.set_xlabel(plot_parameters['xlable'])
+        ax_.set_xticks(plot_parameters['x_ticks'])
+        ax_.set_yticks(plot_parameters['y_ticks'])
+        ax_.grid(True, ls='--', lw=0.5, alpha=0.5, color='grey')
+        ax_.legend()
     ax_i.set_ylim(plot_parameters['y_lim'])
-    ax_i.set_yticks(plot_parameters['y_ticks'])
-    ax_i.grid(True, ls='--', lw=0.5, alpha=0.5, color='grey')
-    ax_i.legend()
-    elsevier_plot_tools.save_close_fig(fig_i,
-                                       plot_parameters['output_file'],
-                                       loc=plot_parameters['legend_loc'])
+    ax_j.set_ylim((-0.1, 1.1))
+    ax_i.set_ylabel(plot_parameters['ylable'])
+    ax_j.set_ylabel(plot_parameters['ylable'] + ' (normalized)')
+    elsevier_plot_tools.save_close_fig(
+        fig_i,
+        plot_parameters['output_file'],
+        loc=plot_parameters['legend_loc'])
+    elsevier_plot_tools.save_close_fig(
+        fig_j,
+        'normalized_' + plot_parameters['output_file'],
+        loc=plot_parameters['legend_loc'])
 
 
 def plot_all_boltman_distribution(all_dist_radii: Dict[int, Tuple[np.ndarray,
@@ -305,10 +323,14 @@ def plot_all_boltman_distribution(all_dist_radii: Dict[int, Tuple[np.ndarray,
                                   cut_ind: int  # cut of radius
                                   ) -> None:
     """Plot all the Boltzman distribution"""
+    # pylint: disable=too-many-locals
     configs: PlotBoltzmanDistribution = PlotBoltzmanDistribution()
-    figure: Tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
+    figure_i: Tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
             'double_column')
-    fig_i, ax_i = figure
+    fig_i, ax_i = figure_i
+    figure_j: Tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
+            'double_column')
+    fig_j, ax_j = figure_j
     plot_parameters: Dict[
        str, Union[str, Tuple[float, float], List[float]]] = \
         configs.BOLTZMANN
@@ -325,12 +347,25 @@ def plot_all_boltman_distribution(all_dist_radii: Dict[int, Tuple[np.ndarray,
                   color=colors[i],
                   ls='-',
                   )
-    ax_i.set_xlabel(plot_parameters['xlable'])
-    ax_i.set_xticks(plot_parameters['x_ticks'])
+        ax_j.plot(phi_i_radii[1][:cut_ind]/10.0,  # Convert to nm
+                  phi_i_radii[0][:cut_ind]/np.max(phi_i_radii[0][:cut_ind]),
+                  label=label,
+                  color=colors[i],
+                  ls='-',
+                  )
+    for ax_ in (ax_i, ax_j):
+        ax_.set_xlabel(plot_parameters['xlable'])
+        ax_.set_xticks(plot_parameters['x_ticks'])
+        ax_.grid(True, ls='--', lw=0.5, alpha=0.5, color='grey')
+        ax_.legend()
     ax_i.set_ylabel(plot_parameters['ylable'])
-    ax_i.grid(True, ls='--', lw=0.5, alpha=0.5, color='grey')
-    ax_i.legend()
+    ax_j.set_ylabel(plot_parameters['ylable'] + ' (normalized)')
+
     elsevier_plot_tools.save_close_fig(
         fig_i,
         fname='all_' + plot_parameters['output_file'],
+        loc=plot_parameters['legend_loc'])
+    elsevier_plot_tools.save_close_fig(
+        fig_j,
+        fname='all_normalized' + plot_parameters['output_file'],
         loc=plot_parameters['legend_loc'])

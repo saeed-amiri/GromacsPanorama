@@ -63,7 +63,7 @@ class PlotParameterFittedPotential:
 
     @property
     def ODA_BOUND(self) -> tuple[int, int]:
-        return (90, 95)
+        return (90, 96)
 
 
 def interactive_plot(plots_data: list[tuple[np.ndarray,
@@ -240,11 +240,11 @@ class PlotBoltzmanDistribution:
        str, Union[str, Tuple[float, float], List[float]]]:
         return {'label': 'Distribution',
                 'ylable': r'$c^+/c_0$',
-                'xlable': 'r [nm] (COM of the circle)',
+                'xlable': r'r$^*$ [nm]',
                 'output_file': 'oda_distribution.jpg',
                 'legend_loc': 'upper left',
-                'y_lim': (-0.1, 1.1),
-                'y_ticks': [0.0, 0.5, 1.0],
+                'y_lim': (-0.1, 4.1),
+                'y_ticks': [0.0, 0.5, 1.0, 2.0, 3.0, 4.0],
                 'x_lim': (-0.5, 10.5),
                 'x_ticks': [0, 2, 4, 6, 8, 10]}
 
@@ -284,7 +284,7 @@ def plot_boltzman_distribution(dist_radii: Dict[int,  # z index
     for i, (ind, phi_i_radii) in enumerate(dist_radii.items()):
         ax_i.plot(phi_i_radii[1][:cut_ind]/10.0,  # Convert to nm
                   phi_i_radii[0][:cut_ind],
-                  label=f'Grid: {ind}',
+                  label=f'z index = {ind}',
                   color=colors[i],
                   ls=lstyles[i][1],
                   )
@@ -307,7 +307,7 @@ def plot_all_boltman_distribution(all_dist_radii: Dict[int, Tuple[np.ndarray,
     """Plot all the Boltzman distribution"""
     configs: PlotBoltzmanDistribution = PlotBoltzmanDistribution()
     figure: Tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
-            'single_column')
+            'double_column')
     fig_i, ax_i = figure
     plot_parameters: Dict[
        str, Union[str, Tuple[float, float], List[float]]] = \
@@ -316,7 +316,7 @@ def plot_all_boltman_distribution(all_dist_radii: Dict[int, Tuple[np.ndarray,
 
     for i, (ind, phi_i_radii) in enumerate(all_dist_radii.items()):
         if i in (0, len(all_dist_radii) - 1):
-            label: str | None = f'Grid: {ind}'
+            label: str | None = f'z index = {ind}'
         else:
             label = None
         ax_i.plot(phi_i_radii[1][:cut_ind]/10.0,  # Convert to nm

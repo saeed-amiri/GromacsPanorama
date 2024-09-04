@@ -67,7 +67,7 @@ class PlotPotentialLayer:
                              radii_list,
                              radial_average_list,
                              sphere_grid_range,
-                             log)
+                             )
         self.write_msg(log)
 
     def plot_potentials(self,
@@ -76,7 +76,6 @@ class PlotPotentialLayer:
                         radii_list: list[np.ndarray],
                         radial_average_list: list[np.ndarray],
                         sphere_grid_range: np.ndarray,
-                        log: logger.logging.Logger
                         ) -> None:
         """plot the potentials"""
         # pylint: disable=too-many-arguments
@@ -132,6 +131,8 @@ class PlotPotentialLayer:
         # pylint: disable=too-many-arguments
         self.plot_multi_layers_whole(
             radii_list, radial_average_list, sphere_grid_range)
+        self.plot_multi_layers_cut(
+            cut_radii, cut_radial_average, sphere_grid_range)
 
     def plot_multi_layers_whole(self,
                                 radii_list: list[np.ndarray],
@@ -157,6 +158,35 @@ class PlotPotentialLayer:
         elsevier_plot_tools.remove_mirror_axes(ax_i)
         elsevier_plot_tools.save_close_fig(fig_i,
                                            'potential_layers_whole',
+                                           loc='upper right',
+                                           )
+
+    def plot_multi_layers_cut(self,
+                              cut_radii: list[np.ndarray],
+                              cut_radial_average: list[np.ndarray],
+                              sphere_grid_range: np.ndarray,
+                              ) -> None:
+        """plot the potentials of the layers"""
+        plt.rcParams.update(
+            {'font.size': elsevier_plot_tools.LABEL_FONT_SIZE_PT})
+        fig_i: plt.Figure
+        ax_i: plt.Axes
+        _config: dict[str, typing.Any] = self.configs.MULTI_LAYERS
+        fig_i, ax_i = elsevier_plot_tools.mk_canvas('double_column')
+        for i, layer in enumerate(_config['indices']):
+            ind: int = sphere_grid_range.tolist().index(layer)
+            ax_i.plot(cut_radii[ind] / 10.0,  # Convert to nm
+                      cut_radial_average[ind],
+                      label=f'z index = {layer}',
+                      ls=elsevier_plot_tools.LINESTYLE_TUPLE[i][1],
+                      color=elsevier_plot_tools.DARK_RGB_COLOR_GRADIENT[i],
+                      )
+        ax_i.set_xlabel(_config['xlabel'])
+        ax_i.set_ylabel(_config['ylabel'])
+        self.add_text(ax_i, loc=(0.75, 1.0))
+        elsevier_plot_tools.remove_mirror_axes(ax_i)
+        elsevier_plot_tools.save_close_fig(fig_i,
+                                           'potential_layers_cut',
                                            loc='upper right',
                                            )
 

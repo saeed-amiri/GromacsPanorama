@@ -233,7 +233,7 @@ class PlotBolzmannRdf:
         fig_i, ax_i = figure
 
         plt_config = PlotBolzmannRdfConfiguratio()
-        self.plot_rdf(ax_i, plt_config.RDF_PROP)
+        self.plot_rdf(ax_i, self.rdf_data, plt_config.RDF_PROP)
         self.plot_boltzman(ax_i, self.boltzman_data, plt_config.BOLTZMAN_PROP)
         self.plot_vlines(ax_i)
 
@@ -259,7 +259,7 @@ class PlotBolzmannRdf:
             fig_i, ax_i = figure
 
             plt_config = PlotBolzmannRdfConfiguratio()
-            self.plot_rdf(ax_i, plt_config.RDF_PROP)
+            self.plot_rdf(ax_i, self.rdf_data, plt_config.RDF_PROP)
             boltzman_data = self.cut_radii(self.boltzman_dict['radii'],
                                            self.boltzman_dict[layer],
                                            cut_radius)[1]
@@ -284,11 +284,12 @@ class PlotBolzmannRdf:
 
     def plot_rdf(self,
                  ax_i: plt.Axes,
+                 rdf_data: np.ndarray,
                  kwargs: Dict[str, str | float]
                  ) -> None:
         """plot the RDF"""
         ax_i.plot(self.rdf_radii,
-                  self.rdf_data,
+                  rdf_data,
                   scalex=True,
                   scaley=True,
                   **kwargs)

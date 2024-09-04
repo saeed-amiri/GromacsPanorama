@@ -139,6 +139,7 @@ class PlotBolzmannRdf:
     rdf_data: np.ndarray
     rdf_radii: np.ndarray  # in Angstrom
     boltzman_data: np.ndarray
+    boltzman_dict: dict[int, np.ndarray]
     boltzman_radii: np.ndarray  # in nm
     config: FileConfig
     info_msg: str
@@ -152,6 +153,7 @@ class PlotBolzmannRdf:
         self.config = config
         self.process_files(cut_radius, log)
         self.plot_data()
+        self.plot_fit_rdf_with_distribution(cut_radius)
         self.write_msg(log)
 
     def process_files(self,
@@ -182,6 +184,7 @@ class PlotBolzmannRdf:
                           ) -> None:
         """set the Boltzman factor data"""
         boltzman_data_dict: dict[int, np.ndarray] = {}
+        boltzman_data_list: list[np.ndarray] = []
         for i in self.config.boltzman_file['data']:
             boltzman_data, boltzman_radii = self.parse_xvg(
                 fname=self.config.boltzman_file['fname'],
@@ -189,12 +192,15 @@ class PlotBolzmannRdf:
                 radii_column=self.config.boltzman_file['radii'],
                 log=log)
             boltzman_data_dict[i] = boltzman_data
-        boltzman_data = np.mean(list(boltzman_data_dict.values()), axis=0)
+            boltzman_data_list.append(boltzman_data)
+        boltzman_data_dict['radii'] = boltzman_radii
+        boltzman_data = np.mean(boltzman_data_list, axis=0)
         self.boltzman_radii, boltzman_data = self.cut_radii(
             boltzman_radii, boltzman_data, cut_radius)
         self.boltzman_data = boltzman_data / np.max(boltzman_data)
         self.boltzman_dict = boltzman_data_dict
         del boltzman_data_dict
+        del boltzman_data_list
 
     @staticmethod
     def cut_radii(radii: np.ndarray,
@@ -240,6 +246,41 @@ class PlotBolzmannRdf:
             fname=(fname := plt_config.PLOT_PROPERTIES['output_fname']),
             )
         self.info_msg += f'\tThe plot is saved as {fname}\n'
+
+    def plot_fit_rdf_with_distribution(self,
+                                       cut_radius: float | None = None
+                                       ) -> None:
+        """
+        plot the raw rdf as dots along with potential of each point
+        """
+        for layer in self.config.boltzman_file['data']:
+            figure: Tuple[plt.Figure, plt.Axes] = \
+                elsevier_plot_tools.mk_canvas('single_column')
+            fig_i, ax_i = figure
+
+            plt_config = PlotBolzmannRdfConfiguratio()
+            self.plot_rdf(ax_i, plt_config.RDF_PROP)
+            boltzman_data = self.cut_radii(self.boltzman_dict['radii'],
+                                           self.boltzman_dict[layer],
+                                           cut_radius)[1]
+            self.plot_boltzman(ax_i,
+                               boltzman_data / np.max(boltzman_data),
+                               plt_config.BOLTZMAN_PROP)
+
+            self.set_axis_properties(ax_i, plt_config)
+            self.add_text(ax_i, plt_config)
+            self.add_text(ax_i,
+                          plt_config,
+                          text=f'z index = {layer}',
+                          loc=(0.14, 0.9))
+
+            elsevier_plot_tools.save_close_fig(
+                fig=fig_i,
+                loc=plt_config.PLOT_PROPERTIES['legend_loc'],
+                fname=(fname := f'{layer}_boltzman_rdf.jpg'),
+                )
+            self.info_msg += f'\tThe plot is saved as {fname}\
+                for the layer {layer}\n'
 
     def plot_rdf(self,
                  ax_i: plt.Axes,
@@ -299,13 +340,19 @@ class PlotBolzmannRdf:
 
     def add_text(self,
                  ax_i: plt.Axes,
-                 plt_config: PlotBolzmannRdfConfiguratio
+                 plt_config: PlotBolzmannRdfConfiguratio,
+                 text: str | None = None,
+                 loc: Tuple[float, float] = (0.16, 1.0)
                  ) -> None:
         """add text to the plot"""
+        if text is not None:
+            pattern = text
+        else:
+            pattern = f'{self.config.oda_concentration} ODA/nm$^2$'
         if plt_config.ADD_TEXT:
-            ax_i.text(0.16,
-                      1.0,
-                      f'{self.config.oda_concentration} ODA/nm$^2$',
+            ax_i.text(loc[0],
+                      loc[1],
+                      pattern,
                       transform=ax_i.transAxes,
                       fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT - 3,
                       verticalalignment='top',

@@ -64,9 +64,6 @@ class PlotPotentialLayer:
                               sphere_grid_range: np.ndarray,
                               ) -> None:
         """plot the potential of the layers"""
-        # pylint: disable=unused-variable
-        # pylint: disable=unused-argument
-        # pylint: disable=too-many-arguments
         fig_i: plt.Figure
         ax_i: plt.Axes
         _config: dict[str, typing.Any] = self.configs.SINGLE_PLOT

@@ -395,7 +395,7 @@ class AverageAnalysis:
     def plot_debye_surface_potential_with_density(self,
                                                   data: dict[np.int64, float],
                                                   type_data: str,
-                                                  log: logger.logging
+                                                  log: logger.logging.Logger
                                                   ) -> None:
         """Plot the Debye length and surface potential"""
         SurfacePotentialAndDensityPlot(data,
@@ -539,4 +539,4 @@ class AverageAnalysis:
 
 if __name__ == '__main__':
     AverageAnalysis(sys.argv[1],
-                    logger.setup_logger('avarge_potential_analysis.log'))
+                    logger.setup_logger('average_potential_analysis.log'))

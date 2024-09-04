@@ -53,21 +53,15 @@ class PlotPotentialLayer:
         """write and log messages"""
         # pylint: disable=too-many-arguments
         self.configs = configs
-        self.plot_potential_layers(cut_radii,
-                                   cut_radial_average,
-                                   radii_list,
+        self.plot_potential_layers(radii_list,
                                    radial_average_list,
-                                   sphere_grid_range,
-                                   log)
+                                   sphere_grid_range)
         self.write_msg(log)
 
     def plot_potential_layers(self,
-                              cut_radii: list[np.ndarray],
-                              cut_radial_average: list[np.ndarray],
                               radii_list: list[np.ndarray],
                               radial_average_list: list[np.ndarray],
                               sphere_grid_range: np.ndarray,
-                              log: logger.logging.Logger
                               ) -> None:
         """plot the potential of the layers"""
         # pylint: disable=unused-variable
@@ -76,12 +70,12 @@ class PlotPotentialLayer:
         fig_i: plt.Figure
         ax_i: plt.Axes
         _config: dict[str, typing.Any] = self.configs.SINGLE_PLOT
-        for i, radial_average in enumerate(cut_radial_average):
+        for i, radial_average in enumerate(radial_average_list):
             fig_i, ax_i = \
                 elsevier_plot_tools.mk_canvas('single_column')
             layer: int = sphere_grid_range[i]
             ax_i.plot(radii_list[i] / 10.0,  # Convert to nm
-                      radial_average_list[i],
+                      radial_average,
                       color=_config['color'],
                       ls=_config['linestyle'],
                       label=_config['label']

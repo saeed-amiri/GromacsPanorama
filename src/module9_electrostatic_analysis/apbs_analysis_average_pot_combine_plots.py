@@ -301,6 +301,56 @@ class PlotBolzmannRdf:
             self.info_msg += f'\tThe plot is saved as {fname}\
                 for the layer {layer}\n'
 
+    def plot_raw_rdf_with_distribution(self,
+                                       cut_radius: float | None = None
+                                       ) -> None:
+        """
+        plot the raw rdf as dots along with potential of each point
+        """
+        plt_config = PlotBolzmannRdfConfiguratio()
+
+        rdf_config: Dict[str, Any] = {
+            'linestyle': ':',
+            'linewidth': 1.5,
+            'marker': 'o',
+            'markersize': 3,
+            'color': 'darkred',
+            'label': r'$g^*(r^*)$, a.u.',
+            }
+        boltzman_config: Dict[str, Any] = {
+            'linestyle': '-',
+            'color': 'darkblue',
+            'label': r'c/c$_0$, norm.',
+            'linewidth': 1.5,
+            }
+        for layer in self.config.boltzman_file['data']:
+            figure: Tuple[plt.Figure, plt.Axes] = \
+                elsevier_plot_tools.mk_canvas('single_column')
+            fig_i, ax_i = figure
+
+            self.plot_rdf(ax_i, self.raw_rdf_data, rdf_config)
+            boltzman_data = self.cut_radii(self.boltzman_dict['radii'],
+                                           self.boltzman_dict[layer],
+                                           cut_radius)[1]
+            self.plot_boltzman(ax_i,
+                               boltzman_data / np.max(boltzman_data),
+                               boltzman_config)
+
+            self.set_axis_properties(ax_i, plt_config)
+            self.add_text(ax_i, plt_config)
+            self.add_text(ax_i,
+                          plt_config,
+                          text=f'z index = {layer}',
+                          loc=(0.14, 0.9))
+
+            elsevier_plot_tools.save_close_fig(
+                fig=fig_i,
+                loc=plt_config.PLOT_PROPERTIES['legend_loc'],
+                fname=(fname := f'raw_{layer}_boltzman_rdf.jpg'),
+                )
+            self.info_msg += f'\tThe plot is saved as {fname}\
+                for the layer {layer}\n'
+
     def plot_rdf(self,
                  ax_i: plt.Axes,
                  rdf_data: np.ndarray,

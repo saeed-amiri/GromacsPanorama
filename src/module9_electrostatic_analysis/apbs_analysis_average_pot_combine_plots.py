@@ -3,7 +3,7 @@ Plot combination data
 plot the selcted Boltzman factor for ODA ans the 2d RDF of the ODA at
 the interface
 """
-from typing import Dict, Union, Tuple, List
+from typing import Dict, Union, Tuple, List, Any
 from dataclasses import field
 from dataclasses import dataclass
 
@@ -25,13 +25,13 @@ class FileConfig:
     rdf_file: Dict[str, str] = field(default_factory=lambda: {
         'fname': '15_oda_densities.xvg',
         'data': 'fitted_rdf',
-        'raw_data': 'fitted_rdf',
+        'raw_data': 'rdf_2d',
         'radii': 'regions',
         })
     boltzman_file: Dict[str, str | List[float]] = field(
          default_factory=lambda: {
               'fname': 'boltzman_distribution.xvg',
-              'data': [90, 91, 92, 93, 94, 95, 96],
+              'data': [87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98],
               'radii': 'r_nm',
               })
 
@@ -129,14 +129,17 @@ class PlotBolzmannRdf:
     """
     Read the files and plot the data
     """
+    # pylint: disable=too-many-instance-attributes
     __solts__ = ['rdf_radii',
                  'rdf_data',
+                 'raw_rdf_data',
                  'boltzman_radii',
                  'boltzman_dict',
                  'boltzman_data',
                  'config',
                  'info_msg']
     rdf_data: np.ndarray
+    raw_rdf_data: np.ndarray
     rdf_radii: np.ndarray  # in Angstrom
     boltzman_data: np.ndarray
     boltzman_dict: dict[int, np.ndarray]
@@ -154,6 +157,7 @@ class PlotBolzmannRdf:
         self.process_files(cut_radius, log)
         self.plot_data()
         self.plot_fit_rdf_with_distribution(cut_radius)
+        self.plot_raw_rdf_with_distribution(cut_radius)
         self.write_msg(log)
 
     def process_files(self,
@@ -162,6 +166,7 @@ class PlotBolzmannRdf:
                       ) -> None:
         """process the files"""
         self.set_rdf_data(cut_radius, log)
+        self.set_raw_rdf_data(cut_radius, log)
         self.set_boltzman_data(cut_radius, log)
 
     def set_rdf_data(self,
@@ -176,6 +181,20 @@ class PlotBolzmannRdf:
             log=log)
         rdf_data /= np.max(rdf_data)
         self.rdf_radii, self.rdf_data = \
+            self.cut_radii(rdf_radii, rdf_data, cut_radius)
+
+    def set_raw_rdf_data(self,
+                         cut_radius: float | None,
+                         log: logger.logging.Logger
+                         ) -> None:
+        """set the RDF data"""
+        rdf_data, rdf_radii = self.parse_xvg(
+            fname=self.config.rdf_file['fname'],
+            data_column=self.config.rdf_file['raw_data'],
+            radii_column=self.config.rdf_file['radii'],
+            log=log)
+        rdf_data /= np.max(rdf_data)
+        self.rdf_radii, self.raw_rdf_data = \
             self.cut_radii(rdf_radii, rdf_data, cut_radius)
 
     def set_boltzman_data(self,

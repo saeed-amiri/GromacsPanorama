@@ -33,7 +33,8 @@ class BoltzmanConfig:
         'mv_to_v': 1e-3,  # mV to V
         'oda_concentration': 0.003  # Molar concentration of the ODA!!
         })
-    selected_grid: list[int] = field(default_factory=lambda: [90, 91, 92])
+    selected_grid: list[int] = field(
+        default_factory=lambda: [90, 91, 92, 93, 94, 95])
     min_grid_to_write: int = 85
     # if True, the boltzmann coefficient will be calculated, otherwise
     # the concentration will be cnsidered as the input

@@ -109,15 +109,15 @@ BLACK_SHADES = [
 # Python list containing a gradient palette from dark red to dark blue
 DARK_RGB_COLOR_GRADIENT = [
     "#8B0000",  # Dark Red
-    "#9B111E",  # Firebrick
-    "#A52A2A",  # Brown
-    "#B22222",  # Firebrick4
-    "#CD5C5C",  # IndianRed3
     "#006400",  # Dark Green
-    "#008000",  # Green
+    "#9B111E",  # Firebrick
     "#228B22",  # ForestGreen
+    "#A52A2A",  # Brown
     "#2E8B57",  # SeaGreen
+    "#B22222",  # Firebrick4
     "#00688B",  # DeepSkyBlue4
+    "#CD5C5C",  # IndianRed3
+    "#008000",  # Green
     "#00008B"   # Dark Blue
 ]
 

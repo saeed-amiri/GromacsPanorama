@@ -89,7 +89,7 @@ class PlotBolzmannRdfConfiguratio:
     def PLOT_PROPERTIES(self) -> Dict[str, Union[str, int, float]]:
         """set the plot properties"""
         return {'y_label': None,
-                'xlabel': r'r$^*$ (nm)',
+                'xlabel': r'r$^*$ [nm]',
                 'title': 'Boltzman factor and RDF',
                 'x_lims': [-0.5, 10.5],
                 'y_lims': [-0.1, 1.1],

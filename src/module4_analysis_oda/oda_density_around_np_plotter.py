@@ -313,7 +313,8 @@ class SurfactantDensityPlotter:
         ax_i.set_xlabel(ax_i.get_xlabel(), fontsize=14)
         ax_i.set_ylabel(ax_i.get_ylabel(), fontsize=14)
 
-        ax_i.set_yticks([0.0, 0.5, 1.0])
+        if self.residue == 'AMINO_ODN':
+            ax_i.set_yticks([0.0, 0.5, 1.0])
         ax_i.tick_params(axis='x', labelsize=14)  # X-ticks
         ax_i.tick_params(axis='y', labelsize=14)  # Y-ticks
 

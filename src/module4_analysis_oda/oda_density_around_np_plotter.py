@@ -271,6 +271,7 @@ class SurfactantDensityPlotter:
         # DensityTimePlotter(density=self.density, log=log)
         self.plot_density_graph(self.graph_configs.graph_config)
         self.plot_2d_rdf(self.graph_configs.rdf_config)
+        self.plot_2d_rdf_bpm(self.graph_configs.rdf_config)
         self.plot_fitted_or_smoothed_rdf(self.smoothed_rdf,
                                          'smoothed',
                                          self.graph_configs.smoothed_rdf_config
@@ -287,6 +288,55 @@ class SurfactantDensityPlotter:
                     ) -> None:
         """Plot a simple graph of 2d rdf vs distance."""
         self._plot_graphes(self.rdf_2d, config)
+
+    def plot_2d_rdf_bpm(self,
+                        config: "Rdf2dGraphConfig"
+                        ) -> None:
+        """
+        Plot a simple graph of 2d rdf vs distance, for the presntation
+        at the BPM.
+        """
+        # Save the current rcParams
+        original_rc_params = plt.rcParams.copy()
+        # Set the rcParams for the BPM
+        # Set local font size for this method
+        _config = config
+        _config.if_elsevier = False
+        _config.graph_style['markersize'] = 3
+        _config.graph_style['linestyle'] = ':'
+        _config.graph_style['color'] = 'k'
+        fig_i, ax_i = self._plot_graphes(self.rdf_2d, _config, return_ax=True)
+        golden_ratio: float = (1 + 5 ** 0.5) / 2
+        hight: float = 2.35
+        width: float = hight * golden_ratio
+        fig_i.set_size_inches(width, hight)
+        ax_i.set_xlabel(ax_i.get_xlabel(), fontsize=14)
+        ax_i.set_ylabel(ax_i.get_ylabel(), fontsize=14)
+
+        ax_i.set_yticks([0.0, 0.5, 1.0])
+        ax_i.tick_params(axis='x', labelsize=14)  # X-ticks
+        ax_i.tick_params(axis='y', labelsize=14)  # Y-ticks
+
+        contact_radius: float = \
+            self.contact_data.loc[:, 'contact_radius'].mean() * \
+            self.angstrom_to_nm
+        self._add_vline(ax_i,
+                        contact_radius,
+                        lstyle='--',
+                        color='darkred',
+                        legend='r$^\star_c$')
+
+        fout: str = f'{self.residue}_rdf_2d_bpm.png'
+        plot_tools.save_close_fig(fig_i,
+                                  ax_i,
+                                  fout,
+                                  loc='lower right',
+                                  legend_font_size=13,
+                                  )
+        self.info_msg += \
+            f'\tThe rdf graph saved: for bpm style as `{fout}`\n'
+        # Restore the original rcParams
+        plt.rcParams.update(original_rc_params)
 
     def plot_fitted_or_smoothed_rdf(self,
                                     rdf: dict[float, float],

@@ -134,8 +134,10 @@ if __name__ == '__main__':
     try:
         analysis = OdaAnalysis(fname=sys.argv[1], log=LOG)
     except IndexError:
-        LOG.error("No command line argument provided for the filename.")
+        LOG.error(msg := "No command line argument provided for the filename.")
+        print(f"{bcolors.FAIL}{msg}{bcolors.ENDC}")
         sys.exit(1)
     else:
-        LOG.error("Failed to initialize ODA analysis")
+        LOG.error(msg := "Failed to initialize ODA analysis")
+        print(f"{bcolors.FAIL}{msg}{bcolors.ENDC}")
         sys.exit(1)

@@ -60,6 +60,7 @@ import matplotlib.pyplot as plt
 
 from common import logger
 from common import my_tools
+from common import plot_tools
 from common import elsevier_plot_tools
 from common.colors_text import TextColor as bcolors
 
@@ -523,14 +524,15 @@ class PlotOverlayLayers:
         """write and log messages"""
         self.configs = configs
         self.configs.bulk_averaging = False
-
-        self.plot_potential_layers_z(data_arr, grid_spacing, grid_points)
+        radii_average_dict: dict[int | str, np.ndarray] = \
+            self.plot_potential_layers_z(data_arr, grid_spacing, grid_points)
+        self.plot_bpm_talk(radii_average_dict)
 
     def plot_potential_layers_z(self,
                                 data_arr: np.ndarray,
                                 grid_spacing: list[float],
                                 grid_points: list[int]
-                                ) -> None:
+                                ) -> dict[int | str, np.ndarray]:
         """
         plot the average potential layers by changing z
         """
@@ -550,7 +552,7 @@ class PlotOverlayLayers:
         line_styles: list[tuple[str, tuple[int, typing.Any]]]
         long_list: bool
         colors, line_styles, long_list = self._get_colors_linestyle(range_z)
-
+        radii_average_dict: dict[int | str, np.ndarray] = {}
         for i, z_index in enumerate(range_z):
             # Calculate the center of the box in grid units
             center_xyz = (center_xyz[0], center_xyz[1], z_index)
@@ -590,7 +592,9 @@ class PlotOverlayLayers:
                       ls=line_style,
                       label=label,
                       )
+            radii_average_dict[z_index] = radii_average.radial_average
             min_z_value.append(min(radii_average.radial_average))
+        radii_average_dict['radii'] = radii_average.radii
 
         ax_i.set_xlabel('Radius [nm]')
         ax_i.set_ylabel('Average Potential')
@@ -603,6 +607,7 @@ class PlotOverlayLayers:
                       self.configs.y_lims[1])
         elsevier_plot_tools.save_close_fig(
             fig_i, 'potential_layers_z_zoom.jpg', close_fig=True)
+        return radii_average_dict
 
     def _get_lable(self,
                    iteration: int,
@@ -646,6 +651,72 @@ class PlotOverlayLayers:
             print(f'{bcolors.WARNING}The number of z layers is more than '
                   f'the number of colors!{bcolors.ENDC}')
         return colors, line_styles, long_list
+
+    def plot_bpm_talk(self,
+                      radii_average_dict: dict[int | str, np.ndarray]
+                      ) -> None:
+        """plot the potential layers for the talk"""
+        average_range: tuple[int, int] = (90, 96)
+        average_potetial: np.ndarray = np.zeros(
+            radii_average_dict['radii'].shape)
+        for z_index, radial_average in radii_average_dict.items():
+            if z_index in average_range:
+                average_potetial += radial_average
+        average_potetial /= len(average_range)
+        xdata, ydata = filter_data(
+            radii_average_dict['radii']/self.configs.dist_unit_conversion,
+            average_potetial)
+
+        fig_i, ax_i = elsevier_plot_tools.mk_canvas('single_column')
+        ax_i.plot(xdata,
+                  ydata,
+                  #   label=r'$\psi(r^\star)$ at interface',
+                  lw=2,
+                  c='black',
+                  )
+        golden_ratio: float = (1 + 5 ** 0.5) / 2
+        hight: float = 2.35
+        width: float = hight * golden_ratio
+        fig_i.set_size_inches(width, hight)
+        ax_i.set_yticks([0.0, 10.0, 20.0, 30.0])
+        ax_i.set_xlabel(r'$r^\star$ [nm]', fontsize=14)
+        ax_i.set_ylabel(r'$\psi(r^\star)$ [mV]', fontsize=14)
+        ax_i.tick_params(axis='x', labelsize=14)  # X-ticks
+        ax_i.tick_params(axis='y', labelsize=14)  # Y-ticks
+        plot_tools.save_close_fig(fig_i,
+                                  ax_i,
+                                  'average_potential_interface_bpm_talk.jpg',
+                                  loc='upper right',
+                                  legend_font_size=13,
+                                  )
+
+
+def filter_data(xdata: np.ndarray,
+                ydata: np.ndarray,
+                min_radius: float = 3.6,
+                max_radius: float = 10.0
+                ) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Filter the xdata and ydata to include only the values where xdata
+    is between min_radius and max_radius.
+
+    Parameters:
+    xdata (np.ndarray): The radii data.
+    ydata (np.ndarray): The potential data.
+    min_radius (float): The minimum radius to include.
+    max_radius (float): The maximum radius to include.
+
+    Returns:
+    tuple[np.ndarray, np.ndarray]: The filtered xdata and ydata.
+    """
+    # Create a boolean mask for the desired range
+    mask = (xdata >= min_radius) & (xdata <= max_radius)
+
+    # Apply the mask to xdata and ydata
+    filtered_xdata = xdata[mask]
+    filtered_ydata = ydata[mask]
+
+    return filtered_xdata, filtered_ydata
 
 
 if __name__ == '__main__':

@@ -474,9 +474,11 @@ class PlotBolzmannRdf:
                  ax_i: plt.Axes,
                  plt_config: PlotBolzmannRdfConfiguratio,
                  text: str | None = None,
-                 loc: Tuple[float, float] = (0.16, 1.0)
+                 loc: Tuple[float, float] = (0.16, 1.0),
+                 font_size: int = elsevier_plot_tools.LABEL_FONT_SIZE_PT - 3
                  ) -> None:
         """add text to the plot"""
+        # pylint: disable=too-many-arguments
         if text is not None:
             pattern = text
         else:
@@ -486,7 +488,7 @@ class PlotBolzmannRdf:
                       loc[1],
                       pattern,
                       transform=ax_i.transAxes,
-                      fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT - 3,
+                      fontsize=font_size,
                       verticalalignment='top',
                       horizontalalignment='center',
                       )

@@ -12,6 +12,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from common import logger
+from common import plot_tools
 from common import xvg_to_dataframe
 from common import elsevier_plot_tools
 from common.colors_text import TextColor as bcolors
@@ -31,7 +32,7 @@ class FileConfig:
     boltzman_file: Dict[str, str | List[float]] = field(
          default_factory=lambda: {
               'fname': 'boltzman_distribution.xvg',
-              'data': [87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98],
+              'data': [90, 91, 92, 93, 94, 95],
               'radii': 'r_nm',
               })
 
@@ -156,6 +157,7 @@ class PlotBolzmannRdf:
         self.config = config
         self.process_files(cut_radius, log)
         self.plot_data()
+        self.plot_data_bpm()
         self.plot_fit_rdf_with_distribution(cut_radius)
         self.plot_raw_rdf_with_distribution(cut_radius)
         self.write_msg(log)
@@ -265,6 +267,66 @@ class PlotBolzmannRdf:
             fname=(fname := plt_config.PLOT_PROPERTIES['output_fname']),
             )
         self.info_msg += f'\tThe plot is saved as {fname}\n'
+
+    def plot_data_bpm(self) -> None:
+        """plot the data"""
+        figure: Tuple[plt.Figure, plt.Axes] = \
+            elsevier_plot_tools.mk_canvas('single_column')
+        fig_i, ax_i = figure
+
+        _plt_config = PlotBolzmannRdfConfiguratio()
+        _plt_config.BOLTZMAN_PROP['label'] = r'c^\star/c$_0 (norm)$'
+        _plt_config.PLOT_PROPERTIES['linestyle'] = '-'
+        golden_ratio: float = (1 + 5 ** 0.5) / 2
+        hight: float = 2.35
+        width: float = hight * golden_ratio
+        self.plot_boltzman(ax_i, self.boltzman_data, _plt_config.BOLTZMAN_PROP)
+        fig_i.set_size_inches(width, hight)
+        ax_i.set_xlabel(r'$r^\star$ [nm]', fontsize=14)
+        ax_i.set_ylabel(ax_i.get_ylabel(), fontsize=14)
+        ax_i.set_yticks([0.0, 0.5, 1.0])
+        ax_i.set_xticks([0, 2, 4, 6, 8, 10])
+        ax_i.tick_params(axis='x', labelsize=14)  # X-ticks
+        ax_i.tick_params(axis='y', labelsize=14)  # Y-ticks
+        plot_tools.save_close_fig(fig_i,
+                                  ax_i,
+                                  fout := 'boltzman_bpm.jpg',
+                                  loc='lower right',
+                                  legend_font_size=11,
+                                  if_close=False,
+                                  )
+        _plt_config.RDF_PROP['linesytle'] = ':'
+        _plt_config.RDF_PROP['marker'] = 's'
+        _plt_config.RDF_PROP['markersize'] = '3'
+        ax_i.plot(self.rdf_radii,
+                  self.raw_rdf_data,
+                  scalex=True,
+                  scaley=True,
+                  marker='o',
+                  markersize=3,
+                  linestyle=':',
+                  color='k',
+                  label=r'$g^\star(r^\star)$, a.u.',
+                  )
+
+        ax_i.axvline(x=1.75,
+                     ymin=0,
+                     ymax=1,
+                     linestyle='--',
+                     color='darkred',
+                     linewidth=1.0,
+                     label=r'r$^\star_c$',
+                     )
+
+        plot_tools.save_close_fig(fig_i,
+                                  ax_i,
+                                  fout := 'boltzman_rdf_bpm.jpg',
+                                  loc='lower right',
+                                  legend_font_size=11,
+                                  if_close=False,
+                                  )
+
+        self.info_msg += f'\tThe plot is saved as {fout}\n'
 
     def plot_fit_rdf_with_distribution(self,
                                        cut_radius: float | None = None

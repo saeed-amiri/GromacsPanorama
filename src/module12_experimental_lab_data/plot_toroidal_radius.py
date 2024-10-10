@@ -51,7 +51,9 @@ class ToroidalRadiusPlot:
         axs: plt.Axes
         fig_i, axs = elsevier_plot_tools.mk_canvas_multi('double_column',
                                                          n_rows=1,
-                                                         n_cols=3)
+                                                         n_cols=3,
+                                                         aspect_ratio=2
+                                                         )
         self._plot_panel_a(axs[0], grouped_over_salt)
         self._plot_panel_b(axs[1], grouped_over_surfactant)
         self._plot_panel_c(axs[2])

@@ -146,11 +146,10 @@ class PlotPotential:
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,
-                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT-2)
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+
         self.info_msg += f'\tIsosurface image: {configs.isosurface_fig}\n'
-        # Add a circle on top of the image
-        self._add_circle(ax_i, img, 970, '--', 'black')  # debye length
-        # self._add_circle(ax_i, img, 670, '-', 'black')  # Stern layer
+
 
     def _add_circle(self,
                     ax_i: plt.axes,

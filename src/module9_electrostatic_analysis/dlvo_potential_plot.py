@@ -75,7 +75,7 @@ class PlotPotential:
         """add shcem of the dlvo model for a sphere"""
         ax_i.axis('off')
         ax_i.imshow(plt.imread(configs.scheme_fig_path))
-        ax_i.text(0.09,
+        ax_i.text(-0.013,
                   1,
                   'a)',
                   ha='right',
@@ -122,9 +122,8 @@ class PlotPotential:
                      ) -> None:
         """add scheme of the dlvo model for a sphere"""
         ax_i.axis('off')
-        img = plt.imread(configs.isosurface_fig)
-        ax_i.imshow(img)
-        ax_i.text(0.09,
+        ax_i.imshow(plt.imread(configs.apbs_fig))
+        ax_i.text(-0.013,
                   1,
                   'c)',
                   ha='right',
@@ -364,7 +363,7 @@ class PlotPotential:
         """set the figure labels"""
         ax_i.text(-0.013,
                   1,
-                  'b)',
+                  'd)',
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,

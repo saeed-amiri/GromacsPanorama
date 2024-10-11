@@ -206,13 +206,13 @@ class ComparisonConfigs:
     charge_column: str = 'total_charge'
 
     charge_files: dict[str, str] = field(default_factory=lambda: {
-        '3.0': 'charge_df_3_0.xvg',
+        # '3.0': 'charge_df_3_0.xvg',
         '3.2': 'charge_df_3_2.xvg',
         '3.4': 'charge_df_3_4.xvg',
         '3.6': 'charge_df_3_6.xvg'})
 
     radial_avg_files: dict[str, str] = field(default_factory=lambda: {
-        '3.0': 'radial_average_potential_nonlinear_3_0.xvg',
+        # '3.0': 'radial_average_potential_nonlinear_3_0.xvg',
         '3.2': 'radial_average_potential_nonlinear_3_2.xvg',
         '3.4': 'radial_average_potential_nonlinear_3_4.xvg',
         '3.6': 'radial_average_potential_nonlinear_3_6.xvg',

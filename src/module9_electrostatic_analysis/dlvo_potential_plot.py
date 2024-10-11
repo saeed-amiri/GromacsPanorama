@@ -63,9 +63,9 @@ class PlotPotential:
         axs[2] = fig_i.add_subplot(grid_panel[0, 5:])
         axs[3] = fig_i.add_subplot(grid_panel[1, 0:4])
         self.plot_panel_a(axs[0], configs)
-        self.plot_panel_b(axs[3], radii, phi_r, debye_d, configs, log)
-        self.plot_panel_c(axs[1], configs)
-        self.plot_panel_d(axs[2], configs)
+        self.plot_panel_b(axs[1], configs)
+        self.plot_panel_c(axs[2], configs)
+        self.plot_panel_d(axs[3], radii, phi_r, debye_d, configs, log)
         self._save_fig(fig_i, configs)
 
     def plot_panel_a(self,
@@ -84,7 +84,7 @@ class PlotPotential:
                   fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
         self.info_msg += f'\tScheme image: {configs.scheme_fig_path}\n'
 
-    def plot_panel_b(self,
+    def plot_panel_d(self,
                      ax_i: plt.axes,
                      radii: np.ndarray,
                      phi_r: np.ndarray,
@@ -116,7 +116,7 @@ class PlotPotential:
         ax_i.legend(loc=configs.legend_loc,
                     fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
-    def plot_panel_d(self,
+    def plot_panel_c(self,
                      ax_i: plt.axes,
                      configs: PlotConfig
                      ) -> None:
@@ -132,7 +132,7 @@ class PlotPotential:
                   fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
         self.info_msg += f'\tScheme image: {configs.apbs_fig}\n'
 
-    def plot_panel_c(self,
+    def plot_panel_b(self,
                      ax_i: plt.axes,
                      configs: PlotConfig
                      ) -> None:

@@ -129,13 +129,18 @@ class PlotConfig(FileConfig):
 
     scheme_fig_path_0: str = \
         '/scratch/saeed/GÖHBP/PRE_DFG_7May24/single_np/15Oda/'
-    scheme_fig_path_1: str = 'electrostatic_potential/exclusion_zone_edgy.jpg'
+    scheme_fig_path_1: str = 'electrostatic_potential/exclusion_zone_edgy.png'
     scheme_fig_path: str = f'{scheme_fig_path_0}{scheme_fig_path_1}'
 
     isosurface_fig_path: str = \
         '/scratch/saeed/GÖHBP/PRE_DFG_7May24/single_np/15Oda/'
-    isosurface_fig_name: str = 'electrostatic_potential/isosurface.png'
+    isosurface_fig_name: str = 'electrostatic_potential/edl_structure.png'
     isosurface_fig: str = f'{isosurface_fig_path}{isosurface_fig_name}'
+
+    apbs_fig_path: str = \
+        '/scratch/saeed/GÖHBP/PRE_DFG_7May24/single_np/15Oda/'
+    apbs_fig_name: str = 'electrostatic_potential/apbs_potential.png'
+    apbs_fig: str = f'{apbs_fig_path}{apbs_fig_name}'
 
     def __post_init__(self) -> None:
         if self.if_experiment:

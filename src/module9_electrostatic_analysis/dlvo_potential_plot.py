@@ -116,11 +116,11 @@ class PlotPotential:
         ax_i.legend(loc=configs.legend_loc,
                     fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
-    def plot_panel_c(self,
+    def plot_panel_d(self,
                      ax_i: plt.axes,
                      configs: PlotConfig
                      ) -> None:
-        """add scheme of the dlvo model for a sphere"""
+        """potential from the apbs simulation with vmd"""
         ax_i.axis('off')
         ax_i.imshow(plt.imread(configs.apbs_fig))
         ax_i.text(-0.013,
@@ -130,9 +130,19 @@ class PlotPotential:
                   va='top',
                   transform=ax_i.transAxes,
                   fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
-        ax_i.text(0.15,
-                  0.5,
-                  r'<->',
+        self.info_msg += f'\tScheme image: {configs.apbs_fig}\n'
+
+    def plot_panel_c(self,
+                     ax_i: plt.axes,
+                     configs: PlotConfig
+                     ) -> None:
+        """add scheme of the dlvo model for a sphere"""
+        ax_i.axis('off')
+        img = plt.imread(configs.isosurface_fig)
+        ax_i.imshow(img)
+        ax_i.text(0.08,
+                  1,
+                  'b)',
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,

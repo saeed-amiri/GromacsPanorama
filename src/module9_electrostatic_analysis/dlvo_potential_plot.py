@@ -63,8 +63,9 @@ class PlotPotential:
         axs[2] = fig_i.add_subplot(grid_panel[0, 5:])
         axs[3] = fig_i.add_subplot(grid_panel[1, 0:4])
         self.plot_panel_a(axs[0], configs)
-        self.plot_panel_b(axs[1], radii, phi_r, debye_d, configs, log)
-        self.plot_panel_c(axs[2], configs)
+        self.plot_panel_b(axs[3], radii, phi_r, debye_d, configs, log)
+        self.plot_panel_c(axs[1], configs)
+        self.plot_panel_d(axs[2], configs)
         self._save_fig(fig_i, configs)
 
     def plot_panel_a(self,

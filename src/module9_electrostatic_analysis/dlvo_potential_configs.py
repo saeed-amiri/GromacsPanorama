@@ -18,7 +18,7 @@ class FileConfig:
     contact_fname: str = 'contact.xvg'
     fout: str = 'potential.xvg'
     radial_avg_files: dict[str, str] = field(default_factory=lambda: {
-        'numerical, 3.6': 'radial_average_potential_nonlinear_3_6.xvg'
+        'numerical': 'radial_average_potential_nonlinear_3_6.xvg'
         })
 
 
@@ -82,7 +82,7 @@ class PlotConfig(FileConfig):
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'potential',
         'ylabel': r'potential $\psi$ [mV]',
-        'xlabel': 'distance X [nm]'
+        'xlabel': 'r [nm]'
     })
 
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {

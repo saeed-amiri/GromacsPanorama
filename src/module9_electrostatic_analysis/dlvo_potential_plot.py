@@ -48,16 +48,20 @@ class PlotPotential:
         axs: plt.axes
         fig_i: plt.figure
         fig_i, axs = elsevier_plot_tools.mk_canvas_multi('double_column',
-                                                         n_rows=1,
-                                                         n_cols=7,
-                                                         aspect_ratio=2)
+                                                         n_rows=2,
+                                                         n_cols=8,
+                                                         aspect_ratio=1)
+        # Flatten axs if it's a 2D array
+        axs = axs.flatten() if isinstance(axs, np.ndarray) else axs
+
         for ax_i in axs:
             ax_i.axis('off')
-        grid_panel = gridspec.GridSpec(1, 7, figure=fig_i)
+        grid_panel = gridspec.GridSpec(2, 8, figure=fig_i)
 
         axs[0] = fig_i.add_subplot(grid_panel[0, :2])
         axs[1] = fig_i.add_subplot(grid_panel[0, 2:5])
         axs[2] = fig_i.add_subplot(grid_panel[0, 5:])
+        axs[3] = fig_i.add_subplot(grid_panel[1, 0:4])
         self.plot_panel_a(axs[0], configs)
         self.plot_panel_b(axs[1], radii, phi_r, debye_d, configs, log)
         self.plot_panel_c(axs[2], configs)

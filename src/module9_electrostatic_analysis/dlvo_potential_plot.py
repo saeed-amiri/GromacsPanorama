@@ -26,6 +26,8 @@ class PlotPotential:
     def __init__(self,
                  radii: np.ndarray,
                  phi_r: np.ndarray,
+                 interface_radii: np.ndarray,
+                 interface_phi_r: np.ndarray,
                  debye_l: float,
                  configs: AllConfig,
                  log: logger.logging.Logger
@@ -33,12 +35,19 @@ class PlotPotential:
         # pylint: disable=too-many-arguments
         self.configs = configs
         debye_distance: float = debye_l + self.configs.np_radius / 10.0
-        self.plot_potential(radii, phi_r, debye_distance, log)
+        self.plot_potential(radii,
+                            phi_r,
+                            interface_radii,
+                            interface_phi_r,
+                            debye_distance,
+                            log)
         self.write_msg(log)
 
     def plot_potential(self,
                        radii: np.ndarray,
                        phi_r: np.ndarray,
+                       interface_radii: np.ndarray,
+                       interface_phi_r: np.ndarray,
                        debye_d: float,
                        log: logger.logging.Logger
                        ) -> None:

@@ -71,6 +71,7 @@ class InputConfig:
     number_of_header_lines: int = 11
     number_of_tail_lines: int = 5
     output_file: str = 'radial_average_potential_nonlinear.xvg'
+    interface_file: str = 'interface_radial_average_potential_nonlinear.xvg'
     bulk_averaging: bool = False  # if Bulk averaging else interface averaging
     interface_low_index: int = 89
     interface_high_index: int = 90
@@ -95,7 +96,7 @@ class MultilayerPlotConfig:
 @dataclass
 class AllConfigs(InputConfig, MultilayerPlotConfig):
     """set the parameters for the radial average potential"""
-    pot_unit_conversion: float = 25.2  # kT/e <-> mV
+    pot_unit_conversion: float = 25.7  # kT/e <-> mV
     dist_unit_conversion: float = 10.0  # Angstrom <-> nm
 
 
@@ -197,7 +198,7 @@ class RadialAveragePotential:
         # self._plot_radial_average(radii, radial_average)
         self.write_radial_average(radii, radial_average, log)
         self.plot_potential_layers_z(
-                data_arr, grid_spacing, grid_points)
+                data_arr, grid_spacing, grid_points, log)
 
     def _reshape_reevaluate_data(self,
                                  data: list[float],
@@ -283,14 +284,16 @@ class RadialAveragePotential:
     def plot_potential_layers_z(self,
                                 data_arr: np.ndarray,
                                 grid_spacing: list[float],
-                                grid_points: list[int]
+                                grid_points: list[int],
+                                log: logger.logging.Logger
                                 ) -> None:
         """
         plot the average potential layers by changing z
         """
         # make sure the computation is in the plane not bulk
 
-        PlotOverlayLayers(data_arr, grid_spacing, grid_points, self.configs)
+        PlotOverlayLayers(
+            data_arr, grid_spacing, grid_points, self.configs, log)
 
     def write_radial_average(self,
                              radii: np.ndarray,
@@ -519,14 +522,15 @@ class PlotOverlayLayers:
                  data_arr: np.ndarray,
                  grid_spacing: list[float],
                  grid_points: list[int],
-                 configs: AllConfigs
+                 configs: AllConfigs,
+                 log: logger.logging.Logger
                  ) -> None:
         """write and log messages"""
         self.configs = configs
         self.configs.bulk_averaging = False
         radii_average_dict: dict[int | str, np.ndarray] = \
             self.plot_potential_layers_z(data_arr, grid_spacing, grid_points)
-        self.plot_bpm_talk(radii_average_dict)
+        self.plot_bpm_talk(radii_average_dict, log)
 
     def plot_potential_layers_z(self,
                                 data_arr: np.ndarray,
@@ -653,7 +657,8 @@ class PlotOverlayLayers:
         return colors, line_styles, long_list
 
     def plot_bpm_talk(self,
-                      radii_average_dict: dict[int | str, np.ndarray]
+                      radii_average_dict: dict[int | str, np.ndarray],
+                      log: logger.logging.Logger
                       ) -> None:
         """plot the potential layers for the talk"""
         average_range: tuple[int, int] = (90, 96)
@@ -666,7 +671,6 @@ class PlotOverlayLayers:
         xdata, ydata = filter_data(
             radii_average_dict['radii']/self.configs.dist_unit_conversion,
             average_potetial)
-
         fig_i, ax_i = elsevier_plot_tools.mk_canvas('single_column')
         ax_i.plot(xdata,
                   ydata,
@@ -689,7 +693,28 @@ class PlotOverlayLayers:
                                   loc='upper right',
                                   legend_font_size=13,
                                   )
+        self.write_radial_average(xdata, ydata, log)
 
+    def write_radial_average(self,
+                             radii: np.ndarray,
+                             radial_average: np.ndarray,
+                             log: logger.logging.Logger
+                             ) -> None:
+        """Write the radial average to a file"""
+        # Write the radial average to a file
+        data = {'Radius [nm]': radii,
+                'Average Potential [mV]': radial_average
+                }
+        extra_msg_0 = ('# The radial average is set below the index: '
+                       f'{self.configs.interface_low_index}')
+        extra_msg = [extra_msg_0]
+        df_i = pd.DataFrame(data)
+        df_i.set_index(df_i.columns[0], inplace=True)
+        my_tools.write_xvg(df_i,
+                           log,
+                           extra_msg,
+                           fname=self.configs.interface_file,
+                           x_axis_label='radius [nm]')
 
 def filter_data(xdata: np.ndarray,
                 ydata: np.ndarray,

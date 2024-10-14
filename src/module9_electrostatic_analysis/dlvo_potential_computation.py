@@ -326,12 +326,9 @@ class ElectroStaticComputation:
                                 ) -> tuple[np.ndarray, np.ndarray]:
         """get the interface potential from the closest value to the
         cut off of the computation radius"""
-        cut_off: float = self.configs.computation_radius / 10.0
-        # findig the index of the closest radius to the cut off
-        idx: int = (np.abs(df_i['radius_nm'] - cut_off)).idxmin()
-        radius: np.ndarray = np.asanyarray(df_i['radius_nm'].values[idx:])
+        radius: np.ndarray = np.asanyarray(df_i['radius_nm'].values)
         potential: np.ndarray = \
-            np.asanyarray(df_i['Average_Potential_mV'].values[idx:])
+            np.asanyarray(df_i['Average_Potential_mV'].values)
         return radius, potential
 
     def write_msg(self,

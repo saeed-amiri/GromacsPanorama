@@ -20,6 +20,7 @@ class FileConfig:
     radial_avg_files: dict[str, str] = field(default_factory=lambda: {
         'numerical': 'radial_average_potential_nonlinear_3_6.xvg'
         })
+    interfaace_radial_avg_files: str = 'radial_average_potential_interface.xvg'
 
 
 @dataclass

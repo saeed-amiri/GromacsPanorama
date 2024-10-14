@@ -486,10 +486,6 @@ class PlotPotential:
                     color=configs.colors[4],
                     linestyle=configs.line_styles[0],
                     linewidth=elsevier_plot_tools.LINE_WIDTH)
-        # ax_i.text(x_temp+0.5,
-        #   phi_mv.max(),
-        #   'Stern layer',
-        #   fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
         ax_i.hlines(y=(phi_0 := phi_mv.max()),
                     xmin=0,

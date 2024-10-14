@@ -64,8 +64,10 @@ Also the script is splited into separate files for better readability.
 from datetime import datetime
 
 import numpy as np
+import pandas as pd
 
 from common import logger
+from common import xvg_to_dataframe
 from common.colors_text import TextColor as bcolors
 from module9_electrostatic_analysis.dlvo_potential_plot import \
     PlotPotential
@@ -118,8 +120,14 @@ class ElectroStaticComputation:
         radii: np.ndarray
         phi_r: np.ndarray
         radii, phi_r = self.compute_potential(debye_l, log)
-
-        self.plot_save_phi(radii, phi_r, debye_l, log)
+        interface_potential: pd.DataFrame = \
+            self.read_interface_potential(log)
+        interface_radii: np.ndarray
+        interface_phi_r: np.ndarray
+        interface_radii, interface_phi_r = \
+            self.get_interface_potential(interface_potential)
+        self.plot_save_phi(
+            radii, phi_r, interface_radii, interface_phi_r, debye_l, log)
         return debye_l
 
     def get_debye(self,
@@ -278,11 +286,19 @@ class ElectroStaticComputation:
     def plot_save_phi(self,
                       radii: np.ndarray,
                       phi_r: np.ndarray,
+                      interface_radii: np.ndarray,
+                      interface_phi_r: np.ndarray,
                       debye_l: float,
                       log: logger.logging.Logger
                       ) -> None:
         """plot and save the electostatic potential"""
-        PlotPotential(radii, phi_r, debye_l, self.configs, log)
+        PlotPotential(radii,
+                      phi_r,
+                      interface_radii,
+                      interface_phi_r,
+                      debye_l,
+                      self.configs,
+                      log)
 
     def compare_experiments(self,
                             debye_l: float,
@@ -296,6 +312,27 @@ class ElectroStaticComputation:
                          configs=self.configs,
                          debye_md=debye_l,
                          charge_density_range= charge_density_range)
+
+    def read_interface_potential(self,
+                                 log: logger.logging.Logger
+                                 ) -> pd.DataFrame:
+        """read the interface potential"""
+        df_i: pd.DataFrame = xvg_to_dataframe.XvgParser(
+            self.configs.interfaace_radial_avg_files, log, x_type=float).xvg_df
+        return df_i
+
+    def get_interface_potential(self,
+                                df_i: pd.DataFrame
+                                ) -> tuple[np.ndarray, np.ndarray]:
+        """get the interface potential from the closest value to the
+        cut off of the computation radius"""
+        cut_off: float = self.configs.computation_radius / 10.0
+        # findig the index of the closest radius to the cut off
+        idx: int = (np.abs(df_i['radius_nm'] - cut_off)).idxmin()
+        radius: np.ndarray = np.asanyarray(df_i['radius_nm'].values[idx:])
+        potential: np.ndarray = \
+            np.asanyarray(df_i['Average_Potential_mV'].values[idx:])
+        return radius, potential
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

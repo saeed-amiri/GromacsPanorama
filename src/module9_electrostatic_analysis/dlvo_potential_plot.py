@@ -71,10 +71,21 @@ class PlotPotential:
         axs[1] = fig_i.add_subplot(grid_panel[0, 2:5])
         axs[2] = fig_i.add_subplot(grid_panel[0, 5:])
         axs[3] = fig_i.add_subplot(grid_panel[1, 0:4])
+        axs[4] = fig_i.add_subplot(grid_panel[1, 4:])
+        # Manually adjust the position of axs[3] and axs[4]
+        pos3 = axs[3].get_position()
+        pos4 = axs[4].get_position()
+        axs[3].set_position(
+            [pos3.x0, pos3.y0, pos3.width - 0.015, pos3.height])
+        axs[4].set_position(
+            [pos4.x0 + 0.03, pos4.y0, pos4.width - 0.015, pos4.height])
+
         self.plot_panel_a(axs[0], configs)
         self.plot_panel_b(axs[1], configs)
         self.plot_panel_c(axs[2], configs)
         self.plot_panel_d(axs[3], radii, phi_r, debye_d, configs, log)
+        self.plot_panel_e(
+            axs[4], interface_radii, interface_phi_r, debye_d, configs, log)
         self._save_fig(fig_i, configs)
 
     def plot_panel_a(self,
@@ -124,6 +135,38 @@ class PlotPotential:
         self._set_mirror_axes(ax_i, configs)
         ax_i.legend(loc=configs.legend_loc,
                     fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+
+    def plot_panel_e(self,
+                        ax_i: plt.axes,
+                        interface_radii: np.ndarray,
+                        interface_phi_r: np.ndarray,
+                        debye_d: float,
+                        configs: PlotConfig,
+                        log: logger.logging.Logger
+                        ) -> None:
+        """plot surface potential"""
+        # pylint: disable=too-many-arguments
+        _configs = configs
+        ax_i.plot(interface_radii,
+                    interface_phi_r/10,
+                    color=_configs.colors[0],
+                    linestyle=_configs.line_styles[0],
+                    linewidth=elsevier_plot_tools.LINE_WIDTH,
+                    label='interface')
+        ax_i.set_xlim(3.4, 8.0)
+        ax_i.set_xlabel(r'$r^\star$ [nm]',
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        ax_i.set_ylabel(r'interface potential $\psi^\star$ [mV]',
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        self._set_axis_ticks(ax_i, debye_d, _configs)
+        self._set_mirror_axes(ax_i, _configs)
+        ax_i.text(-0.078,
+                  1,
+                  'e)',
+                  ha='right',
+                  va='top',
+                  transform=ax_i.transAxes,
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
 
     def plot_panel_c(self,
                      ax_i: plt.axes,

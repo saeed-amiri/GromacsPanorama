@@ -718,7 +718,7 @@ class PlotOverlayLayers:
 
 def filter_data(xdata: np.ndarray,
                 ydata: np.ndarray,
-                min_radius: float = 3.6,
+                min_radius: float = 1.65,
                 max_radius: float = 10.0
                 ) -> tuple[np.ndarray, np.ndarray]:
     """

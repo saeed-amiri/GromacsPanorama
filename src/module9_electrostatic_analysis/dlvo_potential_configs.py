@@ -18,7 +18,7 @@ class FileConfig:
     contact_fname: str = 'contact.xvg'
     fout: str = 'potential.xvg'
     radial_avg_files: dict[str, str] = field(default_factory=lambda: {
-        'numerical': 'radial_average_potential_nonlinear_3_6.xvg'
+        'numerical': 'radial_average_potential_nonlinear_3_4.xvg'
         })
     interfaace_radial_avg_files: str = \
         'interface_radial_average_potential_nonlinear.xvg'
@@ -110,11 +110,11 @@ class PlotConfig(FileConfig):
 
     y_unit: str = ''
     x_lims: tuple[float, float] = (2.8, 7.0)
-    y_lims: tuple[float, float] = (0, 135)
+    y_lims: tuple[float, float] = (-5, 135)
 
     phi_r_exprimental_avg: float = field(init=False)
 
-    x_ticks: list[float] = field(default_factory=lambda: [5, 7])
+    x_ticks: list[float] = field(default_factory=lambda: [3, 5, 7])
     y_ticks: list[float] = field(default_factory=lambda: [])
 
     legend_loc: str = 'center right'

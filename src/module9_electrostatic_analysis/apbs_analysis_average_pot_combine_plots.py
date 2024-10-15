@@ -114,7 +114,7 @@ class PlotBolzmannRdfConfiguratio:
     def BOLTZMAN_PROP(self) -> Dict[str, str | float]:
         """set the line style for Boltzman factor"""
         return {
-            'linestyle': ':',
+            'linestyle': '-',
             'color': 'darkblue',
             'label': r'c/c$_0$, norm.',
             'linewidth': 1.5,

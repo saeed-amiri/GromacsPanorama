@@ -125,6 +125,18 @@ class PlotPotential:
         self._plot_radial_avg(ax_i, configs, debye_d, phi_vlaue_calced, log)
 
         self._plot_experiment_lines(ax_i, phi_mv, radii, configs)
+        ax_i.hlines(y=0,
+                    xmin=0,
+                    xmax=7.0,
+                    color=configs.colors[4],
+                    linestyle=configs.line_styles[2],
+                    linewidth=elsevier_plot_tools.LINE_WIDTH)
+        ax_i.text(4.8,
+                  12,
+                  rf'$\psi\,=\,0.0$',
+                  ha='right',
+                  va='top',
+                  fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
         self._set_grids(ax_i)
         self._set_axis_labels(ax_i, configs)

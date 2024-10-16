@@ -149,29 +149,59 @@ class PlotPotential:
                     fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
     def plot_panel_e(self,
-                        ax_i: plt.axes,
-                        interface_radii: np.ndarray,
-                        interface_phi_r: np.ndarray,
-                        debye_d: float,
-                        configs: PlotConfig,
-                        log: logger.logging.Logger
-                        ) -> None:
+                     ax_i: plt.axes,
+                     interface_radii: np.ndarray,
+                     interface_phi_r: np.ndarray,
+                     debye_d: float,
+                     configs: PlotConfig,
+                     log: logger.logging.Logger
+                     ) -> None:
         """plot surface potential"""
         # pylint: disable=too-many-arguments
         _configs = configs
+        _configs.x_ticks = [1.75] + configs.x_ticks[1:]
+        self._set_axis_ticks(ax_i, debye_d, _configs)
+        xticks_labels: list[str] = \
+            [r'$r^\star_c$'] + [str(f'{i:.1f}') for i in configs.x_ticks[1:]]
+        ax_i.set_xticks(_configs.x_ticks)
+        ax_i.set_xticklabels(xticks_labels,
+                             fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+
         ax_i.plot(interface_radii,
-                    interface_phi_r/10,
-                    color=_configs.colors[0],
-                    linestyle=_configs.line_styles[0],
-                    linewidth=elsevier_plot_tools.LINE_WIDTH,
-                    label='interface')
-        ax_i.set_xlim(3.4, 8.0)
+                  interface_phi_r,
+                  color=_configs.colors[0],
+                  linestyle=_configs.line_styles[0],
+                  linewidth=elsevier_plot_tools.LINE_WIDTH,
+                  label='interface')
+        ax_i.set_xlim(1.4, 8.0)
         ax_i.set_xlabel(r'$r^\star$ [nm]',
                         fontsize=elsevier_plot_tools.FONT_SIZE_PT)
         ax_i.set_ylabel(r'interface potential $\psi^\star$ [mV]',
                         fontsize=elsevier_plot_tools.FONT_SIZE_PT)
-        self._set_axis_ticks(ax_i, debye_d, _configs)
         self._set_mirror_axes(ax_i, _configs)
+        xlims: tuple[float, float] = ax_i.get_xlim()
+        ylims: tuple[float, float] = ax_i.get_ylim()
+        ymax: float = interface_phi_r.max()
+        ax_i.vlines(x=1.75,
+                    ymin=ylims[0],
+                    ymax=ylims[1],
+                    color=_configs.colors[4],
+                    linestyle=_configs.line_styles[0],
+                    linewidth=elsevier_plot_tools.LINE_WIDTH)
+        ax_i.hlines(y=ymax,
+                    xmin=xlims[0],
+                    xmax=2.8,
+                    color=_configs.colors[4],
+                    linestyle=_configs.line_styles[2],
+                    linewidth=elsevier_plot_tools.LINE_WIDTH)
+        ax_i.hlines(y=0,
+                    xmin=xlims[0],
+                    xmax=6.8,
+                    color=_configs.colors[4],
+                    linestyle=_configs.line_styles[2],
+                    linewidth=elsevier_plot_tools.LINE_WIDTH)
+        ax_i.set_xlim(xlims)
+        ax_i.set_ylim(ylims)
         ax_i.text(-0.078,
                   1,
                   'e)',

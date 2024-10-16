@@ -209,6 +209,18 @@ class PlotPotential:
                   va='top',
                   transform=ax_i.transAxes,
                   fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+        ax_i.text(4.2,
+                  ymax+5,
+                  rf'$\psi^\star=\,${ymax:.2f}',
+                  ha='right',
+                  va='top',
+                  fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        ax_i.text(7.9,
+                  7,
+                  rf'$\psi^\star=\,${0.0:.1f}',
+                  ha='right',
+                  va='top',
+                  fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
     def plot_panel_c(self,
                      ax_i: plt.axes,
@@ -243,7 +255,6 @@ class PlotPotential:
                   fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
 
         self.info_msg += f'\tIsosurface image: {configs.isosurface_fig}\n'
-
 
     def _add_circle(self,
                     ax_i: plt.axes,
@@ -336,7 +347,7 @@ class PlotPotential:
 
         self.info_msg += (
             f'\tPotential at stern ({item}): {phi_value:.2f} [mV] = '
-            f'{phi_value/25.2:.2f} [kT/e]\n')
+            f'{phi_value/25.7:.2f} [kT/e]\n')
         idx_closest = np.abs(df_i.iloc[:, 0] - debye_d).argmin()
         try:
             phi_value = (
@@ -347,7 +358,7 @@ class PlotPotential:
             phi_value = df_i.iloc[idx_closest, 0]
         self.info_msg += (
             f'\tPotential at Debye ({item}): {phi_value:.2f} [mV] = '
-            f'{phi_value/25.2:.2f} [kT/e]\n')
+            f'{phi_value/25.7:.2f} [kT/e]\n')
 
     def _plot_experiment_lines(self,
                                ax_i: plt.axes,
@@ -447,11 +458,11 @@ class PlotPotential:
         """set the axis ticks"""
         x_tick_labels: list[str] = [str(f'{i:.1f}') for i in configs.x_ticks]
         if configs.if_debye_line:
-            debye_d_str: str = f'{debye_d:.2f}'
+            debye_d_str: str = f'{debye_d:.1f}'
             configs.x_ticks.extend([debye_d])
             x_tick_labels.append(debye_d_str)
         if configs.if_stern_line:
-            stern_layer_str: str = f'{self.configs.stern_layer/10:.2f}'
+            stern_layer_str: str = f'{self.configs.stern_layer/10:.1f}'
             configs.x_ticks.extend([self.configs.stern_layer/10])
             x_tick_labels.append(stern_layer_str)
         ax_i.set_xticks(configs.x_ticks)

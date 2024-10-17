@@ -231,9 +231,11 @@ def mk_canvas_multi(size_type: str,
                      n_cols,
                      figsize=set_figure_size(size_type, aspect_ratio))
     set_dpi(dpi)
-    for ax_i in axs_i:
-        ax_i = set_font_size(ax_i)
-    return fig_i, axs_i
+    # Flatten axs if it's a 2D array
+    axs = axs_i.flatten() if isinstance(axs_i, np.ndarray) else axs_i
+    for ax_i in axs:
+            ax_i.axis('off')
+    return fig_i, axs
 
 
 def remove_mirror_axes(ax: plt.Axes

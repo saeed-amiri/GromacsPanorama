@@ -73,9 +73,15 @@ class PlotPotential:
         axs[2] = fig_i.add_subplot(grid_panel[0, 5:])
         axs[3] = fig_i.add_subplot(grid_panel[1, 0:4])
         axs[4] = fig_i.add_subplot(grid_panel[1, 4:])
-        # Manually adjust the position of axs[3] and axs[4]
+        # Manually adjust the position of axses
+        pos1 = axs[1].get_position()
+        pos2 = axs[2].get_position()
         pos3 = axs[3].get_position()
         pos4 = axs[4].get_position()
+        axs[1].set_position(
+            [pos1.x0, pos1.y0, pos1.width + 0.05, pos1.height])
+        axs[2].set_position(
+            [pos2.x0, pos2.y0, pos2.width + 0.05, pos2.height])
         axs[3].set_position(
             [pos3.x0, pos3.y0, pos3.width - 0.015, pos3.height])
         axs[4].set_position(
@@ -102,7 +108,7 @@ class PlotPotential:
         """add shcem of the dlvo model for a sphere"""
         ax_i.axis('off')
         ax_i.imshow(plt.imread(configs.scheme_fig_path))
-        ax_i.text(-0.013,
+        ax_i.text(-0.02,
                   1,
                   'a)',
                   ha='right',
@@ -236,7 +242,7 @@ class PlotPotential:
         """potential from the apbs simulation with vmd"""
         ax_i.axis('off')
         ax_i.imshow(plt.imread(configs.apbs_fig))
-        ax_i.text(-0.013,
+        ax_i.text(-0.02,
                   1,
                   'c)',
                   ha='right',
@@ -253,7 +259,7 @@ class PlotPotential:
         ax_i.axis('off')
         img = plt.imread(configs.isosurface_fig)
         ax_i.imshow(img)
-        ax_i.text(0.08,
+        ax_i.text(-0.02,
                   1,
                   'b)',
                   ha='right',

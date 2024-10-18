@@ -9,6 +9,7 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
+import matplotlib.patches as patches
 
 from common import logger
 from common import xvg_to_dataframe
@@ -86,6 +87,12 @@ class PlotPotential:
         self.plot_panel_d(axs[3], radii, phi_r, debye_d, configs, log)
         self.plot_panel_e(
             axs[4], interface_radii, interface_phi_r, debye_d, configs, log)
+        # Add a box around the subplots
+        box = patches.Rectangle(
+            (0.095, 0.01), 0.83, 0.89, transform=fig_i.transFigure,
+            linewidth=1.5, edgecolor='black', facecolor='none')
+        fig_i.patches.append(box)
+
         self._save_fig(fig_i, configs)
 
     def plot_panel_a(self,

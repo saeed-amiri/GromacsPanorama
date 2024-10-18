@@ -409,6 +409,8 @@ class PlotPotential:
         """set the axis labels"""
         ax_i.set_xlabel(configs.labels.get('xlabel'),
                         fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        # Adjust the position of the x-axis label
+        ax_i.set_xlabel(ax_i.get_xlabel(), labelpad=6)
         ax_i.set_ylabel(configs.labels.get('ylabel'),
                         fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 

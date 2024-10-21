@@ -79,7 +79,7 @@ class PlotPotential:
         pos3 = axs[3].get_position()
         pos4 = axs[4].get_position()
         axs[1].set_position(
-            [pos1.x0, pos1.y0, pos1.width + 0.05, pos1.height])
+            [pos1.x0, pos1.y0, pos1.width + 0.06, pos1.height])
         axs[2].set_position(
             [pos2.x0, pos2.y0, pos2.width + 0.05, pos2.height])
         axs[3].set_position(
@@ -95,7 +95,7 @@ class PlotPotential:
             axs[4], interface_radii, interface_phi_r, debye_d, configs, log)
         # Add a box around the subplots
         box = patches.Rectangle(
-            (0.095, 0.01), 0.83, 0.89, transform=fig_i.transFigure,
+            (0.095, 0.01), 0.83, 0.88, transform=fig_i.transFigure,
             linewidth=1.5, edgecolor='black', facecolor='none')
         fig_i.patches.append(box)
 

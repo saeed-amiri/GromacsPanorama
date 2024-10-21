@@ -223,8 +223,8 @@ class PlotPotential:
                   transform=ax_i.transAxes,
                   fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
         ax_i.text(4.2,
-                  ymax+5,
-                  rf'$\psi^\star=\,${ymax:.2f}',
+                  ymax+5.5,
+                  rf'$\psi^\star_0=\,${ymax:.1f}',
                   ha='right',
                   va='top',
                   fontsize=elsevier_plot_tools.FONT_SIZE_PT)

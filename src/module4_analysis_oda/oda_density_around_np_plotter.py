@@ -272,6 +272,7 @@ class SurfactantDensityPlotter:
         self.plot_density_graph(self.graph_configs.graph_config)
         self.plot_2d_rdf(self.graph_configs.rdf_config)
         self.plot_2d_rdf_bpm(self.graph_configs.rdf_config)
+        self.plot_2d_rdf_paper(self.graph_configs.rdf_config)
         self.plot_fitted_or_smoothed_rdf(self.smoothed_rdf,
                                          'smoothed',
                                          self.graph_configs.smoothed_rdf_config
@@ -333,6 +334,57 @@ class SurfactantDensityPlotter:
                                   fout,
                                   loc='lower right',
                                   legend_font_size=13,
+                                  )
+        self.info_msg += \
+            f'\tThe rdf graph saved: for bpm style as `{fout}`\n'
+        # Restore the original rcParams
+        plt.rcParams.update(original_rc_params)
+
+    def plot_2d_rdf_paper(self,
+                        config: "Rdf2dGraphConfig"
+                        ) -> None:
+        """
+        Plot a simple graph of 2d rdf vs distance, for the presntation
+        at the BPM.
+        """
+        # Save the current rcParams
+        original_rc_params = plt.rcParams.copy()
+        # Set local font size for this method
+        _config = config
+        _config.if_elsevier = True
+        _config.graph_style['markersize'] = 2
+        _config.graph_style['linestyle'] = ':'
+        _config.graph_style['color'] = 'k'
+        _config.graph_style['linewidth'] = 0.1
+        _config.graph_legend = r'0.03 ODA/nm$^2$'
+        fig_i, ax_i = self._plot_graphes(self.rdf_2d, _config, return_ax=True)
+        ax_i.set_xlabel(ax_i.get_xlabel(),
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        ax_i.set_ylabel(ax_i.get_ylabel(),
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+
+        if self.residue == 'AMINO_ODN':
+            ax_i.set_yticks([0.0, 0.5, 1.0])
+        ax_i.tick_params(axis='x',
+                         labelsize=elsevier_plot_tools.FONT_SIZE_PT)  # X-ticks
+        ax_i.tick_params(axis='y',
+                         labelsize=elsevier_plot_tools.FONT_SIZE_PT)  # Y-ticks
+
+        contact_radius: float = \
+            self.contact_data.loc[:, 'contact_radius'].mean() * \
+            self.angstrom_to_nm
+        self._add_vline(ax_i,
+                        contact_radius,
+                        lstyle='-',
+                        color='gray',
+                        legend='r$^\star_c$')
+        ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
+
+        fout: str = f'{self.residue}_rdf_2d_paper.jpg'
+        plot_tools.save_close_fig(fig_i,
+                                  ax_i,
+                                  fout,
+                                  loc='lower right',
                                   )
         self.info_msg += \
             f'\tThe rdf graph saved: for bpm style as `{fout}`\n'

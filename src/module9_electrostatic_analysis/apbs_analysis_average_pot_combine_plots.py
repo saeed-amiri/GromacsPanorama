@@ -115,8 +115,8 @@ class PlotBolzmannRdfConfiguratio:
         """set the line style for Boltzman factor"""
         return {
             'linestyle': '-',
-            'color': 'darkblue',
-            'label': r'c/c$_0$, norm.',
+            'color': 'darkred',
+            'label': r'c$^\star(r^\star)$, norm.',
             'linewidth': 1.5,
             }
 

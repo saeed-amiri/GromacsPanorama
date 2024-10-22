@@ -158,6 +158,7 @@ class PlotBolzmannRdf:
         self.process_files(cut_radius, log)
         self.plot_data()
         self.plot_data_bpm()
+        self.plot_data_paper()
         self.plot_fit_rdf_with_distribution(cut_radius)
         self.plot_raw_rdf_with_distribution(cut_radius)
         self.write_msg(log)
@@ -327,6 +328,78 @@ class PlotBolzmannRdf:
                                   )
 
         self.info_msg += f'\tThe plot is saved as {fout}\n'
+
+    def plot_data_paper(self) -> None:
+        """plot the data"""
+        figure: Tuple[plt.Figure, plt.Axes] = \
+            elsevier_plot_tools.mk_canvas('single_column')
+        fig_i, ax_i = figure
+
+        _plt_config = PlotBolzmannRdfConfiguratio()
+        _plt_config.BOLTZMAN_PROP['label'] = r'c$^\star(norm)$'
+        _plt_config.PLOT_PROPERTIES['linestyle'] = '-'
+        self.plot_boltzman(ax_i, self.boltzman_data, _plt_config.BOLTZMAN_PROP)
+        ax_i.set_xlabel(r'$r^\star$ [nm]',
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        ax_i.set_ylabel(ax_i.get_ylabel(),
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        ax_i.set_yticks([0.0, 0.5, 1.0])
+        ax_i.set_xticks([0, 2, 4, 6, 8, 10])
+        ax_i.tick_params(axis='x',
+                         labelsize=elsevier_plot_tools.FONT_SIZE_PT)  # X-ticks
+        ax_i.tick_params(axis='y',
+                         labelsize=elsevier_plot_tools.FONT_SIZE_PT)  # Y-ticks
+        plot_tools.save_close_fig(fig_i,
+                                  ax_i,
+                                  fout := 'boltzman_paper.jpg',
+                                  loc='lower right',
+                                  if_close=False,
+                                  )
+        _plt_config.RDF_PROP['linesytle'] = ':'
+        _plt_config.RDF_PROP['marker'] = 's'
+        _plt_config.RDF_PROP['markersize'] = '2'
+        ax_i.plot(self.rdf_radii,
+                  self.raw_rdf_data,
+                  scalex=True,
+                  scaley=True,
+                  marker='o',
+                  markersize=2,
+                  linestyle=' ',
+                  color='k',
+                  label=r'$g^\star(r^\star)$, a.u.',
+                  )
+
+        ax_i.axvline(x=1.75,
+                     ymin=0,
+                     ymax=0.9,
+                     linestyle='-',
+                     color='gray',
+                     linewidth=1.0,
+                     label=r'r$^\star_c$=1.75',
+                     )
+        ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
+        ax_i.set_xlim(-0.5, 10.5)
+
+        ax_i.text(0.3,
+                  0.98,
+                  '0.03 ODA/nm$^2$',
+                  ha='right',
+                  va='top',
+                  transform=ax_i.transAxes,
+                  bbox=dict(facecolor='white',
+                            edgecolor='white',
+                            boxstyle='round,pad=0.1'),
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT - 2)
+
+        plot_tools.save_close_fig(fig_i,
+                                  ax_i,
+                                  fout := 'boltzman_rdf_paper.jpg',
+                                  loc='lower right',
+                                  if_close=False,
+                                  )
+
+        self.info_msg += f'\tThe plot is saved as {fout}\n'
+
 
     def plot_fit_rdf_with_distribution(self,
                                        cut_radius: float | None = None

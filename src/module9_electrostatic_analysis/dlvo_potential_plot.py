@@ -189,7 +189,7 @@ class PlotPotential:
         ax_i.set_xlim(1.4, 8.0)
         ax_i.set_xlabel(r'$r^\star$ [nm]',
                         fontsize=elsevier_plot_tools.FONT_SIZE_PT)
-        ax_i.set_ylabel(r'interface potential $\psi^\star$ [mV]',
+        ax_i.set_ylabel(r'interface EP, $\psi^\star$ [mV]',
                         fontsize=elsevier_plot_tools.FONT_SIZE_PT)
         self._set_mirror_axes(ax_i, _configs)
         xlims: tuple[float, float] = ax_i.get_xlim()

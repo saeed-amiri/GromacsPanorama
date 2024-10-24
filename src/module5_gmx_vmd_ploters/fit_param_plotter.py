@@ -59,15 +59,22 @@ class BaseConfig:
 
     legend_loc: str = 'lower right'
 
-    show_grid: bool = False
+    show_grid: bool = True
     plot_contact_radius: bool = False
-    show_mirror_axes: bool = False
+    show_mirror_axes: bool = True
 
 
 @dataclass
 class FitPlotConfig(BaseConfig):
     """
     Configuration for the fit plot
+    The columns are:
+    'first_turn',
+    'midpoint',
+    'second_turn',
+    'pure_first_turn',
+    'pure_midpoint',
+    'pure_second_turn',
     """
     # pylint: disable=too-many-instance-attributes
     out_suffix: str = f'turn_points.{elsevier_plot_tools.IMG_FORMAT}'
@@ -129,14 +136,22 @@ class FitRdfPlotConfig(BaseConfig):
     })
     fit_rdf_fname: list[str] = field(default_factory=lambda: [
         '5_oda_densities.xvg',
+        '10_oda_densities.xvg',
         '15_oda_densities.xvg',
+        '20_oda_densities.xvg',
+        '30_oda_densities.xvg',
+        '40_oda_densities.xvg',
         '50_oda_densities.xvg',
         ])
 
     legends: dict[str, str] = \
         field(default_factory=lambda: {
             '5_oda_densities.xvg': r'0.01 ODA/$nm^2$',  # 5ODA
+            '10_oda_densities.xvg': r'0.02 ODA/$nm^2$',  # 10ODA
             '15_oda_densities.xvg': r'0.03 ODA/$nm^2$',  # 15ODA
+            '20_oda_densities.xvg': r'0.04 ODA/$nm^2$',  # 20ODA
+            '30_oda_densities.xvg': r'0.06 ODA/$nm^2$',  # 30ODA
+            '40_oda_densities.xvg': r'0.09 ODA/$nm^2$',  # 40ODA
             '50_oda_densities.xvg': r'0.11 ODA/$nm^2$'  # 50ODA
         })
 

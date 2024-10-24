@@ -79,14 +79,12 @@ class FitPlotConfig(BaseConfig):
     # pylint: disable=too-many-instance-attributes
     out_suffix: str = f'turn_points.{elsevier_plot_tools.IMG_FORMAT}'
     xcol_name: str = 'nr_oda'
-    ycol_name: list[str] = field(default_factory=lambda: ['first_turn',
-                                                          'midpoint',
-                                                          'second_turn'
-                                                          ])
+
+    ycol_name: list[str] = field(default_factory=lambda: ['pure_second_turn'])
 
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'Fitted parameters',
-        'ylabel': r'$r^\star$ [nm]',
+        'ylabel': r'$r^\star_{ex}$ [nm]',
         'xlabel': r'ODA/nm$^2$'
     })
     fit_param_fname: str = 'fit_parameters.xvg'

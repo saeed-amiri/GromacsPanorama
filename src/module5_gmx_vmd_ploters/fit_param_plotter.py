@@ -205,13 +205,17 @@ class PlotFitted:
         fig_i, ax_i = \
             elsevier_plot_tools.mk_canvas(size_type='single_column')
 
-        for _, ycol in enumerate(config.ycol_name):
+        for ind, ycol in enumerate(config.ycol_name):
             ax_i.plot(fit_data[config.xcol_name],
                       fit_data[ycol]/10.0,  # Convert to nm
-                      label=config.legends.get(ycol),
-                      color=config.colors.get(ycol),
-                      linestyle=config.line_styles.get(ycol),
-                      lw=1)
+                    #   label=config.legends.get(ycol),
+                      marker='o',
+                      markersize=3,
+                      color=elsevier_plot_tools.BLACK_SHADES[ind],
+                      linestyle=elsevier_plot_tools.LINESTYLE_TUPLE[ind][1],
+                      lw=0.5,
+                      label=f'Exclusion zone',
+                      )
 
         ax_i.set_xlabel(config.labels['xlabel'],
                         fontsize=elsevier_plot_tools.FONT_SIZE_PT)
@@ -230,9 +234,9 @@ class PlotFitted:
         if config.show_grid:
             ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
 
-        ax_i.text(-0.09,
+        ax_i.text(-0.10,
                   1,
-                  'd)',
+                  'b)',
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,
@@ -265,9 +269,10 @@ class PlotFitted:
             ax_i.plot(rdf_data[config.xcol_name] / 10.0,  # Convert to nm
                       rdf_norm,
                       label=config.legends.get(rdf_fname),
-                      color=config.colors[idx],
-                      linestyle=config.line_styles[idx],
-                      lw=1)
+                      color=elsevier_plot_tools.BLACK_SHADES[idx],
+                      linestyle=elsevier_plot_tools.LINESTYLE_TUPLE[idx][1],
+                      lw=1,
+                      )
 
         ax_i.set_xlabel(config.labels['xlabel'],
                         fontsize=elsevier_plot_tools.FONT_SIZE_PT)

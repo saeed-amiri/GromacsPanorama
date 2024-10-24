@@ -34,6 +34,7 @@ class ParameterConfig:
     number_of_regions: int = 150
     time_dependent_step: int = 100
     xvg_output: str = 'densities.xvg'
+    if_clean_np: bool = True  # If true, the ODA before r* will be cleaned
 
 
 class SurfactantDensityAroundNanoparticle:
@@ -97,6 +98,7 @@ class SurfactantDensityAroundNanoparticle:
             self._comput_2d_rdf(self.density_per_region, num_oda_in_radius)
 
         if residue == 'AMINO_ODN':
+            self._clean_np()
             self.time_dependent_rdf, self.time_dependent_ave_density = \
                 self.calculate_time_dependent_densities(
                     amino_arr, num_oda_in_radius, regions, log)
@@ -163,6 +165,18 @@ class SurfactantDensityAroundNanoparticle:
                 tmp.append(item/density)
             rdf_2d[region] = np.mean(tmp)
         return rdf_2d
+
+    def _clean_np(self) -> dict[np.ndarray, np.ndarray]:
+        """clean the rdf before the contact radius by setting them the
+        min value of the rdf values"""
+
+        if self.param_config.if_clean_np:
+            min_value = min(self.rdf_2d.values())
+            contact_radius: float = \
+                self.contact_data.loc[:, 'contact_radius'].mean()
+            for key in self.rdf_2d.keys():
+                if key < contact_radius:
+                    self.rdf_2d[key] = min_value
 
     def _fit_and_set_fitted2d_rdf(self,
                                   log: logger.logging.Logger

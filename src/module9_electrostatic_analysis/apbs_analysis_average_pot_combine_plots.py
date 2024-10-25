@@ -341,7 +341,7 @@ class PlotBolzmannRdf:
         self.plot_boltzman(ax_i, self.boltzman_data, _plt_config.BOLTZMAN_PROP)
         ax_i.set_xlabel(r'$r^\star$ [nm]',
                         fontsize=elsevier_plot_tools.FONT_SIZE_PT)
-        ax_i.set_ylabel(ax_i.get_ylabel(),
+        ax_i.set_ylabel('a.u.',
                         fontsize=elsevier_plot_tools.FONT_SIZE_PT)
         ax_i.set_yticks([0.0, 0.5, 1.0])
         ax_i.set_xticks([0, 2, 4, 6, 8, 10])
@@ -366,7 +366,7 @@ class PlotBolzmannRdf:
                   markersize=2,
                   linestyle=' ',
                   color='k',
-                  label=r'$g^\star(r^\star)$, a.u.',
+                  label=r'$g^\star(r^\star)$',
                   )
 
         ax_i.axvline(x=1.75,
@@ -390,6 +390,13 @@ class PlotBolzmannRdf:
                             edgecolor='white',
                             boxstyle='round,pad=0.1'),
                   fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT - 2)
+        ax_i.text(-0.10,
+                  1,
+                  'a)',
+                  ha='right',
+                  va='top',
+                  transform=ax_i.transAxes,
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
 
         plot_tools.save_close_fig(fig_i,
                                   ax_i,

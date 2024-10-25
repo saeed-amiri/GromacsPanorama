@@ -116,7 +116,7 @@ class PlotBolzmannRdfConfiguratio:
         return {
             'linestyle': '-',
             'color': 'darkred',
-            'label': r'c$^\star(r^\star)$, norm.',
+            'label': r'c$^\star(r^\star)$',
             'linewidth': 1.5,
             }
 
@@ -336,7 +336,7 @@ class PlotBolzmannRdf:
         fig_i, ax_i = figure
 
         _plt_config = PlotBolzmannRdfConfiguratio()
-        _plt_config.BOLTZMAN_PROP['label'] = r'c$^\star(norm)$'
+        _plt_config.BOLTZMAN_PROP['label'] = r'c$^\star$'
         _plt_config.PLOT_PROPERTIES['linestyle'] = '-'
         self.plot_boltzman(ax_i, self.boltzman_data, _plt_config.BOLTZMAN_PROP)
         ax_i.set_xlabel(r'$r^\star$ [nm]',
@@ -371,16 +371,25 @@ class PlotBolzmannRdf:
 
         ax_i.axvline(x=1.75,
                      ymin=0,
-                     ymax=0.9,
+                     ymax=1.0,
                      linestyle='-',
                      color='gray',
                      linewidth=1.0,
-                     label=r'r$^\star_c$=1.75',
+                     label=r'r$^\star_c$',
                      )
-        ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
+
+        ax_i.axvline(x=8.2,
+                     ymin=0,
+                     ymax=1.0,
+                     linestyle='--',
+                     color='gray',
+                     linewidth=1.0,
+                     label=r'r$^\star_s$',
+                     )
+
         ax_i.set_xlim(-0.5, 10.5)
 
-        ax_i.text(0.3,
+        ax_i.text(0.6,
                   0.98,
                   '0.03 ODA/nm$^2$',
                   ha='right',
@@ -401,12 +410,11 @@ class PlotBolzmannRdf:
         plot_tools.save_close_fig(fig_i,
                                   ax_i,
                                   fout := 'boltzman_rdf_paper.jpg',
-                                  loc='lower right',
+                                  loc='upper left',
                                   if_close=False,
                                   )
 
         self.info_msg += f'\tThe plot is saved as {fout}\n'
-
 
     def plot_fit_rdf_with_distribution(self,
                                        cut_radius: float | None = None

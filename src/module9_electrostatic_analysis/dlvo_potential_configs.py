@@ -83,7 +83,7 @@ class PlotConfig(FileConfig):
 
     labels: dict[str, str] = field(default_factory=lambda: {
         'title': 'potential',
-        'ylabel': r'potential $\psi$ [mV]',
+        'ylabel': r'EP, $\psi$ [mV]',
         'xlabel': 'r [nm]'
     })
 

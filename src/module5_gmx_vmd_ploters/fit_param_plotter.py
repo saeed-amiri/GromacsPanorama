@@ -107,7 +107,7 @@ class FitPlotConfig(BaseConfig):
             'second_turn': 'darkred'})
     graph_max_col: str = 'second_turn'
 
-    yticks: list[float] = field(default_factory=lambda: [0, 3.0, 6.0])
+    yticks: list[float] = field(default_factory=lambda: [3.0, 5.0, 7.0])
 
     def __post_init__(self) -> None:
         """Post init function"""
@@ -208,7 +208,6 @@ class PlotFitted:
         for ind, ycol in enumerate(config.ycol_name):
             ax_i.plot(fit_data[config.xcol_name],
                       fit_data[ycol]/10.0,  # Convert to nm
-                    #   label=config.legends.get(ycol),
                       marker='o',
                       markersize=3,
                       color=elsevier_plot_tools.BLACK_SHADES[ind],
@@ -221,7 +220,10 @@ class PlotFitted:
                         fontsize=elsevier_plot_tools.FONT_SIZE_PT)
         ax_i.set_ylabel(config.labels['ylabel'],
                         fontsize=elsevier_plot_tools.FONT_SIZE_PT)
-
+        ax_i.tick_params(axis='x',
+                         labelsize=elsevier_plot_tools.FONT_SIZE_PT)  # X-ticks
+        ax_i.tick_params(axis='y',
+                         labelsize=elsevier_plot_tools.FONT_SIZE_PT)  # Y-ticks
         xticks: list[float] = fit_data[config.xcol_name].unique().tolist()
         ax_i.set_xticks(xticks)
         xticklabels: list[np.float64] = \
@@ -230,6 +232,7 @@ class PlotFitted:
 
         ax_i.set_yticks(config.yticks)
         ax_i.set_yticklabels([f'{item:.1f}' for item in config.yticks])
+        ax_i.set_ylim(2.5, 7.5)
 
         if config.show_grid:
             ax_i.grid(True, 'both', ls='--', color='gray', alpha=0.5, zorder=2)
@@ -244,7 +247,7 @@ class PlotFitted:
         if not config.show_mirror_axes:
             self.remove_mirror_axes(ax_i)
         elsevier_plot_tools.save_close_fig(
-            fig_i, config.out_suffix, loc='lower right')
+            fig_i, config.out_suffix, loc='upper right')
         self.info_msg += f"\tSaved plot: {config.out_suffix}\n"
 
     def plot_fitted_rdf(self,

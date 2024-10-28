@@ -356,7 +356,8 @@ class SurfactantDensityPlotter:
         _config.graph_style['linestyle'] = ':'
         _config.graph_style['color'] = 'k'
         _config.graph_style['linewidth'] = 0.1
-        _config.graph_legend = r'0.03 ODA/nm$^2$'
+        _config.graph_legend = r'0.11 ODA/nm$^2$'
+        r_debye: float = 5.23
         fig_i, ax_i = self._plot_graphes(self.rdf_2d, _config, return_ax=True)
         ax_i.set_xlabel(ax_i.get_xlabel(),
                         fontsize=elsevier_plot_tools.FONT_SIZE_PT)
@@ -378,13 +379,19 @@ class SurfactantDensityPlotter:
                         lstyle='-',
                         color='gray',
                         legend='r$^\star_c$')
+        self._add_vline(ax_i,
+                        r_debye,
+                        lstyle='--',
+                        color='gray',
+                        legend='r$^\star_d$')
+
         ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
 
         fout: str = f'{self.residue}_rdf_2d_paper.jpg'
         plot_tools.save_close_fig(fig_i,
                                   ax_i,
                                   fout,
-                                  loc='lower right',
+                                  loc='upper left',
                                   )
         self.info_msg += \
             f'\tThe rdf graph saved: for bpm style as `{fout}`\n'

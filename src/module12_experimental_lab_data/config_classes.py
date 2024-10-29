@@ -58,7 +58,7 @@ class CaCovConfig(BasePlotConfig):
     """Contact angle and coverage dataclass"""
     fout: str = f'ca_coverage.{elsevier_plot_tools.IMG_FORMAT}'
 
-    x_label: str = r'c$_{ODA}$ [mM/L]'
+    x_label: str = r'c$_{ODA}$ [mM]'
     y_label: str = 'Contact angle and coverage'
 
     y_lims: tuple[int, int] = field(default_factory=lambda: (30, 71))
@@ -74,9 +74,9 @@ class ToroidalConfig(BasePlotConfig):
     # pylint: disable=too-many-instance-attributes
     fout: str = f'toroidal_radius.{elsevier_plot_tools.IMG_FORMAT}'
 
-    y_label: str = r'S$_{ex}$ [nm]'
-    x_label_surfactant: str = r'c$_{ODA}$ [mM/L]'
-    x_label_salt: str = r'c$_{NaCl}$ [mM/L]'
+    y_label: str = r'Z$_{ex}$ [nm]'
+    x_label_surfactant: str = r'c$_{ODA}$ [mM]'
+    x_label_salt: str = r'c$_{NaCl}$ [mM]'
 
     y_lims: tuple[int, int] = field(default_factory=lambda: (-3, 15))
 

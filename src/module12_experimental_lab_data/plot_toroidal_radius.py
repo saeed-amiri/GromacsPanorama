@@ -73,7 +73,7 @@ class ToroidalRadiusPlot:
                           'surfactant_concentration_mM_L')
         self._set_axis_labels(ax_i, 0, self.config.x_label_surfactant)
         self._set_y_ax(ax_i, self.config.y_lims)
-        self._ax_add_fig_labels(ax_i, 0, r'c$_{NaCl}$ [mM/L]')
+        self._ax_add_fig_labels(ax_i, 0, r'c$_{NaCl}$ [mM]')
         self._mirror_axes(ax_i)
 
     def _plot_panel_b(self,
@@ -90,7 +90,7 @@ class ToroidalRadiusPlot:
                           'salt_concentration_mM_L')
         self._set_axis_labels(ax_i, 1, self.config.x_label_salt)
         self._set_y_ax(ax_i, self.config.y_lims)
-        self._ax_add_fig_labels(ax_i, 1, r'c$_{ODA}$ [mM/L]')
+        self._ax_add_fig_labels(ax_i, 1, r'c$_{ODA}$ [mM]')
         self._mirror_axes(ax_i)
 
     def _plot_panel_c(self,

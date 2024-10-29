@@ -47,7 +47,9 @@ class PlotCaCoverage:
         axs: plt.Axes
         fig_i, axs = elsevier_plot_tools.mk_canvas_multi('double_column',
                                                          n_rows=1,
-                                                         n_cols=4)
+                                                         n_cols=4,
+                                                         aspect_ratio=2
+                                                         )
         for i, (name, group) in enumerate(grouped):
             ax_i = axs[i]
             self._select_plot_type(ax_i, group)
@@ -121,7 +123,8 @@ class PlotCaCoverage:
         x_values = group['log_surfactant_concentration_mM_L']
         x_labels = group['surfactant_concentration_mM_L']
         ax_i.set_xticks(x_values)
-        ax_i.set_xticklabels(x_labels)
+        ax_i.set_xticklabels(x_labels,
+                             fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
     def _set_y_ticks(self,
                      ax_i: plt.Axes
@@ -129,6 +132,8 @@ class PlotCaCoverage:
         """Set the yticks"""
         ax_i.set_ylim(self.config.y_lims)
         ax_i.set_yticks(self.config.ytick_labels)
+        ax_i.set_yticklabels(ax_i.get_yticklabels(),
+                             fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
     def _set_axis_labels(self,
                          ax_i: plt.Axes,
@@ -176,7 +181,11 @@ class PlotCaCoverage:
                      ) -> None:
         """keep or remove the mirror the axes"""
         if not self.config.show_mirror_axis:
-            elsevier_plot_tools.remove_mirror_axes(ax_i)
+            ax_i.set_axis_on()
+            ax_i.spines['top'].set_visible(False)
+            ax_i.spines['right'].set_visible(False)
+        else:
+            ax_i.set_axis_on()
 
     def _split_data(self,
                     data: pd.DataFrame

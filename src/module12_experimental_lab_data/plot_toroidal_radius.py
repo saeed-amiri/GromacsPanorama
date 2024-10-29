@@ -164,7 +164,11 @@ class ToroidalRadiusPlot:
                      ) -> None:
         """Mirror the axes"""
         if not self.config.show_mirror_axis:
-            elsevier_plot_tools.remove_mirror_axes(ax_i)
+            ax_i.set_axis_on()
+            ax_i.spines['top'].set_visible(False)
+            ax_i.spines['right'].set_visible(False)
+        else:
+            ax_i.set_axis_on()
 
     def _ax_add_fig_labels(self,
                            ax_i: plt.Axes,

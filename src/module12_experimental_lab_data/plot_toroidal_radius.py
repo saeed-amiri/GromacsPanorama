@@ -136,11 +136,19 @@ class ToroidalRadiusPlot:
         if x_column == 'salt_concentration_mM_L':
             xticks = first_group[x_column]
             xticks_labels = first_group[x_column]
+            x_label_adjusted: list[int] = [
+                item + 1.0 if i == 1 else item for i, item in enumerate(xticks)
+                ]
+            x_label_adjusted: list[int] = [
+                item - 1.0 if i == 0 else item for i, item in enumerate(xticks)
+                ]
+            ax_i.set_xticks(x_label_adjusted)
         else:
             xticks = first_group[f'log_{x_column}'][1:]
             xticks_labels = first_group[x_column][1:]
-        ax_i.set_xticks(xticks)
-        ax_i.set_xticklabels(xticks_labels)
+            ax_i.set_xticks(xticks)
+        ax_i.set_xticklabels(xticks_labels,
+                             fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
     def _set_axis_labels(self,
                          ax_i: plt.Axes,
@@ -149,8 +157,10 @@ class ToroidalRadiusPlot:
                          ) -> None:
         """Set the axis labels"""
         if ax_index == 0:
-            ax_i.set_ylabel(self.config.y_label)
-        ax_i.set_xlabel(x_label)
+            ax_i.set_ylabel(self.config.y_label,
+                            fontsize=elsevier_plot_tools.FONT_SIZE_PT + 1)
+        ax_i.set_xlabel(x_label,
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT + 1)
 
     def _set_y_ax(self,
                   ax_i: plt.Axes,
@@ -158,6 +168,8 @@ class ToroidalRadiusPlot:
                   ) -> None:
         """Set the y axis"""
         ax_i.set_ylim(y_lims)
+        ax_i.set_yticklabels(ax_i.get_yticklabels(),
+                             fontsize=elsevier_plot_tools.FONT_SIZE_PT)
 
     def _mirror_axes(self,
                      ax_i: plt.Axes

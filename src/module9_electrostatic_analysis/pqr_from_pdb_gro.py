@@ -170,7 +170,11 @@ class StructureToPqr:
                  log: logger.logging.Logger,
                  configs: AllConfig = AllConfig()
                  ) -> None:
-        configs.structure_files = structure_files
+        configs.structure_files = structure_files[:-1]
+        configs.res_number_dict['APT'] = int(structure_files[-1])
+        self.info_msg += '\t' + '-' * 75 + '\n'
+        self.info_msg += \
+            f'\tNumber of atoms in APT is {structure_files[-1]}\n'
         self.configs = configs
         self.initiate(log)
         self.write_msg(log)
@@ -841,5 +845,7 @@ class ReadForceFieldFile:
 
 
 if __name__ == '__main__':
+    print('\t' + '-' * 75 + '\n')
     StructureToPqr(
-        structure_files=sys.argv[1:], log=logger.setup_logger('pdb2pqr.log'))
+        structure_files=sys.argv[1:],
+        log=logger.setup_logger('pdb2pqr.log'))

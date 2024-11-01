@@ -171,7 +171,11 @@ class StructureToPqr:
                  configs: AllConfig = AllConfig()
                  ) -> None:
         configs.structure_files = structure_files[:-1]
-        configs.res_number_dict['APT'] = int(structure_files[-1])
+        try:
+            configs.res_number_dict['APT'] = int(structure_files[-1])
+        except ValueError:
+            log.error(msg := '\tThe number of APT atoms is not an integer!\n')
+            sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
         self.info_msg += '\t' + '-' * 75 + '\n'
         self.info_msg += \
             f'\tNumber of atoms in APT is {structure_files[-1]}\n'

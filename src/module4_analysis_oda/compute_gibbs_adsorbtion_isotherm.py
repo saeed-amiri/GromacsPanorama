@@ -26,10 +26,10 @@ Gamma =
     frac{1}{text{RTm}} left(frac{partial gamma}{partial c} right)_{T,P}
 where:
     Gamma: Gibbs adsorption
-    R: Gas constant
-    T: Temperature
+    R: Gas constant (8.314 J/(mol K))
+    T: Temperature (K)
     m: 2 for ionic surfactants and 1 for non-ionic surfactants
-    gamma: Interfacial tension
+    gamma: Interfacial tension (mN/m)
     c: Concentration of ODA in the box
 
 Inputs:
@@ -41,3 +41,40 @@ Outputs:
 Nov 4, 2024
 Saeed
 """
+from dataclasses import dataclass, field
+from enum import Enum
+
+import numpy as np
+import pandas as pd
+
+from common import logger
+from common import xvg_to_dataframe
+from common.colors_text import TextColor as bcolors
+
+
+# Constants
+class Constants(Enum):
+    """Physical constants"""
+    # pylint: disable=invalid-name
+    R = 8.314  # J/(mol K)
+    m = 2  # unitless
+    T = 298.15  # K
+
+
+# Dataclass
+@dataclass
+class Config:
+    """Configuration for the ComputeIsotherm class"""
+    input_file: str = "data/interfacial_tension.xvg"
+    output_file: str = "data/gibbs_adsorption_isotherm.xvg"
+
+
+class ComputeIsotherm:
+    """Reading data and computing the Gibbs adsorption isotherm"""
+    info_msg: str = "Message from ComputeIsotherm:\n"
+
+    def __init__(self,
+                 config: Config,
+                 log: logger.logging.Logger
+                 ) -> None:
+        self.config = config

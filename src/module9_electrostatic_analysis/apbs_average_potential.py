@@ -236,4 +236,4 @@ class AveragePotential:
 
 
 if __name__ == '__main__':
-    AveragePotential(logger.logging.Logger('average_potential.log'))
+    AveragePotential(logger.setup_logger('average_potential.log'))

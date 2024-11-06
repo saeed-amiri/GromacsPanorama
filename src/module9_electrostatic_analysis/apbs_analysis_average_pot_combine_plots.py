@@ -3,6 +3,7 @@ Plot combination data
 plot the selcted Boltzman factor for ODA ans the 2d RDF of the ODA at
 the interface
 """
+import sys
 from typing import Dict, Union, Tuple, List, Any
 from dataclasses import field
 from dataclasses import dataclass
@@ -24,7 +25,7 @@ class FileConfig:
     """
     oda_concentration: float = 0.003  # ODA/nm^2
     rdf_file: Dict[str, str] = field(default_factory=lambda: {
-        'fname': '15_oda_densities.xvg',
+        'fname': '',  # Read from the command line
         'data': 'fitted_rdf',
         'raw_data': 'rdf_2d',
         'radii': 'regions',
@@ -149,12 +150,14 @@ class PlotBolzmannRdf:
     info_msg: str
 
     def __init__(self,
+                 rdf_file_fname: str,
                  log: logger.logging.Logger,
                  cut_radius: float | None = None,
                  config: FileConfig = FileConfig()
                  ) -> None:
         self.info_msg = 'Message from PlotBolzmannRdf:\n'
         self.config = config
+        self.config.rdf_file['fname'] = rdf_file_fname
         self.process_files(cut_radius, log)
         self.plot_data()
         self.plot_data_bpm()
@@ -591,4 +594,6 @@ class PlotBolzmannRdf:
 
 
 if __name__ == '__main__':
-    PlotBolzmannRdf(logger.setup_logger('combine_plots.log'), cut_radius=9.8)
+    PlotBolzmannRdf(rdf_file_fname=sys.argv[1],
+                    log=logger.setup_logger('combine_plots.log'),
+                    cut_radius=9.8)

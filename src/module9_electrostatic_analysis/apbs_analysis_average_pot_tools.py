@@ -227,8 +227,11 @@ def get_average_z_palce_nanoparticle(log: logger.logging.Logger,
         print(f'{bcolors.WARNING}{msg}{bcolors.ENDC}')
         return 0.0
     df: pd.DataFrame = xvg_to_dataframe.XvgParser(fname, log).xvg_df
+    columns_to_check: list[str] = ['COR_Z', 'COR_APT_Z']
     try:
-        return df['COR_Z'].mean()
+        for column in columns_to_check:
+            if column in df.columns:
+                return df[column].mean()
     except KeyError:
         log.error(
             msg := '\tThe column `COR_Z` does not exist!, return `0.0`\n')

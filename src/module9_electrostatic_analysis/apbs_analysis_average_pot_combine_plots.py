@@ -126,6 +126,11 @@ class PlotBolzmannRdfConfiguratio:
         """add text for ODA concentration to the plot"""
         return True
 
+    @property
+    def BOX_XY(self) -> np.ndarray:
+        """set the position of the text"""
+        return np.asanyarray([21.7, 21.7])
+
 
 class PlotBolzmannRdf:
     """
@@ -442,7 +447,7 @@ class PlotBolzmannRdf:
 
         ax_i.text(0.6,
                   0.98,
-                  '0.03 ODA/nm$^2$',
+                  f'{self._concents_per_area(_plt_config): .2f} ODA/nm$^2$',
                   ha='right',
                   va='top',
                   transform=ax_i.transAxes,
@@ -466,6 +471,17 @@ class PlotBolzmannRdf:
                                   )
 
         self.info_msg += f'\tThe plot is saved as {fout}\n'
+
+    def _concents_per_area(self,
+                           plt_config: PlotBolzmannRdfConfiguratio
+                           ) -> float:
+        """Compute the concentration ODA per area"""
+        concnetration: float = \
+            self.nr_oda_nominal / np.prod(plt_config.BOX_XY)
+        self.info_msg += (
+            f'\t{bcolors.CAUTION}The nomminal concentration of ODA per area is '
+            f'{concnetration}{bcolors.ENDC}\n')
+        return concnetration
 
     def plot_fit_rdf_with_distribution(self,
                                        cut_radius: float | None = None

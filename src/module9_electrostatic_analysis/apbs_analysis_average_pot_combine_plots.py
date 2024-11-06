@@ -139,8 +139,11 @@ class PlotBolzmannRdf:
                  'boltzman_dict',
                  'boltzman_data',
                  'nr_oda_at_interface',
+                 'nr_oda_nominal',
                  'config',
                  'info_msg']
+    nr_oda_at_interface: float
+    nr_oda_nominal: str | int
     rdf_data: np.ndarray
     raw_rdf_data: np.ndarray
     rdf_radii: np.ndarray  # in Angstrom
@@ -161,6 +164,7 @@ class PlotBolzmannRdf:
         self.config.rdf_file['fname'] = rdf_file_fname
         self.process_files(cut_radius, log)
         self.nr_oda_at_interface = self.estimate_number_of_oda(log)
+        self.nr_oda_nominal = self.get_nominal_oda_nr()
         self.plot_data()
         self.plot_data_bpm()
         self.plot_data_paper()
@@ -176,6 +180,21 @@ class PlotBolzmannRdf:
         self.set_rdf_data(cut_radius, log)
         self.set_raw_rdf_data(cut_radius, log)
         self.set_boltzman_data(cut_radius, log)
+
+    def get_nominal_oda_nr(self) -> int | str:
+        """get the nominal number of ODA molecules"""
+        nominal_nr_oda = self.config.rdf_file['fname'].split('_')[0]
+        try:
+            nominal_nr_oda = int(nominal_nr_oda)
+            self.info_msg += (
+                f'\t{bcolors.CAUTION}The nominal number of ODA molecules is '
+                f'{nominal_nr_oda}{bcolors.ENDC}\n')
+        except ValueError:
+            nominal_nr_oda = 'unknown'
+            self.info_msg += (
+                f'\t{bcolors.CAUTION}The nominal number of ODA molecules is '
+                f'{nominal_nr_oda}{bcolors.ENDC}\n')
+        return nominal_nr_oda
 
     def set_rdf_data(self,
                      cut_radius: float | None,

@@ -138,6 +138,7 @@ class PlotBolzmannRdf:
                  'boltzman_radii',
                  'boltzman_dict',
                  'boltzman_data',
+                 'nr_oda_at_interface',
                  'config',
                  'info_msg']
     rdf_data: np.ndarray
@@ -159,6 +160,7 @@ class PlotBolzmannRdf:
         self.config = config
         self.config.rdf_file['fname'] = rdf_file_fname
         self.process_files(cut_radius, log)
+        self.nr_oda_at_interface = self.estimate_number_of_oda(log)
         self.plot_data()
         self.plot_data_bpm()
         self.plot_data_paper()
@@ -188,6 +190,29 @@ class PlotBolzmannRdf:
         rdf_data /= np.max(rdf_data)
         self.rdf_radii, self.rdf_data = \
             self.cut_radii(rdf_radii, rdf_data, cut_radius)
+
+    def estimate_number_of_oda(self,
+                               log) -> float:
+        """Estimate the number of ODA molecules using
+        avg_density_per_region"""
+        avg_density_per_region, rdf_radii = self.parse_xvg(
+            fname=self.config.rdf_file['fname'],
+            data_column='avg_density_per_region',
+            radii_column=self.config.rdf_file['radii'],
+            log=log)
+        # Calculate bin widths (assuming uniform bins)
+        bin_width = rdf_radii[1] - rdf_radii[0]
+
+        # Calculate the area of each annular region in 2D
+        area = 2 * np.pi * rdf_radii * bin_width
+
+        # Calculate the number of ODA molecules in each region
+        number_in_bins = avg_density_per_region * area
+
+        # Sum over all regions to get the total number
+        total_number_of_oda_at_interface = np.sum(number_in_bins)
+
+        return total_number_of_oda_at_interface
 
     def set_raw_rdf_data(self,
                          cut_radius: float | None,

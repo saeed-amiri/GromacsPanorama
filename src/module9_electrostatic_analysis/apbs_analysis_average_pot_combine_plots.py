@@ -231,6 +231,10 @@ class PlotBolzmannRdf:
         # Sum over all regions to get the total number
         total_number_of_oda_at_interface = np.sum(number_in_bins)
 
+        self.info_msg += (
+            f'\t{bcolors.CAUTION}The total number of ODA molecules at the'
+            f' interfaceis {total_number_of_oda_at_interface}\n{bcolors.ENDC}')
+
         return total_number_of_oda_at_interface
 
     def set_raw_rdf_data(self,

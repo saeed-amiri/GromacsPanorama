@@ -481,8 +481,8 @@ class StructureToPqr:
                        ) -> pd.DataFrame:
         """set the charges for the np section"""
         df_i: pd.DataFrame = df_np.copy()
-        if len(df_np) == len(
-           ff_df := self.force_field.ff_charge['np_info']):
+        if (np_len := len(df_np)) == (ff_len := len(
+           ff_df := self.force_field.ff_charge['np_info'])):
             charge: np.ndarray = ff_df['charge'].values
             df_i['charge'] = charge
 
@@ -496,7 +496,10 @@ class StructureToPqr:
                               f'{sum(df_i["charge"]):.3f}\n')
 
         else:
-            log.error(msg := '\tError! There is problem in np data!\n')
+            log.error(msg := ('\tError! There is problem in np data!\n'
+                              f'\tThe number of atoms in the np section is: '
+                              f'{np_len}, but the number of atoms in the '
+                              f'force field file is: {ff_len}\n'))
             sys.exit(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
 
         del ff_df

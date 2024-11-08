@@ -25,14 +25,14 @@ class FileConfig:
     defines dict of info for files.
     """
     boltzmann_files: list[dict[str, str | int | list[int]]] = \
-        field(default_factory=[
-            {'fname': '5_boltzman_distribution.xvg',
+        field(default_factory=lambda: [
+            {'fname': '5_boltzmann_distribution.xvg',
              'nr_oda': 5,
              'layers': [90, 91, 92, 93],
              },
-            {'fname': '10_boltzman_distribution.xvg',
+            {'fname': '10_boltzmann_distribution.xvg',
              'nr_oda': 10,
-             'layers': [90, 91, 92, 93]
+             'layers': [90, 91, 92, 99]
              },
             ])
 
@@ -40,11 +40,11 @@ class FileConfig:
 @dataclass
 class PlotConfig:
     """Set the plot configurations"""
-    title: str = 'Avg. Boltzman distribution for different ODA concentrations'
+    title: str = 'Avg. boltzmann distribution for different ODA concentrations'
     xlabel: str = r'$r^*$ [nm]'
     ylabel: str = 'a.u.'
     legend: str = r'ODA/nm$^2$'
-    fig_name: str = 'average_boltzman_distribution.png'
+    fig_name: str = 'average_boltzmann_distribution.png'
     save_fig: bool = True
 
 
@@ -55,25 +55,40 @@ class AverageBoltzmanPlot:
                  'plot_config'
                  'info_msg',
                  ]
-    file_config: FileConfig
-    plot_config: PlotConfig
+    file_config: "FileConfig"
+    plot_config: "PlotConfig"
     info_msg: str
 
     def __init__(self,
                  log: logger.logging.Logger,
-                 file_config: FileConfig = FileConfig(),
-                 plot_config: PlotConfig = PlotConfig(),
+                 file_config: "FileConfig" = FileConfig(),
+                 plot_config: "PlotConfig" = PlotConfig(),
                  ) -> None:
         self.info_msg = 'Message from AverageBoltzmanPlot:\n'
         self.file_config = file_config
         self.plot_config = plot_config
-        self.process_files(log)
+        data: dict[str, pd.DataFrame] = self.process_files(log)
 
     def process_files(self,
                       log: logger.logging.Logger
-                      ) -> None:
+                      ) -> dict[str, pd.DataFrame]:
         """process the files"""
+        data: dict[str, pd.DataFrame] = {}
+        for file in self.file_config.boltzmann_files:
+            try:
+                df_i: pd.DataFrame = \
+                    xvg_to_dataframe.XvgParser(file['fname'], log).xvg_df
+                df_i.columns = df_i.columns.astype(str)
+                data[str(file['nr_oda'])] = \
+                    df_i[[str(layer) for layer in file['layers']]]
+            except Exception as e:
+                log.error(msg := (f'{bcolors.FAIL}\tError:{bcolors.ENDC} '
+                                  f'{e}\n'
+                                  f'Could not process file {file["fname"]}\n'))
+                self.info_msg += msg
+                continue
+        return data
 
 
 if __name__ == '__main__':
-    AverageBoltzmanPlot(log=logger.setup_logger('compare_boltzman_plot.log'))
+    AverageBoltzmanPlot(log=logger.setup_logger('compare_boltzmann_plot.log'))

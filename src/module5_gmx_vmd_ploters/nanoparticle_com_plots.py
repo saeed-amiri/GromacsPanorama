@@ -103,7 +103,7 @@ class PlotNpCom:
         for i, (file, label) in enumerate(self.configs.xvg_files.items()):
             df_i: pd.DataFrame = xvg_to_dataframe.XvgParser(file, log).xvg_df
             if i == 0:
-                time: np.ndarray = df_i.iloc[:, 0].values / 1000.0
+                time: np.ndarray = df_i.iloc[:, 0].values / 1000.0 + 300
             data[label] = \
                 df_i.iloc[:, self.configs.direction.value].values
         return data, time

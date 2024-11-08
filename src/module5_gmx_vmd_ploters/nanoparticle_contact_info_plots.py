@@ -137,7 +137,7 @@ class PlotNpContactInfo:
                          i: int
                          ) -> None:
         for _, df_i in data.items():
-            ax_i.plot(df_i.iloc[:, 0] / 10.0,  # Convert to nm
+            ax_i.plot(df_i.iloc[:, 0] / 10.0 + 300,  # Convert to nm
                       df_i[selection],
                       label=self.configs.line_labels[i],
                       linestyle=self.configs.line_styles[i],

@@ -68,6 +68,7 @@ class AverageBoltzmanPlot:
         self.file_config = file_config
         self.plot_config = plot_config
         data: dict[str, pd.DataFrame] = self.process_files(log)
+        avg_data: dict[str, pd.DataFrame] = self.get_average_boltzmann(data)
 
     def process_files(self,
                       log: logger.logging.Logger
@@ -88,6 +89,15 @@ class AverageBoltzmanPlot:
                 self.info_msg += msg
                 continue
         return data
+
+    def get_average_boltzmann(self,
+                              data: dict[str, pd.DataFrame]
+                              ) -> dict[str, pd.DataFrame]:
+        """get the average boltzmann distribution"""
+        avg_data: dict[str, pd.DataFrame] = {}
+        for key, df in data.items():
+            avg_data[key] = df.iloc[1:].mean(axis=1)
+        return avg_data
 
 
 if __name__ == '__main__':

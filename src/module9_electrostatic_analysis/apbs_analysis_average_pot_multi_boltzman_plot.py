@@ -5,6 +5,7 @@ The same layers which are plotted in the rdf_boltzmann plots should be
 used here.
 """
 
+import sys
 from dataclasses import field
 from dataclasses import dataclass
 
@@ -32,7 +33,7 @@ class FileConfig:
              },
             {'fname': '10_boltzmann_distribution.xvg',
              'nr_oda': 10,
-             'layers': [90, 91, 92, 99]
+             'layers': [90, 91, 92, 93]
              },
             ])
 
@@ -67,36 +68,43 @@ class AverageBoltzmanPlot:
         self.info_msg = 'Message from AverageBoltzmanPlot:\n'
         self.file_config = file_config
         self.plot_config = plot_config
-        data: dict[str, pd.DataFrame] = self.process_files(log)
-        avg_data: dict[str, pd.DataFrame] = self.get_average_boltzmann(data)
+        data: dict[str, pd.DataFrame]
+        radii: np.ndarray
+        data, radii = self.process_files(log)
+        avg_data: dict[str, np.ndarray] = self.get_average_boltzmann(data)
 
     def process_files(self,
                       log: logger.logging.Logger
-                      ) -> dict[str, pd.DataFrame]:
+                      ) -> tuple[dict[str, pd.DataFrame], np.ndarray]:
         """process the files"""
         data: dict[str, pd.DataFrame] = {}
-        for file in self.file_config.boltzmann_files:
+        radii: np.ndarray = np.array([])
+        for i, file in enumerate(self.file_config.boltzmann_files):
             try:
                 df_i: pd.DataFrame = \
                     xvg_to_dataframe.XvgParser(file['fname'], log).xvg_df
                 df_i.columns = df_i.columns.astype(str)
                 data[str(file['nr_oda'])] = \
                     df_i[[str(layer) for layer in file['layers']]]
+                if i == 0:
+                    radii: np.ndarray = np.asanyarray(df_i['r_nm'])
             except Exception as e:
                 log.error(msg := (f'{bcolors.FAIL}\tError:{bcolors.ENDC} '
                                   f'{e}\n'
                                   f'Could not process file {file["fname"]}\n'))
                 self.info_msg += msg
+                if i == 0:
+                    sys.exit(1)
                 continue
-        return data
+        return data, radii
 
     def get_average_boltzmann(self,
                               data: dict[str, pd.DataFrame]
-                              ) -> dict[str, pd.DataFrame]:
+                              ) -> dict[str, np.ndarray]:
         """get the average boltzmann distribution"""
-        avg_data: dict[str, pd.DataFrame] = {}
+        avg_data: dict[str, np.ndarray] = {}
         for key, df in data.items():
-            avg_data[key] = df.iloc[1:].mean(axis=1)
+            avg_data[key] = np.asanyarray(df.iloc[1:].mean(axis=1))
         return avg_data
 
 

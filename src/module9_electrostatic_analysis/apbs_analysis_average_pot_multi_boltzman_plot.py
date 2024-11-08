@@ -46,3 +46,34 @@ class PlotConfig:
     legend: str = r'ODA/nm$^2$'
     fig_name: str = 'average_boltzman_distribution.png'
     save_fig: bool = True
+
+
+class AverageBoltzmanPlot:
+    """plot the comparing graph"""
+
+    __solts__ = ['file_config',
+                 'plot_config'
+                 'info_msg',
+                 ]
+    file_config: FileConfig
+    plot_config: PlotConfig
+    info_msg: str
+
+    def __init__(self,
+                 log: logger.logging.Logger,
+                 file_config: FileConfig = FileConfig(),
+                 plot_config: PlotConfig = PlotConfig(),
+                 ) -> None:
+        self.info_msg = 'Message from AverageBoltzmanPlot:\n'
+        self.file_config = file_config
+        self.plot_config = plot_config
+        self.process_files(log)
+
+    def process_files(self,
+                      log: logger.logging.Logger
+                      ) -> None:
+        """process the files"""
+
+
+if __name__ == '__main__':
+    AverageBoltzmanPlot(log=logger.setup_logger('compare_boltzman_plot.log'))

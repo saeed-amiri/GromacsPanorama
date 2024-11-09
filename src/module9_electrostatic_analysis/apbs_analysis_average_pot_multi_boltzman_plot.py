@@ -127,8 +127,14 @@ class AverageBoltzmanPlot:
             elsevier_plot_tools.mk_canvas('single_column')
         fig_i, ax_i = figure
 
-        for key, data in avg_data.items():
-            ax_i.plot(radii, data, label=key)
+        for i, (key, data) in enumerate(avg_data.items()):
+            ax_i.plot(radii,
+                      data,
+                      label=key + ' ODA/nm$^2$',
+                      linewidth=1.5,
+                      color=elsevier_plot_tools.DARK_RGB_COLOR_GRADIENT[i],
+                      ls=elsevier_plot_tools.LINESTYLE_TUPLE[i][1]
+                      )
 
         ax_i.set_xlabel(r'$r^\star$ [nm]',
                         fontsize=elsevier_plot_tools.FONT_SIZE_PT)

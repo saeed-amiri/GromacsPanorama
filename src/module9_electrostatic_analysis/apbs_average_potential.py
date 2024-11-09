@@ -77,6 +77,8 @@ class AveragePotential:
         # Read and sum the data in each file
         for file_name in file_names:
             data = self.read_file(file_name)
+            if data.empty:
+                continue
             if total_sum is None:
                 total_sum = data
             else:
@@ -142,7 +144,12 @@ class AveragePotential:
                   ) -> pd.DataFrame:
         """read the file"""
         with open(file_name, 'r', encoding='utf-8') as f_in:
-            return self.read_data(f_in)
+            # Check if the file is empty
+            if f_in.read(1):
+                f_in.seek(0)  # Reset file pointer to the beginning
+                return self.read_data(f_in)
+            else:
+                return pd.DataFrame()
 
     def read_header_tail(self,
                          file_name: str

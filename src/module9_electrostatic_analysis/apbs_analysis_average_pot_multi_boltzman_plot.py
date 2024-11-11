@@ -74,6 +74,7 @@ class AverageBoltzmanPlot:
         avg_data: dict[str, np.ndarray] = self.get_average_boltzmann(data)
         norm_data: dict[str, np.ndarray] = self.normalize_data(avg_data)
         self.plot_data_paper(norm_data, radii)
+        self.write_msg(log)
 
     def process_files(self,
                       log: logger.logging.Logger
@@ -157,6 +158,14 @@ class AverageBoltzmanPlot:
                                   )
 
         self.info_msg += f'\tThe plot is saved as {fout}\n'
+
+    def write_msg(self,
+                  log: logger.logging.Logger  # To log
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{AverageBoltzmanPlot.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == '__main__':

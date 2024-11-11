@@ -131,6 +131,16 @@ class PlotBolzmannRdfConfiguratio:
         """set the position of the text"""
         return np.asanyarray([21.7, 21.7])
 
+    @property
+    def AVG_OVER_LAYER(self) -> bool:
+        """average over layers"""
+        return True
+
+    @property
+    def AVG_INTERVAL(self) -> Tuple[int, int]:
+        """average interval"""
+        return (-11, -5)
+
 
 class PlotBolzmannRdf:
     """
@@ -414,8 +424,15 @@ class PlotBolzmannRdf:
         _plt_config.RDF_PROP['linesytle'] = ':'
         _plt_config.RDF_PROP['marker'] = 's'
         _plt_config.RDF_PROP['markersize'] = '2'
+        if _plt_config.AVG_OVER_LAYER:
+            final_values: np.ndarray = self.raw_rdf_data[
+                _plt_config.AVG_INTERVAL[0]:_plt_config.AVG_INTERVAL[1]]
+            norm_value: float = np.mean(final_values)
+            rdf_data = self.raw_rdf_data / norm_value
+        else:
+            rdf_data = self.raw_rdf_data
         ax_i.plot(self.rdf_radii,
-                  self.raw_rdf_data,
+                  rdf_data,
                   scalex=True,
                   scaley=True,
                   marker='o',
@@ -479,8 +496,8 @@ class PlotBolzmannRdf:
         concnetration: float = \
             self.nr_oda_nominal / np.prod(plt_config.BOX_XY)
         self.info_msg += (
-            f'\t{bcolors.CAUTION}The nomminal concentration of ODA per area is '
-            f'{concnetration}{bcolors.ENDC}\n')
+            f'\t{bcolors.CAUTION}The nomminal concentration of ODA per area is'
+            f' {concnetration}{bcolors.ENDC}\n')
         return concnetration
 
     def plot_fit_rdf_with_distribution(self,

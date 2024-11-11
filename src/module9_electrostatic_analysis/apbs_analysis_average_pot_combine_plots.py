@@ -33,7 +33,7 @@ class FileConfig:
     boltzman_file: Dict[str, str | List[float]] = field(
          default_factory=lambda: {
               'fname': 'boltzman_distribution.xvg',
-              'data': [90, 91, 92, 93, 94, 95],
+              'data': [79, 80, 81, 82, 83],
               'radii': 'r_nm',
               })
 
@@ -139,7 +139,7 @@ class PlotBolzmannRdfConfiguratio:
     @property
     def AVG_INTERVAL(self) -> Tuple[int, int]:
         """average interval"""
-        return (-11, -5)
+        return (-5, -3)
 
 
 class PlotBolzmannRdf:

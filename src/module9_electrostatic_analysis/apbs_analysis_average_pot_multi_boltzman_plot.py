@@ -45,11 +45,15 @@ class FileConfig:
              },
             {'fname': '30_boltzmann_distribution.xvg',
              'nr_oda': 30,
-             'layers': [75, 76, 77, 78, 79, 80, 81, 82, 83, 84]
+             'layers': [78, 79, 80, 81, 82, 83]
+             },
+            {'fname': '40_boltzmann_distribution.xvg',
+             'nr_oda': 40,
+             'layers': [79, 80, 81, 82, 83]
              },
             {'fname': '50_boltzmann_distribution.xvg',
              'nr_oda': 50,
-             'layers': [91, 92, 93, 94, 95]
+             'layers': [81, 82, 83, 84, 85]
              },
             ])
 

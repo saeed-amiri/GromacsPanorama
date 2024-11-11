@@ -150,7 +150,7 @@ class AverageBoltzmanPlot:
                       data,
                       label=key + ' ODA/nm$^2$',
                       linewidth=1.5,
-                      color=elsevier_plot_tools.DARK_RGB_COLOR_GRADIENT[i],
+                      color=elsevier_plot_tools.CLEAR_COLOR_GRADIENT[i],
                       ls=elsevier_plot_tools.LINESTYLE_TUPLE[i][1]
                       )
 

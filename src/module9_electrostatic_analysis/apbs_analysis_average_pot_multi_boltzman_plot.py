@@ -113,7 +113,8 @@ class AverageBoltzmanPlot:
                                   f'Could not process file {file["fname"]}\n'))
                 self.info_msg += msg
                 if i == 0:
-                    sys.exit(1)
+                    sys.exit(
+                        'Exiting the program, there is problem in 1st file\n')
                 continue
         return data, radii
 

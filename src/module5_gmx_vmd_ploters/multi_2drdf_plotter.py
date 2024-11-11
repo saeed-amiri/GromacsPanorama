@@ -87,6 +87,7 @@ class Plot2dRdf:
         self.config = config
         self.plot_config = plot_config
         self.read_data(log)
+        self.plot_data(log)
 
     def read_data(self,
                   log: logger.logging.Logger
@@ -103,6 +104,62 @@ class Plot2dRdf:
             data[str(nr_oda)] = df_i[self.config.y_data]
 
         self.data = pd.concat(data, axis=1)
+
+    def plot_data(self,
+                  log: logger.logging.Logger
+                  ) -> None:
+        """plot the data"""
+        fig_i, ax_i = self._make_axis()
+        for i, (oda, rdf) in enumerate(self.data.items()):
+            if i == 0:
+                x_data: pd.DataFrame = self.data['regions']
+            else:
+                self._plot_axis(ax_i[i-1], x_data, y_data=rdf)
+                self._set_or_remove_ticks(i, ax_i)
+        self._save_figure(fig_i)
+
+    def _make_axis(self) -> tuple[plt.Figure, plt.Axes]:
+        """make the axis"""
+        return elsevier_plot_tools.mk_canvas_multi(
+            'double_height',
+            n_rows=self.plot_config.nr_columns,
+            n_cols=self.plot_config.nr_rows,
+            aspect_ratio=2,
+            )
+
+    def _plot_axis(self,
+                   ax_i: plt.Axes,
+                   x_data: pd.DataFrame,
+                   y_data: pd.DataFrame,
+                   ) -> None:
+        """plot the axis"""
+        ax_i.plot(x_data,
+                  y_data,
+                  marker='o',
+                  markersize=0.5,
+                  ls='',
+                  lw=0.5,
+                  color='k',
+                  )
+
+    def _set_or_remove_ticks(self,
+                             ind: int,
+                             ax_i: plt.Axes,
+                             ) -> None:
+        """set or remove the ticks"""
+        # Remove y-ticks for axes not in the first column
+        if ind % self.plot_config.nr_rows != 0:
+            ax_i[ind].set_yticks([])
+        # Remove x-ticks for axes not in the third row
+        if ind < (self.plot_config.nr_columns - 1) * self.plot_config.nr_rows:
+            ax_i[ind].set_xticks([])
+
+    def _save_figure(self,
+                     fig_i: plt.Figure,
+                     ) -> None:
+        """save the figure"""
+        elsevier_plot_tools.save_close_fig(
+            fig_i, 'multi_2d_rdf.jpg', show_legend=False)
 
 
 if __name__ == '__main__':

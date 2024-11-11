@@ -29,11 +29,27 @@ class FileConfig:
         field(default_factory=lambda: [
             {'fname': '5_boltzmann_distribution.xvg',
              'nr_oda': 5,
-             'layers': [90, 91, 92, 93],
+             'layers': [91, 92, 93, 94, 95],
              },
             {'fname': '10_boltzmann_distribution.xvg',
              'nr_oda': 10,
-             'layers': [90, 91, 92, 93]
+             'layers': [91, 92, 93, 94, 95]
+             },
+            {'fname': '15_boltzmann_distribution.xvg',
+             'nr_oda': 15,
+             'layers': [90, 91, 92, 93, 94]
+             },
+            {'fname': '20_boltzmann_distribution.xvg',
+             'nr_oda': 20,
+             'layers': [78, 79, 80, 81, 82, 83]
+             },
+            {'fname': '30_boltzmann_distribution.xvg',
+             'nr_oda': 30,
+             'layers': [75, 76, 77, 78, 79, 80, 81, 82, 83, 84]
+             },
+            {'fname': '50_boltzmann_distribution.xvg',
+             'nr_oda': 50,
+             'layers': [91, 92, 93, 94, 95]
              },
             ])
 

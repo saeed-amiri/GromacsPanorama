@@ -227,6 +227,14 @@ class Plot2dRdf:
         elsevier_plot_tools.save_close_fig(
             fig_i, 'multi_2d_rdf.jpg', show_legend=False)
 
+    def write_msg(self,
+                  log: logger.logging.Logger
+                  ) -> None:
+        """Write and log messages."""
+        print(f'{bcolors.OKCYAN}{Plot2dRdf.__name__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
 
 if __name__ == '__main__':
     Plot2dRdf(log=logger.setup_logger('multi_2d_rdf_plotter.log'))

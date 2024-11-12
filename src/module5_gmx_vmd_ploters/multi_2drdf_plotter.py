@@ -51,6 +51,7 @@ class FileConfig:
             ])
     x_data: str = 'regions'
     y_data: str = 'rdf_2d'
+    fit_data: str = 'fitted_rdf'
     normalize_data: bool = True
 
 
@@ -73,11 +74,17 @@ class PlotCOnfoig:
 class Plot2dRdf:
     """read data and plot the 2d rdf"""
 
-    __slots__ = ['info_msg', 'config', 'data', 'plot_config']
+    __slots__ = ['info_msg',
+                 'config',
+                 'data',
+                 'fit_data',
+                 'plot_config',
+                 ]
 
     info_msg: str
     config: FileConfig
     data: pd.DataFrame
+    fit_data: pd.DataFrame
     plot_config: PlotCOnfoig
 
     def __init__(self,
@@ -89,14 +96,17 @@ class Plot2dRdf:
         self.config = config
         self.plot_config = plot_config
         self.read_data(log)
-        self.normalize_data()
-        self.plot_data(log)
+        self.data = self.normalize_data(self.data, self.config.normalize_data)
+        self.fit_data = self.normalize_data(self.fit_data,
+                                            self.config.normalize_data)
+        self.plot_data()
 
     def read_data(self,
                   log: logger.logging.Logger
                   ) -> None:
         """read the data"""
-        data: dict[str, pd.DataFrame] = {}
+        data: dict[str, pd.Series] = {}
+        fit_data: dict[str, pd.Series] = {}
         for i, file_info in enumerate(self.config.density_files):
             fname = file_info['fname']
             nr_oda = file_info['nr_oda']
@@ -105,36 +115,43 @@ class Plot2dRdf:
             if i == 0:
                 data['regions'] = df_i[self.config.x_data] * 0.1  # nm
             data[str(nr_oda)] = df_i[self.config.y_data]
+            fit_data[str(nr_oda)] = df_i[self.config.fit_data]
 
         self.data = pd.concat(data, axis=1)
+        self.fit_data = pd.concat(fit_data, axis=1)
 
-    def normalize_data(self) -> None:
+    @staticmethod
+    def normalize_data(data: pd.DataFrame,
+                       normalize: bool
+                       ) -> pd.DataFrame:
         """normalize the data"""
-        if not self.config.normalize_data:
-            return
-        for i, (oda, rdf) in enumerate(self.data.items()):
+        if not normalize:
+            return data
+        for i, (oda, rdf) in enumerate(data.items()):
             if i == 0:
                 continue
             # Calculate the mean of the top 10 maximum points
             top_10_mean = rdf.nlargest(2).mean()
             rdf_norm = rdf / top_10_mean
-            self.data[oda] = rdf_norm
+            data[oda] = rdf_norm
+        return data
 
-    def plot_data(self,
-                  log: logger.logging.Logger
-                  ) -> None:
+    def plot_data(self) -> None:
         """plot the data"""
+        fig_i: plt.Figure
+        ax_i: np.ndarray
+        oda: str
         fig_i, ax_i = self._make_axis()
         for i, (oda, rdf) in enumerate(self.data.items()):
             if i == 0:
-                x_data: pd.DataFrame = self.data['regions']
+                x_data: pd.Series = self.data['regions']
             else:
                 self._plot_axis(ax_i[i-1], x_data, y_data=rdf)
                 self._add_legend(ax_i[i-1], oda)
             self._set_or_remove_ticks(i-1, ax_i)
         self._save_figure(fig_i)
 
-    def _make_axis(self) -> tuple[plt.Figure, plt.Axes]:
+    def _make_axis(self) -> tuple[plt.Figure, np.ndarray]:
         """make the axis"""
         return elsevier_plot_tools.mk_canvas_multi(
             'double_height',
@@ -144,9 +161,9 @@ class Plot2dRdf:
             )
 
     def _plot_axis(self,
-                   ax_i: plt.Axes,
-                   x_data: pd.DataFrame,
-                   y_data: pd.DataFrame,
+                   ax_i: mp.axes._axes.Axes,
+                   x_data: pd.Series,
+                   y_data: pd.Series,
                    ) -> None:
         """plot the axis"""
         ax_i.plot(x_data,

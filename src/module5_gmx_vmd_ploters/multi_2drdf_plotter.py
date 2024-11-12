@@ -56,19 +56,23 @@ class FileConfig:
 
 
 @dataclass
-class PlotCOnfoig:
+class PlotConfoig:
     """Set the plot configurations"""
     # pylint: disable=too-many-instance-attributes
-    title: str = '2D RDF for different ODA concentrations'
+    nr_rows: int = 3
+    nr_columns: int = 3
     xlabel: str = 'r [nm]'
     ylabel: str = 'g(r), a.u.'
-    xlim: list[float] = field(default_factory=lambda: [0, 12])
-    ylim: list[float] = field(default_factory=lambda: [0, 1.05])
     legend_loc: str = 'upper right'
     legend_title: str = 'ODA/nm$^2$'
-    nr_columns: int = 3
-    nr_rows: int = 3
     ylims: tuple[float, float] = (-0.05, 1.1)
+    xlim: list[float] = field(default_factory=lambda: [0, 12])
+    ylim: list[float] = field(default_factory=lambda: [0, 1.05])
+    colors: list[str] = \
+        field(default_factory=lambda: elsevier_plot_tools.CLEAR_COLOR_GRADIENT)
+    linestyle: list[str] = \
+        field(default_factory=lambda: [item[1] for item in
+                                       elsevier_plot_tools.LINESTYLE_TUPLE])
 
 
 class Plot2dRdf:
@@ -85,12 +89,12 @@ class Plot2dRdf:
     config: FileConfig
     data: pd.DataFrame
     fit_data: pd.DataFrame
-    plot_config: PlotCOnfoig
+    plot_config: PlotConfoig
 
     def __init__(self,
                  log: logger.logging.Logger,
                  config: FileConfig = FileConfig(),
-                 plot_config: PlotCOnfoig = PlotCOnfoig()
+                 plot_config: PlotConfoig = PlotConfoig()
                  ) -> None:
         self.info_msg = 'Message from Plot2dRdf:\n'
         self.config = config

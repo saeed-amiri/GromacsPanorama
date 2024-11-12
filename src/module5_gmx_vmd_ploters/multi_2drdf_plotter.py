@@ -67,6 +67,7 @@ class PlotCOnfoig:
     legend_title: str = 'ODA/nm$^2$'
     nr_columns: int = 3
     nr_rows: int = 3
+    ylims: tuple[float, float] = (-0.05, 1.1)
 
 
 class Plot2dRdf:
@@ -156,6 +157,7 @@ class Plot2dRdf:
                   lw=0.5,
                   color='k',
                   )
+        ax_i.set_ylim(self.plot_config.ylims)
 
     def _set_or_remove_ticks(self,
                              ind: int,

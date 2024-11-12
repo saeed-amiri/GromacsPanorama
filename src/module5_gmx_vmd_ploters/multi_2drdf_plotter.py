@@ -142,6 +142,7 @@ class Plot2dRdf:
         ax_i: np.ndarray
         oda: str
         fig_i, ax_i = self._make_axis()
+        last_ind: int = len(ax_i) - 1
         for i, (oda, rdf) in enumerate(self.data.items()):
             if i == 0:
                 x_data: pd.Series = self.data['regions']
@@ -149,6 +150,7 @@ class Plot2dRdf:
                 self._plot_axis(ax_i[i-1], x_data, y_data=rdf)
                 self._add_legend(ax_i[i-1], oda)
             self._set_or_remove_ticks(i-1, ax_i)
+        self._plot_fitted_rdf(ax_i[last_ind], x_data)
         self._save_figure(fig_i)
 
     def _make_axis(self) -> tuple[plt.Figure, np.ndarray]:
@@ -168,13 +170,28 @@ class Plot2dRdf:
         """plot the axis"""
         ax_i.plot(x_data,
                   y_data,
-                  marker='o',
+                  marker='',
                   markersize=0.5,
-                  ls='',
+                  ls='--',
                   lw=0.5,
                   color='k',
                   )
         ax_i.set_ylim(self.plot_config.ylims)
+
+    def _plot_fitted_rdf(self,
+                         ax_i: mp.axes._axes.Axes,
+                         x_data: pd.Series,
+                         ) -> None:
+        """plot the fitted rdf"""
+        for i, (oda, rdf) in enumerate(self.data.items()):
+            if i == 0:
+                continue
+            ax_i.plot(x_data,
+                      rdf / rdf.max(),
+                      lw=0.5,
+                      label=f'{oda} ODA/nm$^2$',)
+        ax_i.set_ylim(self.plot_config.ylims)
+        ax_i.set_yticks([])
 
     def _set_or_remove_ticks(self,
                              ind: int,

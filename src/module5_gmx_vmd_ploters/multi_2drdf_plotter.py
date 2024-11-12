@@ -13,7 +13,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from common import logger
-from common import plot_tools
 from common import xvg_to_dataframe
 from common import elsevier_plot_tools
 from common.colors_text import TextColor as bcolors
@@ -51,6 +50,8 @@ class FileConfig:
             ])
     x_data: str = 'regions'
     y_data: str = 'rdf_2d'
+    normalize_data: bool = True
+    norm_range: tuple[float, float] = (-10, -1)
 
 
 @dataclass
@@ -87,6 +88,7 @@ class Plot2dRdf:
         self.config = config
         self.plot_config = plot_config
         self.read_data(log)
+        self.normalize_data()
         self.plot_data(log)
 
     def read_data(self,
@@ -104,6 +106,18 @@ class Plot2dRdf:
             data[str(nr_oda)] = df_i[self.config.y_data]
 
         self.data = pd.concat(data, axis=1)
+
+    def normalize_data(self) -> None:
+        """normalize the data"""
+        if not self.config.normalize_data:
+            return
+        for i, (oda, rdf) in enumerate(self.data.items()):
+            if i == 0:
+                continue
+            mean_value: float = \
+                rdf[self.config.norm_range[0]:self.config.norm_range[1]].mean()
+            rdf_norm = rdf / mean_value
+            self.data[oda] = rdf_norm
 
     def plot_data(self,
                   log: logger.logging.Logger

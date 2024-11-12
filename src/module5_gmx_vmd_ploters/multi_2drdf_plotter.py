@@ -10,6 +10,7 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+import matplotlib as mp
 import matplotlib.pyplot as plt
 
 from common import logger
@@ -160,7 +161,7 @@ class Plot2dRdf:
 
     def _set_or_remove_ticks(self,
                              ind: int,
-                             ax_i: plt.Axes,
+                             ax_i: np.ndarray  # of plt.Axes
                              ) -> None:
         """set or remove the ticks"""
         # Remove y-ticks for axes not in the first column
@@ -172,7 +173,7 @@ class Plot2dRdf:
             ax_i[ind].set_xticks([])
 
     def _add_legend(self,
-                    ax_i: plt.Axes,
+                    ax_i: mp.axes._axes.Axes,
                     oda: str,
                     ) -> None:
         """add the legend"""

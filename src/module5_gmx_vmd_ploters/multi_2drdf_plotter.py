@@ -68,11 +68,11 @@ class PlotConfoig:
     ylims: tuple[float, float] = (-0.05, 1.1)
     xlim: list[float] = field(default_factory=lambda: [0, 12])
     ylim: list[float] = field(default_factory=lambda: [0, 1.05])
-    colors: list[str] = \
-        field(default_factory=lambda: elsevier_plot_tools.CLEAR_COLOR_GRADIENT)
-    linestyle: list[str] = \
-        field(default_factory=lambda: [item[1] for item in
-                                       elsevier_plot_tools.LINESTYLE_TUPLE])
+    colors: list[str] = field(
+        default_factory=lambda: elsevier_plot_tools.CLEAR_COLOR_GRADIENT)
+    linestyle: list[str] = field(
+        default_factory=lambda: [item[1] for item in
+                                 elsevier_plot_tools.LINESTYLE_TUPLE][::-1])
 
 
 class Plot2dRdf:
@@ -151,7 +151,12 @@ class Plot2dRdf:
             if i == 0:
                 x_data: pd.Series = self.data['regions']
             else:
-                self._plot_axis(ax_i[i-1], x_data, y_data=rdf)
+                self._plot_axis(ax_i[i-1],
+                                x_data,
+                                y_data=rdf,
+                                color=self.plot_config.colors[i-1],
+                                line_style=self.plot_config.linestyle[i-1],
+                                )
                 self._add_legend(ax_i[i-1], oda)
             self._set_or_remove_ticks(i-1, ax_i)
         self._plot_all_rdf(self.data, ax_i[last_ind - 1], x_data)
@@ -172,15 +177,17 @@ class Plot2dRdf:
                    ax_i: mp.axes._axes.Axes,
                    x_data: pd.Series,
                    y_data: pd.Series,
+                   color: str,
+                   line_style: str,
                    ) -> None:
         """plot the axis"""
         ax_i.plot(x_data,
                   y_data,
                   marker='',
                   markersize=0.5,
-                  ls='--',
+                  ls=line_style,
                   lw=1,
-                  color='k',
+                  color=color,
                   )
         ax_i.set_ylim(self.plot_config.ylims)
 

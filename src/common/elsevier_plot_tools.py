@@ -234,7 +234,8 @@ def mk_canvas_multi(size_type: str,
     # Flatten axs if it's a 2D array
     axs = axs_i.flatten() if isinstance(axs_i, np.ndarray) else axs_i
     for ax_i in axs:
-            ax_i.axis('off')
+        ax_i.spines['top'].set_visible(False)
+        ax_i.spines['right'].set_visible(False)
     return fig_i, axs
 
 

@@ -191,19 +191,21 @@ class Plot2dRdf:
                   )
         ax_i.set_ylim(self.plot_config.ylims)
 
-    @staticmethod
-    def _plot_all_rdf(data: pd.DataFrame,
+    def _plot_all_rdf(self,
+                      data: pd.DataFrame,
                       ax_i: mp.axes._axes.Axes,
                       x_data: pd.Series,
                       ) -> None:
         """plot the fitted rdf"""
-        for i, (oda, rdf) in enumerate(data.items()):
+        for i, (_, rdf) in enumerate(data.items()):
             if i == 0:
                 continue
             ax_i.plot(x_data,
                       rdf,
-                      lw=0.5,
-                      label=f'{oda} ODA/nm$^2$',)
+                      lw=1,
+                      color=self.plot_config.colors[i-1],
+                      linestyle=self.plot_config.linestyle[i-1],
+                      )
         ax_i.set_yticks([])
 
     def _set_or_remove_ticks(self,

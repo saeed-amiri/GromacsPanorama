@@ -51,7 +51,6 @@ class FileConfig:
     x_data: str = 'regions'
     y_data: str = 'rdf_2d'
     normalize_data: bool = True
-    norm_range: tuple[float, float] = (-10, -1)
 
 
 @dataclass
@@ -166,7 +165,6 @@ class Plot2dRdf:
         """set or remove the ticks"""
         # Remove y-ticks for axes not in the first column
         if ind % self.plot_config.nr_rows != 0:
-            print('y', ind)
             ax_i[ind].set_yticks([])
         # Remove x-ticks for axes not in the third row
         if ind < (self.plot_config.nr_columns - 1) * self.plot_config.nr_rows \

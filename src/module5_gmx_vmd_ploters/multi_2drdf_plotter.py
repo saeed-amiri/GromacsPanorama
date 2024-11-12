@@ -157,11 +157,13 @@ class Plot2dRdf:
                                 color=self.plot_config.colors[i-1],
                                 line_style=self.plot_config.linestyle[i-1],
                                 )
-                self._add_legend(ax_i[i-1], oda)
+                self._add_legend(ax_i[i-1], f'{oda} ODA/nm$^2$')
             self._set_or_remove_ticks(i-1, ax_i)
         self._plot_all_rdf(self.data, ax_i[last_ind - 1], x_data)
+        self._add_legend(ax_i[last_ind - 1], 'All RDF')
         ax_i[last_ind].set_ylim(self.plot_config.ylims)
         self._plot_all_rdf(self.fit_data, ax_i[last_ind], x_data)
+        self._add_legend(ax_i[last_ind], 'Fitted RDF')
         self._save_figure(fig_i)
 
     def _make_axis(self) -> tuple[plt.Figure, np.ndarray]:
@@ -181,6 +183,7 @@ class Plot2dRdf:
                    line_style: str,
                    ) -> None:
         """plot the axis"""
+        # pylint: disable=too-many-arguments
         ax_i.plot(x_data,
                   y_data,
                   marker='',
@@ -223,15 +226,15 @@ class Plot2dRdf:
 
     def _add_legend(self,
                     ax_i: mp.axes._axes.Axes,
-                    oda: str,
+                    label: str,
                     ) -> None:
         """add the legend"""
         ax_i.text(1.0,
                   .02,
-                  f'{oda} ODA/nm$^2$',
+                  label,
                   ha='right',
                   va='bottom',
-                  fontsize=5,
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT,
                   transform=ax_i.transAxes,
                   )
 

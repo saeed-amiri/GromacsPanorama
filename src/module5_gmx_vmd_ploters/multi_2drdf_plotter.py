@@ -103,7 +103,7 @@ class Plot2dRdf:
             df_i: pd.DataFrame = \
                 xvg_to_dataframe.XvgParser(fname, log, x_type=float).xvg_df
             if i == 0:
-                data['regions'] = df_i[self.config.x_data]
+                data['regions'] = df_i[self.config.x_data] * 0.1  # nm
             data[str(nr_oda)] = df_i[self.config.y_data]
 
         self.data = pd.concat(data, axis=1)

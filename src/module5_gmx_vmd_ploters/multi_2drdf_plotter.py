@@ -142,7 +142,7 @@ class Plot2dRdf:
         ax_i: np.ndarray
         oda: str
         fig_i, ax_i = self._make_axis()
-        last_ind: int = len(ax_i) - 1
+        last_ind: int = len(self.data.columns)
         for i, (oda, rdf) in enumerate(self.data.items()):
             if i == 0:
                 x_data: pd.Series = self.data['regions']
@@ -150,16 +150,18 @@ class Plot2dRdf:
                 self._plot_axis(ax_i[i-1], x_data, y_data=rdf)
                 self._add_legend(ax_i[i-1], oda)
             self._set_or_remove_ticks(i-1, ax_i)
-        self._plot_fitted_rdf(ax_i[last_ind], x_data)
+        self._plot_all_rdf(self.data, ax_i[last_ind - 1], x_data)
+        ax_i[last_ind].set_ylim(self.plot_config.ylims)
+        self._plot_all_rdf(self.fit_data, ax_i[last_ind], x_data)
         self._save_figure(fig_i)
 
     def _make_axis(self) -> tuple[plt.Figure, np.ndarray]:
         """make the axis"""
         return elsevier_plot_tools.mk_canvas_multi(
-            'double_height',
+            'double_column',
             n_rows=self.plot_config.nr_columns,
             n_cols=self.plot_config.nr_rows,
-            aspect_ratio=2,
+            aspect_ratio=1,
             )
 
     def _plot_axis(self,
@@ -173,24 +175,24 @@ class Plot2dRdf:
                   marker='',
                   markersize=0.5,
                   ls='--',
-                  lw=0.5,
+                  lw=1,
                   color='k',
                   )
         ax_i.set_ylim(self.plot_config.ylims)
 
-    def _plot_fitted_rdf(self,
-                         ax_i: mp.axes._axes.Axes,
-                         x_data: pd.Series,
-                         ) -> None:
+    @staticmethod
+    def _plot_all_rdf(data: pd.DataFrame,
+                      ax_i: mp.axes._axes.Axes,
+                      x_data: pd.Series,
+                      ) -> None:
         """plot the fitted rdf"""
-        for i, (oda, rdf) in enumerate(self.data.items()):
+        for i, (oda, rdf) in enumerate(data.items()):
             if i == 0:
                 continue
             ax_i.plot(x_data,
-                      rdf / rdf.max(),
+                      rdf,
                       lw=0.5,
                       label=f'{oda} ODA/nm$^2$',)
-        ax_i.set_ylim(self.plot_config.ylims)
         ax_i.set_yticks([])
 
     def _set_or_remove_ticks(self,

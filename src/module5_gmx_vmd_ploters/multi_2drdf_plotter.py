@@ -115,9 +115,9 @@ class Plot2dRdf:
         for i, (oda, rdf) in enumerate(self.data.items()):
             if i == 0:
                 continue
-            mean_value: float = \
-                rdf[self.config.norm_range[0]:self.config.norm_range[1]].mean()
-            rdf_norm = rdf / mean_value
+            # Calculate the mean of the top 10 maximum points
+            top_10_mean = rdf.nlargest(2).mean()
+            rdf_norm = rdf / top_10_mean
             self.data[oda] = rdf_norm
 
     def plot_data(self,
@@ -130,8 +130,8 @@ class Plot2dRdf:
                 x_data: pd.DataFrame = self.data['regions']
             else:
                 self._plot_axis(ax_i[i-1], x_data, y_data=rdf)
-                self._set_or_remove_ticks(i, ax_i)
                 self._add_legend(ax_i[i-1], oda)
+            self._set_or_remove_ticks(i-1, ax_i)
         self._save_figure(fig_i)
 
     def _make_axis(self) -> tuple[plt.Figure, plt.Axes]:
@@ -166,9 +166,11 @@ class Plot2dRdf:
         """set or remove the ticks"""
         # Remove y-ticks for axes not in the first column
         if ind % self.plot_config.nr_rows != 0:
+            print('y', ind)
             ax_i[ind].set_yticks([])
         # Remove x-ticks for axes not in the third row
-        if ind < (self.plot_config.nr_columns - 1) * self.plot_config.nr_rows:
+        if ind < (self.plot_config.nr_columns - 1) * self.plot_config.nr_rows \
+           or ind == 0:
             ax_i[ind].set_xticks([])
 
     def _add_legend(self,

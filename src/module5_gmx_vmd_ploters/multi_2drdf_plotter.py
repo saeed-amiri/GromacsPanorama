@@ -130,6 +130,7 @@ class Plot2dRdf:
             else:
                 self._plot_axis(ax_i[i-1], x_data, y_data=rdf)
                 self._set_or_remove_ticks(i, ax_i)
+                self._add_legend(ax_i[i-1], oda)
         self._save_figure(fig_i)
 
     def _make_axis(self) -> tuple[plt.Figure, plt.Axes]:
@@ -167,6 +168,20 @@ class Plot2dRdf:
         # Remove x-ticks for axes not in the third row
         if ind < (self.plot_config.nr_columns - 1) * self.plot_config.nr_rows:
             ax_i[ind].set_xticks([])
+
+    def _add_legend(self,
+                    ax_i: plt.Axes,
+                    oda: str,
+                    ) -> None:
+        """add the legend"""
+        ax_i.text(1.0,
+                  .02,
+                  f'{oda} ODA/nm$^2$',
+                  ha='right',
+                  va='bottom',
+                  fontsize=5,
+                  transform=ax_i.transAxes,
+                  )
 
     def _save_figure(self,
                      fig_i: plt.Figure,

@@ -90,6 +90,21 @@ MARKER_SIZE: float = 2.0
 MARKER_COLORS: list[str] = \
     ['black', 'darkred', 'royalblue', 'green', 'orange', 'purple']
 MARKER_SHAPES: list[str] = ['o', 's', 'D', '^', 'v', 'x']
+
+# Marker styles
+MARKER_STYLES = [
+    "o",  # Circle
+    "s",  # Square
+    "D",  # Diamond
+    "^",  # Upward triangle
+    "v",  # Downward triangle
+    "<",  # Leftward triangle
+    ">",  # Rightward triangle
+    "p",  # Pentagon
+    "*",  # Star
+    "h",  # Hexagon
+]
+
 # Output file format
 IMG_FORMAT: str = 'jpg'
 # Python list containing a palette of black shades

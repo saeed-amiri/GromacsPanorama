@@ -73,6 +73,8 @@ class PlotConfoig:
     linestyle: list[str] = field(
         default_factory=lambda: [item[1] for item in
                                  elsevier_plot_tools.LINESTYLE_TUPLE][::-1])
+    markers: list[str] = field(
+        default_factory=lambda: elsevier_plot_tools.MARKER_STYLES)
 
 
 class Plot2dRdf:
@@ -155,8 +157,10 @@ class Plot2dRdf:
                 self._plot_axis(ax_i[i-1],
                                 x_data,
                                 y_data=rdf,
+                                fit_data=self.fit_data[oda],
                                 color=self.plot_config.colors[i-1],
                                 line_style=self.plot_config.linestyle[i-1],
+                                marker=self.plot_config.markers[i-1],
                                 )
                 self._add_label(ax_i[i-1], f'{oda} ODA/nm$^2$')
             self._set_or_remove_ticks(i-1, ax_i)
@@ -180,21 +184,33 @@ class Plot2dRdf:
                    ax_i: mp.axes._axes.Axes,
                    x_data: pd.Series,
                    y_data: pd.Series,
+                   fit_data: pd.Series,
                    color: str,
                    line_style: str,
+                   marker: str,
                    ) -> None:
         """plot the axis"""
         # pylint: disable=too-many-arguments
         ax_i.plot(x_data,
                   y_data,
-                  marker='o',
+                  marker=marker,
                   markersize=0.5,
                   ls='',
                   lw=1,
                   color=color,
-                  label='ODA',
+                  label='g$^*$(r$^*$)',
                   )
-        ax_i.legend(fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT-2)
+        ax_i.plot(x_data,
+                  fit_data,
+                  marker='',
+                  markersize=0,
+                  ls=line_style,
+                  lw=1,
+                  color=color,
+                  label='Fitted',
+                  )
+        ax_i.legend(fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT-3,
+                    loc='upper left')
         ax_i.set_ylim(self.plot_config.ylims)
 
     def _plot_all_rdf(self,

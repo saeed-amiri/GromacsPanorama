@@ -174,6 +174,8 @@ class Plot2dRdf:
 
         self._set_or_remove_ticks(axes)
 
+        self._add_axis_labels(axes)
+
         self._add_grid(axes)
 
         self._save_figure(fig_i)
@@ -282,6 +284,21 @@ class Plot2dRdf:
         """add the grid"""
         for ax_i in axes:
             ax_i.grid(True, which='both', linestyle='--', lw=0.5)
+
+    def _add_axis_labels(self,
+                         axes: np.ndarray  # of plt.Axes
+                         ) -> None:
+        """add the axis labels"""
+        for ind, ax_i in enumerate(axes):
+            if ind % self.plot_config.nr_rows == 0:
+                ax_i.set_ylabel(
+                    self.plot_config.ylabel,
+                    fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+            if ind >= (self.plot_config.nr_columns - 1) * \
+                self.plot_config.nr_rows:
+                ax_i.set_xlabel(
+                    self.plot_config.xlabel,
+                    fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
 
     def _save_figure(self,
                      fig_i: plt.Figure,

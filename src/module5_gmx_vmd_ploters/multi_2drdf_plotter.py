@@ -146,15 +146,15 @@ class Plot2dRdf:
     def plot_data(self) -> None:
         """plot the data"""
         fig_i: plt.Figure
-        ax_i: np.ndarray
+        axes: np.ndarray
         oda: str
-        fig_i, ax_i = self._make_axis()
+        fig_i, axes = self._make_axis()
         last_ind: int = len(self.data.columns)
         for i, (oda, rdf) in enumerate(self.data.items()):
             if i == 0:
                 x_data: pd.Series = self.data['regions']
             else:
-                self._plot_axis(ax_i[i-1],
+                self._plot_axis(axes[i-1],
                                 x_data,
                                 y_data=rdf,
                                 fit_data=self.fit_data[oda],
@@ -162,13 +162,20 @@ class Plot2dRdf:
                                 line_style=self.plot_config.linestyle[i-1],
                                 marker=self.plot_config.markers[i-1],
                                 )
-                self._add_label(ax_i[i-1], f'{oda} ODA/nm$^2$')
-            self._set_or_remove_ticks(i-1, ax_i)
-        self._plot_all_rdf(self.data, ax_i[last_ind - 1], x_data, 'rdf')
-        self._add_label(ax_i[last_ind - 1], 'All RDF')
-        ax_i[last_ind].set_ylim(self.plot_config.ylims)
-        self._plot_all_rdf(self.fit_data, ax_i[last_ind], x_data)
-        self._add_label(ax_i[last_ind], 'Fitted RDF')
+                self._add_label(axes[i-1], f'{oda} ODA/nm$^2$')
+
+        self._plot_all_rdf(self.data, axes[last_ind - 1], x_data, 'rdf')
+        self._add_label(axes[last_ind - 1], 'All RDF')
+        axes[last_ind - 1].set_ylim(self.plot_config.ylims)
+
+        self._plot_all_rdf(self.fit_data, axes[last_ind], x_data)
+        self._add_label(axes[last_ind], 'Fitted RDF')
+        axes[last_ind].set_ylim(self.plot_config.ylims)
+
+        self._set_or_remove_ticks(axes)
+
+        self._add_grid(axes)
+
         self._save_figure(fig_i)
 
     def _make_axis(self) -> tuple[plt.Figure, np.ndarray]:
@@ -226,7 +233,7 @@ class Plot2dRdf:
             if style == 'fitted_rdf':
                 marker = ''
                 linestyle = self.plot_config.linestyle[i-1]
-                lw = 1
+                lw: float = 1.0
             else:
                 marker = self.plot_config.markers[i-1]
                 linestyle = '--'
@@ -239,20 +246,21 @@ class Plot2dRdf:
                       lw=lw,
                       marker=marker,
                       )
-        ax_i.set_yticks([])
+        ax_i.set_yticklabels([])
 
     def _set_or_remove_ticks(self,
-                             ind: int,
-                             ax_i: np.ndarray  # of plt.Axes
+                             axes: np.ndarray  # of plt.Axes
                              ) -> None:
         """set or remove the ticks"""
-        # Remove y-ticks for axes not in the first column
-        if ind % self.plot_config.nr_rows != 0:
-            ax_i[ind].set_yticks([])
-        # Remove x-ticks for axes not in the third row
-        if ind < (self.plot_config.nr_columns - 1) * self.plot_config.nr_rows \
-           or ind == 0:
-            ax_i[ind].set_xticks([])
+        for ind, ax_i in enumerate(axes):
+            # Remove y-ticks for axes not in the first column
+            if ind % self.plot_config.nr_rows != 0:
+                ax_i.set_yticklabels([])
+            # Remove x-ticks for axes not in the third row
+            if ind < (self.plot_config.nr_columns - 1) * \
+               self.plot_config.nr_rows \
+               or ind == 0:
+                ax_i.set_xticklabels([])
 
     def _add_label(self,
                    ax_i: mp.axes._axes.Axes,
@@ -267,6 +275,13 @@ class Plot2dRdf:
                   fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT,
                   transform=ax_i.transAxes,
                   )
+
+    def _add_grid(self,
+                  axes: np.ndarray  # of plt.Axes
+                  ) -> None:
+        """add the grid"""
+        for ax_i in axes:
+            ax_i.grid(True, which='both', linestyle='--', lw=0.5)
 
     def _save_figure(self,
                      fig_i: plt.Figure,

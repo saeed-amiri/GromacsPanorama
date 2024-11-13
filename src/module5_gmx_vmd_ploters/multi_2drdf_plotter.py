@@ -158,13 +158,13 @@ class Plot2dRdf:
                                 color=self.plot_config.colors[i-1],
                                 line_style=self.plot_config.linestyle[i-1],
                                 )
-                self._add_legend(ax_i[i-1], f'{oda} ODA/nm$^2$')
+                self._add_label(ax_i[i-1], f'{oda} ODA/nm$^2$')
             self._set_or_remove_ticks(i-1, ax_i)
         self._plot_all_rdf(self.data, ax_i[last_ind - 1], x_data)
-        self._add_legend(ax_i[last_ind - 1], 'All RDF')
+        self._add_label(ax_i[last_ind - 1], 'All RDF')
         ax_i[last_ind].set_ylim(self.plot_config.ylims)
         self._plot_all_rdf(self.fit_data, ax_i[last_ind], x_data)
-        self._add_legend(ax_i[last_ind], 'Fitted RDF')
+        self._add_label(ax_i[last_ind], 'Fitted RDF')
         self._save_figure(fig_i)
 
     def _make_axis(self) -> tuple[plt.Figure, np.ndarray]:
@@ -225,10 +225,10 @@ class Plot2dRdf:
            or ind == 0:
             ax_i[ind].set_xticks([])
 
-    def _add_legend(self,
-                    ax_i: mp.axes._axes.Axes,
-                    label: str,
-                    ) -> None:
+    def _add_label(self,
+                   ax_i: mp.axes._axes.Axes,
+                   label: str,
+                   ) -> None:
         """add the legend"""
         ax_i.text(1.0,
                   .02,
@@ -244,7 +244,7 @@ class Plot2dRdf:
                      ) -> None:
         """save the figure"""
         elsevier_plot_tools.save_close_fig(
-            fig_i, 'multi_2d_rdf.jpg', show_legend=False)
+            fig_i, 'multi_2d_rdf.jpg', show_legend=True, loc='upper left')
 
     def write_msg(self,
                   log: logger.logging.Logger

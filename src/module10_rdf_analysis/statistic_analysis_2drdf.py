@@ -70,3 +70,23 @@ distributions. Each method offers unique insights, as described below.
 Each of these methods enables nuanced statistical analysis, helping to
 uncover trends, differences, and patterns within data sets.
 """
+
+import hydra
+from hydra.core.config_store import ConfigStore
+
+
+from module10_rdf_analysis.config import StatisticsConfig
+
+conf_store = ConfigStore.instance()
+conf_store.store(name="configs", node=StatisticsConfig)
+
+@hydra.main(version_base=None,
+            config_path="conf",
+            config_name="config")
+def main(cfg: StatisticsConfig) -> None:
+    # pylint: disable=missing-function-docstring
+    pass
+
+if __name__ == "__main__":
+    # pylint: disable=no-value-for-parameter
+    main()

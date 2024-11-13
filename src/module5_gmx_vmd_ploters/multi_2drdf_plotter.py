@@ -187,12 +187,14 @@ class Plot2dRdf:
         # pylint: disable=too-many-arguments
         ax_i.plot(x_data,
                   y_data,
-                  marker='',
+                  marker='o',
                   markersize=0.5,
-                  ls=line_style,
+                  ls='',
                   lw=1,
                   color=color,
+                  label='ODA',
                   )
+        ax_i.legend(fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT-2)
         ax_i.set_ylim(self.plot_config.ylims)
 
     def _plot_all_rdf(self,

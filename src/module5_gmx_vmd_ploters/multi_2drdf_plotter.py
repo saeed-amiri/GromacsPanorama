@@ -118,6 +118,7 @@ class Plot2dRdf:
                 xvg_to_dataframe.XvgParser(fname, log, x_type=float).xvg_df
             if i == 0:
                 data['regions'] = df_i[self.config.x_data] * 0.1  # nm
+                fit_data['regions'] = df_i[self.config.x_data] * 0.1  # nm
             data[str(nr_oda)] = df_i[self.config.y_data]
             fit_data[str(nr_oda)] = df_i[self.config.fit_data]
 

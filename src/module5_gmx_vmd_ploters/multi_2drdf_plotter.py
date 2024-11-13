@@ -165,11 +165,11 @@ class Plot2dRdf:
                 self._add_label(axes[i-1], f'{oda} ODA/nm$^2$')
 
         self._plot_all_rdf(self.data, axes[last_ind - 1], x_data, 'rdf')
-        self._add_label(axes[last_ind - 1], 'All RDF')
+        self._add_label(axes[last_ind - 1], r'All g$^*$(r$^*$)')
         axes[last_ind - 1].set_ylim(self.plot_config.ylims)
 
         self._plot_all_rdf(self.fit_data, axes[last_ind], x_data)
-        self._add_label(axes[last_ind], 'Fitted RDF')
+        self._add_label(axes[last_ind], r'Fitted g$^*$(r$^*$)')
         axes[last_ind].set_ylim(self.plot_config.ylims)
 
         self._set_or_remove_ticks(axes)
@@ -201,11 +201,11 @@ class Plot2dRdf:
         ax_i.plot(x_data,
                   y_data,
                   marker=marker,
-                  markersize=0.5,
+                  markersize=1,
                   ls='',
                   lw=1,
                   color=color,
-                  label='g$^*$(r$^*$)',
+                  label=r'g$^*$(r$^*$)',
                   )
         ax_i.plot(x_data,
                   fit_data,

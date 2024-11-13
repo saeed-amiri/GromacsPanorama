@@ -76,16 +76,23 @@ from hydra.core.config_store import ConfigStore
 
 
 from module10_rdf_analysis.config import StatisticsConfig
+from module10_rdf_analysis.statistic_analysis_2drdf_read_data import ReadData
+
+from common import logger
 
 conf_store = ConfigStore.instance()
 conf_store.store(name="configs", node=StatisticsConfig)
+
 
 @hydra.main(version_base=None,
             config_path="conf",
             config_name="config")
 def main(cfg: StatisticsConfig) -> None:
     # pylint: disable=missing-function-docstring
-    pass
+    log: logger.logging.Logger = \
+        logger.setup_logger('statistic_analysis_2drdf.log')
+    rdf_data: "ReadData" = ReadData(cfg, log)
+
 
 if __name__ == "__main__":
     # pylint: disable=no-value-for-parameter

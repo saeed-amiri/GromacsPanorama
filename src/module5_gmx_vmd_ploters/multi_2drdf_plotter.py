@@ -164,7 +164,7 @@ class Plot2dRdf:
                                 )
                 self._add_label(ax_i[i-1], f'{oda} ODA/nm$^2$')
             self._set_or_remove_ticks(i-1, ax_i)
-        self._plot_all_rdf(self.data, ax_i[last_ind - 1], x_data)
+        self._plot_all_rdf(self.data, ax_i[last_ind - 1], x_data, 'rdf')
         self._add_label(ax_i[last_ind - 1], 'All RDF')
         ax_i[last_ind].set_ylim(self.plot_config.ylims)
         self._plot_all_rdf(self.fit_data, ax_i[last_ind], x_data)
@@ -217,16 +217,27 @@ class Plot2dRdf:
                       data: pd.DataFrame,
                       ax_i: mp.axes._axes.Axes,
                       x_data: pd.Series,
+                      style: str = 'fitted_rdf',
                       ) -> None:
         """plot the fitted rdf"""
         for i, (_, rdf) in enumerate(data.items()):
             if i == 0:
                 continue
+            if style == 'fitted_rdf':
+                marker = ''
+                linestyle = self.plot_config.linestyle[i-1]
+                lw = 1
+            else:
+                marker = self.plot_config.markers[i-1]
+                linestyle = '--'
+                lw = 0.5
             ax_i.plot(x_data,
                       rdf,
-                      lw=1,
+                      markersize=0.5,
                       color=self.plot_config.colors[i-1],
-                      linestyle=self.plot_config.linestyle[i-1],
+                      linestyle=linestyle,
+                      lw=lw,
+                      marker=marker,
                       )
         ax_i.set_yticks([])
 

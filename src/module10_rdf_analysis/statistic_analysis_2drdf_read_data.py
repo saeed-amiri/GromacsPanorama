@@ -4,9 +4,11 @@ Read rdf data from files
 """
 
 import pandas as pd
-from common import xvg_to_dataframe
-from common import logger
 
+from common import logger
+from common import xvg_to_dataframe
+
+from module10_rdf_analysis.config import StatisticsConfig
 
 class ReadData:
     """Read the data from the files"""
@@ -14,7 +16,7 @@ class ReadData:
     _slots__ = ['config', 'data', 'fit_data']
 
     def __init__(self,
-                 config: dict,
+                 config: StatisticsConfig,
                  log: logger.logging.Logger
                  ) -> None:
         self.config = config
@@ -24,7 +26,7 @@ class ReadData:
                   log: logger.logging.Logger
                   ) -> None:
         """read the data"""
-        data: dict[str, pd.Series] = {}
+        data: StatisticsConfig[str, pd.Series] = {}
         fit_data: dict[str, pd.Series] = {}
         xdata: str = self.config.files.xdata
         ydata: str = self.config.files.ydata

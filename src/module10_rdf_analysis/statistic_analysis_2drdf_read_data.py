@@ -45,3 +45,23 @@ class ReadData:
 
         self.data = pd.concat(data, axis=1)
         self.fit_data = pd.concat(fit_data, axis=1)
+
+
+class ProcessData(ReadData):
+    """Process the data"""
+    # pylint: disable=too-few-public-methods
+    __slots__ = ['config', 'data', 'fit_data']
+
+    def __init__(self,
+                 config: StatisticsConfig,
+                 log: logger.logging.Logger
+                 ) -> None:
+        super().__init__(config, log)
+        self.config = config
+        self.process_data()
+
+    def process_data(self) -> None:
+        """Process the data"""
+        for i in self.data.columns:
+            self.data[i] /= self.data[i].max()
+            self.fit_data[i] /= self.fit_data[i].max()

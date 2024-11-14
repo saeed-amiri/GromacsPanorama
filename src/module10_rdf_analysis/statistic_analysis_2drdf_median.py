@@ -94,8 +94,9 @@ class CalculateMedian:
         """
         Write the median to a file
         """
-        extra_comments: str = \
-            'median of the 2D RDF data, for normalized data and fitted data'
+        extra_comments: str = ('median of the 2D RDF data, for normalized data'
+                               ' and fitted data, by:'
+                               f' {self.__module__}')
         file_writer.write_xvg(
             median_df,
             log,

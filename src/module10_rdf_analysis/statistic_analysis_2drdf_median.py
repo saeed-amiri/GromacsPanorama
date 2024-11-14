@@ -8,39 +8,34 @@ import numpy as np
 from common import logger
 from common import file_writer
 
+from module10_rdf_analysis.config import StatisticsConfig
+from module10_rdf_analysis.statistic_analysis_2drdf_plots import PlotStatistics
+
 
 class CalculateMedian:
     """
     Apply Median to the 2D RDF data
     """
-    _slots__ = ['xdata', 'data', 'fit_data', 'info_msg']
+    _slots__ = ['data', 'fit_data', 'info_msg']
 
-    xdata: pd.Series
     data: pd.DataFrame
     fit_data: pd.DataFrame
     info_msg: str = "Message from CalculateMedian::\n"
 
     def __init__(self,
-                 xdata: pd.Series,
                  data: pd.DataFrame,
                  fit_data: pd.DataFrame,
-                 log: logger.logging.Logger
+                 log: logger.logging.Logger,
+                 config: StatisticsConfig
                  ) -> None:
-        self.xdata = xdata
+        # pylint: disable=too-many-arguments
         self.data = data
         self.fit_data = fit_data
-        self.normal_tests(log)
-
-    def normal_tests(self,
-                     log: logger.logging.Logger
-                     ) -> None:
-        """
-        Test the normality of the data
-        """
-        self.get_median(log)
+        self.get_median(log, config)
 
     def get_median(self,
-                   log: logger.logging.Logger
+                   log: logger.logging.Logger,
+                   config: StatisticsConfig
                    ) -> None:
         """
         Get the median of the data
@@ -52,6 +47,7 @@ class CalculateMedian:
         fitted_median: np.ndarray = self._calculate_median(self.fit_data)
         median_df: pd.DataFrame = \
             self.arr_to_df(rdf_median, fitted_median)
+        PlotStatistics(median_df, log, config)
         self.write_median(median_df, log)
 
     @staticmethod
@@ -60,7 +56,6 @@ class CalculateMedian:
         """
         Get the median of the raw data
         """
-        print('data shape:', len(data.columns))
         median_arr: np.ndarray = np.zeros((len(data.columns), 2))
         for idx, col in enumerate(data.columns):
             rdf: np.ndarray = np.asanyarray(data[col])

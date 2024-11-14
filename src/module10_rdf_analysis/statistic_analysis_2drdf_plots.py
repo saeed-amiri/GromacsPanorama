@@ -17,12 +17,10 @@ class PlotStatistics:
     info_msg: str = "Message from PlotStatistics:\n"
 
     def __init__(self,
-                 xdata: pd.Series,
                  ydata: pd.DataFrame,
                  log: logger.logging.Logger,
                  config: StatisticsConfig
                  ) -> None:
-        self.xdata = xdata
         self.ydata = ydata
         self.plot_statistics(log, config.plot_config)
 

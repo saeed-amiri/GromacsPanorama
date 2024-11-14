@@ -1,2 +1,4 @@
 defaults:
   - files: rdf
+  - plots:
+      median

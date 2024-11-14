@@ -4,7 +4,6 @@ Applying noraml statistics to the 2D RDF data
 
 import pandas as pd
 import numpy as np
-import scipy.stats as stats
 
 from common import logger
 
@@ -13,14 +12,22 @@ class NormalStatistics:
     """
     Apply normal statistics to the 2D RDF data
     """
+    _slots__ = ['xdata', 'data', 'fit_data', 'info_msg']
 
+    xdata: pd.Series
+    data: pd.DataFrame
+    fit_data: pd.DataFrame
     info_msg: str = "Message from NormalStatistics:\n"
 
     def __init__(self,
+                 xdata: pd.Series,
                  data: pd.DataFrame,
+                 fit_data: pd.DataFrame,
                  log: logger.logging.Logger
                  ) -> None:
+        self.xdata = xdata
         self.data = data
+        self.fit_data = fit_data
         self.normal_tests(log)
 
     def normal_tests(self,

@@ -4,6 +4,7 @@ xvg, gro, pdb, ...
 
 import os
 import warnings
+import datetime
 import pandas as pd
 
 from common import logger
@@ -34,6 +35,7 @@ def write_xvg(df_i: pd.DataFrame,
     columns: list[str] = df_i.columns.to_list()
 
     header_lines: list[str] = [
+        f"# {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         f'# Written by {write_xvg.__module__}',
         f"# Current directory: {os.getcwd()}",
         f"# {extra_comments}\n"

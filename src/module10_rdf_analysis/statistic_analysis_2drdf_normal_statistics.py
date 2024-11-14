@@ -1,5 +1,5 @@
 """
-Applying noraml statistics to the 2D RDF data
+Applying median statistics to the 2D RDF data
 """
 
 import pandas as pd
@@ -9,16 +9,16 @@ from common import logger
 from common import file_writer
 
 
-class NormalStatistics:
+class CalculateMedian:
     """
-    Apply normal statistics to the 2D RDF data
+    Apply Median to the 2D RDF data
     """
     _slots__ = ['xdata', 'data', 'fit_data', 'info_msg']
 
     xdata: pd.Series
     data: pd.DataFrame
     fit_data: pd.DataFrame
-    info_msg: str = "Message from NormalStatistics:\n"
+    info_msg: str = "Message from CalculateMedian::\n"
 
     def __init__(self,
                  xdata: pd.Series,

@@ -1,0 +1,15 @@
+plot_config:
+    title: RDF of ODA
+    xlabel: ODA/nm$^2$
+    ylabel: medium RDF
+    legend: True
+    legend_loc: upper left
+    savefig: median.jpg
+    show: True
+    colors: ['darkred', 'darkblue']
+    markers: ['o', 's']
+    linestyles: ['-', '--']
+    linewidths: [1, 1]
+    markersizes: [3, 3]
+    ylim: [0.25, 1.05]
+    xlim: [0, 55]

@@ -1,0 +1,15 @@
+plot_config:
+    title: turn point of RDF
+    xlabel: ODA/nm$^2$
+    ylabel: turning point [nm]
+    legend: True
+    legend_loc: upper left
+    savefig: fit_turn_points.jpg
+    show: True
+    colors: ['darkred']
+    markers: ['o']
+    linestyles: ['-']
+    linewidths: [1]
+    markersizes: [3]
+    ylim: [2, 6]
+    xlim: [0, 55]

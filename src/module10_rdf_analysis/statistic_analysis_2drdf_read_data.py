@@ -33,12 +33,12 @@ class ReadData:
         """read the data"""
         data: StatisticsConfig[str, pd.Series] = {}
         fit_data: dict[str, pd.Series] = {}
-        xdata: str = self.config.files.xdata
-        ydata: str = self.config.files.ydata
-        fitted_data: str = self.config.files.fitted_data
+        xdata: str = self.config.files.rdf.xdata
+        ydata: str = self.config.files.rdf.ydata
+        fitted_data: str = self.config.files.rdf.fitted_data
 
         for i, (oda, fname) in enumerate(
-           self.config.files['file_names'].items()):
+           self.config.files.rdf['file_names'].items()):
             nr_oda = oda
             df_i: pd.DataFrame = \
                 xvg_to_dataframe.XvgParser(fname, log, x_type=float).xvg_df

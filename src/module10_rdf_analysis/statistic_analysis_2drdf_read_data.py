@@ -13,7 +13,12 @@ from module10_rdf_analysis.config import StatisticsConfig
 class ReadData:
     """Read the data from the files"""
     # pylint: disable=too-few-public-methods
-    _slots__ = ['config', 'data', 'fit_data']
+    _slots__ = ['xdata', 'data', 'fit_data', 'config']
+
+    xdata: pd.Series
+    data: pd.DataFrame
+    fit_data: pd.DataFrame
+    config: StatisticsConfig
 
     def __init__(self,
                  config: StatisticsConfig,
@@ -38,13 +43,13 @@ class ReadData:
             df_i: pd.DataFrame = \
                 xvg_to_dataframe.XvgParser(fname, log, x_type=float).xvg_df
             if i == 0:
-                data[xdata] = df_i[xdata] * 0.1  # nm
-                fit_data[xdata] = df_i[xdata] * 0.1  # nm
+                xdata = df_i[xdata] * 0.1  # nm
             data[str(nr_oda)] = df_i[ydata]
             fit_data[str(nr_oda)] = df_i[fitted_data]
 
         self.data = pd.concat(data, axis=1)
         self.fit_data = pd.concat(fit_data, axis=1)
+        self.xdata = xdata
 
 
 class ProcessData(ReadData):

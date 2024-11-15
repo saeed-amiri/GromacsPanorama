@@ -1,4 +1,5 @@
+# config/config.yaml
 defaults:
-  - files: rdf
-  - plots:
-      median
+  - files@files.rdf: rdf          # Includes files/rdf.yaml under cfg.files.rdf
+  - files@files.fitted: fitted    # Includes files/fitted.yaml under cfg.files.fitted
+  - plots@plots.median: median    # Includes plots/median.yaml

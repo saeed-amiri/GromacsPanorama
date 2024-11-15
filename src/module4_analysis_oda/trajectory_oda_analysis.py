@@ -139,6 +139,5 @@ if __name__ == '__main__':
         print(f"{bcolors.FAIL}{MSG}{bcolors.ENDC}")
         sys.exit(1)
     else:
-        LOG.error(MSG := "Failed to initialize ODA analysis")
-        print(f"{bcolors.FAIL}{MSG}{bcolors.ENDC}")
-        sys.exit(1)
+        LOG.info(MSG := "ODA analysis is doen.")
+        sys.exit(f"{bcolors.CAUTION}{MSG}{bcolors.ENDC}")

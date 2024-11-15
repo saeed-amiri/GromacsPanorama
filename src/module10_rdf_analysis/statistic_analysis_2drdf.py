@@ -19,14 +19,6 @@ distributions. Each method offers unique insights, as described below.
     The square of the standard deviation, measuring data dispersion
     relative to the mean.
 
-- **Skewness**:
-    Measures the asymmetry of the data distribution; positive values
-    indicate right skew, negative values indicate left skew.
-
-- **Kurtosis**:
-    Reflects the "tailedness" of the distribution; high kurtosis
-    indicates more outliers, while low kurtosis suggests fewer.
-
 - **Confidence Interval**:
     Provides a range within which the true mean is likely to fall,
     offering a measure of uncertainty.
@@ -76,9 +68,12 @@ from hydra.core.config_store import ConfigStore
 
 
 from module10_rdf_analysis.config import StatisticsConfig
-from module10_rdf_analysis.statistic_analysis_2drdf_read_data import ReadData
-
+from module10_rdf_analysis.statistic_analysis_2drdf_read_data import \
+    ProcessData
+from module10_rdf_analysis.statistic_analysis_2drdf_median import \
+    CalculateMedian
 from common import logger
+
 
 conf_store = ConfigStore.instance()
 conf_store.store(name="configs", node=StatisticsConfig)
@@ -91,7 +86,12 @@ def main(cfg: StatisticsConfig) -> None:
     # pylint: disable=missing-function-docstring
     log: logger.logging.Logger = \
         logger.setup_logger('statistic_analysis_2drdf.log')
-    rdf_data: "ReadData" = ReadData(cfg, log)
+    # read and process the data
+    rdf_data: "ProcessData" = ProcessData(cfg, log)
+
+    # apply normal statistics to the data
+    CalculateMedian(
+        rdf_data.data, rdf_data.fit_data, log, cfg.plots.median)
 
 
 if __name__ == "__main__":

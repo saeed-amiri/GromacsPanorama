@@ -19,10 +19,14 @@ class PlotStatistics:
     def __init__(self,
                  ydata: pd.DataFrame,
                  log: logger.logging.Logger,
-                 config: StatisticsConfig
+                 config: StatisticsConfig,
+                 err_plot: bool = False
                  ) -> None:
         self.ydata = ydata
-        self.plot_statistics(log, config.plot_config)
+        if err_plot:
+            self.plot_statistics_with_error(log, config.plot_config)
+        else:
+            self.plot_statistics(log, config.plot_config)
 
     def plot_statistics(self,
                         log: logger.logging.Logger,
@@ -55,6 +59,46 @@ class PlotStatistics:
                                            show_legend=config.legend)
         log.info(f"{self.info_msg}")
         log.info(f"Statistics plot saved as {config.savefig}\n")
+
+    def plot_statistics_with_error(self,
+                                   log: logger.logging.Logger,
+                                   config: StatisticsConfig
+                                   ) -> None:
+        """
+        Plot the statistics with error bars
+        """
+        if 'y_err' not in config:
+
+            self.info_msg += ("\nNo error data found in the ydata, returning"
+                              " plot without error bars")
+            self.plot_statistics(log, config)
+        figure: tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
+            'single_column', aspect_ratio=1)
+        fig_i, ax_i = figure
+        x_data = self.ydata.index
+        y_data = self.ydata[config.y_data]
+        y_err = self.ydata[config.y_err]
+        ax_i.errorbar(x_data,
+                      y_data,
+                      yerr=y_err,
+                      label='midpoints',
+                      color=config.colors[0],
+                      linestyle=config.linestyles[0],
+                      marker=config.markers[0],
+                      markersize=config.markersizes[0],
+                      )
+        ax_i.set_xlabel(config.xlabel)
+        ax_i.set_ylabel(config.ylabel)
+        ax_i.legend(loc=config.legend_loc)
+        ax_i.set_xlim(config.xlim)
+        ax_i.set_ylim(config.ylim)
+        self.add_text(ax_i, config)
+        elsevier_plot_tools.save_close_fig(fig_i,
+                                           config.savefig,
+                                           loc=config.legend_loc,
+                                           show_legend=config.legend)
+        log.info(f"{self.info_msg}")
+        log.info(f"Statistics err plot saved as {config.savefig}\n")
 
     def add_text(self,
                  ax_i: plt.Axes,

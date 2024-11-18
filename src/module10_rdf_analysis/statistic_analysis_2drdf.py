@@ -72,6 +72,11 @@ from module10_rdf_analysis.statistic_analysis_2drdf_read_data import \
     ProcessData
 from module10_rdf_analysis.statistic_analysis_2drdf_median import \
     CalculateMedian
+from module10_rdf_analysis.statistic_analysis_2drdf_turn_points import \
+    AnalysisFitParameters
+from module10_rdf_analysis.statistic_analysis_2drdf_contact import \
+    ContactAnalysis
+
 from common import logger
 
 
@@ -92,6 +97,12 @@ def main(cfg: StatisticsConfig) -> None:
     # apply normal statistics to the data
     CalculateMedian(
         rdf_data.data, rdf_data.fit_data, log, cfg.plots.median)
+
+    # read and process the fitted parameters
+    fit_data: "AnalysisFitParameters" = AnalysisFitParameters(cfg, log)
+
+    # read and process the contact data
+    contact_data: "ContactAnalysis" = ContactAnalysis(cfg, log)
 
 
 if __name__ == "__main__":

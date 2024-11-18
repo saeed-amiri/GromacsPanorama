@@ -101,9 +101,11 @@ class SurfactantDensityAroundNanoparticle:
         if residue == 'AMINO_ODN':
             self.rdf_2d = self._clean_np(self.rdf_2d)
             self.time_dependent_rdf, self.time_dependent_ave_density, \
-                all_turn_points = self.calculate_time_dependent_densities(
-                    amino_arr, num_oda_in_radius, regions, log)
+                all_turn_points, medians = \
+                self.calculate_time_dependent_densities(
+                        amino_arr, num_oda_in_radius, regions, log)
             self._write_turn_points(all_turn_points, log)
+            self._write_medians(medians, log)
             self._fit_and_set_fitted2d_rdf(log)
         self._comput_and_set_moving_average(3)
         return regions
@@ -203,12 +205,15 @@ class SurfactantDensityAroundNanoparticle:
                                                       dict[float, float]],
                                                       dict[int,
                                                       dict[float, float]],
-                                                      list[tuple[float, ...]]]:
+                                                      list[tuple[float, ...]],
+                                                      dict[int, tuple[float,
+                                                                      float]]]:
         """calculate avedensity and rdf as function of time"""
         step: int = self.param_config.time_dependent_step
         step = 1
         time_dependent_rdf: dict[int, dict[float, float]] = {}
         time_dependent_ave_density: dict[int, dict[float, float]] = {}
+        medians: dict[int, tuple[float, float]] = {}
         points: list[tuple[float, float, float]] = []
         for i in range(0, amino_arr.shape[0], step):
             amino_arr_i = amino_arr[:i].copy()
@@ -218,6 +223,8 @@ class SurfactantDensityAroundNanoparticle:
             try:
                 rdf_i = self._clean_np(rdf_i)
                 fitted_rdf = fit_rdf.FitRdf2dTo5PL2S(rdf_i, log)
+                medians[i] = (np.median(list(rdf_i.values())),
+                              np.median(list(fitted_rdf.fitted_rdf.values())))
                 time_dependent_rdf[i] = fitted_rdf.fitted_rdf
                 first_turn = fitted_rdf.first_turn
                 midpoint = fitted_rdf.midpoind
@@ -227,7 +234,7 @@ class SurfactantDensityAroundNanoparticle:
                     self._comput_avg_density(density_per_region)
             except RuntimeError:
                 pass
-        return time_dependent_rdf, time_dependent_ave_density, points
+        return time_dependent_rdf, time_dependent_ave_density, points, medians
 
     @staticmethod
     def _compute_density_per_region(regions: list[float],
@@ -443,6 +450,19 @@ class SurfactantDensityAroundNanoparticle:
                               'Turn points of the fitted rdf',
                               'Frame', 'Turn points (nm)')
         self.info_msg += '\tThe turn points are written to `turn_points.xvg`\n'
+
+    def _write_medians(self,
+                       medians: dict[int, tuple[float, float]],
+                       log: logger.logging.Logger
+                       ) -> None:
+        """write the medians to the a xvg file"""
+        if not medians:
+            return
+        medians_df: pd.DataFrame = pd.DataFrame(medians).T
+        medians_df.columns = ['rdf_median', 'fitted_median']
+        file_writer.write_xvg(medians_df, log, 'medians.xvg',
+                              'Medians of the rdf and fitted rdf',
+                              'Frame', 'Median')
 
     @staticmethod
     def _interpolate_data_to_fix_length(regions: list[float],

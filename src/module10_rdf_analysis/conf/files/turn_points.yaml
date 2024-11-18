@@ -1,3 +1,13 @@
-file_name: fit_parameters.xvg
-xdata: nr_oda
-ydata: midpoint
+avg_fname: fit_parameters.xvg
+avg_xdata: nr_oda
+avg_ydata: midpoint
+turn_points_files:
+    5: 5_turn_points.xvg
+    10: 10_turn_points.xvg
+    15: 15_turn_points.xvg
+    20: 20_turn_points.xvg
+    30: 30_turn_points.xvg
+    40: 40_turn_points.xvg
+    50: 50_turn_points.xvg
+turn_points_xdata: Frame
+turn_points_ydata: midpoint

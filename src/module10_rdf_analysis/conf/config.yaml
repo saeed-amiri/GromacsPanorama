@@ -1,6 +1,6 @@
 # config/config.yaml
 defaults:
-  - files@files.rdf: rdf          # Includes files/rdf.yaml
-  - files@files.fitted: fitted    # Includes files/fitted.yaml
-  - plots@plots.median: median    # Includes plots/median.yaml
-  - plots@plots.fitted: fitted    # Includes plots/fitted.yaml
+  - files@files.rdf: rdf                   # Includes files/rdf.yaml
+  - files@files.turn_points: turn_points   # Includes files/turn_points.yaml
+  - plots@plots.median: median             # Includes plots/median.yaml
+  - plots@plots.turn_points: turn_points   # Includes plots/turn_points.yaml

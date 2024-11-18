@@ -131,8 +131,12 @@ class FitRdf2dTo5PL2S:
         g_initial_guess: float = \
             float(np.abs(np.min(curvature)/np.max(curvature)))
 
-        b_initial_guess: float = 1.0
-        response_infinite = max(rdf_values)
+        b_initial_guess: float = 5.0
+        # response_infinite = max(rdf_values)
+        # Assuming rdf_values is a Pandas Series or a NumPy array
+        rdf_values = np.array(rdf_values)
+        # Get the 4 largest values and calculate their mean
+        response_infinite = np.mean(np.sort(rdf_values)[-4:])
         initial_guesses = [c_initial_guess,
                            b_initial_guess,
                            g_initial_guess,

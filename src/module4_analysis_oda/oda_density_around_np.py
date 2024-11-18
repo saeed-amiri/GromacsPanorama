@@ -16,6 +16,7 @@ from common import my_tools
 from common import static_info as stinfo
 from common import xvg_to_dataframe as xvg
 from common.colors_text import TextColor as bcolors
+from common import file_writer
 
 from module4_analysis_oda import fit_rdf
 
@@ -99,10 +100,10 @@ class SurfactantDensityAroundNanoparticle:
 
         if residue == 'AMINO_ODN':
             self._clean_np()
-            self.time_dependent_rdf, self.time_dependent_ave_density = \
-                self.calculate_time_dependent_densities(
+            self.time_dependent_rdf, self.time_dependent_ave_density, \
+                all_turn_points = self.calculate_time_dependent_densities(
                     amino_arr, num_oda_in_radius, regions, log)
-
+            self._write_turn_points(all_turn_points, log)
             self._fit_and_set_fitted2d_rdf(log)
         self._comput_and_set_moving_average(3)
         return regions
@@ -198,24 +199,31 @@ class SurfactantDensityAroundNanoparticle:
                                            ) -> tuple[dict[int,
                                                       dict[float, float]],
                                                       dict[int,
-                                                      dict[float, float]]]:
+                                                      dict[float, float]],
+                                                      list[tuple[float, ...]]]:
         """calculate avedensity and rdf as function of time"""
         step: int = self.param_config.time_dependent_step
+        step = 1
         time_dependent_rdf: dict[int, dict[float, float]] = {}
         time_dependent_ave_density: dict[int, dict[float, float]] = {}
+        points: list[tuple[float, float, float]] = []
         for i in range(0, amino_arr.shape[0], step):
             amino_arr_i = amino_arr[:i].copy()
             density_per_region, num_oda_in_radius = \
                 self.initialize_calculation(amino_arr_i, regions, log)
             rdf_i = self._comput_2d_rdf(density_per_region, num_oda_in_radius)
             try:
-                time_dependent_rdf[i] = \
-                    fit_rdf.FitRdf2dTo5PL2S(rdf_i, log).fitted_rdf
+                fitted_rdf = fit_rdf.FitRdf2dTo5PL2S(rdf_i, log)
+                time_dependent_rdf[i] = fitted_rdf.fitted_rdf
+                first_turn = fitted_rdf.first_turn
+                midpoint = fitted_rdf.midpoind
+                second_turn = fitted_rdf.second_turn
+                points.append((first_turn, midpoint, second_turn))
                 time_dependent_ave_density[i] = \
                     self._comput_avg_density(density_per_region)
             except RuntimeError:
                 pass
-        return time_dependent_rdf, time_dependent_ave_density
+        return time_dependent_rdf, time_dependent_ave_density, points
 
     @staticmethod
     def _compute_density_per_region(regions: list[float],
@@ -376,7 +384,7 @@ class SurfactantDensityAroundNanoparticle:
     def _prepare_arraies_for_xvg(self,
                                  regions: list[float],
                                  log: logger.logging.Logger
-                                 ) -> pd.DataFrame:
+                                 ) -> pd.DataFrame | None | bool:
         """convert the arraies to one dataframe to write into xvg file"""
         columns: list[str] = self._get_xvg_columns()
         if not self._check_denisty(log):
@@ -415,6 +423,22 @@ class SurfactantDensityAroundNanoparticle:
             warnings.warn(msg, UserWarning)
             return False
         return True
+
+    def _write_turn_points(self,
+                           all_turn_points: list[tuple[float, ...]],
+                           log: logger.logging.Logger
+                           ) -> None:
+        """write the turn points to the a xvg file"""
+        if not all_turn_points:
+            return
+        turn_points_df: pd.DataFrame = pd.DataFrame(all_turn_points,
+                                                    columns=['first_turn',
+                                                             'midpoint',
+                                                             'second_turn'])
+        file_writer.write_xvg(turn_points_df, log, 'turn_points.xvg',
+                              'Turn points of the fitted rdf',
+                              'Frame', 'Turn points (nm)')
+        self.info_msg += '\tThe turn points are written to `turn_points.xvg`\n'
 
     @staticmethod
     def _interpolate_data_to_fix_length(regions: list[float],

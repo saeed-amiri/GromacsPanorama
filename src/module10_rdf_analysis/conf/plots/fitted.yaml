@@ -1,7 +1,7 @@
 plot_config:
     title: turn point of RDF
     xlabel: ODA/nm$^2$
-    ylabel: turning point [nm]
+    ylabel: midpoint (b) [nm]
     legend: True
     legend_loc: upper left
     savefig: fit_turn_points.jpg
@@ -13,3 +13,4 @@ plot_config:
     markersizes: [3]
     ylim: [2, 6]
     xlim: [0, 55]
+    text: $f(r) = a + \frac{c-a}{[1+(\frac{r}{b})^\mu]^g}$

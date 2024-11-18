@@ -1,5 +1,6 @@
 # config/config.yaml
 defaults:
-  - files@files.rdf: rdf          # Includes files/rdf.yaml under cfg.files.rdf
-  - files@files.fitted: fitted    # Includes files/fitted.yaml under cfg.files.fitted
+  - files@files.rdf: rdf          # Includes files/rdf.yaml
+  - files@files.fitted: fitted    # Includes files/fitted.yaml
   - plots@plots.median: median    # Includes plots/median.yaml
+  - plots@plots.fitted: fitted    # Includes plots/fitted.yaml

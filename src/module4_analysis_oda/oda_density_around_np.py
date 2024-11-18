@@ -99,7 +99,7 @@ class SurfactantDensityAroundNanoparticle:
             self._comput_2d_rdf(self.density_per_region, num_oda_in_radius)
 
         if residue == 'AMINO_ODN':
-            self._clean_np()
+            self.rdf_2d = self._clean_np(self.rdf_2d)
             self.time_dependent_rdf, self.time_dependent_ave_density, \
                 all_turn_points = self.calculate_time_dependent_densities(
                     amino_arr, num_oda_in_radius, regions, log)
@@ -167,17 +167,20 @@ class SurfactantDensityAroundNanoparticle:
             rdf_2d[region] = np.mean(tmp)
         return rdf_2d
 
-    def _clean_np(self) -> dict[np.ndarray, np.ndarray]:
+    def _clean_np(self,
+                  rdf_2d: dict[float, float]
+                  ) -> dict[np.ndarray, np.ndarray]:
         """clean the rdf before the contact radius by setting them the
         min value of the rdf values"""
-
+        cleaned_rdf_2d: dict[float, float] = rdf_2d.copy()
         if self.param_config.if_clean_np:
-            min_value = min(self.rdf_2d.values())
+            min_value = min(rdf_2d.values())
             contact_radius: float = \
                 self.contact_data.loc[:, 'contact_radius'].mean()
-            for key in self.rdf_2d.keys():
+            for key in rdf_2d.keys():
                 if key < contact_radius:
-                    self.rdf_2d[key] = min_value
+                    cleaned_rdf_2d[key] = min_value
+        return cleaned_rdf_2d
 
     def _fit_and_set_fitted2d_rdf(self,
                                   log: logger.logging.Logger
@@ -213,6 +216,7 @@ class SurfactantDensityAroundNanoparticle:
                 self.initialize_calculation(amino_arr_i, regions, log)
             rdf_i = self._comput_2d_rdf(density_per_region, num_oda_in_radius)
             try:
+                rdf_i = self._clean_np(rdf_i)
                 fitted_rdf = fit_rdf.FitRdf2dTo5PL2S(rdf_i, log)
                 time_dependent_rdf[i] = fitted_rdf.fitted_rdf
                 first_turn = fitted_rdf.first_turn

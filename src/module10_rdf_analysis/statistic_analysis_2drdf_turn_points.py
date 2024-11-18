@@ -16,6 +16,7 @@ import pandas as pd
 from scipy import stats
 
 from common import logger
+from common import file_writer
 from common import xvg_to_dataframe
 from common.colors_text import TextColor as bcolors
 
@@ -47,7 +48,8 @@ class AnalysisFitParameters:
         df_stats: pd.DataFrame = \
             self._analysis_turn_points(log, self.config.files.turn_points)
 
-        self.plot_data(df_stats, log, self.config)
+        self.plot_data(df_stats, log, self.config.plots)
+        self.write_midpoints(df_stats, log, self.config.files.turn_points)
 
     def _analysis_turn_points(self,
                               log: logger.logging.Logger,
@@ -144,7 +146,26 @@ class AnalysisFitParameters:
         """
         Plot the fitted parameters
         """
-        PlotStatistics(df_i, log, config.plots.turn_points, err_plot=True)
+        PlotStatistics(df_i, log, config.turn_points, err_plot=True)
+
+    def write_midpoints(self,
+                        df_i: pd.DataFrame,
+                        log: logger.logging.Logger,
+                        config: StatisticsConfig
+                        ) -> None:
+        """
+        Write the turn points to a file
+        """
+        extra_comments: str = ('turn points of the 2D RDF data, for normalized'
+                               ' data and fitted data, by:'
+                               f' {self.__module__}')
+        file_writer.write_xvg(df_i,
+                              log,
+                              fname=config.out_avg_fname,
+                              extra_comments=extra_comments,
+                              xaxis_label='ODA',
+                              yaxis_label='Turn Points',
+                              title='Turn Points of the 2D RDF data')
 
     def _write_msg(self, log: logger.logging.Logger) -> None:
         """write and log messages"""

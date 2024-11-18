@@ -48,9 +48,28 @@ class PlotStatistics:
         ax_i.legend(loc=config.legend_loc)
         ax_i.set_xlim(config.xlim)
         ax_i.set_ylim(config.ylim)
+        self.add_text(ax_i, config)
         elsevier_plot_tools.save_close_fig(fig_i,
                                            config.savefig,
                                            loc=config.legend_loc,
                                            show_legend=config.legend)
         log.info(f"{self.info_msg}")
         log.info(f"Statistics plot saved as {config.savefig}\n")
+
+    def add_text(self,
+                 ax_i: plt.Axes,
+                 config: StatisticsConfig,
+                 text_x: float = 0.5,
+                 text_y: float = 0.85,
+                 ) -> None:
+        """
+        Add text to the plot
+        """
+        if 'text' not in config:
+            return
+        ax_i.text(text_x,
+                  text_y,
+                  config.text,
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT,
+                  transform=ax_i.transAxes,
+                  )

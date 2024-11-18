@@ -22,6 +22,8 @@ from common.colors_text import TextColor as bcolors
 
 from module10_rdf_analysis.config import StatisticsConfig
 from module10_rdf_analysis.statistic_analysis_2drdf_plots import PlotStatistics
+from module10_rdf_analysis.statistic_analysis_2drdf_tools import \
+    bootstrap_turn_points
 
 
 class AnalysisFitParameters:
@@ -63,16 +65,19 @@ class AnalysisFitParameters:
         for oda, fname in f_config.turn_points_files.items():
             df_i: pd.DataFrame = \
                 xvg_to_dataframe.XvgParser(fname, log, x_type=int).xvg_df
-            df_i = self._clean_data(df_i)
+            df_i = self._clean_data(df_i, f_config.min_contact_radius[oda])
             y_arr: np.ndarray = df_i[ydata].values * 0.1  # nm
-            bootstrap: tuple[np.float64, ...] = \
-                self._bootstrap_turn_points(oda, y_arr[1:])
-            midpoints_stats[str(oda)] = bootstrap
+            bootstrap: tuple[tuple[np.float64, ...], str] = \
+                bootstrap_turn_points(oda, y_arr[1:])
+            midpoints_stats[str(oda)] = bootstrap[0]
+            self.info_msg += bootstrap[1]
         midpoints_df: pd.DataFrame = self._make_turn_points_df(midpoints_stats)
         return midpoints_df
 
     @staticmethod
-    def _clean_data(df_i: pd.DataFrame) -> pd.DataFrame:
+    def _clean_data(df_i: pd.DataFrame,
+                    min_contact_radius: float = 13.0
+                    ) -> pd.DataFrame:
         """
         Clean the data
         There are some situations where the fitted parameters are not
@@ -81,48 +86,12 @@ class AnalysisFitParameters:
         is bigger than twice of the minimum contact radius, and the
         second turn point should be greater than the midpoint.
         """
-        min_contact_radius: float = 17.5
         df_i = df_i[df_i['second_turn'] != 0]
         df_i = df_i[df_i['second_turn'] > df_i['midpoint']]
         df_i = df_i[df_i['midpoint'] > df_i['first_turn']]
         df_i = df_i[df_i['first_turn'] > min_contact_radius]
         df_i = df_i[df_i['first_turn'] < 2 * min_contact_radius]
         return df_i
-
-    def _bootstrap_turn_points(self,
-                               oda: int,
-                               y_arr: np.ndarray
-                               ) -> tuple[np.float64, np.float64, np.float64,
-                                          np.float64, np.float64]:
-        """
-        Bootstrap the turn points
-        """
-        def mean_func(data, axis):
-            return np.mean(data, axis=axis)
-
-        # Perform bootstrapping
-        res = stats.bootstrap(
-            (y_arr,),
-            statistic=mean_func,
-            confidence_level=0.95,
-            n_resamples=10000,
-            method='percentile',
-            random_state=0  # For reproducibility
-        )
-
-        # Extract results
-        mean_estimate: np.float64 = mean_func(y_arr, axis=0)
-        normal_std_err: np.float64 = np.std(y_arr, ddof=0)
-        ci: np.float64 = res.confidence_interval
-        std_err: np.float64 = res.standard_error
-
-        # Display results
-        self.info_msg += (
-            f"\tTurn point: {oda}\n"
-            f"\tMean estimate: {mean_estimate}\n"
-            f"\t95% Confidence Interval for the mean: {ci.low} to {ci.high}\n"
-            f"\tStandard Error of the mean: {std_err}\n\n")
-        return mean_estimate, normal_std_err, std_err, ci.low, ci.high
 
     def _make_turn_points_df(self,
                              midpoints_stats: dict[str, tuple[np.float64, ...]]

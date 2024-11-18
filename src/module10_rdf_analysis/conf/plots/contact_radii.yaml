@@ -1,0 +1,17 @@
+plot_config:
+    title: Contact radius of the nanoparticle
+    xlabel: ODA/nm$^2$
+    ylabel: contact radius $r^\star_c$ [nm]
+    y_data: mean
+    y_err: normal_std_err
+    legend: True
+    legend_loc: upper left
+    savefig: contact_radius.jpg
+    show: True
+    colors: ['darkred']
+    markers: ['o']
+    linestyles: ['-']
+    linewidths: [1]
+    markersizes: [3]
+    ylim: [0.5, 3.5]
+    xlim: [0, 55]

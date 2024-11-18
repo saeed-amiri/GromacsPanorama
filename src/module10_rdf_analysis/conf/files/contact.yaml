@@ -1,0 +1,13 @@
+contact_files:
+  5: 5_contact.xvg
+  10: 10_contact.xvg
+  15: 15_contact.xvg
+  20: 20_contact.xvg
+  30: 30_contact.xvg
+  40: 40_contact.xvg
+  50: 50_contact.xvg
+contact_radius: contact_radius
+contact_angle: contact_angles
+xdata: Frame
+radii_out_fname: contact_radii_stats.xvg
+angles_out_fname: contact_angles_stats.xvg

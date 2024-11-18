@@ -1,0 +1,17 @@
+plot_config:
+    title: Contact angles of the nanoparticle
+    xlabel: ODA/nm$^2$
+    ylabel: contact angles $\theta^\star_c$ [deg]
+    y_data: mean
+    y_err: normal_std_err
+    legend: True
+    legend_loc: upper left
+    savefig: contact_angels.jpg
+    show: True
+    colors: ['darkred']
+    markers: ['o']
+    linestyles: ['-']
+    linewidths: [1]
+    markersizes: [3]
+    ylim: [10.0, 60.0]
+    xlim: [0, 55]

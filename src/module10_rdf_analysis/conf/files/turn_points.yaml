@@ -1,6 +1,4 @@
-avg_fname: fit_parameters.xvg
-avg_xdata: nr_oda
-avg_ydata: midpoint
+out_avg_fname: turn_points_avg.xvg
 turn_points_files:
     5: 5_turn_points.xvg
     10: 10_turn_points.xvg
@@ -11,3 +9,11 @@ turn_points_files:
     50: 50_turn_points.xvg
 turn_points_xdata: Frame
 turn_points_ydata: midpoint
+min_contact_radius:
+  5: 13.21
+  10: 19.95
+  15: 17.53
+  20: 23.18
+  30: 21.20
+  40: 23.55
+  50: 21.41

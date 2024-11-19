@@ -91,6 +91,9 @@ class AnalysisFitParameters:
         df_i = df_i[df_i['midpoint'] > df_i['first_turn']]
         df_i = df_i[df_i['first_turn'] > min_contact_radius]
         df_i = df_i[df_i['first_turn'] < 2 * min_contact_radius]
+        df_i = df_i[(np.abs(stats.zscore(df_i['first_turn'])) < 3)]
+        df_i = df_i[(np.abs(stats.zscore(df_i['midpoint'])) < 3)]
+        df_i = df_i[(np.abs(stats.zscore(df_i['second_turn'])) < 3)]
         return df_i
 
     def _make_turn_points_df(self,

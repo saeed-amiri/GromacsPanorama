@@ -6,6 +6,7 @@ interface and contact between the surfactants and the nanoparticle.
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 from common import logger
 from common import file_writer
@@ -130,14 +131,18 @@ class ContactAnalysis:
         return stats_df
 
     def clean_data(self,
-                   df_radii: pd.DataFrame,
+                   df_i: pd.DataFrame,
                    ) -> pd.DataFrame:
         """
         Clean the data
         """
         # if any raw contains Nan values, drop it
-        df_radii.dropna(inplace=True)
-        return df_radii
+        df_i.dropna(inplace=True)
+        # remove outliers
+        for col_name in df_i.columns:
+            z_scores = np.abs(stats.zscore(df_i[col_name]))
+            df_i = df_i[z_scores < 3]
+        return df_i
 
     def _write_msg(self, log: logger.logging.Logger) -> None:
         """write and log messages"""

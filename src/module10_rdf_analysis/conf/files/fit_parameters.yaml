@@ -1,0 +1,30 @@
+file_names:
+    5: 5_fit_parm.xvg
+    10: 10_fit_parm.xvg
+    15: 15_fit_parm.xvg
+    20: 20_fit_parm.xvg
+    30: 30_fit_parm.xvg
+    40: 40_fit_parm.xvg
+    50: 50_fit_parm.xvg
+c_column: c
+b_column: b
+g_column: g
+d_column: d
+wsse_column: WSSE
+dof_column: DOF
+p_value_column: p_value
+r_squared_column: R_squared
+rmse_column: RMSE
+mae_column: MAE
+min_contact_radius:
+  5: 13.21
+  10: 19.95
+  15: 17.53
+  20: 23.18
+  30: 21.20
+  40: 23.55
+  50: 21.41
+box_size:
+    x: 217.0
+    y: 217.0
+    z: 248.0

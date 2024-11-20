@@ -18,9 +18,11 @@ for such data.
 
 """
 
+
 from dataclasses import dataclass
 
 import numpy as np
+from scipy import stats
 from scipy.optimize import curve_fit
 from scipy.interpolate import interp1d
 from scipy.signal import savgol_filter
@@ -219,89 +221,156 @@ class FitRdf2dTo5PL2S:
 
 
 class FitStatistics:
-    """calculate the fit statistics"""
-
-    info_msg: str = 'Messege from FitStatistics:\n'
-    rdf_2d: dict[float, float]
-    fitted_rdf: dict[float, float]
-
-    wsse: float
+    """Calculate the fit statistics."""
 
     def __init__(self,
                  rdf_2d: dict[float, float],
                  fitted_rdf: dict[float, float],
                  log: logger.logging.Logger
                  ) -> None:
-        self.rdf_2d = rdf_2d
-        self.fitted_rdf = fitted_rdf
+        """
+        Initialize the FitStatistics object.
+
+        Parameters:
+            rdf_2d (dict[float, float]): Actual RDF data with radii as keys and RDF values as values.
+            fitted_rdf (dict[float, float]): Fitted RDF data with radii as keys and RDF values as values.
+            log (logging.Logger): Logger for recording fit statistics.
+        """
+        self.rdf_2d = np.array(list(rdf_2d.keys()))
+        self.actual_rdf_values = np.array(list(rdf_2d.values()))
+        self.fitted_rdf = np.array(list(fitted_rdf.keys()))
+        self.fitted_values = np.array(list(fitted_rdf.values()))
+        self.wsse: float = 0.0
+        self.r_squared: float = 0.0
+        self.rmse: float = 0.0
+        self.mae: float = 0.0
+        self.fit_probability: float = 0.0
+        self.info_msg: str = 'Message from FitStatistics:\n'
+
         self.calculate_statistics()
         self.write_msg(log)
 
     def calculate_statistics(self) -> None:
         """Calculate the fit statistics."""
-        # Implementation for calculating wSSE, degrees of freedom, etc.
-        radii = np.array(list(self.rdf_2d.keys()))
-        actual_rdf_values = np.array(list(self.rdf_2d.values()))
+        if len(self.rdf_2d) == 0 or len(self.fitted_rdf) == 0:
+            raise ValueError("rdf_2d and fitted_rdf must be non-empty dictionaries.")
 
-        fitted_radii = np.array(list(self.fitted_rdf.keys()))
-        fitted_values = np.array(list(self.fitted_rdf.values()))
+        # Sort the fitted_rdf for interpolation
+        sorted_indices = np.argsort(self.fitted_rdf)
+        sorted_fitted_radii = self.fitted_rdf[sorted_indices]
+        sorted_fitted_values = self.fitted_values[sorted_indices]
 
-        predicted_rdf_values = \
-            self._get_corrsponded_radii_in_fitted(radii,
-                                                  fitted_radii,
-                                                  fitted_values)
-        variances: np.ndarray
-        residuals: np.ndarray
-        residuals, variances = self._calculate_residuals_variances(
-            actual_rdf_values, predicted_rdf_values)
+        # Interpolate fitted RDF to actual radii
+        predicted_rdf_values = self._get_corresponded_radii_in_fitted(
+            self.rdf_2d,
+            sorted_fitted_radii,
+            sorted_fitted_values
+        )
 
+        # Calculate residuals
+        residuals = self.actual_rdf_values - predicted_rdf_values
+
+        # Assume constant variance if not provided
+        variances = self._calculate_variances(residuals)
+
+        # Calculate WSSE
         self.wsse = self._calculate_wsse(variances, residuals)
-        self.info_msg += f'\tThe wSSE is `{self.wsse:.3f}`\n'
+
+        # Calculate additional statistics
+        self.r_squared = self._calculate_r_squared(self.actual_rdf_values, predicted_rdf_values)
+        self.rmse = self._calculate_rmse(residuals)
+        self.mae = self._calculate_mae(residuals)
+        self.fit_probability = self._calculate_fit_probability()
+
+        # Compile info message
+        self.info_msg += (
+            f"\tWSSE: {self.wsse:.3f}\n"
+            f"\tDegrees of Freedom: {self._calculate_degrees_of_freedom()}\n"
+            f"\tFit Probability (p-value): {self.fit_probability:.3f}\n"
+            f"\tR-squared: {self.r_squared:.3f}\n"
+            f"\tRMSE: {self.rmse:.3f}\n"
+            f"\tMAE: {self.mae:.3f}\n"
+        )
 
     @staticmethod
     def _calculate_wsse(variances: np.ndarray,
                         residuals: np.ndarray
                         ) -> float:
         """Calculate the weighted sum of squared errors."""
-        # Filter out zero variance points
         nonzero_variance_mask = variances != 0
         filtered_variances = variances[nonzero_variance_mask]
         filtered_residuals = residuals[nonzero_variance_mask]
         weights = 1 / filtered_variances
         return np.sum(weights * filtered_residuals**2)
 
-    def _calculate_degrees_of_freedom(self):
+    def _calculate_degrees_of_freedom(self) -> int:
         """Calculate the degrees of freedom."""
-        # Implementation
+        num_data_points = len(self.rdf_2d)
+        num_parameters = 3  # Assuming parameters c, b, g
+        return num_data_points - num_parameters
 
-    def _calculate_fit_probability(self):
-        """Calculate the fit probability."""
-        # Implementation
+    def _calculate_fit_probability(self) -> float:
+        """Calculate the fit probability using the chi-squared
+        distribution."""
+        dof = self._calculate_degrees_of_freedom()
+        if dof <= 0:
+            return 0.0  # Not enough degrees of freedom
+        chi_squared = self.wsse
+        p_value = 1 - stats.chi2.cdf(chi_squared, df=dof)
+        return p_value
 
     @staticmethod
-    def _get_corrsponded_radii_in_fitted(radii: np.ndarray,
+    def _get_corresponded_radii_in_fitted(radii: np.ndarray,
                                          fitted_radii: np.ndarray,
                                          fitted_values: np.ndarray
                                          ) -> np.ndarray:
-        """calculate the corrsponding radii in fitted data"""
-        fitted_data_interpolator = interp1d(fitted_radii,
-                                            fitted_values,
-                                            kind='linear',
-                                            fill_value="extrapolate")
-        return fitted_data_interpolator(radii)
+        """Calculate the corresponding radii in fitted data using
+        interpolation."""
+        try:
+            fitted_data_interpolator = interp1d(
+                fitted_radii,
+                fitted_values,
+                kind='linear',
+                fill_value="extrapolate")
+            return fitted_data_interpolator(radii)
+        except Exception as e:
+            raise ValueError(f"Interpolation failed: {e}")
 
-    @staticmethod
-    def _calculate_residuals_variances(actual_rdf_values: np.ndarray,
-                                       predicted_rdf_values: np.ndarray
-                                       ) -> tuple[np.ndarray, np.ndarray]:
+    def _calculate_variances(self,
+                             residuals: np.ndarray
+                             ) -> np.ndarray:
         """
-        Calculate the variances of the residuals.
+        Estimate variances based on residuals.
+        For simplicity, assume homoscedasticity (constant variance).
         """
-        # Calculate the residuals
-        residuals: np.ndarray = actual_rdf_values - predicted_rdf_values
-        # Calculate the variances of the residuals
-        variances: np.ndarray = np.abs(residuals - np.mean(residuals))**2
-        return residuals, variances
+        # Example: Estimate variance as the variance of residuals
+        estimated_variance = np.var(residuals) if len(residuals) > 1 else 1.0
+        return np.full_like(residuals, estimated_variance)
+
+    def _calculate_r_squared(self,
+                             actual: np.ndarray,
+                             predicted: np.ndarray
+                             ) -> float:
+        """Calculate the R-squared value."""
+        ss_res = np.sum((actual - predicted) ** 2)
+        ss_tot = np.sum((actual - np.mean(actual)) ** 2)
+        if ss_tot == 0:
+            return 1.0  # Perfect fit if all actual values are the same
+        return 1 - ss_res / ss_tot
+
+    def _calculate_rmse(self,
+                        residuals: np.ndarray
+                        ) -> float:
+        """Calculate the Root Mean Squared Error."""
+        mse = np.mean(residuals ** 2)
+        return np.sqrt(mse)
+
+    def _calculate_mae(self,
+                       residuals: np.ndarray
+                       ) -> float:
+        """Calculate the Mean Absolute Error."""
+        return np.mean(np.abs(residuals))
+
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

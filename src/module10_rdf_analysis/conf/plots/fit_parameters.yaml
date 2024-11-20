@@ -1,0 +1,18 @@
+plot_config:
+    title: middle point of RDF
+    xlabel: ODA/nm$^2$
+    ylabel: midpoint (b) [nm]
+    y_data: mean
+    y_err: normal_std_err
+    legend: True
+    legend_loc: upper left
+    savefig: mean_all_fits.jpg
+    show: True
+    colors: ['darkred']
+    markers: ['o']
+    linestyles: ['-']
+    linewidths: [1]
+    markersizes: [3]
+    ylim: [2.5, 12.5]
+    xlim: [0, 55]
+    text: $f(r) = a + \frac{c-a}{[1+(\frac{r}{b})^\mu]^g}$

@@ -28,6 +28,8 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
+import matplotlib.pyplot as plt
+
 from common import logger
 from common import file_writer
 from common import xvg_to_dataframe
@@ -82,12 +84,11 @@ class FitParameters:
             df_i = self.clean_data(
                  df_i, oda, self.config.files.fit_parameters)
             mean_estimate, normal_std_err, std_err, _, _ = \
-                self.get_c_columns_average(df_i, oda)
+                self.get_r_half_max_columns_average(df_i, oda)
             fit_params[oda] = (mean_estimate * 0.1,  # nm
                                normal_std_err * 0.1,  # nm
                                std_err * 0.1  # nm
                                )
-
         return fit_params
 
     def make_df(self,
@@ -131,7 +132,6 @@ class FitParameters:
 
         # drop NaN values
         df_copy = df_copy.dropna()
-
         # remove outliers based on the statistics
         df_copy = \
             df_copy[(df_copy[param.mae_column] < param.mae_max) &
@@ -140,29 +140,29 @@ class FitParameters:
                     (df_copy[param.p_value_column] > param.p_value_max) &
                     (df_copy[param.r_squared_column] > param.r_squared_max)
                     ]
-
-        # remove outliers of c_column
+        # remove outliers of r_half_max_column
         max_r_posible = \
             max(float(param.box_size['x']),
                 float(param.box_size['y'])) / 2
 
         min_r_posible = float(param.min_contact_radius[oda])
-        df_copy = df_copy[(df_copy[param.c_column] > min_r_posible) &
-                          (df_copy[param.c_column] < max_r_posible)]
-        # remove outliers of param.c_column
-        df_copy = df_copy[(np.abs(stats.zscore(df_copy[param.c_column])) < 1)]
+        df_copy = df_copy[(df_copy[param.r_half_max_column] > min_r_posible) &
+                          (df_copy[param.r_half_max_column] < max_r_posible)]
+        # remove outliers of param.r_half_max_column
+        df_copy = df_copy[
+            (np.abs(stats.zscore(df_copy[param.r_half_max_column])) < 3)]
 
         return df_copy
 
-    def get_c_columns_average(self,
-                              df_i: pd.DataFrame,
-                              oda: str
-                              ) -> tuple[np.float64, ...]:
+    def get_r_half_max_columns_average(self,
+                                       df_i: pd.DataFrame,
+                                       oda: str
+                                       ) -> tuple[np.float64, ...]:
         """
-        Get the average of the c_column
+        Get the average of the r_half_max_column
         """
-        c_column = self.config.files.fit_parameters.c_column
-        c_arr = df_i[c_column].values
+        r_half_max_column = self.config.files.fit_parameters.r_half_max_column
+        c_arr = df_i[r_half_max_column].values
         boot_stats, msg = bootstrap_turn_points(oda, c_arr)
         self.info_msg += msg
         return boot_stats

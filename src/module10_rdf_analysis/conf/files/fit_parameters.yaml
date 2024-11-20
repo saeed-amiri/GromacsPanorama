@@ -10,12 +10,17 @@ c_column: c
 b_column: b
 g_column: g
 d_column: d
-wsse_column: WSSE
 dof_column: DOF
+mae_column: MAE
+rmse_column: RMSE
+wsse_column: WSSE
 p_value_column: p_value
 r_squared_column: R_squared
-rmse_column: RMSE
-mae_column: MAE
+mae_max: 0.1
+rmse_max: 0.1
+wsse_max: 200
+p_value_max: 0.35
+r_squared_max: 0.8
 min_contact_radius:
   5: 13.21
   10: 19.95

@@ -53,6 +53,7 @@ class FitParameters:
         self.info_msg: str = "Message from FitParameters:\n"
         self.config = config
         self.process_fit_parameters(log)
+        self.write_msg(log)
 
     def process_fit_parameters(self,
                                log: logger.logging.Logger
@@ -60,20 +61,47 @@ class FitParameters:
         """
         Read the fitted parameters
         """
-        self.read_fit_parameters(log)
+        fit_params: dict[str, tuple[np.float64, np.float64, np.float64]] = \
+            self.read_fit_parameters(log)
+        df_stats: pd.DataFrame = self.make_df(fit_params)
+        self.plot_data(df_stats, log)
+        self.write_xvg(df_stats, log)
 
     def read_fit_parameters(self,
                             log: logger.logging.Logger
-                            ) -> None:
+                            ) -> dict[str, tuple[np.float64,
+                                                 np.float64,
+                                                 np.float64]]:
         """
         Read the fit parameters
         """
-        fit_params: dict[str, pd.DataFrame] = {}
+        fit_params: dict[str, tuple[np.float64, np.float64, np.float64]] = {}
         for oda, fname in self.config.files.fit_parameters.file_names.items():
             df_i: pd.DataFrame = xvg_to_dataframe.XvgParser(
                 fname, log, x_type=int).xvg_df
             df_i = self.clean_data(
                  df_i, oda, self.config.files.fit_parameters)
+            mean_estimate, normal_std_err, std_err, _, _ = \
+                self.get_c_columns_average(df_i, oda)
+            fit_params[oda] = (mean_estimate * 0.1,  # nm
+                               normal_std_err * 0.1,  # nm
+                               std_err * 0.1  # nm
+                               )
+
+        return fit_params
+
+    def make_df(self,
+                fit_params: dict[str, tuple[np.float64,
+                                            np.float64,
+                                            np.float64]]
+                ) -> pd.DataFrame:
+        """
+        Convert the dictionary to a DataFrame
+        """
+        # Convert the dictionary to a DataFrame
+        return pd.DataFrame.from_dict(
+            fit_params,
+            orient='index', columns=['mean', 'normal_std_err', 'std_err'])
 
     def clean_data(self,
                    df_i: pd.DataFrame,
@@ -125,3 +153,49 @@ class FitParameters:
         df_copy = df_copy[(np.abs(stats.zscore(df_copy[param.c_column])) < 1)]
 
         return df_copy
+
+    def get_c_columns_average(self,
+                              df_i: pd.DataFrame,
+                              oda: str
+                              ) -> tuple[np.float64, ...]:
+        """
+        Get the average of the c_column
+        """
+        c_column = self.config.files.fit_parameters.c_column
+        c_arr = df_i[c_column].values
+        boot_stats, msg = bootstrap_turn_points(oda, c_arr)
+        self.info_msg += msg
+        return boot_stats
+
+    def plot_data(self,
+                  df_stats: pd.DataFrame,
+                  log: logger.logging.Logger
+                  ) -> None:
+        """
+        Plot the data
+        """
+        PlotStatistics(df_stats, log, self.config.plots.fit_parameters, True)
+
+    def write_xvg(self,
+                  df_stats: pd.DataFrame,
+                  log: logger.logging.Logger
+                  ) -> None:
+        """
+        Write the data to an xvg file
+        """
+        file_writer.write_xvg(
+            df_stats,
+            log,
+            self.config.files.fit_parameters.out_fname,
+            extra_comments="Stats of the fitted parameters from all:\n",
+            xaxis_label='ODA',
+            yaxis_label='varies [nm]',
+            title='computed c_mean of the fitted parameters')
+
+    def write_msg(self,
+                  log: logger.logging.Logger  # To log
+                  ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKGREEN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)

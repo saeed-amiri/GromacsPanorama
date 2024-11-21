@@ -23,12 +23,14 @@ class CalculateMedian:
     info_msg: str = "Message from CalculateMedian::\n"
 
     def __init__(self,
+                 x_data: pd.DataFrame,
                  data: pd.DataFrame,
                  fit_data: pd.DataFrame,
                  log: logger.logging.Logger,
                  config: StatisticsConfig
                  ) -> None:
         # pylint: disable=too-many-arguments
+        self.x_data = x_data
         self.data = data
         self.fit_data = fit_data
         self.get_median(log, config)
@@ -43,15 +45,17 @@ class CalculateMedian:
         middle value of a dataset when it is ordered from smallest to
         largest.
         """
-        rdf_median: np.ndarray = self._calculate_median(self.data)
-        fitted_median: np.ndarray = self._calculate_median(self.fit_data)
+        rdf_median: np.ndarray = self._calculate_median(self.x_data, self.data)
+        fitted_median: np.ndarray = self._calculate_median(
+            self.x_data, self.fit_data)
         median_df: pd.DataFrame = \
             self.arr_to_df(rdf_median, fitted_median)
-        PlotStatistics(median_df, log, config)
-        self.write_median(median_df, log)
+        PlotStatistics(median_df, log, config.plots.median)
+        self.write_median(median_df, log, config.files.rdf.out_fname)
 
     @staticmethod
-    def _calculate_median(data: pd.DataFrame,
+    def _calculate_median(xdata: pd.DataFrame,
+                          data: pd.DataFrame,
                           ) -> np.ndarray:
         """
         Get the median of the raw data
@@ -62,8 +66,10 @@ class CalculateMedian:
             rdf = np.sort(rdf)
             rdf /= np.max(rdf)
             median = np.median(rdf)
+            # find cloest x value to the median
+            median_r: float = np.abs(rdf - median).argmin()
             median_arr[idx, 0] = col
-            median_arr[idx, 1] = median
+            median_arr[idx, 1] = xdata[median_r]
         return median_arr
 
     @staticmethod
@@ -84,7 +90,8 @@ class CalculateMedian:
 
     def write_median(self,
                      median_df: pd.DataFrame,
-                     log: logger.logging.Logger
+                     log: logger.logging.Logger,
+                     fname: str
                      ) -> None:
         """
         Write the median to a file
@@ -95,7 +102,7 @@ class CalculateMedian:
         file_writer.write_xvg(
             median_df,
             log,
-            fname='median.xvg',
+            fname=fname,
             extra_comments=extra_comments,
             xaxis_label='ODA',
             yaxis_label='Median',

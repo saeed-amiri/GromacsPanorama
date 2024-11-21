@@ -16,3 +16,4 @@ plot_config:
     markersizes: [3]
     ylim: [2.5, 8.5]
     xlim: [0, 55]
+    grid: True

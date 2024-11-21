@@ -17,3 +17,5 @@ plot_config:
     ylim: [2.5, 6.5]
     xlim: [0, 55]
     text: $f(r) = a + \frac{c-a}{[1+(\frac{r}{b})^\mu]^g}$
+    grid: True
+    

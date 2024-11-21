@@ -17,3 +17,4 @@ plot_config:
     ylim: [0.5, 6.5]
     xlim: [0, 55]
     grid: True
+    microgrid: True

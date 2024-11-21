@@ -18,4 +18,4 @@ plot_config:
     xlim: [0, 55]
     text: $f(r) = a + \frac{c-a}{[1+(\frac{r}{b})^\mu]^g}$
     grid: True
-    
+    microgrid: True

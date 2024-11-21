@@ -3,7 +3,12 @@ defaults:
   - files@files.rdf: rdf                   # Includes files/rdf.yaml
   - files@files.turn_points: turn_points   # Includes files/turn_points.yaml
   - files@files.contact: contact           # Includes files/contact.yaml
+  - files@files.medians: medians           # Includes files/medians.yaml
+  - files@files.fit_parameters: fit_parameters # Includes files/fit_parameters.yaml
+  - files@files.ex_zone: ex_zone           # Includes files/ex_zone.yaml
   - plots@plots.median: median             # Includes plots/median.yaml
   - plots@plots.turn_points: turn_points   # Includes plots/turn_points.yaml
   - plots@plots.contact_radii: contact_radii # Includes plots/contact_radii.yaml
   - plots@plots.contact_angles: contact_angles # Includes plots/contact_angles.yaml
+  - plots@plots.fit_parameters: fit_parameters # Includes plots/fit_parameters.yaml
+  - plots@plots.ex_zone: ex_zone           # Includes plots/ex_zone.yaml

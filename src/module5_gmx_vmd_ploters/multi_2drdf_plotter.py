@@ -61,8 +61,8 @@ class PlotConfoig:
     # pylint: disable=too-many-instance-attributes
     nr_rows: int = 3
     nr_columns: int = 3
-    xlabel: str = 'r [nm]'
-    ylabel: str = 'g(r), a.u.'
+    xlabel: str = 'r$^\star$ [nm]'
+    ylabel: str = 'g$^\star$(r$^\star$), a.u.'
     legend_loc: str = 'upper right'
     legend_title: str = 'ODA/nm$^2$'
     ylims: tuple[float, float] = (-0.05, 1.1)
@@ -162,7 +162,8 @@ class Plot2dRdf:
                                 line_style=self.plot_config.linestyle[i-1],
                                 marker=self.plot_config.markers[i-1],
                                 )
-                self._add_label(axes[i-1], f'{oda} ODA/nm$^2$')
+                oda_per_nm2: float = float(oda) / (21.7**2)
+                self._add_label(axes[i-1], f'{oda_per_nm2: .2f} ODA/nm$^2$')
 
         self._plot_all_rdf(self.data, axes[last_ind - 1], x_data, 'rdf')
         self._add_label(axes[last_ind - 1], r'All g$^*$(r$^*$)')

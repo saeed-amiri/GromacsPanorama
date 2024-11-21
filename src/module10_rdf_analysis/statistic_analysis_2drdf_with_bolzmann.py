@@ -62,10 +62,13 @@ class Rdf2dWithBoltzmann:
         boltzmann_y_mean_dict: dict[str, pd.Series] = \
             self.calculate_average_boltzmann(truct_boltzmann_y_dict)
 
+        boltzmann_y_normalized_dict: dict[str, pd.Series] = \
+            self.normalize_boltzmann(boltzmann_y_mean_dict)
+
         # Create a new DataFrame with the Boltzmann distribution
         processed_boltzmann_data: pd.DataFrame = \
             self.create_boltzmann_dataframe(
-                truct_boltzmann_x_dict, boltzmann_y_mean_dict)
+                truct_boltzmann_x_dict, boltzmann_y_normalized_dict)
 
         return processed_boltzmann_data
 
@@ -161,9 +164,23 @@ class Rdf2dWithBoltzmann:
         boltzmann_y_mean_dict: dict[str, pd.Series] = {}
         for oda, boltzmann_y in boltzmann_y_dict.items():
             boltzmann_y_mean: pd.Series = boltzmann_y.mean(axis=1)
-            boltzmann_y_mean_dict[oda] = \
-                boltzmann_y_mean / boltzmann_y_mean.max()
+            boltzmann_y_mean_dict[oda] = boltzmann_y_mean
         return boltzmann_y_mean_dict
+
+    @staticmethod
+    def normalize_boltzmann(boltzmann_y_mean_dict: dict[str, pd.Series],
+                            ) -> dict[str, pd.Series]:
+        """
+        Normalize the Boltzmann distribution
+        """
+        boltzmann_y_normalized_dict: dict[str, pd.Series] = {}
+        for oda, boltzmann_y in boltzmann_y_mean_dict.items():
+            y_copy: pd.Series = boltzmann_y.copy()
+            # sort the values and get average of the last 10 bigest values
+            y_copy.sort_values(ascending=False, inplace=True)
+            aveg_max: float = y_copy[:7].mean()
+            boltzmann_y_normalized_dict[oda] = boltzmann_y / aveg_max
+        return boltzmann_y_normalized_dict
 
     @staticmethod
     def create_boltzmann_dataframe(cut_boltzmann_x_dict: dict[str, pd.Series],

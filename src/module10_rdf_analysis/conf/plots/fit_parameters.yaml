@@ -1,5 +1,6 @@
 plot_config:
     title: middle point of RDF
+    label: r of half max(RDF) [nm]
     xlabel: ODA/nm$^2$
     ylabel: midpoint (b) [nm]
     y_data: mean

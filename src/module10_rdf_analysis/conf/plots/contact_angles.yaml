@@ -1,5 +1,6 @@
 plot_config:
     title: Contact angles of the nanoparticle
+    label: contact angles
     xlabel: ODA/nm$^2$
     ylabel: contact angles $\theta^\star_c$ [deg]
     y_data: mean

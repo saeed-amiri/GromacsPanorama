@@ -1,7 +1,8 @@
 plot_config:
     title: RDF of ODA
+    label: median
     xlabel: ODA/nm$^2$
-    ylabel: median RDF
+    ylabel: median region
     legend: True
     legend_loc: upper left
     savefig: median.jpg

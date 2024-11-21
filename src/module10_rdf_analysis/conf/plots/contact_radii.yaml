@@ -1,5 +1,6 @@
 plot_config:
     title: Contact radius of the nanoparticle
+    label: contact radius
     xlabel: ODA/nm$^2$
     ylabel: contact radius $r^\star_c$ [nm]
     y_data: mean

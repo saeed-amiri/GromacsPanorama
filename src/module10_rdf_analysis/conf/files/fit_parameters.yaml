@@ -6,10 +6,12 @@ file_names:
     30: 30_fit_parm.xvg
     40: 40_fit_parm.xvg
     50: 50_fit_parm.xvg
+out_fname: fit_parameters_avg.xvg
 c_column: c
 b_column: b
 g_column: g
 d_column: d
+r_half_max_column: r_half_max
 dof_column: DOF
 mae_column: MAE
 rmse_column: RMSE

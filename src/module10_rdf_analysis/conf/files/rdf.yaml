@@ -9,3 +9,4 @@ file_names:
 xdata: regions
 ydata: rdf_2d
 fitted_data: fitted_rdf
+out_fname: median.xvg

@@ -5,7 +5,6 @@ There are other scripts which are doing somehow the same, but I want
 all of them to be in one place
 """
 
-import numpy as np
 import pandas as pd
 
 from common import logger
@@ -19,6 +18,7 @@ class Rdf2dWithBoltzmann:
     """
     read and plot the 2d rdf with the Boltzmann distribution
     """
+    # pylint: disable=too-many-arguments
 
     __slots__ = ['config', 'info_msg']
 
@@ -33,6 +33,9 @@ class Rdf2dWithBoltzmann:
         self.config = config
         boltzmann_data: dict[str, pd.DataFrame] = \
             self.process_boltzmann_data(log)
+        vlines_data: dict[str, tuple[float, float]] = \
+            self.get_radii_vlines(log)
+        print(vlines_data)
         self.plot_data(rdf_x, rdf_data, rdf_fit_data, boltzmann_data, log)
 
     def process_boltzmann_data(self,
@@ -67,6 +70,29 @@ class Rdf2dWithBoltzmann:
 
         return processed_boltzmann_data
 
+    def get_radii_vlines(self,
+                         log: logger.logging.Logger
+                         ) -> pd.DataFrame:
+        """
+        Get the computed contact radius and r of half max from the
+        wriiten files
+        """
+        contact_r_file: str = self.config.files.contact.radii_out_fname
+        r_half_max_file: str = self.config.files.fit_parameters.out_fname
+        contact_r_df: pd.DataFrame = xvg_to_dataframe.XvgParser(
+            contact_r_file, log, x_type=float).xvg_df
+        r_half_max_df: pd.DataFrame = xvg_to_dataframe.XvgParser(
+            r_half_max_file, log, x_type=float).xvg_df
+        vlines_data: dict[str, tuple[float, float]] = {}
+        for idx, radius in contact_r_df.iterrows():
+            oda: str = radius['ODA']
+            contact_r: float = radius['mean']
+            r_half_max: float = r_half_max_df.iloc[idx]['mean']
+            vlines_data[str(int(oda))] = (contact_r, r_half_max)
+        df_vlines_data: pd.DataFrame = pd.DataFrame(vlines_data).T
+        df_vlines_data.columns = ['contact_r', 'r_half_max']
+        return df_vlines_data
+
     def plot_data(self,
                   rdf_x: pd.DataFrame,
                   rdf_data: pd.DataFrame,
@@ -77,6 +103,7 @@ class Rdf2dWithBoltzmann:
         """
         Plot the 2d rdf with the Boltzmann distribution
         """
+        # pylint: disable=too-many-arguments
 
     @staticmethod
     def extract_boltzmann_data(log: logger.logging.Logger,

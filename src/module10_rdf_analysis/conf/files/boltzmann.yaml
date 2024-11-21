@@ -1,0 +1,21 @@
+file_names:
+  5: 5_boltzmann_distribution.xvg
+  10: 10_boltzmann_distribution.xvg
+  15: 15_boltzmann_distribution.xvg
+  20: 20_boltzmann_distribution.xvg
+  30: 30_boltzmann_distribution.xvg
+  40: 40_boltzmann_distribution.xvg
+  50: 50_boltzmann_distribution.xvg
+xdata: r_nm  # Angstrom
+ydata:
+  5: [85, 86, 87, 88, 89, 90, 91]
+  10: [85, 86, 87, 88, 89, 90, 91]
+  15: [85, 86, 87, 88, 89, 90, 91]
+  20: [85, 86, 87, 88, 89, 90, 91]
+  30: [85, 86, 87, 88, 89, 90, 91]
+  40: [85, 86, 87, 88, 89, 90, 91]
+  50: [85, 86, 87, 88, 89, 90, 91]
+r_cut: 100.0  # Angstrom
+
+
+

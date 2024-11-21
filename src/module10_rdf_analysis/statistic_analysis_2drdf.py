@@ -23,45 +23,10 @@ distributions. Each method offers unique insights, as described below.
     Provides a range within which the true mean is likely to fall,
     offering a measure of uncertainty.
 
-- **T-test**:
-    Compares the means of two groups to see if they are significantly
-    different.
-
-- **ANOVA**:
-    Analyzes the variance across multiple groups to determine if there
-    are any statistically significant differences between them.
-
-- **Tukey's HSD**:
-    A post-hoc test following ANOVA to identify which specific groups
-    differ from each other.
-
-- **Kruskal-Wallis**:
-    A non-parametric test that evaluates differences between multiple
-    groups without assuming normality.
-
-- **Dunn's Test**:
-    A post-hoc test following Kruskal-Wallis to pinpoint which groups
-    differ.
-
-- **Mann-Whitney U Test**:
-    A non-parametric test to compare two independent groups, assessing
-    differences in their distributions.
-
-- **Wilcoxon Signed Rank Test**:
-    A non-parametric test comparing two related samples, used for
-    paired data.
-
-- **Shapiro-Wilk Test**:
-    Assesses if data follow a normal distribution, suitable for small
-    sample sizes.
-
-- **Anderson-Darling Test**:
-    Tests for normality with an emphasis on the tails, helping to check
-    distribution fit.
-
 Each of these methods enables nuanced statistical analysis, helping to
 uncover trends, differences, and patterns within data sets.
 """
+# pylint: disable=unused-import
 
 import hydra
 from hydra.core.config_store import ConfigStore

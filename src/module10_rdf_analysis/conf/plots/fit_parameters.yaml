@@ -14,6 +14,5 @@ plot_config:
     linestyles: ['-']
     linewidths: [1]
     markersizes: [3]
-    ylim: [2.5, 12.5]
+    ylim: [2.5, 8.5]
     xlim: [0, 55]
-    text: $f(r) = a + \frac{c-a}{[1+(\frac{r}{b})^\mu]^g}$

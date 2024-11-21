@@ -14,5 +14,5 @@ plot_config:
     linestyles: ['-']
     linewidths: [1]
     markersizes: [3]
-    ylim: [10.0, 60.0]
+    ylim: [10.0, 75.0]
     xlim: [0, 55]

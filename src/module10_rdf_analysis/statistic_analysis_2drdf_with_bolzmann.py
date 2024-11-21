@@ -11,7 +11,8 @@ from common import logger
 from common import xvg_to_dataframe
 
 from module10_rdf_analysis.config import StatisticsConfig
-from module10_rdf_analysis.statistic_analysis_2drdf_plots import PlotStatistics
+from module10_rdf_analysis.statistic_analysis_2drdf_boltzmann_plots import \
+    PlotRdfBoltzmann
 
 
 class Rdf2dWithBoltzmann:
@@ -31,16 +32,14 @@ class Rdf2dWithBoltzmann:
                  ) -> None:
         self.info_msg: str = "Message from Rdf2dWithBoltzmann:\n"
         self.config = config
-        boltzmann_data: dict[str, pd.DataFrame] = \
-            self.process_boltzmann_data(log)
-        vlines_data: dict[str, tuple[float, float]] = \
-            self.get_radii_vlines(log)
-        print(vlines_data)
-        self.plot_data(rdf_x, rdf_data, rdf_fit_data, boltzmann_data, log)
+        boltzmann_data: pd.DataFrame = self.process_boltzmann_data(log)
+        vlines_data: pd.DataFrame = self.get_radii_vlines(log)
+        self.plot_data(
+            rdf_x, rdf_data, rdf_fit_data, boltzmann_data, vlines_data, log)
 
     def process_boltzmann_data(self,
                                log: logger.logging.Logger
-                               ) -> dict[str, pd.DataFrame]:
+                               ) -> pd.DataFrame:
         """
         Read the boltzmann distribution
         """
@@ -64,7 +63,7 @@ class Rdf2dWithBoltzmann:
             self.calculate_average_boltzmann(truct_boltzmann_y_dict)
 
         # Create a new DataFrame with the Boltzmann distribution
-        processed_boltzmann_data: dict[str, pd.DataFrame] = \
+        processed_boltzmann_data: pd.DataFrame = \
             self.create_boltzmann_dataframe(
                 truct_boltzmann_x_dict, boltzmann_y_mean_dict)
 
@@ -87,10 +86,11 @@ class Rdf2dWithBoltzmann:
         for idx, radius in contact_r_df.iterrows():
             oda: str = radius['ODA']
             contact_r: float = radius['mean']
-            r_half_max: float = r_half_max_df.iloc[idx]['mean']
+            r_half_max: float = r_half_max_df.at[idx, 'mean']
             vlines_data[str(int(oda))] = (contact_r, r_half_max)
-        df_vlines_data: pd.DataFrame = pd.DataFrame(vlines_data).T
-        df_vlines_data.columns = ['contact_r', 'r_half_max']
+        df_vlines_data: pd.DataFrame = pd.DataFrame(vlines_data)
+        df_vlines_data.index = pd.Index(['contact_r', 'r_half_max'])
+        print(df_vlines_data)
         return df_vlines_data
 
     def plot_data(self,
@@ -98,12 +98,20 @@ class Rdf2dWithBoltzmann:
                   rdf_data: pd.DataFrame,
                   rdf_fit_data: pd.DataFrame,
                   boltzmann_data: dict[str, pd.DataFrame],
+                  vlines_data: pd.DataFrame,
                   log: logger.logging.Logger
                   ) -> None:
         """
         Plot the 2d rdf with the Boltzmann distribution
         """
         # pylint: disable=too-many-arguments
+        PlotRdfBoltzmann(rdf_x,
+                         rdf_data,
+                         rdf_fit_data,
+                         boltzmann_data,
+                         vlines_data,
+                         log,
+                         self.config.plots.boltzmann_rdf)
 
     @staticmethod
     def extract_boltzmann_data(log: logger.logging.Logger,
@@ -155,19 +163,23 @@ class Rdf2dWithBoltzmann:
         for oda, boltzmann_y in boltzmann_y_dict.items():
             boltzmann_y_mean: pd.Series = boltzmann_y.mean(axis=1)
             boltzmann_y_mean_dict[oda] = boltzmann_y_mean
-            print(len(boltzmann_y_mean))
         return boltzmann_y_mean_dict
 
     @staticmethod
     def create_boltzmann_dataframe(cut_boltzmann_x_dict: dict[str, pd.Series],
                                    boltzmann_y_mean_dict: dict[str, pd.Series],
-                                   ) -> dict[str, pd.DataFrame]:
+                                   ) -> pd.DataFrame:
         """
         make a new DataFrame with the Boltzmann distribution for each
         of the oda concentrations
         """
-        boltzmann_data: dict[str, pd.DataFrame] = {}
-        for oda, boltzmann_x in cut_boltzmann_x_dict.items():
-            boltzmann_data[oda] = pd.concat(
-                [boltzmann_x, boltzmann_y_mean_dict[oda]], axis=1)
-        return boltzmann_data
+        # check if all the xdata are similar
+        for boltzmann_x in cut_boltzmann_x_dict.values():
+            assert boltzmann_x.equals(list(cut_boltzmann_x_dict.values())[0])
+        data_columns: list[str] = \
+            ['r_ang'] + list(boltzmann_y_mean_dict.keys())
+        boltzmann_data_df: pd.DataFrame = pd.DataFrame(columns=data_columns)
+        boltzmann_data_df['r_ang'] = list(cut_boltzmann_x_dict.values())[0]
+        for oda, boltzmann_y in boltzmann_y_mean_dict.items():
+            boltzmann_data_df[oda] = boltzmann_y
+        return boltzmann_data_df

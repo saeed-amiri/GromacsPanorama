@@ -53,6 +53,7 @@ class PlotStatistics:
         ax_i.set_xlim(config.xlim)
         ax_i.set_ylim(config.ylim)
         self.add_text(ax_i, config)
+        self.add_grids(ax_i, config)
         elsevier_plot_tools.save_close_fig(fig_i,
                                            config.savefig,
                                            loc=config.legend_loc,
@@ -93,6 +94,7 @@ class PlotStatistics:
         ax_i.set_xlim(config.xlim)
         ax_i.set_ylim(config.ylim)
         self.add_text(ax_i, config)
+        self.add_grids(ax_i, config)
         elsevier_plot_tools.save_close_fig(fig_i,
                                            config.savefig,
                                            loc=config.legend_loc,
@@ -117,3 +119,19 @@ class PlotStatistics:
                   fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT,
                   transform=ax_i.transAxes,
                   )
+
+    def add_grids(self,
+                  ax_i: plt.Axes,
+                  config: StatisticsConfig,
+                  ) -> None:
+        """
+        Add grids to the plot
+        """
+        if 'grid' not in config or not config.grid:
+            return
+        ax_i.grid(True, which='both', linestyle='--', linewidth=0.5)
+        if 'microgrid' not in config or not config.microgrid:
+            return
+        ax_i.minorticks_on()
+        ax_i.grid(
+            True, which='minor', axis='both', linestyle=':', linewidth=0.5)

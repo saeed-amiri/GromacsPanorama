@@ -161,7 +161,8 @@ class Rdf2dWithBoltzmann:
         boltzmann_y_mean_dict: dict[str, pd.Series] = {}
         for oda, boltzmann_y in boltzmann_y_dict.items():
             boltzmann_y_mean: pd.Series = boltzmann_y.mean(axis=1)
-            boltzmann_y_mean_dict[oda] = boltzmann_y_mean
+            boltzmann_y_mean_dict[oda] = \
+                boltzmann_y_mean / boltzmann_y_mean.max()
         return boltzmann_y_mean_dict
 
     @staticmethod
@@ -176,9 +177,10 @@ class Rdf2dWithBoltzmann:
         for boltzmann_x in cut_boltzmann_x_dict.values():
             assert boltzmann_x.equals(list(cut_boltzmann_x_dict.values())[0])
         data_columns: list[str] = \
-            ['r_ang'] + list(boltzmann_y_mean_dict.keys())
+            ['r_nm'] + list(boltzmann_y_mean_dict.keys())
         boltzmann_data_df: pd.DataFrame = pd.DataFrame(columns=data_columns)
-        boltzmann_data_df['r_ang'] = list(cut_boltzmann_x_dict.values())[0]
+        boltzmann_data_df['r_nm'] = \
+            list(cut_boltzmann_x_dict.values())[0] * 0.1  # nm
         for oda, boltzmann_y in boltzmann_y_mean_dict.items():
             boltzmann_data_df[oda] = boltzmann_y
         return boltzmann_data_df

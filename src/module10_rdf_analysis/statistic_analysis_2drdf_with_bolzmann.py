@@ -90,7 +90,6 @@ class Rdf2dWithBoltzmann:
             vlines_data[str(int(oda))] = (contact_r, r_half_max)
         df_vlines_data: pd.DataFrame = pd.DataFrame(vlines_data)
         df_vlines_data.index = pd.Index(['contact_r', 'r_half_max'])
-        print(df_vlines_data)
         return df_vlines_data
 
     def plot_data(self,

@@ -81,7 +81,7 @@ class PlotStatistics:
         ax_i.errorbar(x_data,
                       y_data,
                       yerr=y_err,
-                      label='midpoints',
+                      label=config.label,
                       color=config.colors[0],
                       linestyle=config.linestyles[0],
                       marker=config.markers[0],

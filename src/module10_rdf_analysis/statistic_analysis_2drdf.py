@@ -71,14 +71,19 @@ from module10_rdf_analysis.config import StatisticsConfig
 from module10_rdf_analysis.statistic_analysis_2drdf_read_data import \
     ProcessData
 from module10_rdf_analysis.statistic_analysis_2drdf_median import \
+    MedianAnalysis
+from module10_rdf_analysis.statistic_analysis_2drdf_median_from_rdf import \
     CalculateMedian
 from module10_rdf_analysis.statistic_analysis_2drdf_turn_points import \
     AnalysisFitParameters
 from module10_rdf_analysis.statistic_analysis_2drdf_contact import \
     ContactAnalysis
+from module10_rdf_analysis.statistic_analysis_2drdf_fit_parametrs import \
+    FitParameters
+from module10_rdf_analysis.statistic_analysis_2drdf_compute_ex_zone import \
+    ComputeExcludedAreas
 
 from common import logger
-
 
 conf_store = ConfigStore.instance()
 conf_store.store(name="configs", node=StatisticsConfig)
@@ -89,20 +94,33 @@ conf_store.store(name="configs", node=StatisticsConfig)
             config_name="config")
 def main(cfg: StatisticsConfig) -> None:
     # pylint: disable=missing-function-docstring
+    # pylint: disable=unused-variable
     log: logger.logging.Logger = \
         logger.setup_logger('statistic_analysis_2drdf.log')
     # read and process the data
     rdf_data: "ProcessData" = ProcessData(cfg, log)
 
     # apply normal statistics to the data
-    CalculateMedian(
-        rdf_data.data, rdf_data.fit_data, log, cfg.plots.median)
+    CalculateMedian(rdf_data.xdata,
+                    rdf_data.data,
+                    rdf_data.fit_data,
+                    log,
+                    cfg)
 
     # read and process the fitted parameters
     fit_data: "AnalysisFitParameters" = AnalysisFitParameters(cfg, log)
 
     # read and process the contact data
     contact_data: "ContactAnalysis" = ContactAnalysis(cfg, log)
+
+    # read and process the median data
+    # median_data: "MedianAnalysis" = MedianAnalysis(cfg, log)
+
+    # read and process the fit parameters
+    fit_params: "FitParameters" = FitParameters(cfg, log)
+
+    # compute the excluded areas
+    ComputeExcludedAreas(cfg, log)
 
 
 if __name__ == "__main__":

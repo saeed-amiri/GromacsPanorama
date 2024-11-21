@@ -1,0 +1,19 @@
+plot_config:
+    title: exclusion zone
+    label: exclusion zone
+    xlabel: ODA/nm$^2$
+    ylabel: $r_{ex}$ [nm]
+    y_data: ex_zone
+    y_err: err
+    legend: True
+    legend_loc: upper left
+    savefig: ex_zone.jpg
+    show: True
+    colors: ['darkred']
+    markers: ['o']
+    linestyles: ['-']
+    linewidths: [1]
+    markersizes: [3]
+    ylim: [0.5, 6.5]
+    xlim: [0, 55]
+    grid: True

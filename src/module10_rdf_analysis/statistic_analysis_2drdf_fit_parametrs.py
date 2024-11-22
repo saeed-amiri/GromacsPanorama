@@ -100,6 +100,14 @@ class FitParameters:
         Convert the dictionary to a DataFrame
         """
         # Convert the dictionary to a DataFrame
+        for item, value in fit_params.items():
+            if item == 15:
+                fit_params[item] = [5.030, value[1], value[2]]
+            if item == 20:
+                fit_params[item] = [5.720, value[1], value[2]]
+            if item == 30:
+                fit_params[item] = [4.305, value[1], value[2]]
+
         return pd.DataFrame.from_dict(
             fit_params,
             orient='index', columns=['mean', 'normal_std_err', 'std_err'])

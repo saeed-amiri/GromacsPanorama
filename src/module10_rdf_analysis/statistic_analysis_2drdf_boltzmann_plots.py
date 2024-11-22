@@ -84,7 +84,7 @@ class PlotRdfBoltzmann:
                             )
             self.add_vlines(axes[i], vlines_data[oda])
             oda_per_nm2: float = float(oda) / (21.7**2)
-            self._add_label(axes[i], f'{oda_per_nm2: .2f} ODA/nm$^2$')
+            self._add_label(axes[i], f'~{oda_per_nm2:.2f} ODA/nm$^2$')
 
         self._plot_all_rdf(rdf_data, axes[last_ind], rdf_x, 'rdf')
         self._add_label(axes[last_ind], r'All g$^*$(r$^*$)')

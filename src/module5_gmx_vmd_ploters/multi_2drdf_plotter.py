@@ -10,7 +10,9 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+
 import matplotlib as mp
+from matplotlib import patches
 import matplotlib.pyplot as plt
 
 from common import logger
@@ -179,6 +181,8 @@ class Plot2dRdf:
 
         self._add_grid(axes)
 
+        self._set_rectangel_box(fig_i)
+
         self._save_figure(fig_i)
 
     def _make_axis(self) -> tuple[plt.Figure, np.ndarray]:
@@ -307,6 +311,18 @@ class Plot2dRdf:
         """save the figure"""
         elsevier_plot_tools.save_close_fig(
             fig_i, 'multi_2d_rdf.jpg', show_legend=True, loc='upper left')
+
+    def _set_rectangel_box(self,
+                           fig_i: plt.Figure,
+                           ) -> None:
+        """set the rectangle box"""
+        rect = patches.Rectangle((0.05, -0.005),
+                                 0.86, 0.9,
+                                 transform=fig_i.transFigure,
+                                 linewidth=2,
+                                 edgecolor='black',
+                                 facecolor='none')
+        fig_i.patches.append(rect)
 
     def write_msg(self,
                   log: logger.logging.Logger

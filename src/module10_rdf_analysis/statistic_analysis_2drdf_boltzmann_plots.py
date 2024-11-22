@@ -88,10 +88,14 @@ class PlotRdfBoltzmann:
 
         self._plot_all_rdf(rdf_data, axes[last_ind], rdf_x, 'rdf')
         self._add_label(axes[last_ind], r'All g$^*$(r$^*$)')
+        axes[last_ind].set_ylim(self.config.ylim)
+        rdf_x_lims: tuple[float, float] = axes[last_ind].get_xlim()
 
         self._plot_all_rdf(
             boltzmann_data, axes[last_ind + 1], boltzmann_x, 'boltzmann')
         self._add_label(axes[last_ind + 1], r'All $\psi$(r$^*$)')
+        axes[last_ind + 1].set_ylim(self.config.ylim)
+        axes[last_ind + 1].set_xlim(rdf_x_lims)
 
         self._set_or_remove_ticks(axes)
         self._add_grid(axes)
@@ -139,6 +143,7 @@ class PlotRdfBoltzmann:
                   )
         ax_i.legend(fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT-3,
                     loc='upper left')
+        ax_i.set_ylim(self.config.ylim)
 
     def add_vlines(self,
                    ax_i: mp.axes._axes.Axes,

@@ -33,11 +33,12 @@ class PlotRdfBoltzmann:
                  log: logger.logging.Logger,
                  config: StatisticsConfig
                  ) -> None:
+        # pylint: disable=unused-argument
         self.info_msg: str = "Message from PlotRdfBoltzmann:\n"
         self.config = config
         self.set_styles()
         self.plot_data(
-            rdf_x, rdf_data, rdf_fit_data, boltzmann_data, vlines_data, log)
+            rdf_x, rdf_data, boltzmann_data, vlines_data)
 
     def set_styles(self) -> None:
         """set the styles
@@ -54,23 +55,22 @@ class PlotRdfBoltzmann:
     def plot_data(self,
                   rdf_x: pd.Series,
                   rdf_data: pd.DataFrame,
-                  rdf_fit_data: pd.DataFrame,
                   boltzmann_data: pd.DataFrame,
                   vlines_data: pd.DataFrame,
-                  log: logger.logging.Logger
                   ) -> None:
         """
         Plot the 2d rdf with the Boltzmann distribution
         """
         # pylint: disable=too-many-locals
+
         fig_i: plt.Figure
         axes: np.ndarray
-        oda: str
-
         fig_i, axes = self._make_axis()
-        # last_ind: int = len(self.data.columns)
+
         boltzmann_x: pd.Series = boltzmann_data['r_nm']
+
         last_ind: int = len(rdf_data.columns)
+
         for i, (oda, rdf) in enumerate(rdf_data.items()):
             bolzmann: pd.Series = boltzmann_data[int(oda)]
             self._plot_axis(axes[i],
@@ -92,6 +92,7 @@ class PlotRdfBoltzmann:
         self._plot_all_rdf(
             boltzmann_data, axes[last_ind + 1], boltzmann_x, 'boltzmann')
         self._add_label(axes[last_ind + 1], r'All $\psi$(r$^*$)')
+
         self._set_or_remove_ticks(axes)
         self._add_grid(axes)
         self._add_axis_labels(axes)

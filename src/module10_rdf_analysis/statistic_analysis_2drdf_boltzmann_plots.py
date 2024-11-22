@@ -35,8 +35,21 @@ class PlotRdfBoltzmann:
                  ) -> None:
         self.info_msg: str = "Message from PlotRdfBoltzmann:\n"
         self.config = config
+        self.set_styles()
         self.plot_data(
             rdf_x, rdf_data, rdf_fit_data, boltzmann_data, vlines_data, log)
+
+    def set_styles(self) -> None:
+        """set the styles
+        cant set the linestyle to the confg since hydra is not able to
+        handle the tuple of tuples
+        """
+        self.linestyles = [
+            (offset, tuple(dashpattern)) if dashpattern else 'solid'
+            for (_, (offset, dashpattern)) in
+            elsevier_plot_tools.LINESTYLE_TUPLE][::-1]
+        self.config.colors = elsevier_plot_tools.CLEAR_COLOR_GRADIENT
+        self.config.markers = elsevier_plot_tools.MARKER_STYLES
 
     def plot_data(self,
                   rdf_x: pd.Series,
@@ -57,15 +70,6 @@ class PlotRdfBoltzmann:
         fig_i, axes = self._make_axis()
         # last_ind: int = len(self.data.columns)
         boltzmann_x: pd.Series = boltzmann_data['r_nm']
-        colors: list[str] = elsevier_plot_tools.CLEAR_COLOR_GRADIENT
-        self.linestyles = [
-            (offset, tuple(dashpattern)) if dashpattern else 'solid'
-            for (_, (offset, dashpattern)) in
-            elsevier_plot_tools.LINESTYLE_TUPLE][::-1]
-        # Validate linestyles
-        markers: list[str] = elsevier_plot_tools.MARKER_STYLES
-        self.config.colors = colors
-        self.config.markers = markers
         last_ind: int = len(rdf_data.columns)
         for i, (oda, rdf) in enumerate(rdf_data.items()):
             bolzmann: pd.Series = boltzmann_data[int(oda)]
@@ -74,17 +78,20 @@ class PlotRdfBoltzmann:
                             rdf=rdf,
                             boltzmann_x=boltzmann_x,
                             boltzmann=bolzmann,
-                            color=colors[i],
+                            color=self.config.colors[i],
                             linestyle=self.linestyles[i],
-                            marker=markers[i],
+                            marker=self.config.markers[i],
                             )
             self.add_vlines(axes[i], vlines_data[oda])
             oda_per_nm2: float = float(oda) / (21.7**2)
             self._add_label(axes[i], f'{oda_per_nm2: .2f} ODA/nm$^2$')
 
         self._plot_all_rdf(rdf_data, axes[last_ind], rdf_x, 'rdf')
+        self._add_label(axes[last_ind], r'All g$^*$(r$^*$)')
+
         self._plot_all_rdf(
             boltzmann_data, axes[last_ind + 1], boltzmann_x, 'boltzmann')
+        self._add_label(axes[last_ind + 1], r'All $\psi$(r$^*$)')
         self._set_or_remove_ticks(axes)
         self._add_grid(axes)
         self._add_axis_labels(axes)
@@ -162,16 +169,19 @@ class PlotRdfBoltzmann:
                 if i == 0:
                     continue
                 marker = ''
-                linestyle = self.linestyles[i]
+                linestyle = self.linestyles[i-1]
+                color = self.config.colors[i-1]
                 lw: float = 1.0
             else:
                 marker = self.config.markers[i]
                 linestyle = '--'
                 lw = 0.5
+                color = self.config.colors[i]
+
             ax_i.plot(x_data,
                       rdf,
                       markersize=0.5,
-                      color=self.config.colors[i],
+                      color=color,
                       linestyle=linestyle,
                       lw=lw,
                       marker=marker,

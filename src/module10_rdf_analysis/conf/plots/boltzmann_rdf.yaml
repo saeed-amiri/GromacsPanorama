@@ -1,0 +1,17 @@
+title: boltzmann with 2d RDF
+nr_rows: 3
+nr_cols: 3
+rdf_label: g$^\star$(r$^\star$)
+boltzmann_label: $\psi(r^\star$)
+contact_radii_label: $r^\star_{c}$
+r_half_max_label: $r^\star_{HM}$
+xlabel: r$^\star$ [nm]
+ylabel: a.u.
+legend: True
+legend_loc: upper left
+savefig: boltzmann_rdf.jpg
+show: True
+ylim: [2.5, 8.5]
+xlim: [0, 55]
+grid: False
+microgrid: False

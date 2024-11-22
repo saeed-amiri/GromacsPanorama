@@ -9,6 +9,7 @@ import pandas as pd
 
 import matplotlib as mp
 import matplotlib.pyplot as plt
+from matplotlib import patches
 
 from common import logger
 from common import elsevier_plot_tools
@@ -97,6 +98,7 @@ class PlotRdfBoltzmann:
         axes[last_ind + 1].set_ylim(self.config.ylim)
         axes[last_ind + 1].set_xlim(rdf_x_lims)
 
+        self._set_rectangel_box(fig_i)
         self._set_or_remove_ticks(axes)
         self._add_grid(axes)
         self._add_axis_labels(axes)
@@ -242,6 +244,20 @@ class PlotRdfBoltzmann:
                 ax_i.set_xlabel(
                     self.config.xlabel,
                     fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+
+    def _set_rectangel_box(self,
+                           fig_i: plt.Figure,
+                           ) -> None:
+        """set the rectangle box"""
+        if not self.config.rectangel_box:
+            return
+        rect = patches.Rectangle((0.05, -0.005),
+                                 0.86, 0.9,
+                                 transform=fig_i.transFigure,
+                                 linewidth=2,
+                                 edgecolor='black',
+                                 facecolor='none')
+        fig_i.patches.append(rect)
 
     def _save_figure(self,
                      fig_i: plt.Figure,

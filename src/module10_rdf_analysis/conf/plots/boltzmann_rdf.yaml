@@ -1,6 +1,7 @@
 title: boltzmann with 2d RDF
 nr_rows: 3
 nr_cols: 3
+normalize_rdf: True
 rdf_label: g$^\star$(r$^\star$)
 boltzmann_label: $\psi(r^\star$)
 contact_radii_label: $r^\star_{c}$
@@ -11,7 +12,10 @@ legend: True
 legend_loc: upper left
 savefig: boltzmann_rdf.jpg
 show: True
-ylim: [2.5, 8.5]
-xlim: [0, 55]
+ylim: [-0.05, 1.075]
+xlim: [0, 12]
 grid: False
 microgrid: False
+colors: null
+markers: null
+linestyles: null

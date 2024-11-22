@@ -1,6 +1,6 @@
 plot_config:
     title: middle point of RDF
-    label: r$^\star$ at half max(RDF) [nm]
+    label: r$^\star$ at half max(RDF)
     xlabel: ODA/nm$^2$
     ylabel: r$^\star_{HM}$ [nm]
     y_data: mean
@@ -18,3 +18,5 @@ plot_config:
     xlim: [0, 0.115]
     grid: True
     microgrid: True
+    
+

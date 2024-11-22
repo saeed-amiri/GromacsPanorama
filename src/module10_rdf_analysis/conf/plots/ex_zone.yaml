@@ -14,7 +14,7 @@ plot_config:
     linestyles: ['-']
     linewidths: [1]
     markersizes: [3]
-    ylim: [0.5, 6.5]
-    xlim: [0, 55]
+    ylim: [0.5, 5.5]
+    xlim: [0, 0.115]
     grid: True
     microgrid: True

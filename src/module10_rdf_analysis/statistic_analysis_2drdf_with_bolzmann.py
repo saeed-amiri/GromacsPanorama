@@ -24,7 +24,7 @@ class Rdf2dWithBoltzmann:
     __slots__ = ['config', 'info_msg']
 
     def __init__(self,
-                 rdf_x: pd.DataFrame,
+                 rdf_x: pd.Series,
                  rdf_data: pd.DataFrame,
                  rdf_fit_data: pd.DataFrame,
                  log: logger.logging.Logger,
@@ -96,7 +96,7 @@ class Rdf2dWithBoltzmann:
         return df_vlines_data
 
     def plot_data(self,
-                  rdf_x: pd.DataFrame,
+                  rdf_x: pd.Series,
                   rdf_data: pd.DataFrame,
                   rdf_fit_data: pd.DataFrame,
                   boltzmann_data: dict[str, pd.DataFrame],

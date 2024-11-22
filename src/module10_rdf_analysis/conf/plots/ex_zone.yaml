@@ -2,7 +2,7 @@ plot_config:
     title: exclusion zone
     label: exclusion zone
     xlabel: ODA/nm$^2$
-    ylabel: $r_{ex}$ [nm]
+    ylabel: $r^\star_{ex}$ [nm]
     y_data: ex_zone
     y_err: err
     legend: True

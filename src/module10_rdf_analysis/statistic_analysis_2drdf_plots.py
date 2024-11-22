@@ -20,7 +20,7 @@ class PlotStatistics:
                  ydata: pd.DataFrame,
                  log: logger.logging.Logger,
                  config: StatisticsConfig,
-                 err_plot: bool = False
+                 err_plot: bool = False,
                  ) -> None:
         self.ydata = ydata
         if err_plot:
@@ -76,7 +76,7 @@ class PlotStatistics:
         figure: tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
             'single_column', aspect_ratio=1)
         fig_i, ax_i = figure
-        x_data = self.ydata.index
+        x_data = [item/21.7**2 for item in self.ydata.index]
         y_data = self.ydata[config.y_data]
         y_err = self.ydata[config.y_err]
         ax_i.errorbar(x_data,

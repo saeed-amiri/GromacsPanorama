@@ -163,7 +163,7 @@ class Plot2dRdf:
                                 marker=self.plot_config.markers[i-1],
                                 )
                 oda_per_nm2: float = float(oda) / (21.7**2)
-                self._add_label(axes[i-1], f'{oda_per_nm2: .2f} ODA/nm$^2$')
+                self._add_label(axes[i-1], f'~{oda_per_nm2:.2f} ODA/nm$^2$')
 
         self._plot_all_rdf(self.data, axes[last_ind - 1], x_data, 'rdf')
         self._add_label(axes[last_ind - 1], r'All g$^*$(r$^*$)')
@@ -275,7 +275,7 @@ class Plot2dRdf:
                   label,
                   ha='right',
                   va='bottom',
-                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT,
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT - 2,
                   transform=ax_i.transAxes,
                   )
 

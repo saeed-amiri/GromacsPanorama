@@ -33,6 +33,8 @@ class Rdf2dWithBoltzmann:
         self.info_msg: str = "Message from Rdf2dWithBoltzmann:\n"
         self.config = config
         boltzmann_data: pd.DataFrame = self.process_boltzmann_data(log)
+        rdf_data = self.normalize_rdf(
+            rdf_data, self.config.plots.boltzmann_rdf.normalize_rdf)
         vlines_data: pd.DataFrame = self.get_radii_vlines(log)
         self.plot_data(
             rdf_x, rdf_data, rdf_fit_data, boltzmann_data, vlines_data, log)
@@ -114,6 +116,19 @@ class Rdf2dWithBoltzmann:
                          vlines_data,
                          log,
                          self.config.plots.boltzmann_rdf)
+    @staticmethod
+    def normalize_rdf(data: pd.DataFrame,
+                      normalize: bool
+                      ) -> pd.DataFrame:
+        """normalize the data"""
+        if not normalize:
+            return data
+        for i, (oda, rdf) in enumerate(data.items()):
+            # Calculate the mean of the top 10 maximum points
+            top_10_mean = rdf.nlargest(2).mean()
+            rdf_norm = rdf / top_10_mean
+            data[oda] = rdf_norm
+        return data
 
     @staticmethod
     def extract_boltzmann_data(log: logger.logging.Logger,

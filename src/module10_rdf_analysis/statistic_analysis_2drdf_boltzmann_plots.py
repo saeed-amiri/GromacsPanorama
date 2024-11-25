@@ -249,7 +249,8 @@ class PlotRdfBoltzmann:
                            fig_i: plt.Figure,
                            ) -> None:
         """set the rectangle box"""
-        if not self.config.rectangel_box:
+        if 'add_rectangles' not in self.config or \
+           not self.config.add_rectangles:
             return
         rect = patches.Rectangle((0.05, -0.005),
                                  0.86, 0.9,

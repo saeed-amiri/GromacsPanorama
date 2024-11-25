@@ -13,4 +13,5 @@ defaults:
   - plots@plots.contact_angles: contact_angles # Includes plots/contact_angles.yaml
   - plots@plots.fit_parameters: fit_parameters # Includes plots/fit_parameters.yaml
   - plots@plots.ex_zone: ex_zone           # Includes plots/ex_zone.yaml
+  - plots@plots.ex_zone_paper: ex_zone_paper   # Includes plots/ex_zone_paper.yaml
   - plots@plots.boltzmann_rdf: boltzmann_rdf # Includes plots/boltzmann_rdf.yaml

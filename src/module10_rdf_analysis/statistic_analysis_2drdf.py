@@ -47,6 +47,8 @@ from module10_rdf_analysis.statistic_analysis_2drdf_fit_parametrs import \
     FitParameters
 from module10_rdf_analysis.statistic_analysis_2drdf_compute_ex_zone import \
     ComputeExcludedAreas
+from module10_rdf_analysis.statistic_analysis_2drdf_with_bolzmann import \
+    Rdf2dWithBoltzmann
 
 from common import logger
 
@@ -86,6 +88,13 @@ def main(cfg: StatisticsConfig) -> None:
 
     # compute the excluded areas
     ComputeExcludedAreas(cfg, log)
+
+    # compute the median with Boltzmann
+    Rdf2dWithBoltzmann(rdf_data.xdata,
+                       rdf_data.data,
+                       rdf_data.fit_data,
+                       log,
+                       cfg)
 
 
 if __name__ == "__main__":

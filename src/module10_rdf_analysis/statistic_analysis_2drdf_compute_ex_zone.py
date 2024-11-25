@@ -55,6 +55,16 @@ class ComputeExcludedAreas:
             self.make_df(ex_zone, err, df_contact['ODA'])
         PlotStatistics(
             ex_zone_df, log, self.config.plots.ex_zone, err_plot=True)
+        combined_df: pd.DataFrame = ex_zone_df.copy()
+        combined_df['contact_radius'] = contact_arr
+        combined_df['contact_radius_err'] = \
+            df_contact['normal_std_err'].to_numpy()
+        combined_df['r_half_max'] = r_half_max_arr
+        combined_df['r_half_max_err'] = \
+            df_r_half_max['normal_std_err'].to_numpy()
+
+        PlotStatistics(
+            combined_df, log, self.config.plots.ex_zone_paper, paper_plot=True)
         self.write_ex_zone(ex_zone_df, log)
 
     def estimate_error(self,

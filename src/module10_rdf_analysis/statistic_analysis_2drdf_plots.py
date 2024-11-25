@@ -170,7 +170,7 @@ class PlotStatistics:
                         ax_i: plt.Axes,
                         config: StatisticsConfig,
                         text_x: float = -0.11,
-                        text_y: float = 0.95,
+                        text_y: float = 0.92,
                         ) -> None:
         """
         Add text to the plot

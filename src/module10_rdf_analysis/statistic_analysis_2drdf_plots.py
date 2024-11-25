@@ -13,6 +13,7 @@ from module10_rdf_analysis.config import StatisticsConfig
 
 class PlotStatistics:
     """plots the statistics"""
+    # pylint: disable=too-many-arguments
 
     info_msg: str = "Message from PlotStatistics:\n"
 
@@ -76,8 +77,10 @@ class PlotStatistics:
             'single_column', aspect_ratio=1)
         fig_i, ax_i = figure
         xdata = [item/21.7**2 for item in self.ydata.index]
-        print(config.labels)
+
         for idx, col in enumerate(self.ydata.columns[::2]):
+            if col not in config.col_to_plot:
+                continue
             ax_i.errorbar(xdata,
                           self.ydata[col],
                           yerr=self.ydata[self.ydata.columns[1::2][idx]],
@@ -94,6 +97,8 @@ class PlotStatistics:
         ax_i.set_ylim(config.ylim)
         self.add_text(ax_i, config)
         self.add_grids(ax_i, config)
+        self.add_paper_label(ax_i, config)
+
         elsevier_plot_tools.save_close_fig(fig_i,
                                            config.savefig,
                                            loc=config.legend_loc,
@@ -135,6 +140,7 @@ class PlotStatistics:
         ax_i.set_ylim(config.ylim)
         self.add_text(ax_i, config)
         self.add_grids(ax_i, config)
+        self.add_paper_label(ax_i, config)
         elsevier_plot_tools.save_close_fig(fig_i,
                                            config.savefig,
                                            loc=config.legend_loc,
@@ -156,6 +162,24 @@ class PlotStatistics:
         ax_i.text(text_x,
                   text_y,
                   config.text,
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT,
+                  transform=ax_i.transAxes,
+                  )
+
+    def add_paper_label(self,
+                        ax_i: plt.Axes,
+                        config: StatisticsConfig,
+                        text_x: float = -0.11,
+                        text_y: float = 0.95,
+                        ) -> None:
+        """
+        Add text to the plot
+        """
+        if 'add_paper_label' not in config or not config.add_paper_label:
+            return
+        ax_i.text(text_x,
+                  text_y,
+                  config.paper_label,
                   fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT,
                   transform=ax_i.transAxes,
                   )

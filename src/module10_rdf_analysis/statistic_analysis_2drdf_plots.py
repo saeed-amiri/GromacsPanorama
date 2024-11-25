@@ -21,10 +21,14 @@ class PlotStatistics:
                  log: logger.logging.Logger,
                  config: StatisticsConfig,
                  err_plot: bool = False,
+                 paper_plot: bool = False
                  ) -> None:
         self.ydata = ydata
         if err_plot:
             self.plot_statistics_with_error(log, config.plot_config)
+        elif paper_plot:
+            self.plot_statistics_with_error_paper(
+                log, config.plot_config)
         else:
             self.plot_statistics(log, config.plot_config)
 
@@ -47,6 +51,42 @@ class PlotStatistics:
                       marker=config.markers[idx],
                       markersize=config.markersizes[idx],
                       )
+        ax_i.set_xlabel(config.xlabel)
+        ax_i.set_ylabel(config.ylabel)
+        ax_i.legend(loc=config.legend_loc)
+        ax_i.set_xlim(config.xlim)
+        ax_i.set_ylim(config.ylim)
+        self.add_text(ax_i, config)
+        self.add_grids(ax_i, config)
+        elsevier_plot_tools.save_close_fig(fig_i,
+                                           config.savefig,
+                                           loc=config.legend_loc,
+                                           show_legend=config.legend)
+        log.info(f"{self.info_msg}")
+        log.info(f"Statistics plot saved as {config.savefig}\n")
+
+    def plot_statistics_with_error_paper(self,
+                                         log: logger.logging.Logger,
+                                         config: StatisticsConfig
+                                         ) -> None:
+        """
+        Plot the statistics for the paper
+        """
+        figure: tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
+            'single_column', aspect_ratio=1)
+        fig_i, ax_i = figure
+        xdata = [item/21.7**2 for item in self.ydata.index]
+        print(config.labels)
+        for idx, col in enumerate(self.ydata.columns[::2]):
+            ax_i.errorbar(xdata,
+                          self.ydata[col],
+                          yerr=self.ydata[self.ydata.columns[1::2][idx]],
+                          label=config.labels[col],
+                          color=config.colors[idx],
+                          linestyle=config.linestyles[idx],
+                          marker=config.markers[idx],
+                          markersize=config.markersizes[idx],
+                          )
         ax_i.set_xlabel(config.xlabel)
         ax_i.set_ylabel(config.ylabel)
         ax_i.legend(loc=config.legend_loc)

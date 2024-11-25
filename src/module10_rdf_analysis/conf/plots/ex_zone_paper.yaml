@@ -1,0 +1,23 @@
+plot_config:
+    title: exclusion zone
+    labels:
+        ex_zone: $r^\star_{ex}$
+        contact_radius: $r^\star_c$ 
+        r_half_max: $r^\star_{HM}$
+    xlabel: ODA/nm$^2$
+    ylabel: $r^\star$ [nm]
+    y_data: ex_zone
+    y_err: err
+    legend: True
+    legend_loc: upper right
+    savefig: ex_zone_paper.jpg
+    show: True
+    colors: ['darkred', 'darkblue', 'darkgreen']
+    markers: ['o', 'o', 'o']
+    linestyles: ['-', '--', ':']
+    linewidths: [1, 1, 1]
+    markersizes: [3, 3, 3]
+    ylim: [0.5, 7.5]
+    xlim: [0, 0.115]
+    grid: True
+    microgrid: True

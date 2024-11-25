@@ -1,6 +1,6 @@
 plot_config:
     title: exclusion zone
-    label: exclusion zone
+    label: 'exclusion zone: $r^\star_{ex} = r^\star_{HM} - r^\star_c$'
     xlabel: ODA/nm$^2$
     ylabel: $r^\star_{ex}$ [nm]
     y_data: ex_zone
@@ -18,3 +18,5 @@ plot_config:
     xlim: [0, 0.115]
     grid: True
     microgrid: True
+    add_paper_label: True
+    paper_label: 'b)'

@@ -19,3 +19,4 @@ microgrid: False
 colors: null
 markers: null
 linestyles: null
+add_rectangles: True

@@ -49,7 +49,7 @@ class DensityFileConfig:
             })
 
     plot_list: list[int] = \
-        field(default_factory=lambda: [0, 1, 7, 4, 8])
+        field(default_factory=lambda: [0, 1, 7, 4])
 
 
 class DenityPlotConfiguration:

@@ -48,6 +48,7 @@ class FitRdf2dTo5PL2S:
     info_msg: str = 'Messeges from FitRdf2dTo5PL2S:\n'
 
     config: "FitConfigur"
+    half_max_r: np.float64
     fitted_rdf: dict[float, float]
     midpoind: float  # Midpoint of fitting: c
     first_turn: float  # First turnning point
@@ -76,6 +77,7 @@ class FitRdf2dTo5PL2S:
         fitted_data: np.ndarray
 
         radii, rdf_values = self.initiate_data(rdf_2d)
+        self.half_max_r = self.find_r_of_half_max(radii, rdf_values)
         radii_interpolated, rdf_interpolated = \
             self.interpolation_smoothing(radii, rdf_values)
         first_derivative, second_derivative = \
@@ -117,6 +119,24 @@ class FitRdf2dTo5PL2S:
         radii = np.array(list(rdf_2d.keys()))
         rdf_values = np.array(list(rdf_2d.values()))
         return radii, rdf_values
+
+    def find_r_of_half_max(self,
+                            radii: np.ndarray,
+                            rdf_values: np.ndarray
+                            ) -> np.float64:
+        """find the r of half max"""
+        max_rdf: np.float64 = np.mean(rdf_values[-7:])  # the last 7 values
+        half_max_rdf: np.float64 = max_rdf / 2
+        half_max_r: np.float64 = \
+            radii[np.argmin(np.abs(rdf_values - half_max_rdf))]
+        normal_max_r: np.float64 = radii[np.argmax(rdf_values)]
+
+        self.info_msg += f'\tmax rdf  {np.max(rdf_values)}\n'
+        self.info_msg += f'\tnormal max r: {normal_max_r:.3f}\n'
+        self.info_msg += f'\tmax rdf (avg of 7 last points): {max_rdf:.3f}\n'
+        self.info_msg += f'\thalf max rdf: {half_max_rdf:.3f}\n'
+        self.info_msg += f'\thalf max r: {half_max_r:.3f}\n'
+        return half_max_r
 
     def set_initial_guess(self,
                           rdf_values: np.ndarray,
@@ -167,6 +187,7 @@ class FitRdf2dTo5PL2S:
                           f'\t\tb {popt[1]:.3f}\n'
                           f'\t\tg {popt[2]:.3f}\n'
                           f'\t\td {popt[3]:.3f}\n'
+                          f'\t\tr_half_max {self.half_max_r:.3f}\n'
                           )
         return self.logistic_5pl2s(radii_interpolated, *popt), popt
 

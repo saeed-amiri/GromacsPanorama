@@ -3,7 +3,7 @@ nr_rows: 3
 nr_cols: 3
 normalize_rdf: True
 rdf_label: g$^\star$(r$^\star$)
-boltzmann_label: $\psi(r^\star$)
+boltzmann_label: $c(r^\star$)
 contact_radii_label: $r^\star_{c}$
 r_half_max_label: $r^\star_{HM}$
 xlabel: r$^\star$ [nm]

@@ -4,6 +4,7 @@ Since the style is quite different than the other plots, it is
 implemented in a separate class.
 """
 
+import string
 import numpy as np
 import pandas as pd
 
@@ -102,6 +103,7 @@ class PlotRdfBoltzmann:
         self._set_or_remove_ticks(axes)
         self._add_grid(axes)
         self._add_axis_labels(axes)
+        self._add_indices_label(axes)
         self._save_figure(fig_i)
 
     def _make_axis(self) -> tuple[plt.Figure, np.ndarray]:
@@ -244,6 +246,22 @@ class PlotRdfBoltzmann:
                 ax_i.set_xlabel(
                     self.config.xlabel,
                     fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+
+    def _add_indices_label(self,
+                           axes: np.ndarray  # of plt.Axes
+                           ) -> None:
+        """add the indices label"""
+        if not self.config.add_indices_label:
+            return
+        for ind, ax_i in enumerate(axes):
+            label = string.ascii_lowercase[ind % 26]
+            ax_i.text(0.935, 0.40,
+                      f'({label})',
+                      fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT,
+                      transform=ax_i.transAxes,
+                      horizontalalignment='center',
+                      verticalalignment='center',
+                      )
 
     def _set_rectangel_box(self,
                            fig_i: plt.Figure,

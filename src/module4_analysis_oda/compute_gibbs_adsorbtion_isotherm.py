@@ -65,8 +65,9 @@ class Constants(Enum):
 @dataclass
 class Config:
     """Configuration for the ComputeIsotherm class"""
-    input_file: str = "data/interfacial_tension.xvg"
-    output_file: str = "data/gibbs_adsorption_isotherm.xvg"
+    constants: Constants = Constants()
+    input_file: str = "interfacial_tension.xvg"
+    output_file: str = "gibbs_adsorption_isotherm.xvg"
 
 
 class ComputeIsotherm:

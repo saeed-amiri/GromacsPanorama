@@ -172,7 +172,7 @@ class PlotPotential:
         """plot surface potential"""
         # pylint: disable=too-many-arguments
         _configs = configs
-        _configs.x_ticks = [1.75] + configs.x_ticks[1:]
+        _configs.x_ticks = [1.75] + [2.5] + configs.x_ticks[1:]
         self._set_axis_ticks(ax_i, debye_d, _configs)
         xticks_labels: list[str] = \
             [r'$r^\star_c$'] + [str(f'{i:.1f}') for i in configs.x_ticks[1:]]

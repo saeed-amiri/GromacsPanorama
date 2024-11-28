@@ -5,6 +5,7 @@ X_oda_densities.xvg
 in which X is the nominal number of ODA at the interface
 """
 
+import string
 from dataclasses import field
 from dataclasses import dataclass
 
@@ -77,6 +78,7 @@ class PlotConfoig:
                                  elsevier_plot_tools.LINESTYLE_TUPLE][::-1])
     markers: list[str] = field(
         default_factory=lambda: elsevier_plot_tools.MARKER_STYLES)
+    add_indices_label: bool = True
 
 
 class Plot2dRdf:
@@ -182,6 +184,8 @@ class Plot2dRdf:
         self._add_grid(axes)
 
         self._set_rectangel_box(fig_i)
+
+        self._add_indices_label(axes)
 
         self._save_figure(fig_i)
 
@@ -323,6 +327,22 @@ class Plot2dRdf:
                                  edgecolor='black',
                                  facecolor='none')
         fig_i.patches.append(rect)
+
+    def _add_indices_label(self,
+                           axes: np.ndarray  # of plt.Axes
+                           ) -> None:
+        """add the indices label"""
+        if not self.plot_config.add_indices_label:
+            return
+        for ind, ax_i in enumerate(axes):
+            label = string.ascii_lowercase[ind % 26]
+            ax_i.text(0.935, 0.40,
+                      f'({label})',
+                      fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT,
+                      transform=ax_i.transAxes,
+                      horizontalalignment='center',
+                      verticalalignment='center',
+                      )
 
     def write_msg(self,
                   log: logger.logging.Logger

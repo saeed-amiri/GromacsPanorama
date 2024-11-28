@@ -2,6 +2,7 @@
 A script to plot all the statistical analysis results for 2D RDF data.
 """
 
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -52,8 +53,10 @@ class PlotStatistics:
                       marker=config.markers[idx],
                       markersize=config.markersizes[idx],
                       )
-        ax_i.set_xlabel(config.xlabel)
-        ax_i.set_ylabel(config.ylabel)
+        ax_i.set_xlabel(config.xlabel,
+                        fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
+        ax_i.set_ylabel(config.ylabel,
+                        fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
         ax_i.legend(loc=config.legend_loc)
         ax_i.set_xlim(config.xlim)
         ax_i.set_ylim(config.ylim)
@@ -90,15 +93,25 @@ class PlotStatistics:
                           marker=config.markers[idx],
                           markersize=config.markersizes[idx],
                           )
-        ax_i.set_xlabel(config.xlabel)
-        ax_i.set_ylabel(config.ylabel)
+        ax_i.set_xlabel(config.xlabel,
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
+        ax_i.set_ylabel(config.ylabel,
+                        fontsize=elsevier_plot_tools.FONT_SIZE_PT)
         ax_i.legend(loc=config.legend_loc)
         ax_i.set_xlim(config.xlim)
         ax_i.set_ylim(config.ylim)
         self.add_text(ax_i, config)
         self.add_grids(ax_i, config)
         self.add_paper_label(ax_i, config)
+        if 'yticklabels' in config:
+            yticks_labels = [int(item) for item in config.yticklabels]
+            ax_i.set_yticks(yticks_labels)
+            ax_i.set_yticklabels(yticks_labels)
 
+        # set the ticks fontsize
+        ax_i.tick_params(axis='both',
+                         which='major',
+                         labelsize=elsevier_plot_tools.FONT_SIZE_PT)
         elsevier_plot_tools.save_close_fig(fig_i,
                                            config.savefig,
                                            loc=config.legend_loc,
@@ -135,6 +148,16 @@ class PlotStatistics:
                       )
         ax_i.set_xlabel(config.xlabel)
         ax_i.set_ylabel(config.ylabel)
+
+        if 'yticklabels' in config:
+            yticks_labels = [int(item) for item in config.yticklabels]
+            ax_i.set_yticks(yticks_labels)
+            ax_i.set_yticklabels(yticks_labels)
+
+        # set the ticks fontsize
+        ax_i.tick_params(axis='both',
+                         which='major',
+                         labelsize=elsevier_plot_tools.FONT_SIZE_PT)
         ax_i.legend(loc=config.legend_loc)
         ax_i.set_xlim(config.xlim)
         ax_i.set_ylim(config.ylim)

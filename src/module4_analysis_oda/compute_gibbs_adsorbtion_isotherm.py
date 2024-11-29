@@ -121,6 +121,7 @@ class GetTension:
         tension_df: pd.DataFrame = self.read_tension(log)
 
         self.analyze_tension(tension_df, log)
+        self.log_msg(log)
 
     def read_tension(self,
                      log: logger.logging.Logger
@@ -154,8 +155,7 @@ class GetTension:
         for oda, tension in tension_df.items():
             samples: pd.Series = \
                 self.sample_randomly_with_replacement(tension)
-            raw_normal = self.calc_raw_stats(samples, 'normal')
-            stats_normal = self.convert_stats(raw_normal, 'normal')
+            raw_normal = self.calc_raw_stats(oda, samples, 'normal')
 
     def sample_randomly_with_replacement(self,
                                          tension: pd.Series
@@ -169,38 +169,27 @@ class GetTension:
         return samples
 
     def calc_raw_stats(self,
+                       oda: str,
                        samples: typing.Union[list[np.float64], list[float]],
                        style: str
                        ) -> dict[str, typing.Any]:
         """calculate std and averages"""
-        raw_stats_dict: dict[str, typing.Any] = {}
+        raw_stats_dict: dict[str, dict[str, typing.Any]] = {}
         sample_arr: np.ndarray = np.array(samples)
-        raw_stats_dict['std'] = np.std(sample_arr)
-        raw_stats_dict['mean'] = np.mean(sample_arr)
-        raw_stats_dict['mode'] = \
-            self.calc_mode(sample_arr, raw_stats_dict['std'])
+        raw_stats_dict[oda] = {}
+        raw_stats_dict[oda]['std'] = np.std(sample_arr)
+        raw_stats_dict[oda]['mean'] = np.mean(sample_arr)
+        raw_stats_dict[oda]['mode'] = \
+            self.calc_mode(sample_arr, raw_stats_dict[oda]['std'])
         if style == 'initial':
             boots = ''
         else:
             boots = ' bootstraping'
         self.info_msg += \
-            (f'\tStats (raw) for `{style}`{boots}:'
+            (f'\tStats for `{style}`{boots}:'
              f'{json.dumps(raw_stats_dict, indent=8)}\n')
+        print(pd.DataFrame(raw_stats_dict).T)
         return raw_stats_dict
-
-    def convert_stats(self,
-                      raw_stats: dict[str, typing.Any],
-                      style: str
-                      ) -> dict[str, typing.Any]:
-        """convert data to the asked unit"""
-        if style == 'initial':
-            boots = ''
-        else:
-            boots = ' bootstraping'
-        self.info_msg += \
-            (f'\tStats (Converted) for `{style}`{boots}:'
-             f'{json.dumps(raw_stats, indent=8)}\n')
-        return raw_stats
 
     @staticmethod
     def calc_mode(samples: np.ndarray,
@@ -216,10 +205,15 @@ class GetTension:
             = [value for value, count in counts.items() if count == max_count]
         return modes[0]
 
+    def log_msg(self,
+                log: logger.logging.Logger  # Name of the output file
+                ) -> None:
+        """writing and logging messages from methods"""
+        log.info(self.info_msg)
+
 
 conf_store = ConfigStore.instance()
 conf_store.store(name="configs", node=Config)
-
 
 
 @hydra.main(version_base=None,

@@ -39,10 +39,18 @@ Outputs:
     A xvg file containing the Gibbs adsorption isotherm, the concentration
     of ODA in the box, and the interfacial tension.
 Nov 4, 2024
+
+The concentration of the ODA based on the numbers of the oil molecules
+and the number of ODA molecules in the box is also going to be computed.
+Nov 29, 2024
+
 Saeed
 """
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
+
+import hydra
+from hydra.core.config_store import ConfigStore
 
 import numpy as np
 import pandas as pd
@@ -56,9 +64,10 @@ from common.colors_text import TextColor as bcolors
 class Constants(Enum):
     """Physical constants"""
     # pylint: disable=invalid-name
-    R = 8.314  # J/(mol K)
-    m = 2  # unitless
-    T = 298.15  # K
+    R: float = 8.314  # J/(mol K)
+    m: float = 2  # unitless
+    T: float = 298.15  # K
+    NA: float = 6.022e23  # Avogadro's number
 
 
 # Dataclass
@@ -70,12 +79,14 @@ class Config:
     output_file: str = "gibbs_adsorption_isotherm.xvg"
 
 
-class ComputeIsotherm:
-    """Reading data and computing the Gibbs adsorption isotherm"""
-    info_msg: str = "Message from ComputeIsotherm:\n"
+conf_store = ConfigStore.instance()
+conf_store.store(name="configs", node=Config)
 
-    def __init__(self,
-                 config: Config,
-                 log: logger.logging.Logger
-                 ) -> None:
-        self.config = config
+
+@hydra.main(version_base=None,
+            config_path="conf",
+            config_name="config")
+def main(cfg: Config) -> None:
+    # pylint: disable=missing-function-docstring
+    log: logger.logging.Logger = logger.setup_logger(
+        'compute_gibbs_adsorption_isotherm.log')

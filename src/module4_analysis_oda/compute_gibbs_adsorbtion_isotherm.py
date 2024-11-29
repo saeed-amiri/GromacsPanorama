@@ -46,6 +46,7 @@ Nov 29, 2024
 
 Saeed
 """
+# pylint: disable=import-error
 from dataclasses import dataclass
 from enum import Enum
 
@@ -57,7 +58,6 @@ import pandas as pd
 
 from common import logger
 from common import xvg_to_dataframe
-from common.colors_text import TextColor as bcolors
 
 
 # Constants
@@ -74,9 +74,58 @@ class Constants(Enum):
 @dataclass
 class Config:
     """Configuration for the ComputeIsotherm class"""
-    constants: Constants = Constants()
-    input_file: str = "interfacial_tension.xvg"
+    inputs: str
     output_file: str = "gibbs_adsorption_isotherm.xvg"
+
+
+class ComputeOdaConcentration:
+    """
+    compute the concentration of ODA in the box based on the number of
+    oil molecules and the number of ODA molecules in the box
+    """
+    __slots__ = ['config', 'info_msg']
+
+    def __init__(self,
+                 config: Config,
+                 log: logger.logging.Logger
+                 ) -> None:
+        self.info_msg: str = "Message from ComputeIsotherm:\n"
+        self.config = config
+        self.compute_oda_concentration()
+
+    def compute_oda_concentration(self) -> None:
+        """
+        Compute the concentration of ODA in the box
+        """
+
+
+class GetTension:
+    """
+    Read tension files
+    """
+
+    __slots__ = ['config', 'info_msg']
+
+    def __init__(self,
+                 config: Config,
+                 log: logger.logging.Logger
+                 ) -> None:
+        self.info_msg: str = "Message from GetTension:\n"
+        self.config = config.inputs.tension_files
+        self.read_tension(log)
+
+    def read_tension(self,
+                     log: logger.logging.Logger
+                     ) -> pd.DataFrame:
+        """
+        Read the tension file
+        """
+        tension_dict: dict[str, pd.Series] = {}
+        for oda, fname in self.config.items():
+            tension_i: pd.DataFrame = xvg_to_dataframe.XvgParser(
+                fname, log, x_type=float).xvg_df
+            tension_dict[str(oda)] = tension_i['Surf_SurfTen']
+        return pd.DataFrame(tension_dict)
 
 
 conf_store = ConfigStore.instance()
@@ -90,3 +139,8 @@ def main(cfg: Config) -> None:
     # pylint: disable=missing-function-docstring
     log: logger.logging.Logger = logger.setup_logger(
         'compute_gibbs_adsorption_isotherm.log')
+    GetTension(cfg, log)
+
+
+if __name__ == "__main__":
+    main()

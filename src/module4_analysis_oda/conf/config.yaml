@@ -1,0 +1,3 @@
+# conf/config.yaml
+defaults:
+  - inputs@inputs.residue_nr: residue_nr   # Includes inputs/residue_nr.yaml

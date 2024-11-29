@@ -47,6 +47,11 @@ Nov 29, 2024
 Saeed
 """
 # pylint: disable=import-error
+import json
+import random
+import typing
+from collections import Counter
+
 from dataclasses import dataclass
 from enum import Enum
 
@@ -68,6 +73,7 @@ class Constants(Enum):
     m: float = 2  # unitless
     T: float = 298.15  # K
     NA: float = 6.022e23  # Avogadro's number
+    CR: float = 20.0  # conversion rate from mN/m to J/m^2
 
 
 # Dataclass
@@ -104,7 +110,7 @@ class GetTension:
     Read tension files
     """
 
-    __slots__ = ['config', 'info_msg']
+    __slots__ = ['config', 'nr_frames', 'info_msg']
 
     def __init__(self,
                  config: Config,
@@ -112,7 +118,9 @@ class GetTension:
                  ) -> None:
         self.info_msg: str = "Message from GetTension:\n"
         self.config = config.inputs.tension_files
-        self.read_tension(log)
+        tension_df: pd.DataFrame = self.read_tension(log)
+
+        self.analyze_tension(tension_df, log)
 
     def read_tension(self,
                      log: logger.logging.Logger
@@ -121,15 +129,97 @@ class GetTension:
         Read the tension file
         """
         tension_dict: dict[str, pd.Series] = {}
-        for oda, fname in self.config.items():
-            tension_i: pd.DataFrame = xvg_to_dataframe.XvgParser(
-                fname, log, x_type=float).xvg_df
-            tension_dict[str(oda)] = tension_i['Surf_SurfTen']
+        for i, (oda, fname) in enumerate(self.config.items()):
+            xvg_data = xvg_to_dataframe.XvgParser(fname, log, x_type=float)
+            if i == 0:
+                self.nr_frames = xvg_data.nr_frames
+            tension_i = xvg_data.xvg_df
+            tension_dict[str(oda)] = \
+                tension_i['Surf_SurfTen'] / Constants.CR.value  # mN/m
         return pd.DataFrame(tension_dict)
+
+    def analyze_tension(self,
+                        tension_df: pd.DataFrame,
+                        log: logger.logging.Logger
+                        ) -> None:
+        """
+        Analyze the tension data
+        """
+        self.perform_normal_bootstrap(tension_df)
+
+    def perform_normal_bootstrap(self,
+                                 tension_df: pd.DataFrame
+                                 ) -> None:
+        """do the sampling here"""
+        for oda, tension in tension_df.items():
+            samples: pd.Series = \
+                self.sample_randomly_with_replacement(tension)
+            raw_normal = self.calc_raw_stats(samples, 'normal')
+            stats_normal = self.convert_stats(raw_normal, 'normal')
+
+    def sample_randomly_with_replacement(self,
+                                         tension: pd.Series
+                                         ) -> list[np.float64]:
+        """Randomly Select With Replacement"""
+        samples: list[np.float64] = []
+        for _ in range(self.nr_frames):
+            sample_i = random.choices(tension,
+                                      k=self.nr_frames)
+            samples.append(sum(sample_i)/self.nr_frames)
+        return samples
+
+    def calc_raw_stats(self,
+                       samples: typing.Union[list[np.float64], list[float]],
+                       style: str
+                       ) -> dict[str, typing.Any]:
+        """calculate std and averages"""
+        raw_stats_dict: dict[str, typing.Any] = {}
+        sample_arr: np.ndarray = np.array(samples)
+        raw_stats_dict['std'] = np.std(sample_arr)
+        raw_stats_dict['mean'] = np.mean(sample_arr)
+        raw_stats_dict['mode'] = \
+            self.calc_mode(sample_arr, raw_stats_dict['std'])
+        if style == 'initial':
+            boots = ''
+        else:
+            boots = ' bootstraping'
+        self.info_msg += \
+            (f'\tStats (raw) for `{style}`{boots}:'
+             f'{json.dumps(raw_stats_dict, indent=8)}\n')
+        return raw_stats_dict
+
+    def convert_stats(self,
+                      raw_stats: dict[str, typing.Any],
+                      style: str
+                      ) -> dict[str, typing.Any]:
+        """convert data to the asked unit"""
+        if style == 'initial':
+            boots = ''
+        else:
+            boots = ' bootstraping'
+        self.info_msg += \
+            (f'\tStats (Converted) for `{style}`{boots}:'
+             f'{json.dumps(raw_stats, indent=8)}\n')
+        return raw_stats
+
+    @staticmethod
+    def calc_mode(samples: np.ndarray,
+                  tolerance: np.float64
+                  ) -> np.float64:
+        """return mode for the sample"""
+        # Round the data to the nearest multiple of the tolerance
+        rounded_data = [round(x / tolerance) * tolerance for x in samples]
+        # Use Counter to count occurrences of rounded values
+        counts = Counter(rounded_data)
+        max_count: float = max(counts.values())
+        modes \
+            = [value for value, count in counts.items() if count == max_count]
+        return modes[0]
 
 
 conf_store = ConfigStore.instance()
 conf_store.store(name="configs", node=Config)
+
 
 
 @hydra.main(version_base=None,
@@ -143,4 +233,5 @@ def main(cfg: Config) -> None:
 
 
 if __name__ == "__main__":
+    # pylint: disable=no-value-for-parameter
     main()

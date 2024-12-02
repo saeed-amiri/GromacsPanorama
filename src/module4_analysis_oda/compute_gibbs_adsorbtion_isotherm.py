@@ -280,11 +280,13 @@ class LangmuirAdsorptionIsotherm:
                  ) -> None:
         self.info_msg: str = "Message from LangmuirAdsorptionIsotherm:\n"
         self.config = config
-        self.compute_langmuir_adsorption_isotherm(df_i)
+        langmuir_estimation: pd.Series = \
+            self.compute_langmuir_adsorption_isotherm(df_i)
+        print(langmuir_estimation)
 
     def compute_langmuir_adsorption_isotherm(self,
                                              df_i: pd.DataFrame
-                                             ) -> None:
+                                             ) -> pd.Series:
         """
         Compute the Langmuir adsorption isotherm
         """
@@ -293,14 +295,14 @@ class LangmuirAdsorptionIsotherm:
             self.config.langmuir_terms['adsoorptoin_equilibrium']
         gamma_inf: float = self.compute_gamma_inf(area_per_oda)
         self.info_msg += f'\tGamma_inf: {gamma_inf}\n'
-        self.estimate_bulk_concentration(
+        return self.estimate_bulk_concentration(
             df_i, gamma_inf, adsoorptoin_equilibrium)
 
     def estimate_bulk_concentration(self,
                                     df_i: pd.DataFrame,
                                     gamma_inf: float,
                                     adsoorptoin_equilibrium: float
-                                    ) -> None:
+                                    ) -> pd.Series:
         """
         Estimate the bulk concentration of ODA in the box
         C = Gamma / (K * (Gamma_inf - Gamma))

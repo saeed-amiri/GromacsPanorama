@@ -146,11 +146,14 @@ class GetTension:
         """
         Analyze the tension data
         """
-        self.perform_normal_bootstrap(tension_df)
+        normal_stats: pd.DataFrame = self.perform_normal_bootstrap(tension_df)
+        df_normal_change: pd.DataFrame = \
+            self.compute_change_in_tension(normal_stats)
+        print(df_normal_change)
 
     def perform_normal_bootstrap(self,
                                  tension_df: pd.DataFrame
-                                 ) -> None:
+                                 ) -> pd.DataFrame:
         """do the sampling here"""
         all_stats: dict[str, dict[str, typing.Any]] = {}
         for oda, tension in tension_df.items():
@@ -158,7 +161,7 @@ class GetTension:
                 self.sample_randomly_with_replacement(tension)
 
             all_stats[oda] = self.calc_raw_stats(oda, samples, 'normal')
-        df_stats = pd.DataFrame.from_dict(all_stats, orient='index')
+        return pd.DataFrame.from_dict(all_stats, orient='index')
 
     def sample_randomly_with_replacement(self,
                                          tension: pd.Series
@@ -188,9 +191,20 @@ class GetTension:
         else:
             boots = ' bootstraping'
         self.info_msg += \
-            (f'\tStats for `{style}`{boots}:'
+            (f'\tStats for `{style}`{boots} for {oda} ODA:'
              f'{json.dumps(raw_stats_dict, indent=8)}\n')
         return raw_stats_dict
+
+    def compute_change_in_tension(self,
+                                  normal_stats: pd.DataFrame,
+                                  ) -> pd.DataFrame:
+        """
+        Compute the change in tension
+        """
+        df_change: pd.DataFrame = normal_stats.copy()
+        df_change['Change in Tension [mN/m]'] = \
+            df_change['mean'] - df_change['mean'].iloc[0]
+        return df_change
 
     @staticmethod
     def calc_mode(samples: np.ndarray,

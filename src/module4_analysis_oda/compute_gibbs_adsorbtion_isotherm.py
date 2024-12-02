@@ -152,10 +152,13 @@ class GetTension:
                                  tension_df: pd.DataFrame
                                  ) -> None:
         """do the sampling here"""
+        all_stats: dict[str, dict[str, typing.Any]] = {}
         for oda, tension in tension_df.items():
             samples: pd.Series = \
                 self.sample_randomly_with_replacement(tension)
-            raw_normal = self.calc_raw_stats(oda, samples, 'normal')
+
+            all_stats[oda] = self.calc_raw_stats(oda, samples, 'normal')
+        df_stats = pd.DataFrame.from_dict(all_stats, orient='index')
 
     def sample_randomly_with_replacement(self,
                                          tension: pd.Series
@@ -174,13 +177,12 @@ class GetTension:
                        style: str
                        ) -> dict[str, typing.Any]:
         """calculate std and averages"""
-        raw_stats_dict: dict[str, dict[str, typing.Any]] = {}
+        raw_stats_dict: dict[str, typing.Any] = {}
         sample_arr: np.ndarray = np.array(samples)
-        raw_stats_dict[oda] = {}
-        raw_stats_dict[oda]['std'] = np.std(sample_arr)
-        raw_stats_dict[oda]['mean'] = np.mean(sample_arr)
-        raw_stats_dict[oda]['mode'] = \
-            self.calc_mode(sample_arr, raw_stats_dict[oda]['std'])
+        raw_stats_dict['std'] = np.std(sample_arr)
+        raw_stats_dict['mean'] = np.mean(sample_arr)
+        raw_stats_dict['mode'] = \
+            self.calc_mode(sample_arr, raw_stats_dict['std'])
         if style == 'initial':
             boots = ''
         else:
@@ -188,7 +190,6 @@ class GetTension:
         self.info_msg += \
             (f'\tStats for `{style}`{boots}:'
              f'{json.dumps(raw_stats_dict, indent=8)}\n')
-        print(pd.DataFrame(raw_stats_dict).T)
         return raw_stats_dict
 
     @staticmethod

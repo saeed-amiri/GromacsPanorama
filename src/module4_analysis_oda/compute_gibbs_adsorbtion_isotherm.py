@@ -80,7 +80,7 @@ class Constants(Enum):
 @dataclass
 class Config:
     """Configuration for the ComputeIsotherm class"""
-    inputs: str
+    inputs: dict[str, typing.Any]
     output_file: str = "gibbs_adsorption_isotherm.xvg"
 
 
@@ -213,6 +213,44 @@ class GetTension:
         log.info(self.info_msg)
 
 
+def compute_bulk_concentration(config: Config
+                               ) -> pd.DataFrame:
+    """
+    Compute the concentration of ODA in the box
+    There is N ODA molecules which can read from conf files
+    Each ODA contains 59 atoms, reading from the conf files
+    And they have atom mass, reading from the conf files
+    The number of oil molecules is read from the conf files
+    and the size of the box and density of the oil molecules are read
+    from the conf files
+    Here we compute the concentration of ODA in the box both from the
+    box size and the number of ODA molecules and the number of oil
+    and also from the density of the oil molecules and the number of
+    oil molecules and ODA molecules
+    Mass of Decane(M_decane) = (N_decane/N_A) * M_decane
+
+    Final Simplified Formula:
+    C_ODA = (N_ODA / N_decane) * (rho_decane / M_decane)
+
+        N_ODA: Number of ODA molecules.
+        N_decane: Number of decane molecules.
+        rho_decane: Density of decane (ensure correct units: g/cm3)
+        M_decane Molar mass of decane in g/mol
+
+    The number of the ODA are the keys of the tension files
+    """
+    # Compute the concentration of ODA in the box
+    oil_mass = config.inputs.molar_mass['D10']
+    oil_density = config.inputs.box_info['oil_density']
+    oil_nr = config.inputs.residue_nr['D10']
+    oda_concentration: dict[str, float] = {}
+    for oda, _ in config.inputs.tension_files.items():
+        oda_concentration[oda] = (oda/oil_nr) * (oil_density / oil_mass) * 1e6
+    oda_concentration_df = pd.DataFrame.from_dict(
+        oda_concentration, orient='index', columns=['ODA Concentration [mM]'])
+    return oda_concentration_df
+
+
 conf_store = ConfigStore.instance()
 conf_store.store(name="configs", node=Config)
 
@@ -225,6 +263,7 @@ def main(cfg: Config) -> None:
     log: logger.logging.Logger = logger.setup_logger(
         'compute_gibbs_adsorption_isotherm.log')
     GetTension(cfg, log)
+    oda_concentration: pd.DataFrame = compute_bulk_concentration(cfg)
 
 
 if __name__ == "__main__":

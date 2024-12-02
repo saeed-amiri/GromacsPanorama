@@ -207,6 +207,27 @@ class GetTension:
             df_change['mean'] - df_change['mean'].iloc[0]
         return df_change
 
+    def surface_excess_concentration(self,
+                                     df_change: pd.DataFrame
+                                     ) -> pd.DataFrame:
+        """
+        Compute the surface excess concentration
+        which is divide the number of the oda molecules by the surface
+        area of the interface and normalize it by the avogadro number
+        """
+        xlim: float = float(self.config.box_info['xlim'])
+        ylim: float = float(self.config.box_info['ylim'])
+        # Area of the interface in nm^2 -> m^2
+        area: float = xlim * ylim * 1e-18
+
+        # Compute the surface excess concentration for each row
+        df_i: pd.DataFrame = df_change.assign(
+            **{'Surface Excess Concentration [mol/nm^2]':
+               df_change.index.astype(float) / (area * Constants.NA.value)}
+        )
+
+        return df_i
+
     @staticmethod
     def calc_mode(samples: np.ndarray,
                   tolerance: np.float64

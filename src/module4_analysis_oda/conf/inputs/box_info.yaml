@@ -1,0 +1,5 @@
+xlim: 217  # Angstroms
+ylim: 217  # Angstroms
+zlim: 248  # Angstroms
+oil_density: 0.71  # g/cm^3
+water_density: 1.01  # g/cm^3

@@ -1,3 +1,6 @@
 # conf/config.yaml
 defaults:
   - inputs@inputs.residue_nr: residue_nr   # Includes inputs/residue_nr.yaml
+  - inputs@inputs.atoms_per_residue: atoms_per_residue # Includes inputs/atoms_per_residue.yaml
+  - inputs@inputs.box_info: box_info       # Includes inputs/box_info.yaml
+  - inputs@inputs.tension_files: tension_files # Includes inputs/tension_files.yaml

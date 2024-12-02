@@ -222,7 +222,7 @@ class GetTension:
 
         # Compute the surface excess concentration for each row
         df_i: pd.DataFrame = df_change.assign(
-            **{'Surface Excess Concentration [mol/nm^2]':
+            **{'Surface Excess Concentration [mol/m^2]':
                df_change.index.astype(float) / (area * Constants.NA.value)}
         )
 

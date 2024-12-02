@@ -151,6 +151,7 @@ class GetTension:
             self.compute_change_in_tension(normal_stats)
         df_i: pd.DataFrame = \
             self.surface_excess_concentration(df_normal_change)
+        self.compute_langmuir_adsorption_isotherm(df_i, log)
 
     def perform_normal_bootstrap(self,
                                  tension_df: pd.DataFrame
@@ -228,6 +229,15 @@ class GetTension:
 
         return df_i
 
+    def compute_langmuir_adsorption_isotherm(self,
+                                             df_i: pd.DataFrame,
+                                             log: logger.logging.Logger
+                                             ) -> None:
+        """
+        Compute the Langmuir adsorption isotherm
+        """
+        LangmuirAdsorptionIsotherm(df_i, self.config, log)
+
     @staticmethod
     def calc_mode(samples: np.ndarray,
                   tolerance: np.float64
@@ -247,6 +257,73 @@ class GetTension:
                 ) -> None:
         """writing and logging messages from methods"""
         log.info(self.info_msg)
+
+
+class LangmuirAdsorptionIsotherm:
+    """
+    Compute the Langmuir adsorption isotherm:
+    Gamma = Gamma_inf * K * C / (1 + K * C)
+    where:
+        Gamma: Gibbs adsorption
+        Gamma_inf: Maximum Gibbs adsorption
+        K: Equilibrium constant, which is related to the affinity of the
+           surfactant to the interface
+        C: Concentration of ODA in the box
+    """
+
+    __slots__ = ['config', 'info_msg']
+
+    def __init__(self,
+                 df_i: pd.DataFrame,  # have the surface excess concentration
+                 config: Config,
+                 log: logger.logging.Logger
+                 ) -> None:
+        self.info_msg: str = "Message from LangmuirAdsorptionIsotherm:\n"
+        self.config = config
+        self.compute_langmuir_adsorption_isotherm(df_i)
+
+    def compute_langmuir_adsorption_isotherm(self,
+                                             df_i: pd.DataFrame
+                                             ) -> None:
+        """
+        Compute the Langmuir adsorption isotherm
+        """
+        area_per_oda: float = self.config.langmuir_terms['area_per_oda']
+        adsoorptoin_equilibrium: float = \
+            self.config.langmuir_terms['adsoorptoin_equilibrium']
+        gamma_inf: float = self.compute_gamma_inf(area_per_oda)
+        self.info_msg += f'\tGamma_inf: {gamma_inf}\n'
+        self.estimate_bulk_concentration(
+            df_i, gamma_inf, adsoorptoin_equilibrium)
+
+    def estimate_bulk_concentration(self,
+                                    df_i: pd.DataFrame,
+                                    gamma_inf: float,
+                                    adsoorptoin_equilibrium: float
+                                    ) -> None:
+        """
+        Estimate the bulk concentration of ODA in the box
+        C = Gamma / (K * (Gamma_inf - Gamma))
+        where:
+            C: Concentration of ODA in the box in mol/L
+            Gamma: Gibbs adsorption in mol/m^2
+            K: Equilibrium constant in L/mol
+            Gamma_inf: Maximum Gibbs adsorption in mol/m^2
+        """
+        concentration: pd.Series = \
+            df_i['Surface Excess Concentration [mol/m^2]'] / \
+            (adsoorptoin_equilibrium * (
+                gamma_inf - df_i['Surface Excess Concentration [mol/m^2]']))
+        return concentration
+
+    def compute_gamma_inf(self,
+                          area_per_oda: float
+                          ) -> float:
+        """
+        Compute the maximum Gibbs adsorption
+        """
+        gamma_inf: float = 1 / (Constants.NA.value * area_per_oda * 1e-18)
+        return gamma_inf
 
 
 def compute_bulk_concentration(config: Config

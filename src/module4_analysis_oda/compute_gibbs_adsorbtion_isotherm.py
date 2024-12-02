@@ -117,7 +117,7 @@ class GetTension:
                  log: logger.logging.Logger
                  ) -> None:
         self.info_msg: str = "Message from GetTension:\n"
-        self.config = config.inputs.tension_files
+        self.config = config.inputs
         tension_df: pd.DataFrame = self.read_tension(log)
 
         self.analyze_tension(tension_df, log)
@@ -130,7 +130,7 @@ class GetTension:
         Read the tension file
         """
         tension_dict: dict[str, pd.Series] = {}
-        for i, (oda, fname) in enumerate(self.config.items()):
+        for i, (oda, fname) in enumerate(self.config.tension_files.items()):
             xvg_data = xvg_to_dataframe.XvgParser(fname, log, x_type=float)
             if i == 0:
                 self.nr_frames = xvg_data.nr_frames
@@ -149,7 +149,8 @@ class GetTension:
         normal_stats: pd.DataFrame = self.perform_normal_bootstrap(tension_df)
         df_normal_change: pd.DataFrame = \
             self.compute_change_in_tension(normal_stats)
-        print(df_normal_change)
+        df_i: pd.DataFrame = \
+            self.surface_excess_concentration(df_normal_change)
 
     def perform_normal_bootstrap(self,
                                  tension_df: pd.DataFrame

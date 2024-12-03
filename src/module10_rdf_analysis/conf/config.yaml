@@ -1,4 +1,4 @@
-# config/config.yaml
+# conf/config.yaml
 defaults:
   - files@files.rdf: rdf                   # Includes files/rdf.yaml
   - files@files.turn_points: turn_points   # Includes files/turn_points.yaml

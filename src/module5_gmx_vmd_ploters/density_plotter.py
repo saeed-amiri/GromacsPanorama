@@ -10,7 +10,6 @@ from dataclasses import dataclass, field
 import pandas as pd
 
 import matplotlib.pylab as plt
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from common import logger, plot_tools, xvg_to_dataframe
 from common.colors_text import TextColor as bcolors
@@ -180,11 +179,10 @@ class MultiDensityPlotter:
         ax_i = self.plot_density(self.dens_data)
 
         self._save_plot(ax_i)
-           # Store original limits
+        # Store original limits
         original_xlim = ax_i.get_xlim()
-        original_ylim = ax_i.get_ylim()
         self._save_plot_zoom(ax_i)
-        self._save_plot_normalized(original_xlim, yticks=False)
+        self._save_plot_normalized(original_xlim, if_yticks=False)
 
     def _save_plot(self,
                    ax_i: plt.axes
@@ -210,7 +208,7 @@ class MultiDensityPlotter:
 
     def _save_plot_normalized(self,
                               xlim: tuple[float, float],
-                              yticks: bool = True
+                              if_yticks: bool = True
                               ) -> None:
         """save the normalized plot"""
         ax_i: plt.axes
@@ -220,10 +218,10 @@ class MultiDensityPlotter:
         ax_i.set_xlim(-0.5, xlim[1])
         ax_i.set_ylim(-0.0, 1.05)
         ax_i.set_yticks([])
-        if yticks:
-            yticks: list[int] = [0, 0.5, 1.0]
+        if if_yticks:
+            yticks = [0, 0.5, 1.0]
             ax_i.set_yticks(yticks)
-            label_x_loc: float = -0.09
+            label_x_loc = -0.09
             ax_i.hlines(
                 0, xlim[0], xlim[1], color='grey', ls='--', lw=1, alpha=0.5)
             ax_i.hlines(

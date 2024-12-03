@@ -108,15 +108,15 @@ class FileConfig:
         default_factory=lambda: {
             'dens_0': {'fname': 'SOL.xvg', 'y_col': 'SOL'},
             'dens_1': {'fname': 'D10.xvg', 'y_col': 'D10'},
-            'dens_2': {'fname': 'ODN.xvg', 'y_col': 'ODN'},
-            'dens_3': {'fname': 'APT.xvg', 'y_col': 'APT'},
-            'dens_4': {'fname': 'CLA.xvg', 'y_col': 'CLA'},
-            'dens_5': {'fname': 'POT.xvg', 'y_col': 'POT'},
-            'dens_6': {'fname': 'COR.xvg', 'y_col': 'COR'},
-            'dens_7': {'fname': 'COR_APT.xvg', 'y_col': 'COR_APT'},
+            # 'dens_2': {'fname': 'ODN.xvg', 'y_col': 'ODN'},
+            # 'dens_3': {'fname': 'APT.xvg', 'y_col': 'APT'},
+            # 'dens_4': {'fname': 'CLA.xvg', 'y_col': 'CLA'},
+            # 'dens_5': {'fname': 'POT.xvg', 'y_col': 'POT'},
+            # 'dens_6': {'fname': 'COR.xvg', 'y_col': 'COR'},
+            # 'dens_7': {'fname': 'COR_APT.xvg', 'y_col': 'COR_APT'},
             })
     plot_list: list[int] = \
-        field(default_factory=lambda: [0, 1, 2, 3, 4, 5, 6])
+        field(default_factory=lambda: [0, 1])
     legend_loc: str = 'lower right'
     window_legend_loc: str = 'upper left'
     max_indicator: str = 'dens_5'
@@ -167,11 +167,13 @@ class MultiDensityPlotter:
         data.sort_values(by=data.iloc[:, 1].name,
                          ascending=False,
                          inplace=True)
-        bulk_density: float = data.iloc[:20, 1].mean()
-        file_data = self.configs.files.get(key)
-        residue_name: str = file_data.get('y_col')
-        self.info_msg += \
+        bulk_density: float = data.iloc[:22, 1].mean()
+        bulk_std: float = data.iloc[:22, 1].std()
+        file_data: dict[str, typing.Any] = self.configs.files.get(key)
+        residue_name: typing.Any = file_data.get('y_col')
+        self.info_msg += (
             f'\tThe bulk density of {residue_name} is: {bulk_density:.3f}\n'
+            f'\tThe std of the bulk density is: {bulk_std:.3f}\n')
 
     def initate_plot(self) -> None:
         """initiate the plot for the density"""

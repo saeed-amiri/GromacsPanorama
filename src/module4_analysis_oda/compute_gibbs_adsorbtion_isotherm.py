@@ -202,12 +202,23 @@ class ComputeOdaConcentration:
         """
         Write the dataframe to a file
         """
+        # get the configs and write them to the file
+        parameters: dict[str, typing.Any] = self.config.langmuir_terms
+        comment_str: str = \
+            "\n".join([f"# {key}: {val}" for key, val in parameters.items()])
         extra_comments: str = \
             "Surface Excess Concentration is calculated by dividing the nr " \
             "of ODA molecules by the surface area of the interface and " \
-            "normalizing it by Avogadro's number."
-        file_writer.write_xvg(df_i, log, fname='gibbs_adsorption_isotherm.xvg',
-                              extra_comments=extra_comments)
+            "normalizing it by Avogadro's number.\n" \
+            "#parameters for Langmuir approximation are:\n" \
+            f"{comment_str}"
+        file_writer.write_xvg(df_i,
+                              log,
+                              fname='gibbs_adsorption_isotherm.xvg',
+                              extra_comments=extra_comments,
+                              title='Gibbs Adsorption Isotherm',
+                              xaxis_label='ODA nr',
+                              )
 
 
 class GetTension:
@@ -288,7 +299,7 @@ class GetTension:
         raw_stats_dict: dict[str, typing.Any] = {}
         sample_arr: np.ndarray = np.array(samples)
         raw_stats_dict['std'] = np.std(sample_arr)
-        raw_stats_dict['mean'] = np.mean(sample_arr)
+        raw_stats_dict['mean tension'] = np.mean(sample_arr)
         raw_stats_dict['mode'] = \
             self.calc_mode(sample_arr, raw_stats_dict['std'])
         if style == 'initial':
@@ -308,7 +319,7 @@ class GetTension:
         """
         df_change: pd.DataFrame = normal_stats.copy()
         df_change['Change in Tension [mN/m]'] = \
-            df_change['mean'] - df_change['mean'].iloc[0]
+            df_change['mean tension'] - df_change['mean tension'].iloc[0]
         return df_change
 
     @staticmethod

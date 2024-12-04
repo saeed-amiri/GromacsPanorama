@@ -236,7 +236,11 @@ class GetTension:
         """
         Compute the Langmuir adsorption isotherm
         """
-        LangmuirAdsorptionIsotherm(df_i, self.config, log)
+        langmuir_gamma: pd.Series = \
+            LangmuirAdsorptionIsotherm(df_i, self.config, log)
+
+        self.info_msg += ('\tLangmuir Adsorption Isotherm:\n'
+                          f'{langmuir_gamma}\n')
 
     @staticmethod
     def calc_mode(samples: np.ndarray,
@@ -270,8 +274,9 @@ class LangmuirAdsorptionIsotherm:
            surfactant to the interface
         C: Concentration of ODA in the box
     """
+    # pylint: disable=unused-argument
 
-    __slots__ = ['config', 'info_msg']
+    __slots__ = ['config', 'info_msg', 'langmuir_estimation']
 
     def __init__(self,
                  df_i: pd.DataFrame,  # have the surface excess concentration
@@ -280,9 +285,8 @@ class LangmuirAdsorptionIsotherm:
                  ) -> None:
         self.info_msg: str = "Message from LangmuirAdsorptionIsotherm:\n"
         self.config = config
-        langmuir_estimation: pd.Series = \
+        self.langmuir_estimation: pd.Series = \
             self.compute_langmuir_adsorption_isotherm(df_i)
-        print(langmuir_estimation)
 
     def compute_langmuir_adsorption_isotherm(self,
                                              df_i: pd.DataFrame
@@ -379,6 +383,7 @@ def main(cfg: Config) -> None:
         'compute_gibbs_adsorption_isotherm.log')
     GetTension(cfg, log)
     oda_concentration: pd.DataFrame = compute_bulk_concentration(cfg)
+    print(oda_concentration, 'from the box size')
 
 
 if __name__ == "__main__":

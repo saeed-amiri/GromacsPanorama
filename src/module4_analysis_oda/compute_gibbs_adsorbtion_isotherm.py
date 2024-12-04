@@ -94,12 +94,12 @@ class ComputeOdaConcentration:
 
     def __init__(self,
                  tension_df: pd.DataFrame,
-                 oda_concentration: pd.Series,
                  config: Config,
                  log: logger.logging.Logger
                  ) -> None:
         self.info_msg: str = "Message from ComputeIsotherm:\n"
         self.config = config.inputs
+        oda_concentration: pd.DataFrame = self.compute_bulk_concentration()
         df_i: pd.DataFrame = \
             self.compute_oda_concentration(tension_df, oda_concentration, log)
         self.write_df(df_i, log)
@@ -155,6 +155,45 @@ class ComputeOdaConcentration:
         self.info_msg += ('\tLangmuir Adsorption Isotherm:\n'
                           f'{langmuir_gamma}\n')
         return langmuir_gamma
+
+    def compute_bulk_concentration(self) -> pd.DataFrame:
+        """
+        Compute the concentration of ODA in the box
+        There is N ODA molecules which can read from conf files
+        Each ODA contains 59 atoms, reading from the conf files
+        And they have atom mass, reading from the conf files
+        The number of oil molecules is read from the conf files
+        and the size of the box and density of the oil molecules are read
+        from the conf files
+        Here we compute the concentration of ODA in the box both from the
+        box size and the number of ODA molecules and the number of oil
+        and also from the density of the oil molecules and the number of
+        oil molecules and ODA molecules
+        Mass of Decane(M_decane) = (N_decane/N_A) * M_decane
+
+        Final Simplified Formula:
+        C_ODA = (N_ODA / N_decane) * (rho_decane / M_decane)
+
+            N_ODA: Number of ODA molecules.
+            N_decane: Number of decane molecules.
+            rho_decane: Density of decane (ensure correct units: g/cm3)
+            M_decane Molar mass of decane in g/mol
+
+        The number of the ODA are the keys of the tension files
+        """
+        # Compute the concentration of ODA in the box
+        oil_mass = self.config.molar_mass['D10']
+        oil_density = self.config.box_info['oil_density']
+        oil_nr = self.config.residue_nr['D10']
+        oda_concentration: dict[str, float] = {}
+        for oda, _ in self.config.tension_files.items():
+            oda_concentration[oda] = \
+                (oda/oil_nr) * (oil_density / oil_mass) * 1e6
+        oda_concentration_df = \
+            pd.DataFrame.from_dict(oda_concentration,
+                                   orient='index',
+                                   columns=['ODA Concentration [mM]'])
+        return oda_concentration_df
 
     def write_df(self,
                  df_i: pd.DataFrame,
@@ -362,44 +401,6 @@ class LangmuirAdsorptionIsotherm:
         return gamma_inf
 
 
-def compute_bulk_concentration(config: Config
-                               ) -> pd.DataFrame:
-    """
-    Compute the concentration of ODA in the box
-    There is N ODA molecules which can read from conf files
-    Each ODA contains 59 atoms, reading from the conf files
-    And they have atom mass, reading from the conf files
-    The number of oil molecules is read from the conf files
-    and the size of the box and density of the oil molecules are read
-    from the conf files
-    Here we compute the concentration of ODA in the box both from the
-    box size and the number of ODA molecules and the number of oil
-    and also from the density of the oil molecules and the number of
-    oil molecules and ODA molecules
-    Mass of Decane(M_decane) = (N_decane/N_A) * M_decane
-
-    Final Simplified Formula:
-    C_ODA = (N_ODA / N_decane) * (rho_decane / M_decane)
-
-        N_ODA: Number of ODA molecules.
-        N_decane: Number of decane molecules.
-        rho_decane: Density of decane (ensure correct units: g/cm3)
-        M_decane Molar mass of decane in g/mol
-
-    The number of the ODA are the keys of the tension files
-    """
-    # Compute the concentration of ODA in the box
-    oil_mass = config.inputs.molar_mass['D10']
-    oil_density = config.inputs.box_info['oil_density']
-    oil_nr = config.inputs.residue_nr['D10']
-    oda_concentration: dict[str, float] = {}
-    for oda, _ in config.inputs.tension_files.items():
-        oda_concentration[oda] = (oda/oil_nr) * (oil_density / oil_mass) * 1e6
-    oda_concentration_df = pd.DataFrame.from_dict(
-        oda_concentration, orient='index', columns=['ODA Concentration [mM]'])
-    return oda_concentration_df
-
-
 conf_store = ConfigStore.instance()
 conf_store.store(name="configs", node=Config)
 
@@ -411,9 +412,8 @@ def main(cfg: Config) -> None:
     # pylint: disable=missing-function-docstring
     log: logger.logging.Logger = logger.setup_logger(
         'compute_gibbs_adsorption_isotherm.log')
-    oda_concentration: pd.DataFrame = compute_bulk_concentration(cfg)
     tension_df: pd.DataFrame = GetTension(cfg, log).tesnion_df
-    ComputeOdaConcentration(tension_df, oda_concentration, cfg, log)
+    ComputeOdaConcentration(tension_df, cfg, log)
 
 
 if __name__ == "__main__":

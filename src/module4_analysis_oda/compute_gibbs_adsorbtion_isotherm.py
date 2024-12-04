@@ -136,9 +136,8 @@ class ComputeOdaConcentration:
 
         # Compute the surface excess concentration for each row
         df_i: pd.DataFrame = df_change.assign(
-            **{'Surface Excess Concentration [1e-6 mol/m^2]':
-                df_change.index.astype(float) * 1e6 /
-                (area * Constants.NA.value)}
+            **{'Surface Excess Concentration [mol/m^2]':
+                df_change.index.astype(float) / (area * Constants.NA.value)}
         )
 
         return df_i
@@ -219,7 +218,7 @@ class ComputeOdaConcentration:
                               extra_comments=extra_comments,
                               title='Gibbs Adsorption Isotherm',
                               xaxis_label='ODA nr',
-                              )
+                              float_format='%.3e')
 
 
 class GetTension:
@@ -398,9 +397,9 @@ class LangmuirAdsorptionIsotherm:
             Gamma_inf: Maximum Gibbs adsorption in mol/m^2
         """
         concentration: pd.Series = \
-            df_i['Surface Excess Concentration [1e-6 mol/m^2]'] / \
+            df_i['Surface Excess Concentration [mol/m^2]'] / \
             (adsoorptoin_equilibrium * (
-             gamma_inf - df_i['Surface Excess Concentration [1e-6 mol/m^2]']))
+             gamma_inf - df_i['Surface Excess Concentration [mol/m^2]']))
         return concentration * 1e6  # mol/m^2 to mmol/m^2 (mM)
 
     def compute_gamma_inf(self,

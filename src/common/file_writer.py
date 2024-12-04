@@ -17,7 +17,8 @@ def write_xvg(df_i: pd.DataFrame,
               extra_comments: str = '',
               xaxis_label: str = 'Frame index',
               yaxis_label: str = 'Varies',
-              title: str = 'Contact information'
+              title: str = 'Contact information',
+              float_format: str = '%.3f'
               ) -> None:
     """
     Write the data into xvg format
@@ -61,7 +62,7 @@ def write_xvg(df_i: pd.DataFrame,
                     index=True,
                     header=None,
                     na_rep='NaN',
-                    float_format='%.3f',
+                    float_format=float_format,
                     quoting=3,
                     escapechar=" ",
                     )

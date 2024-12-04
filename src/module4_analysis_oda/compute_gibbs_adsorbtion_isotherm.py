@@ -151,7 +151,9 @@ class GetTension:
             self.compute_change_in_tension(normal_stats)
         df_i: pd.DataFrame = \
             self.surface_excess_concentration(df_normal_change)
-        self.compute_langmuir_adsorption_isotherm(df_i, log)
+        langmuir_gamma: pd.Series = \
+            self.compute_langmuir_adsorption_isotherm(df_i, log)
+        df_i['Langmuir Adsorption Isotherm [mM]'] = langmuir_gamma
 
     def perform_normal_bootstrap(self,
                                  tension_df: pd.DataFrame
@@ -232,15 +234,16 @@ class GetTension:
     def compute_langmuir_adsorption_isotherm(self,
                                              df_i: pd.DataFrame,
                                              log: logger.logging.Logger
-                                             ) -> None:
+                                             ) -> pd.Series:
         """
         Compute the Langmuir adsorption isotherm
         """
-        langmuir_gamma: pd.Series = \
-            LangmuirAdsorptionIsotherm(df_i, self.config, log)
+        langmuir_gamma: pd.Series = LangmuirAdsorptionIsotherm(
+            df_i, self.config, log).langmuir_estimation
 
         self.info_msg += ('\tLangmuir Adsorption Isotherm:\n'
                           f'{langmuir_gamma}\n')
+        return langmuir_gamma
 
     @staticmethod
     def calc_mode(samples: np.ndarray,
@@ -320,7 +323,7 @@ class LangmuirAdsorptionIsotherm:
             df_i['Surface Excess Concentration [mol/m^2]'] / \
             (adsoorptoin_equilibrium * (
                 gamma_inf - df_i['Surface Excess Concentration [mol/m^2]']))
-        return concentration
+        return concentration * 1e6  # mol/m^2 to mmol/m^2 (mM)
 
     def compute_gamma_inf(self,
                           area_per_oda: float

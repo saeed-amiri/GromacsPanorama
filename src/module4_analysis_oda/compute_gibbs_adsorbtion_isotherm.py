@@ -62,6 +62,7 @@ import numpy as np
 import pandas as pd
 
 from common import logger
+from common import file_writer
 from common import xvg_to_dataframe
 
 
@@ -92,17 +93,82 @@ class ComputeOdaConcentration:
     __slots__ = ['config', 'info_msg']
 
     def __init__(self,
+                 tension_df: pd.DataFrame,
+                 oda_concentration: pd.Series,
                  config: Config,
                  log: logger.logging.Logger
                  ) -> None:
         self.info_msg: str = "Message from ComputeIsotherm:\n"
-        self.config = config
-        self.compute_oda_concentration()
+        self.config = config.inputs
+        df_i: pd.DataFrame = \
+            self.compute_oda_concentration(tension_df, oda_concentration, log)
+        self.write_df(df_i, log)
 
-    def compute_oda_concentration(self) -> None:
+    def compute_oda_concentration(self,
+                                  tension_df: pd.DataFrame,
+                                  oda_concentration: pd.Series,
+                                  log: logger.logging.Logger
+                                  ) -> pd.DataFrame:
         """
         Compute the concentration of ODA in the box
         """
+        df_i: pd.DataFrame = \
+            self.surface_excess_concentration(tension_df)
+        langmuir_gamma: pd.Series = \
+            self.compute_langmuir_adsorption_isotherm(df_i, log)
+        df_i['ODA Concentration [mM]'] = \
+            list(oda_concentration['ODA Concentration [mM]'])
+        df_i['Langmuir Adsorption Isotherm [mM]'] = langmuir_gamma
+        return df_i
+
+    def surface_excess_concentration(self,
+                                     df_change: pd.DataFrame
+                                     ) -> pd.DataFrame:
+        """
+        Compute the surface excess concentration
+        which is divide the number of the oda molecules by the surface
+        area of the interface and normalize it by the avogadro number
+        """
+        xlim: float = float(self.config.box_info['xlim'])
+        ylim: float = float(self.config.box_info['ylim'])
+        # Area of the interface in nm^2 -> m^2
+        area: float = xlim * ylim * 1e-18
+
+        # Compute the surface excess concentration for each row
+        df_i: pd.DataFrame = df_change.assign(
+            **{'Surface Excess Concentration [mol/m^2]':
+               df_change.index.astype(float) / (area * Constants.NA.value)}
+        )
+
+        return df_i
+
+    def compute_langmuir_adsorption_isotherm(self,
+                                             df_i: pd.DataFrame,
+                                             log: logger.logging.Logger
+                                             ) -> pd.Series:
+        """
+        Compute the Langmuir adsorption isotherm
+        """
+        langmuir_gamma: pd.Series = LangmuirAdsorptionIsotherm(
+            df_i, self.config, log).langmuir_estimation
+
+        self.info_msg += ('\tLangmuir Adsorption Isotherm:\n'
+                          f'{langmuir_gamma}\n')
+        return langmuir_gamma
+
+    def write_df(self,
+                 df_i: pd.DataFrame,
+                 log: logger.logging.Logger
+                 ) -> None:
+        """
+        Write the dataframe to a file
+        """
+        extra_comments: str = \
+            "Surface Excess Concentration is calculated by dividing the nr " \
+            "of ODA molecules by the surface area of the interface and " \
+            "normalizing it by Avogadro's number."
+        file_writer.write_xvg(df_i, log, fname='gibbs_adsorption_isotherm.xvg',
+                              extra_comments=extra_comments)
 
 
 class GetTension:
@@ -110,17 +176,17 @@ class GetTension:
     Read tension files
     """
 
-    __slots__ = ['config', 'nr_frames', 'info_msg']
+    __slots__ = ['config', 'nr_frames', 'info_msg', 'tesnion_df']
+    tesnion_df: pd.DataFrame
 
     def __init__(self,
                  config: Config,
-                 oda_concentration: pd.Series,
                  log: logger.logging.Logger
                  ) -> None:
         self.info_msg: str = "Message from GetTension:\n"
         self.config = config.inputs
-        tension_df: pd.DataFrame = self.read_tension(log)
-        self.analyze_tension(tension_df, oda_concentration, log)
+        tension_raw: pd.DataFrame = self.read_tension(log)
+        self.tesnion_df = self.analyze_tension(tension_raw)
         self.log_msg(log)
 
     def read_tension(self,
@@ -141,21 +207,15 @@ class GetTension:
 
     def analyze_tension(self,
                         tension_df: pd.DataFrame,
-                        oda_concentration: pd.Series,
-                        log: logger.logging.Logger
-                        ) -> None:
+                        ) -> pd.DataFrame:
         """
         Analyze the tension data
         """
         normal_stats: pd.DataFrame = self.perform_normal_bootstrap(tension_df)
         df_normal_change: pd.DataFrame = \
             self.compute_change_in_tension(normal_stats)
-        df_i: pd.DataFrame = \
-            self.surface_excess_concentration(df_normal_change)
-        langmuir_gamma: pd.Series = \
-            self.compute_langmuir_adsorption_isotherm(df_i, log)
-        df_i['ODA Concentration [mM]'] = list(oda_concentration)
-        df_i['Langmuir Adsorption Isotherm [mM]'] = langmuir_gamma
+        df_i: pd.DataFrame = df_normal_change
+        return df_i
 
     def perform_normal_bootstrap(self,
                                  tension_df: pd.DataFrame
@@ -211,41 +271,6 @@ class GetTension:
         df_change['Change in Tension [mN/m]'] = \
             df_change['mean'] - df_change['mean'].iloc[0]
         return df_change
-
-    def surface_excess_concentration(self,
-                                     df_change: pd.DataFrame
-                                     ) -> pd.DataFrame:
-        """
-        Compute the surface excess concentration
-        which is divide the number of the oda molecules by the surface
-        area of the interface and normalize it by the avogadro number
-        """
-        xlim: float = float(self.config.box_info['xlim'])
-        ylim: float = float(self.config.box_info['ylim'])
-        # Area of the interface in nm^2 -> m^2
-        area: float = xlim * ylim * 1e-18
-
-        # Compute the surface excess concentration for each row
-        df_i: pd.DataFrame = df_change.assign(
-            **{'Surface Excess Concentration [mol/m^2]':
-               df_change.index.astype(float) / (area * Constants.NA.value)}
-        )
-
-        return df_i
-
-    def compute_langmuir_adsorption_isotherm(self,
-                                             df_i: pd.DataFrame,
-                                             log: logger.logging.Logger
-                                             ) -> pd.Series:
-        """
-        Compute the Langmuir adsorption isotherm
-        """
-        langmuir_gamma: pd.Series = LangmuirAdsorptionIsotherm(
-            df_i, self.config, log).langmuir_estimation
-
-        self.info_msg += ('\tLangmuir Adsorption Isotherm:\n'
-                          f'{langmuir_gamma}\n')
-        return langmuir_gamma
 
     @staticmethod
     def calc_mode(samples: np.ndarray,
@@ -387,7 +412,8 @@ def main(cfg: Config) -> None:
     log: logger.logging.Logger = logger.setup_logger(
         'compute_gibbs_adsorption_isotherm.log')
     oda_concentration: pd.DataFrame = compute_bulk_concentration(cfg)
-    GetTension(cfg, oda_concentration['ODA Concentration [mM]'], log)
+    tension_df: pd.DataFrame = GetTension(cfg, log).tesnion_df
+    ComputeOdaConcentration(tension_df, oda_concentration, cfg, log)
 
 
 if __name__ == "__main__":

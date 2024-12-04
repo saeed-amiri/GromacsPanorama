@@ -114,13 +114,13 @@ class GetTension:
 
     def __init__(self,
                  config: Config,
+                 oda_concentration: pd.Series,
                  log: logger.logging.Logger
                  ) -> None:
         self.info_msg: str = "Message from GetTension:\n"
         self.config = config.inputs
         tension_df: pd.DataFrame = self.read_tension(log)
-
-        self.analyze_tension(tension_df, log)
+        self.analyze_tension(tension_df, oda_concentration, log)
         self.log_msg(log)
 
     def read_tension(self,
@@ -141,6 +141,7 @@ class GetTension:
 
     def analyze_tension(self,
                         tension_df: pd.DataFrame,
+                        oda_concentration: pd.Series,
                         log: logger.logging.Logger
                         ) -> None:
         """
@@ -153,6 +154,7 @@ class GetTension:
             self.surface_excess_concentration(df_normal_change)
         langmuir_gamma: pd.Series = \
             self.compute_langmuir_adsorption_isotherm(df_i, log)
+        df_i['ODA Concentration [mM]'] = list(oda_concentration)
         df_i['Langmuir Adsorption Isotherm [mM]'] = langmuir_gamma
 
     def perform_normal_bootstrap(self,
@@ -384,9 +386,8 @@ def main(cfg: Config) -> None:
     # pylint: disable=missing-function-docstring
     log: logger.logging.Logger = logger.setup_logger(
         'compute_gibbs_adsorption_isotherm.log')
-    GetTension(cfg, log)
     oda_concentration: pd.DataFrame = compute_bulk_concentration(cfg)
-    print(oda_concentration, 'from the box size')
+    GetTension(cfg, oda_concentration['ODA Concentration [mM]'], log)
 
 
 if __name__ == "__main__":

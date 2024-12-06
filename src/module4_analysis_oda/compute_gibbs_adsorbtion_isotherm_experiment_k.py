@@ -25,7 +25,7 @@ surface excess (Γ_max) in the Gibbs adsorption isotherm:
 
 """
 
-from enum import Enum
+from enum import EnumType
 
 import numpy as np
 import pandas as pd
@@ -42,7 +42,7 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
 
     def __init__(self,
                  config: dict,
-                 constants: Enum,
+                 constants: EnumType,
                  log: logger.logging.Logger
                  ) -> None:
         self.config = config

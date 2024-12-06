@@ -30,15 +30,18 @@ from enum import EnumType
 import numpy as np
 import pandas as pd
 
+import matplotlib.pyplot as plt
+
 from common import logger
 
 
 class ComputeGibbsAdsorbtionIsothermExperimentK:
     """
-    Get data from the hydra and compute the Gibbs adsorption isotherm
+    Compute the Gibbs adsorption isotherm values (Gamma) for each
+    concentration data point.
     """
 
-    __slots__ = ["info_msg", "experiment_data", "a_max", "config"]
+    __slots__ = ["config"]
 
     def __init__(self,
                  config: dict,
@@ -47,9 +50,71 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
                  ) -> None:
         self.config = config
         data: pd.DataFrame = self.get_data()
+        data = self.compute_surface_excess_each_point(data, constants, log)
 
     def get_data(self) -> pd.DataFrame:
         """
-        Get the data from the hydra
+        Get the data from the hydra (assuming self.config.joeri is a
+        dict with C as keys and gamma as values)
         """
-        return pd.DataFrame.from_dict(self.config.joeri, orient='index')
+        data = pd.DataFrame.from_dict(self.config.joeri, orient='index')
+
+        # Ensure data is sorted by concentration
+        return data.sort_index()
+
+    def compute_surface_excess_each_point(self,
+                                          data: pd.DataFrame,
+                                          constants: EnumType,
+                                          log: logger.logging.Logger
+                                          ) -> pd.DataFrame:
+        """
+        Compute the surface excess (Gamma) for each concentration dat
+        point.
+        This method uses finite differences to approximate
+        d(gamma)/dln_concentration locally at each point.
+        """
+        # Convert index (C) to a column so we can easily handle it
+        data["C"] = data.index * 1e-3  # Convert to mol/L
+        data["ln_concentration"] = np.log(data["C"])
+
+        # Extract arrays for convenience
+        ln_concentration = data["ln_concentration"].values
+        gamma_vals = data["gamma_np_mN/m"].values * 1e-3  # to N/m
+
+        # Prepare an array for d_gamma/d_ln_concentration
+        d_gamma_d_ln_concentration = np.zeros(len(data))
+
+        # Use central differences for interior points
+        # For i = 1 to len(data)-2 (since we need i-1 and i+1)
+        for i in range(1, len(data)-1):
+            d_gamma_d_ln_concentration[i] = \
+                (gamma_vals[i+1] - gamma_vals[i-1]) / \
+                (ln_concentration[i+1] - ln_concentration[i-1])
+
+        # Handle endpoints with one-sided differences if you wish:
+        # If we have at least 2 points:
+        if len(data) > 1:
+            # Forward difference for first point
+            d_gamma_d_ln_concentration[0] = \
+                (gamma_vals[1] - gamma_vals[0]) / \
+                (ln_concentration[1] - ln_concentration[0])
+            # Backward difference for last point
+            d_gamma_d_ln_concentration[-1] = \
+                (gamma_vals[-1] - gamma_vals[-2]) / \
+                (ln_concentration[-1] - ln_concentration[-2])
+        else:
+            # Only one data point means we cannot get a derivative
+            d_gamma_d_ln_concentration[0] = np.nan
+
+        # Compute Gamma for each point
+        Gamma_values = -(
+            1 / (constants.n.value * constants.R.value * constants.T.value)
+            ) * d_gamma_d_ln_concentration
+        data["Gamma"] = Gamma_values
+
+        # Log or print the results
+        log.info("Computed Gamma at each concentration point:")
+        for c_val, gamma_val in zip(data["C"], data["Gamma"]):
+            log.info(f"C: {c_val}, Gamma: {gamma_val}")
+
+        return data

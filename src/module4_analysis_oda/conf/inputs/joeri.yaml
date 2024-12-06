@@ -2,32 +2,32 @@
 # Joeri Smits,† Felipi Vieira, Bianca Bisswurn, Kurosch Rezwan,and Michael Maas
 # surfactant concentration (mM)
 0.001:
-  delta_g: 1.42  # mN/m
+  delta_g_mN/m: 1.42
   coverage: 0.40
-  gamma_no_np: 0.93  # mN/m
-  gamma_np: 0.65  # mN/m
-  nr_of_particles: 6.97  # 1e9
+  gamma_no_np_mN/m: 0.93
+  gamma_np_mN/m: 0.65
+  nr_of_particles_1e9: 6.97
 0.01:
-  delta_g: 1.51  # mN/m
+  delta_g_mN/m: 1.51
   coverage: 0.66
-  gamma_no_np: 1.27  # mN/m
-  gamma_np: 1.63  # mN/m
-  nr_of_particles: 11.60  # 1e9 
+  gamma_no_np_mN/m: 1.27
+  gamma_np_mN/m: 1.63
+  nr_of_particles_1e9 : 11.60
 0.1:
-  delta_g: 1.60  # mN/m
+  delta_g_mN/m: 1.60
   coverage: 0.49
-  gamma_no_np: 5.79  # mN/m
-  gamma_np: 3.10  # mN/m
-  nr_of_particles: 8.63  # 1e9
+  gamma_no_np_mN/m: 5.79
+  gamma_np_mN/m: 3.10
+  nr_of_particles_1e9: 8.63
 1.0:
-  delta_g: 2.12  # mN/m
+  delta_g_mN/m: 2.12
   coverage: 0.24
-  gamma_no_np: 12.94  # mN/m
-  gamma_np: 1.52  # mN/m
-  nr_of_particles: 4.23  # 1e9
+  gamma_no_np_mN/m: 12.94
+  gamma_np_mN/m: 1.52
+  nr_of_particles_1e9: 4.23
 4.0:
-  delta_g: 1.17  # mN/m
+  delta_g_mN/m: 1.17
   coverage: 0.05
-  gamma_no_np: 27.53  # mN/m
-  gamma_np: 0.37  # mN/m
-  nr_of_particles: 0.63  # 1e9
+  gamma_no_np_mN/m: 27.53
+  gamma_np_mN/m: 0.37
+  nr_of_particles_1e9: 0.63

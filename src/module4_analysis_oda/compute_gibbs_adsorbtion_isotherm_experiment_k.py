@@ -25,7 +25,7 @@ surface excess (Γ_max) in the Gibbs adsorption isotherm:
 
 """
 
-from enum import EnumType
+from enum import Enum
 
 import numpy as np
 import pandas as pd
@@ -33,6 +33,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from common import logger
+from common import elsevier_plot_tools
 
 
 class ComputeGibbsAdsorbtionIsothermExperimentK:
@@ -45,12 +46,13 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
 
     def __init__(self,
                  config: dict,
-                 constants: EnumType,
+                 constants: Enum,
                  log: logger.logging.Logger
                  ) -> None:
         self.config = config
         data: pd.DataFrame = self.get_data()
         data = self.compute_surface_excess_each_point(data, constants, log)
+        self.plot_data(data, log)
 
     def get_data(self) -> pd.DataFrame:
         """
@@ -64,7 +66,7 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
 
     def compute_surface_excess_each_point(self,
                                           data: pd.DataFrame,
-                                          constants: EnumType,
+                                          constants: Enum,
                                           log: logger.logging.Logger
                                           ) -> pd.DataFrame:
         """
@@ -107,10 +109,10 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
             d_gamma_d_ln_concentration[0] = np.nan
 
         # Compute Gamma for each point
-        Gamma_values = -(
+        gamma_values = -(
             1 / (constants.n.value * constants.R.value * constants.T.value)
             ) * d_gamma_d_ln_concentration
-        data["Gamma"] = Gamma_values
+        data["Gamma"] = gamma_values
 
         # Log or print the results
         log.info("Computed Gamma at each concentration point:")
@@ -118,3 +120,36 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
             log.info(f"C: {c_val}, Gamma: {gamma_val}")
 
         return data
+
+    def plot_data(self,
+                  data: pd.DataFrame,
+                  log: logger.logging.Logger
+                  ) -> None:
+        """
+        Plot the data to visually inspect the relationship between
+        concentration and surface tension.
+        """
+        figure: tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
+            "single_column", aspect_ratio=1)
+        fig_i, ax_i = figure
+        # make the xvalue and yvlaue in log scale
+        ax_i.set_yscale('log')
+        ax_i.set_xscale('log')
+
+        plt.plot(data.index,
+                 data["gamma_np_mN/m"],
+                 'o:',
+                 markersize=3,
+                 color='black',
+                 label='With NP')
+
+        plt.plot(data.index,
+                 data["gamma_no_np_mN/m"],
+                 '^--',
+                 markersize=3,
+                 color='darkred',
+                 label='No NP')
+        plt.xlabel("Concentration (mM)")
+        plt.ylabel("Surface tension (mN/m)")
+        elsevier_plot_tools.save_close_fig(
+            fig_i, 'tensio_exp.jpg', loc='upper left')

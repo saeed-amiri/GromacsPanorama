@@ -150,21 +150,29 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
         # make the xvalue and yvlaue in log scale
         # ax_i.set_yscale('log')
         ax_i.set_xscale('log')
-
-        plt.plot(data.index,
-                 data["gamma_np_mN/m"],
-                 'o:',
-                 markersize=3,
-                 color='black',
-                 label='With NP')
-
-        plt.plot(data.index,
-                 data["gamma_no_np_mN/m"],
-                 '^--',
-                 markersize=3,
-                 color='darkred',
-                 label='No NP')
+        self.plot_joeri(data, ax_i)
         plt.xlabel("Concentration (mM)")
         plt.ylabel("Surface tension (mN/m)")
         elsevier_plot_tools.save_close_fig(
             fig_i, 'tensio_exp.jpg', loc='upper left')
+
+    def plot_joeri(self,
+                   data: pd.DataFrame,
+                   ax: plt.Axes
+                   ) -> None:
+        """
+        Plot the data from the Joeri experiment.
+        """
+        ax.plot(data.index,
+                data["gamma_np_mN/m"],
+                'o:',
+                markersize=3,
+                color='black',
+                label='With NP')
+
+        ax.plot(data.index,
+                data["gamma_no_np_mN/m"],
+                '^--',
+                markersize=3,
+                color='darkred',
+                label='No NP')

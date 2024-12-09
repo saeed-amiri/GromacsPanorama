@@ -53,7 +53,7 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
         self.config = config.inputs
         data: pd.DataFrame = self.get_data(config, log)
         data = self.compute_surface_excess_each_point(data, constants, log)
-        self.plot_data(data, log)
+        self.plot_data(data, log, config)
 
     def get_data(self,
                  config: dict,
@@ -138,7 +138,8 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
 
     def plot_data(self,
                   data: pd.DataFrame,
-                  log: logger.logging.Logger
+                  log: logger.logging.Logger,
+                  config: dict
                   ) -> None:
         """
         Plot the data to visually inspect the relationship between
@@ -147,32 +148,42 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
         figure: tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
             "single_column", aspect_ratio=1)
         fig_i, ax_i = figure
-        # make the xvalue and yvlaue in log scale
-        # ax_i.set_yscale('log')
         ax_i.set_xscale('log')
-        self.plot_joeri(data, ax_i)
         plt.xlabel("Concentration (mM)")
         plt.ylabel("Surface tension (mN/m)")
+
+        if config.experiment == "joeri":
+            self.plot_joeri(data, ax_i)
+        elif config.experiment == "maas":
+            self.plot_maas(data, ax_i)
         elsevier_plot_tools.save_close_fig(
             fig_i, 'tensio_exp.jpg', loc='upper left')
 
     def plot_joeri(self,
                    data: pd.DataFrame,
-                   ax: plt.Axes
+                   ax_i: plt.Axes
                    ) -> None:
         """
         Plot the data from the Joeri experiment.
         """
-        ax.plot(data.index,
-                data["gamma_np_mN/m"],
-                'o:',
-                markersize=3,
-                color='black',
-                label='With NP')
+        ax_i.plot(data.index,
+                  data["gamma_np_mN/m"],
+                  'o:',
+                  markersize=3,
+                  color='black',
+                  label='With NP')
 
-        ax.plot(data.index,
-                data["gamma_no_np_mN/m"],
-                '^--',
-                markersize=3,
-                color='darkred',
-                label='No NP')
+        ax_i.plot(data.index,
+                  data["gamma_no_np_mN/m"],
+                  '^--',
+                  markersize=3,
+                  color='darkred',
+                  label='No NP')
+
+    def plot_maas(self,
+                  data: pd.DataFrame,
+                  ax_i: plt.Axes
+                  ) -> None:
+        """
+        Plot the data from the Maas experiment.
+        """

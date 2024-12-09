@@ -65,13 +65,15 @@ from common import logger
 from common import file_writer
 from common import xvg_to_dataframe
 
+from module4_analysis_oda.compute_gibbs_adsorbtion_isotherm_experiment_k \
+    import ComputeGibbsAdsorbtionIsothermExperimentK
 
 # Constants
 class Constants(Enum):
     """Physical constants"""
     # pylint: disable=invalid-name
     R: float = 8.314  # J/(mol K)
-    m: float = 2  # unitless
+    n: float = 2  # unitless
     T: float = 298.15  # K
     NA: float = 6.022e23  # Avogadro's number
     CR: float = 20.0  # conversion rate from mN/m to J/m^2
@@ -101,13 +103,14 @@ class ComputeOdaConcentration:
         self.config = config.inputs
         oda_concentration: pd.DataFrame = self.compute_bulk_concentration()
         df_i: pd.DataFrame = self.compute_oda_concentration(
-            tension_df, oda_concentration, log)
+            tension_df, oda_concentration, log, config)
         self.write_df(df_i, log)
 
     def compute_oda_concentration(self,
                                   tension_df: pd.DataFrame,
                                   oda_concentration: pd.Series,
-                                  log: logger.logging.Logger
+                                  log: logger.logging.Logger,
+                                  config: Config
                                   ) -> pd.DataFrame:
         """
         Compute the concentration of ODA in the box
@@ -119,6 +122,7 @@ class ComputeOdaConcentration:
         df_i['ODA Concentration [mM]'] = \
             list(oda_concentration['ODA Concentration [mM]'])
         df_i['Langmuir Adsorption Isotherm [mM]'] = langmuir_gamma
+        self.estimate_from_experiment(log, config)
         return df_i
 
     def surface_excess_concentration(self,
@@ -194,6 +198,16 @@ class ComputeOdaConcentration:
                                    orient='index',
                                    columns=['ODA Concentration [mM]'])
         return oda_concentration_df
+
+    def estimate_from_experiment(self,
+                                 log: logger.logging.Logger,
+                                 config: Config
+                                 ) -> None:
+        """
+        Estimate the K in the adsorption equilibrium constant (K) and maximum
+        surface excess (Γ_max) in the Gibbs adsorption isotherm
+        """
+        ComputeGibbsAdsorbtionIsothermExperimentK(config, Constants, log)
 
     def write_df(self,
                  df_i: pd.DataFrame,

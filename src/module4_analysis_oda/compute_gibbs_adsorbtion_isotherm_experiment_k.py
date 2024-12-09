@@ -52,7 +52,7 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
                  ) -> None:
         self.config = config.inputs
         data: pd.DataFrame = self.get_data(config, log)
-        data = self.compute_surface_excess_each_point(data, constants, log)
+        # data = self.compute_surface_excess_each_point(data, constants, log)
         self.plot_data(data, log, config)
 
     def get_data(self,
@@ -148,16 +148,15 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
         figure: tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
             "single_column", aspect_ratio=1)
         fig_i, ax_i = figure
-        ax_i.set_xscale('log')
-        plt.xlabel("Concentration (mM)")
-        plt.ylabel("Surface tension (mN/m)")
+        plt.xlabel("Concentration [mM]")
+        plt.ylabel("Surface tension [mN/m]")
 
         if config.experiment == "joeri":
             self.plot_joeri(data, ax_i)
         elif config.experiment == "maas":
             self.plot_maas(data, ax_i)
         elsevier_plot_tools.save_close_fig(
-            fig_i, 'tensio_exp.jpg', loc='upper left')
+            fig_i, 'tensio_exp.jpg', loc='upper right')
 
     def plot_joeri(self,
                    data: pd.DataFrame,
@@ -187,3 +186,12 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
         """
         Plot the data from the Maas experiment.
         """
+        salt_values: list[float] = \
+            data[self.config.maas.salt_column_name].unique()
+        for salt_value in salt_values:
+            df_i = data[data[self.config.maas.salt_column_name] == salt_value]
+            ax_i.plot(df_i[self.config.maas.oda_column_name],
+                      df_i[self.config.maas.ift_column_name],
+                      'o:',
+                      markersize=3,
+                      label=f"NaCl: {salt_value:.2f} mM")

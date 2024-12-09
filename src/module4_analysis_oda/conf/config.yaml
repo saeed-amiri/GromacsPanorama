@@ -6,3 +6,4 @@ defaults:
   - inputs@inputs.tension_files: tension_files # Includes inputs/tension_files.yaml
   - inputs@inputs.molar_mass: molar_mass   # Includes inputs/molar_mass.yaml
   - inputs@inputs.langmuir_terms: langmuir_terms # Includes inputs/langmuir_terms.yaml
+  - inputs@inputs.joeri: joeri             # Includes inputs/joeri.yaml

@@ -49,20 +49,22 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
                  constants: Enum,
                  log: logger.logging.Logger
                  ) -> None:
-        self.config = config
-        data: pd.DataFrame = self.get_data()
+        self.config = config.inputs
+        data: pd.DataFrame = self.get_data(config)
         data = self.compute_surface_excess_each_point(data, constants, log)
         self.plot_data(data, log)
 
-    def get_data(self) -> pd.DataFrame:
+    def get_data(self,
+                 config: dict
+                 ) -> pd.DataFrame:
         """
         Get the data from the hydra (assuming self.config.joeri is a
         dict with C as keys and gamma as values)
         """
-        data = pd.DataFrame.from_dict(self.config.joeri, orient='index')
-
-        # Ensure data is sorted by concentration
-        return data.sort_index()
+        if config.experiment == "joeri":
+            data = pd.DataFrame.from_dict(self.config.joeri, orient='index')
+            # Ensure data is sorted by concentration
+            return data.sort_index()
 
     def compute_surface_excess_each_point(self,
                                           data: pd.DataFrame,
@@ -133,7 +135,7 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
             "single_column", aspect_ratio=1)
         fig_i, ax_i = figure
         # make the xvalue and yvlaue in log scale
-        ax_i.set_yscale('log')
+        # ax_i.set_yscale('log')
         ax_i.set_xscale('log')
 
         plt.plot(data.index,

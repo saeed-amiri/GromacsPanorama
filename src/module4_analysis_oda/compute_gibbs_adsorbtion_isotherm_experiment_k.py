@@ -52,7 +52,8 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
                  ) -> None:
         self.config = config.inputs
         data: pd.DataFrame = self.get_data(config, log)
-        # data = self.compute_surface_excess_each_point(data, constants, log)
+        data = self.compute_surface_excess_each_point(
+            data, constants, log, config)
         self.plot_data(data, log, config)
 
     def get_data(self,
@@ -82,7 +83,8 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
     def compute_surface_excess_each_point(self,
                                           data: pd.DataFrame,
                                           constants: Enum,
-                                          log: logger.logging.Logger
+                                          log: logger.logging.Logger,
+                                          config: dict
                                           ) -> pd.DataFrame:
         """
         Compute the surface excess (Gamma) for each concentration dat
@@ -90,13 +92,21 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
         This method uses finite differences to approximate
         d(gamma)/dln_concentration locally at each point.
         """
-        # Convert index (C) to a column so we can easily handle it
-        data["C"] = data.index * 1e-3  # Convert to mol/L
-        data["ln_concentration"] = np.log(data["C"])
+        if config.experiment == "joeri":
+            # Convert index (C) to a column so we can easily handle it
+            data["C"] = data.index * 1e-3  # Convert to mol/L
+            data["ln_concentration"] = np.log(data["C"])
 
-        # Extract arrays for convenience
-        ln_concentration = data["ln_concentration"].values
-        gamma_vals = data["gamma_np_mN/m"].values * 1e-3  # to N/m
+            # Extract arrays for convenience
+            ln_concentration = data["ln_concentration"].values
+            gamma_vals = data["gamma_np_mN/m"].values * 1e-3  # to N/m
+        elif config.experiment == "maas":
+            data["C"] = data[self.config.maas.oda_column_name] * 1e-3
+            data["ln_concentration"] = np.log(data["C"])
+
+            # Extract arrays for convenience
+            ln_concentration = data["ln_concentration"].values
+            gamma_vals = data[self.config.maas.ift_column_name].values
 
         # Prepare an array for d_gamma/d_ln_concentration
         d_gamma_d_ln_concentration = np.zeros(len(data))

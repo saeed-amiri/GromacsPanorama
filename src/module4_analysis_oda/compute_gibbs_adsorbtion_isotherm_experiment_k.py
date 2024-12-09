@@ -34,6 +34,7 @@ import matplotlib.pyplot as plt
 
 from common import logger
 from common import elsevier_plot_tools
+from common import xvg_to_dataframe
 
 
 class ComputeGibbsAdsorbtionIsothermExperimentK:
@@ -50,12 +51,13 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
                  log: logger.logging.Logger
                  ) -> None:
         self.config = config.inputs
-        data: pd.DataFrame = self.get_data(config)
+        data: pd.DataFrame = self.get_data(config, log)
         data = self.compute_surface_excess_each_point(data, constants, log)
         self.plot_data(data, log)
 
     def get_data(self,
-                 config: dict
+                 config: dict,
+                 log: logger.logging.Logger
                  ) -> pd.DataFrame:
         """
         Get the data from the hydra (assuming self.config.joeri is a
@@ -65,6 +67,17 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
             data = pd.DataFrame.from_dict(self.config.joeri, orient='index')
             # Ensure data is sorted by concentration
             return data.sort_index()
+        if config.experiment == "maas":
+            xvg_file = self.config.maas.xvg_file
+            data = \
+                xvg_to_dataframe.XvgParser(xvg_file, log, x_type=float).xvg_df
+            columns: list[str] = [self.config.maas.salt_column_name,
+                                  self.config.maas.oda_column_name,
+                                  self.config.maas.ift_column_name,
+                                  ]
+            return data[columns]
+        log.error(msg := "\tExperiment not recognized\n")
+        raise ValueError(msg)
 
     def compute_surface_excess_each_point(self,
                                           data: pd.DataFrame,

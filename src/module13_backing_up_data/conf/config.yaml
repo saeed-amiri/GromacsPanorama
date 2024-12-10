@@ -1,0 +1,3 @@
+# conf/config.yaml
+defaults:
+ - files@files.ff_path: ff_path  # path to the forcefield files

@@ -233,11 +233,12 @@ class AtomsInfo:
         for line in atoms:
             if line.startswith(';'):  # line start with ';' are commets&header
                 l_line = free_char_line(line)
-                if 'Total' not in l_line:  # Not header!
+                if 'total' not in l_line:  # Not header!
                     if l_line != columns:
                         sys.exit(f'{bcolors.FAIL}{self.__class__.__name__}:\n'
                                  f'\tError in the [ atoms ] header of the '
-                                 f'itp file\n{bcolors.ENDC}')
+                                 f'itp file:\n\t{l_line = }\n\t{columns = }'
+                                 f'\n{bcolors.ENDC}')
             else:
                 l_line = free_char_line(line)
                 atomnr.append(int(l_line[0]))
@@ -306,13 +307,14 @@ class BondsInfo:
         for line in bonds:
             if line.startswith(';'):  # line start with ';' are commets&header
                 l_line = free_char_line(line)
-                if ('Total' not in l_line and
+                if ('total' not in l_line and
                    l_line != header_columns):
                     header_columns = alter_header_columns.copy()
                     if l_line != header_columns:
                         sys.exit(f'{bcolors.FAIL}{self.__class__.__name__}:\n'
                                  f'\tError in the [ bonds ] header of the '
-                                 f'itp file\n{bcolors.ENDC}')
+                                 f'itp file\n\t{l_line = }\n\t{header_columns = }'
+                                 f'{bcolors.ENDC}')
             else:
                 tmp = line.split()
                 tmp = [item for item in tmp if item]
@@ -353,9 +355,9 @@ class BondsInfo:
         df_c: pd.DataFrame = df_bonds.copy()
         ai_name: list[str]  # name of the 1st atom from the list
         aj_name: list[str]  # name of the 2nd atom from the list
-        ai_name = [atoms.loc[atoms['atomnr'] == str(item)]['atomname'][item-1]
+        ai_name = [atoms.loc[atoms['atomnr'] == item]['atomname'][item-1]
                    for item in df_bonds['ai']]
-        aj_name = [atoms.loc[atoms['atomnr'] == str(item)]['atomname'][item-1]
+        aj_name = [atoms.loc[atoms['atomnr'] == item]['atomname'][item-1]
                    for item in df_bonds['aj']]
         names: list[str] = [f'{i}-{j}' for i, j in zip(ai_name, aj_name)]
         df_c['name'] = names
@@ -401,11 +403,12 @@ class AnglesInfo:
         for line in angles:
             if line.startswith(';'):  # line start with ';' are commets&header
                 l_line = free_char_line(line)
-                if 'Total' not in l_line and l_line != columns:
+                if 'total' not in l_line and l_line != columns:
                     if l_line != alter_columns:
                         sys.exit(f'{bcolors.FAIL}{self.__class__.__name__}:\n'
-                                 f'\tError in the [ angles ] header of the '
-                                 f'itp file\n{bcolors.ENDC}')
+                                 f'\tError in the [ angles ] header of the\n'
+                                 f'itp file:\n\t{l_line = }\n\t{columns = }'
+                                 f'{bcolors.ENDC}\n')
             else:
                 tmp = line.strip().split('\t')
                 tmp = [item for item in tmp if item]
@@ -415,7 +418,10 @@ class AnglesInfo:
                 a_j.append(int(l_line[1]))
                 a_k.append(int(l_line[2]))
                 funct.append(int(l_line[3]))
-                names.append(l_line[4])
+                if len(l_line) == 5:
+                    names.append(l_line[4])
+                else:
+                    names.append('')
         return a_i, a_j, a_k, funct, names
 
     def mk_df(self,
@@ -451,11 +457,11 @@ class AnglesInfo:
         ai_name: list[str]  # name of the 1st atom from the list
         aj_name: list[str]  # name of the 2nd atom from the list
         ak_name: list[str]  # name of the 3rd atom from the list
-        ai_name = [atoms.loc[atoms['atomnr'] == str(item)]['atomname'][item-1]
+        ai_name = [atoms.loc[atoms['atomnr'] == item]['atomname'][item-1]
                    for item in df_angles['ai']]
-        aj_name = [atoms.loc[atoms['atomnr'] == str(item)]['atomname'][item-1]
+        aj_name = [atoms.loc[atoms['atomnr'] == item]['atomname'][item-1]
                    for item in df_angles['aj']]
-        ak_name = [atoms.loc[atoms['atomnr'] == str(item)]['atomname'][item-1]
+        ak_name = [atoms.loc[atoms['atomnr'] == item]['atomname'][item-1]
                    for item in df_angles['ak']]
         names: list[str] = [f'{i}-{j}-{k}' for i, j, k
                             in zip(ai_name, aj_name, ak_name)]
@@ -504,11 +510,12 @@ class DihedralsInfo:
         for line in dihedrals:
             if line.startswith(';'):  # line start with ';' are commets&header
                 l_line = free_char_line(line)
-                if 'Total' not in l_line and l_line != columns:
+                if 'total' not in l_line and l_line != columns:
                     if l_line != alter_columns:
                         sys.exit(f'{bcolors.FAIL}{self.__class__.__name__}:\n'
                                  f'\tError in the [ dihedrals ] header of the'
-                                 f' itp file\n{bcolors.ENDC}')
+                                 f' itp file\n\t{l_line = }\n\t{columns = }\n'
+                                 f'{bcolors.ENDC}')
             else:
                 tmp = line.strip().split('\t')
                 tmp = [item for item in tmp if item]
@@ -519,7 +526,10 @@ class DihedralsInfo:
                 a_k.append(int(l_line[2]))
                 a_h.append(int(l_line[3]))
                 funct.append(int(l_line[4]))
-                names.append(l_line[5])
+                if len(l_line) == 6:
+                    names.append(l_line[5])
+                else:
+                    names.append('')
         return a_i, a_j, a_k, a_h, funct, names
 
     def mk_df(self,
@@ -558,13 +568,13 @@ class DihedralsInfo:
         aj_name: list[str]  # name of the 2nd atom from the list
         ak_name: list[str]  # name of the 3rd atom from the list
         ah_name: list[str]  # name of the 4th atom from the list
-        ai_name = [atoms.loc[atoms['atomnr'] == str(item)]['atomname'][item-1]
+        ai_name = [atoms.loc[atoms['atomnr'] == item]['atomname'][item-1]
                    for item in df_dihedrals['ai']]
-        aj_name = [atoms.loc[atoms['atomnr'] == str(item)]['atomname'][item-1]
+        aj_name = [atoms.loc[atoms['atomnr'] == item]['atomname'][item-1]
                    for item in df_dihedrals['aj']]
-        ak_name = [atoms.loc[atoms['atomnr'] == str(item)]['atomname'][item-1]
+        ak_name = [atoms.loc[atoms['atomnr'] == item]['atomname'][item-1]
                    for item in df_dihedrals['ak']]
-        ah_name = [atoms.loc[atoms['atomnr'] == str(item)]['atomname'][item-1]
+        ah_name = [atoms.loc[atoms['atomnr'] == item]['atomname'][item-1]
                    for item in df_dihedrals['ah']]
         names: list[str] = [f'{i}-{j}-{k}-{h}' for i, j, k, h
                             in zip(ai_name, aj_name, ak_name, ah_name)]

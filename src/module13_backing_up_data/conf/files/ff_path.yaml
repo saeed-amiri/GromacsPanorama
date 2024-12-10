@@ -1,8 +1,9 @@
-charmm_lj: /scratch/saeed/MyScripts/GromacsPanorama/data/forcefield/chamber.DAT
-charmm: /scratch/saeed/MyScripts/GromacsPanorama/data/forcefield/charmm36_silica.itp
-SOL: /scratch/saeed/MyScripts/GromacsPanorama/data/forcefield/TIP3.itp  # Water
-POT: /scratch/saeed/MyScripts/GromacsPanorama/data/forcefield/POT.itp  # Sodium, Na+
-CLA: /scratch/saeed/MyScripts/GromacsPanorama/data/forcefield/CLA.itp  # Chloride, Cl-
-D10: /scratch/saeed/MyScripts/GromacsPanorama/data/forcefield/D10_charmm.itp  # Decane
-ODA: /scratch/saeed/MyScripts/GromacsPanorama/data/forcefield/ODAp_charmm.itp  # protonated ODA
-ODAH: /scratch/saeed/MyScripts/GromacsPanorama/data/forcefield/ODAh_charmm.itp  # deprotonated ODA
+charmm_lj: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/chamber.DAT
+itps:
+  charmm: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/charmm36_silica.itp
+  SOL: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/TIP3.itp  # Water
+  POT: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/POT.itp  # Sodium, Na+
+  CLA: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/CLA.itp  # Chloride, Cl-
+  D10: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/D10_charmm.itp  # Decane
+  ODA: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/ODAp_charmm.itp  # protonated ODA
+  # gitODAH: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/ODAh_charmm.itp  # deprotonated ODA

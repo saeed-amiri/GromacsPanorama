@@ -41,6 +41,8 @@ def free_char_line(line: str  # line of the itp file
     l_line = line.strip().split(' ')
     l_line = [item for item in l_line if item]
     l_line = [item for item in l_line if item not in char_list]
+    # make sure all the strings are in lower case
+    l_line = [item.lower() for item in l_line]
     return l_line
 
 
@@ -169,7 +171,7 @@ class MoleculeInfo:
         """read and return data about molecule"""
         # pylint: disable=invalid-name
         l_line: list[str]  # Breaking the line chars
-        columns: list[str] = ['Name', 'nrexcl']
+        columns: list[str] = ['name', 'nrexcl']
         name: list[str] = []  # Name of the molecules
         style: list[str] = []
         for line in molecules:
@@ -181,7 +183,8 @@ class MoleculeInfo:
                 if l_line != columns:
                     sys.exit(f'{bcolors.FAIL}{self.__class__.__name__}:\n'
                              f'\tError in the [ atoms ] header of the '
-                             f'itp file\n{bcolors.ENDC}')
+                             f'itp file: {l_line = }, {columns = }\n'
+                             f'{bcolors.ENDC}')
             else:
                 l_line = line.split(' ')
                 l_line = [item for item in l_line if item]

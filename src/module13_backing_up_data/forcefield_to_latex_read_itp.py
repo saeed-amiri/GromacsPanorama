@@ -39,20 +39,37 @@ class ProccessForceField:
         itps: dict[str, itp_to_df.Itp] = {}
         for itp in itp_files.itertuples():
             itp_df: itp_to_df.Itp = itp_to_df.Itp(fname=itp.path)
-            itps[str(itp)] = itp_df
+            itps[str(itp[0])] = itp_df
         return itps
 
     def make_df_to_latex(self,
                          itps: dict[str, itp_to_df.Itp],
                          ) -> None:
         """Writes the data to a LaTeX file."""
+        charmm_atoms_types: pd.DataFrame = itps['charmm'].atomtypes
         for itp in itps.values():
-            self.atoms_to_latex_df(itp)
+            atoms_df: pd.DataFrame = \
+                self.atoms_to_latex_df(itp, charmm_atoms_types)
 
     def atoms_to_latex_df(self,
                           itp: itp_to_df.Itp,
+                          charmm_atoms_types: pd.DataFrame,
                           ) -> pd.DataFrame:
         """Writes the atoms to a LaTeX file."""
         df_atoms: pd.DataFrame = \
             itp.atoms.drop_duplicates(subset=['atomtype', 'charge'])
-        return df_atoms
+        df_c: pd.DataFrame = df_atoms.copy()
+        df_c = df_c.drop(
+            columns=['atomnr', 'atomname', 'resnr', 'resname', 'chargegrp'])
+        atomname: list[str] = list(df_atoms['atomtype'])
+        sigma_dict: dict[str, float] = {}
+        epsilon_dict: dict[str, float] = {}
+        for name in atomname:
+            charmm_param = charmm_atoms_types[
+                charmm_atoms_types['name'] == name.upper()]
+            sigma_dict[name] = charmm_param.iloc[0]['sigma']
+            epsilon_dict[name] = charmm_param.iloc[0]['epsilon']
+        df_c['sigma'] = df_c['atomtype'].map(sigma_dict)
+        df_c['epsilon'] = df_c['atomtype'].map(epsilon_dict)
+
+        return df_c.reset_index(drop=True)

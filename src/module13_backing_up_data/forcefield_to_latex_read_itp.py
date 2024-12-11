@@ -30,7 +30,7 @@ class ProccessForceField:
         itp_files: pd.DataFrame = pd.DataFrame.from_dict(
             self.cfg.files.ff_path.itps, orient='index', columns=['path'])
         itps: dict[str, itp_to_df.Itp] = self.read_itp(itp_files)
-        self.make_df_to_latex(itps)
+        self.make_df_to_latex(itps, log)
 
     def read_itp(self,
                  itp_files: pd.DataFrame,
@@ -44,18 +44,38 @@ class ProccessForceField:
 
     def make_df_to_latex(self,
                          itps: dict[str, itp_to_df.Itp],
+                         log: logger.logging.Logger
                          ) -> None:
         """Writes the data to a LaTeX file."""
         charmm_atoms_types: pd.DataFrame = itps['charmm'].atomtypes
         for itp in itps.values():
             atoms_df: pd.DataFrame = \
-                self.atoms_to_latex_df(itp, charmm_atoms_types)
+                self.atoms_to_latex_df(itp, charmm_atoms_types, log)
 
     def atoms_to_latex_df(self,
                           itp: itp_to_df.Itp,
                           charmm_atoms_types: pd.DataFrame,
+                          log: logger.logging.Logger
                           ) -> pd.DataFrame:
         """Writes the atoms to a LaTeX file."""
+        # Ensure the necessary columns are present in `itp.atoms`
+        required_itp_cols: set[str] = \
+            {'atomnr', 'atomname', 'resnr', 'resname', 'chargegrp',
+             'atomtype', 'charge'}
+        if not required_itp_cols.issubset(itp.atoms.columns):
+            missing = required_itp_cols - set(itp.atoms.columns)
+            log.error(
+                msg := f"\tMissing columns in `itp.atoms`: {missing}\n"
+                )
+            raise ValueError(msg)
+
+        # Ensure the necessary columns are present in `charmm_atoms_types`
+        required_charmm_cols: set[str] = {'name', 'sigma', 'epsilon'}
+        if not required_charmm_cols.issubset(charmm_atoms_types.columns):
+            missing = required_charmm_cols - set(charmm_atoms_types.columns)
+            log.error(
+                msg := f"\tMissing in `charmm_atoms_types`: {missing}\n")
+            raise ValueError(msg)
         df_atoms: pd.DataFrame = \
             itp.atoms.drop_duplicates(subset=['atomtype', 'charge'])
         df_c: pd.DataFrame = df_atoms.copy()

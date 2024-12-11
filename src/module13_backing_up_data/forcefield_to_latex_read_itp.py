@@ -48,9 +48,13 @@ class ProccessForceField:
                          ) -> None:
         """Writes the data to a LaTeX file."""
         charmm_atoms_types: pd.DataFrame = itps['charmm'].atomtypes
+        atoms_df_list: list[pd.DataFrame] = []
         for itp in itps.values():
-            atoms_df: pd.DataFrame = \
+            atoms_df_i: pd.DataFrame = \
                 self.atoms_to_latex_df(itp, charmm_atoms_types, log)
+            atoms_df_list.append(atoms_df_i)
+        atoms_df: pd.DataFrame = pd.concat(atoms_df_list)
+        self.atoms_to_latex(atoms_df)
 
     def atoms_to_latex_df(self,
                           itp: itp_to_df.Itp,
@@ -81,7 +85,7 @@ class ProccessForceField:
             itp.atoms.drop_duplicates(subset=['atomtype', 'charge'])
         df_c: pd.DataFrame = df_atoms.copy()
         df_c = df_c.drop(
-            columns=['atomnr', 'atomname', 'resnr', 'resname', 'chargegrp'])
+            columns=['atomnr', 'atomname', 'resnr', 'chargegrp'])
 
         atomname: list[str] = list(df_atoms['atomtype'])
 
@@ -97,3 +101,35 @@ class ProccessForceField:
         df_c['epsilon'] = df_c['atomtype'].map(epsilon_dict)
 
         return df_c.reset_index(drop=True)
+
+    def atoms_to_latex(self,
+                       atoms_df: pd.DataFrame
+                       ) -> None:
+        """Writes the atoms to a LaTeX file."""
+        residues: list[str] = list(atoms_df['resname'].unique())
+        atoms_lines: list[str] = []
+        for residue in residues:
+            residue_name: str = \
+                self.cfg.files.residue_names.get(residue.upper(), residue)
+            atoms_lines.append(f'\\textbf{{{residue_name}}} & & & \\\\\n')
+            df: pd.DataFrame = atoms_df[atoms_df['resname'] == residue]
+            for _, row in df.iterrows():
+                l_line: str = (
+                    '\\hspace*{{4em}}'
+                    f'{row["element"].upper()}, ({row["atomtype"].upper()}) & '
+                    f'{row["charge"]:.3f} & '
+                    f'{row["sigma"]:.3f} & '
+                    f'{row["epsilon"]:.3f} \\\\\n'
+                )
+                atoms_lines.append(l_line)
+            atoms_lines.append(' & & & \\\\\n')
+
+        fname: str = self.cfg.files.latex_path['atoms']
+        with open(fname, 'w', encoding='utf-8') as file:
+            # Combine headers, lines, and footer into a single string
+            content = ''.join(
+                self.cfg.files.latex_headers['atoms_header'] +
+                atoms_lines +
+                self.cfg.files.latex_headers['atoms_footer']
+            )
+            file.write(content)

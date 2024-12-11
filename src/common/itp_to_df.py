@@ -65,7 +65,8 @@ class Itp:
             'dihedrals': [],
             'impropers': [],
             'moleculetype': [],
-            'atomtypes': []
+            'atomtypes': [],
+            'bondtypes': [],
         }
         self.initialize_empty_dfs()
         self.read_file(fname)
@@ -117,6 +118,11 @@ class Itp:
                 atoms=self.atoms, dihedrals=self.sections['dihedrals']).df
         if section is None or section == 'atomtypes':
             self.atomtypes = AtomsTypes(self.sections['atomtypes']).df
+        if section is None or section == 'bondtypes':
+            self.bondtypes = BondsInfo(atoms=self.atoms,
+                                       bonds=self.sections['bondtypes'],
+                                       style='charmm'
+                                       ).df
 
 
 class AtomsTypes:
@@ -274,10 +280,14 @@ class BondsInfo:
     """get the bonds list from Itp class and return a dataframe"""
     def __init__(self,
                  bonds: list[str],  # lines of bonds section read by Itp class
-                 atoms: pd.DataFrame  # atoms df from AtomsInfo to get names
+                 atoms: pd.DataFrame,  # atoms df from AtomsInfo to get names
+                 style: str = 'normal'
                  ) -> None:
         """get the bonds infos"""
-        self.mk_bonds_df(bonds, atoms)
+        if style == 'normal':
+            self.mk_bonds_df(bonds, atoms)
+        elif style == 'charmm':
+            self.mk_charmm_bonds_df(bonds)
 
     def mk_bonds_df(self,
                     bonds: list[str],  # lines of bonds section
@@ -362,6 +372,49 @@ class BondsInfo:
         names: list[str] = [f'{i}-{j}' for i, j in zip(ai_name, aj_name)]
         df_c['name'] = names
         return df_c
+
+    def mk_charmm_bonds_df(self,
+                           bonds: list[str],  # lines of bonds section
+                           ) -> None:
+        """call all the methods to make the bonds DataFrame"""
+        # pylint: disable=invalid-name
+        a_i: list[str] = []
+        a_j: list[str] = []
+        func: list[int] = []
+        b_0: list[float] = []
+        k_b: list[float] = []
+        for line in bonds:
+            if line.startswith(';'):
+                pass
+            else:
+                tmp = line.split()
+                tmp = [item for item in tmp if item]
+                line = ' '.join(tmp)
+                l_line = free_char_line(line)
+                a_i.append(str(l_line[0]))
+                a_j.append(str(l_line[1]))
+                func.append(int(l_line[2]))
+                b_0.append(float(l_line[3]))
+                k_b.append(float(l_line[4]))
+        self.df = self.mk_charmm_df(a_i, a_j, func, b_0, k_b)
+
+    def mk_charmm_df(self,
+                     a_i: list[int],  # index of the 1st atom in the bonds
+                     a_j: list[int],  # index of the 2nd atom in the bonds
+                     func: list[int],  # Index of the type of the bond
+                     b_0: list[float],  # Equilibrium bond length
+                     k_b: list[float],  # Force constant
+                     ) -> pd.DataFrame:
+        """make DataFrame and check if they are same as atoms name"""
+        # pylint: disable=too-many-arguments
+        df_bonds: pd.DataFrame
+        df_bonds = pd.DataFrame(columns=['ai', 'aj', 'funct', 'r', 'k'])
+        df_bonds['ai'] = a_i
+        df_bonds['aj'] = a_j
+        df_bonds['funct'] = func
+        df_bonds['r'] = b_0
+        df_bonds['k'] = k_b
+        return df_bonds
 
 
 class AnglesInfo:

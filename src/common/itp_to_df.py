@@ -321,10 +321,11 @@ class BondsInfo:
                    l_line != header_columns):
                     header_columns = alter_header_columns.copy()
                     if l_line != header_columns:
-                        sys.exit(f'{bcolors.FAIL}{self.__class__.__name__}:\n'
-                                 f'\tError in the [ bonds ] header of the '
-                                 f'itp file\n\t{l_line = }\n\t{header_columns = }'
-                                 f'{bcolors.ENDC}')
+                        sys.exit(
+                            f'{bcolors.FAIL}{self.__class__.__name__}:\n'
+                            f'\tError in the [ bonds ] header of the '
+                            f'itp file\n\t{l_line = }\n\t{header_columns = }'
+                            f'{bcolors.ENDC}')
             else:
                 tmp = line.split()
                 tmp = [item for item in tmp if item]

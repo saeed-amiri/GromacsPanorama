@@ -1,0 +1,17 @@
+atoms_header:
+  - '\begin{table}[h!]'
+  - '\centering'
+  - '\caption{Non-Bonded Parameters for Atoms}'
+  - '\begin{tabular}{lccc}'
+  - '\hline'
+  - '\textbf{Atom or Group} & '
+  - '\boldmath{$q$, e\textsuperscript{-}} & '
+  - '\boldmath{$\sigma$, \AA} & '
+  - '\boldmath{$\varepsilon$, '
+  - 'kcal mol\textsuperscript{-1}} \\'
+  - '\hline'
+atoms_footer:
+  - '\hline'
+  - '\end{tabular}'
+  - '\label{tab:atoms}'
+  - '\end{table}'

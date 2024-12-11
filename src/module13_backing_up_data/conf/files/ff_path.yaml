@@ -1,4 +1,4 @@
-charmm_lj: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/chamber.DAT
+charmm_dat: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/chamber.DAT
 itps:
   charmm: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/charmm36_silica.itp
   SOL: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/TIP3.itp  # Water
@@ -6,4 +6,3 @@ itps:
   CLA: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/CLA.itp  # Chloride, Cl-
   D10: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/D10_charmm.itp  # Decane
   ODA: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/ODAp_charmm.itp  # protonated ODA
-  # gitODAH: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/ODAh_charmm.itp  # deprotonated ODA

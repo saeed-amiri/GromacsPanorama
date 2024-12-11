@@ -27,30 +27,32 @@ class ProccessForceField:
                     log: logger.logging.Logger
                     ) -> None:
         """Reads the ITP file and processes it."""
-        itp_file: pd.DataFrame = pd.DataFrame.from_dict(
+        itp_files: pd.DataFrame = pd.DataFrame.from_dict(
             self.cfg.files.ff_path.itps, orient='index', columns=['path'])
-        itp_files: dict[str, itp_to_df.Itp] = self.read_itp(itp_file)
-        self.make_df_to_latex(itp_files,)
+        itps: dict[str, itp_to_df.Itp] = self.read_itp(itp_files)
+        self.make_df_to_latex(itps)
 
     def read_itp(self,
-                 itp_file: pd.DataFrame,
+                 itp_files: pd.DataFrame,
                  ) -> dict[str, itp_to_df.Itp]:
         """Reads the ITP file."""
-        itp_files: dict[str, itp_to_df.Itp] = {}
-        for itp in itp_file.itertuples():
+        itps: dict[str, itp_to_df.Itp] = {}
+        for itp in itp_files.itertuples():
             itp_df: itp_to_df.Itp = itp_to_df.Itp(fname=itp.path)
-            itp_files[str(itp.path)] = itp_df
-        return itp_files
+            itps[str(itp)] = itp_df
+        return itps
 
     def make_df_to_latex(self,
-                         itp_files: dict[str, itp_to_df.Itp],
+                         itps: dict[str, itp_to_df.Itp],
                          ) -> None:
         """Writes the data to a LaTeX file."""
-        for itp in itp_files.values():
+        for itp in itps.values():
             self.atoms_to_latex_df(itp)
 
     def atoms_to_latex_df(self,
                           itp: itp_to_df.Itp,
-                          ) -> None:
+                          ) -> pd.DataFrame:
         """Writes the atoms to a LaTeX file."""
-        return itp.atoms.drop_duplicates(subset=['atomtype', 'charge'])
+        df_atoms: pd.DataFrame = \
+            itp.atoms.drop_duplicates(subset=['atomtype', 'charge'])
+        return df_atoms

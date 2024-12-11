@@ -76,12 +76,15 @@ class ProccessForceField:
             log.error(
                 msg := f"\tMissing in `charmm_atoms_types`: {missing}\n")
             raise ValueError(msg)
+
         df_atoms: pd.DataFrame = \
             itp.atoms.drop_duplicates(subset=['atomtype', 'charge'])
         df_c: pd.DataFrame = df_atoms.copy()
         df_c = df_c.drop(
             columns=['atomnr', 'atomname', 'resnr', 'resname', 'chargegrp'])
+
         atomname: list[str] = list(df_atoms['atomtype'])
+
         sigma_dict: dict[str, float] = {}
         epsilon_dict: dict[str, float] = {}
         for name in atomname:
@@ -89,6 +92,7 @@ class ProccessForceField:
                 charmm_atoms_types['name'] == name.upper()]
             sigma_dict[name] = charmm_param.iloc[0]['sigma']
             epsilon_dict[name] = charmm_param.iloc[0]['epsilon']
+
         df_c['sigma'] = df_c['atomtype'].map(sigma_dict)
         df_c['epsilon'] = df_c['atomtype'].map(epsilon_dict)
 

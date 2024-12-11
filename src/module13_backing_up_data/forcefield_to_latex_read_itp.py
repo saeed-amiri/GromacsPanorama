@@ -9,12 +9,16 @@ from common import logger
 from common import itp_to_df
 
 if typing.TYPE_CHECKING:
+    import numpy as np
     from omegaconf import DictConfig
 
 
 class ProccessForceField:
     """Reads and processes the force field parameters."""
-    __slots__ = ['cfg', 'atoms_df']
+    __slots__ = ['cfg', 'atoms_df', 'bonds_df']
+
+    atoms_df: pd.DataFrame
+    bonds_df: pd.DataFrame
 
     def __init__(self,
                  cfg: "DictConfig",
@@ -48,12 +52,18 @@ class ProccessForceField:
                          ) -> None:
         """Writes the data to a LaTeX file."""
         charmm_atoms_types: pd.DataFrame = itps['charmm'].atomtypes
+        charmm_bonds: pd.DataFrame = itps['charmm'].bondtypes
         atoms_df_list: list[pd.DataFrame] = []
-        for itp in itps.values():
-            atoms_df_i: pd.DataFrame = \
-                self.atoms_to_latex_df(itp, charmm_atoms_types, log)
-            atoms_df_list.append(atoms_df_i)
-        self.atoms_df: pd.DataFrame = pd.concat(atoms_df_list)
+        bonds_df_list: list[pd.DataFrame] = []
+        for res, itp in itps.items():
+            if res == 'charmm':
+                continue
+            atoms_df_list.append(
+                self.atoms_to_latex_df(itp, charmm_atoms_types, log))
+            bonds_df_list.append(
+                self.bonds_to_latex_df(res, itp, charmm_bonds, log))
+        self.atoms_df = pd.concat(atoms_df_list)
+        self.bonds_df = pd.concat(bonds_df_list)
 
     def atoms_to_latex_df(self,
                           itp: itp_to_df.Itp,
@@ -100,3 +110,61 @@ class ProccessForceField:
         df_c['epsilon'] = df_c['atomtype'].map(epsilon_dict)
 
         return df_c.reset_index(drop=True)
+
+    def bonds_to_latex_df(self,
+                          res: str,
+                          itp: itp_to_df.Itp,
+                          charmm_bonds: pd.DataFrame,
+                          log: logger.logging.Logger
+                          ) -> pd.DataFrame:
+        """Writes the bonds to a LaTeX file."""
+        # pylint: disable=too-many-locals
+
+        # Ensure the necessary columns are present in `itp.bonds`
+        if itp.bonds is None or itp.atoms is None:
+            log.warning("Missing bonds or atoms data.")
+            return pd.DataFrame()
+
+        # Map atomnr to atomtype for ai and aj in bonds
+        atomtype_map = itp.atoms.set_index('atomnr')['atomtype']
+
+        try:
+            a_i_names: pd.Series = itp.bonds['ai'].map(atomtype_map)
+            a_j_names: pd.Series = itp.bonds['aj'].map(atomtype_map)
+        except KeyError as e:
+            log.error(f"KeyError: {e}")
+            missing_atoms = \
+                set(itp.bonds['ai']).union(itp.bonds['aj']) - \
+                set(atomtype_map.index)
+            log.error(f"Missing atoms in atomtype map: {missing_atoms}")
+            return pd.DataFrame()
+
+        residue_col = pd.Series([res] * len(itp.bonds['ai']), name='residue')
+        residue_col.index += 1
+
+        # Combine the data into a DataFrame for LaTeX export
+        bonds_latex_df = pd.DataFrame({
+            'typ': itp.bonds['typ'],
+            'ai_atomtype': a_i_names,
+            'aj_atomtype': a_j_names,
+            'residue': residue_col
+        })
+        # Drop one of the rows of m and n if m(ai) == n(ai) and m(aj) == n(aj)
+        bonds_latex_df = bonds_latex_df.drop_duplicates(
+            subset=['ai_atomtype', 'aj_atomtype'])
+        # get the k and r from the charmm_bonds when the ai_atomtype and
+        # aj_atomtype are the same as ai and aj in bonds_latex_df
+        k_dict: dict[np.float64, np.float64] = {}
+        r_dict: dict[np.float64, np.float64] = {}
+        for i, row in bonds_latex_df.iterrows():
+            charmm_param = charmm_bonds[
+                ((charmm_bonds['ai'] == row['ai_atomtype']) &
+                 (charmm_bonds['aj'] == row['aj_atomtype'])) |
+                ((charmm_bonds['ai'] == row['aj_atomtype']) &
+                 (charmm_bonds['aj'] == row['ai_atomtype']))
+                ]
+            k_dict[i] = charmm_param.iloc[0]['k']
+            r_dict[i] = charmm_param.iloc[0]['r']
+        bonds_latex_df['k'] = bonds_latex_df.index.map(k_dict)
+        bonds_latex_df['r'] = bonds_latex_df.index.map(r_dict)
+        return bonds_latex_df.reset_index(drop=True)

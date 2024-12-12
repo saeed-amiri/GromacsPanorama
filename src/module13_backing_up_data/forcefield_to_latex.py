@@ -15,6 +15,7 @@ from common import logger
 
 from module13_backing_up_data.forcefield_to_latex_read_itp import \
     ProccessForceField
+from module13_backing_up_data.forcefield_to_latex_write_tex import WriteTex
 
 
 @hydra.main(version_base=None,
@@ -24,7 +25,9 @@ def main(cfg: DictConfig) -> None:
     """main function"""
     log: logger.logging.Logger = logger.setup_logger('ff_to_latex.log')
     # read and process the data
-    ProccessForceField(cfg, log)
+    latex_itp: ProccessForceField = ProccessForceField(cfg, log)
+    # write the data to a LaTeX file
+    WriteTex(latex_itp, cfg, log)
 
 # pylint: disable=no-value-for-parameter
 if __name__ == "__main__":

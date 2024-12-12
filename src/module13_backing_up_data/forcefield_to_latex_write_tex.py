@@ -154,8 +154,8 @@ class WriteTex:
                 l_line: str = (
                     '\\hspace*{1em}'
                     f'{row["anglename"]} & '
-                    f'{row["theta"]:.3f} & {row["k"]:.3f} & '
-                    f'{row["cth"]:.3f} & {row["s_0"]:.3f} '
+                    f'{row["theta"]:.3f} & {row["cth"]:.3f} & '
+                    f'{row["s_0"]:.3f} & {row["k"]:.3f} '
                     f'\\\\\n'
                 )
                 angles_lines.append(l_line)

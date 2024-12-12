@@ -1,3 +1,5 @@
+# This file contains the LaTeX headers and footers for the tables in the
+#############@@@@@ ATOMS @@@@@#############
 atoms_header:
   - '\begin{table}[h!]'
   - '\centering'
@@ -15,6 +17,7 @@ atoms_footer:
   - '\end{tabular}'
   - '\label{tab:atoms}'
   - '\end{table}'
+#############@@@@@ BONDS @@@@@#############
 bonds_header:
   - '\begin{table}[h!]'
   - '\centering'
@@ -29,4 +32,22 @@ bonds_footer:
   - '\hline'
   - '\end{tabular}'
   - '\label{tab:bonds}'
+  - '\end{table}'
+#############@@@@@ ANGLES @@@@@#############
+angles_header:
+  - '\begin{table}[h!]'
+  - '\centering'
+  - '\caption{Angle Parameters}'
+  - '\begin{tabular}{lcrcc}'
+  - '\hline'
+  - '\textbf{Angle} & '
+  - '\boldmath{$\theta_0$, degrees} & '
+  - '\boldmath{$k_{ub}$}, kcal mol\textsuperscript{-1} \AA\textsuperscript{-2} & '
+  - '\boldmath{$c_\theta$}, kcal mol\textsuperscript{-1} rad\textsuperscript{-2} &'
+  - '\boldmath{$S_0$} \\'
+  - '\hline'
+angles_footer:
+  - '\hline'
+  - '\end{tabular}'
+  - '\label{tab:angles}'
   - '\end{table}'

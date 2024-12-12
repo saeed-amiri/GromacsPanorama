@@ -68,6 +68,7 @@ class Itp:
             'atomtypes': [],
             'bondtypes': [],
             'angletypes': [],
+            'dihedraltypes': [],
         }
         self.initialize_empty_dfs()
         self.read_file(fname)
@@ -82,6 +83,9 @@ class Itp:
         self.impropers = pd.DataFrame()
         self.molecules = pd.DataFrame()
         self.atomtypes = pd.DataFrame()
+        self.bondtypes = pd.DataFrame()
+        self.angletypes = pd.DataFrame()
+        self.dihedraltypes = pd.DataFrame()
 
     def read_file(self,
                   fname: str
@@ -129,6 +133,12 @@ class Itp:
                                          angles=self.sections['angletypes'],
                                          style='charmm'
                                          ).df
+        if section is None or section == 'dihedraltypes':
+            self.dihedraltypes = DihedralsInfo(
+                atoms=self.atoms,
+                dihedrals=self.sections['dihedraltypes'],
+                style='charmm'
+                ).df
 
 
 class AtomsTypes:
@@ -599,10 +609,14 @@ class DihedralsInfo:
     """get the dihdrals list from Itp class and return a dataframe"""
     def __init__(self,
                  dihedrals: list[str],  # lines of dihedrals section by Itp
-                 atoms: pd.DataFrame  # atoms df from AtomsInfo to get names
+                 atoms: pd.DataFrame,  # atoms df from AtomsInfo to get names
+                 style: str = 'normal'
                  ) -> None:
         """get the dihedrals infos"""
-        self.mk_dihedrals_df(dihedrals, atoms)
+        if style == 'normal':
+            self.mk_dihedrals_df(dihedrals, atoms)
+        elif style == 'charmm':
+            self.mk_charmm_dihedrals_df(dihedrals)
 
     def mk_dihedrals_df(self,
                         dihedrals: list[str],  # lines of dihedrals section
@@ -707,6 +721,61 @@ class DihedralsInfo:
         df_c['name'] = names
         return df_c
 
+    def mk_charmm_dihedrals_df(self,
+                               dihedrals: list[str]  # lines of dihedrals
+                               ) -> None:
+        """call all the methods to make the bonds DataFrame"""
+        # pylint: disable=invalid-name
+        a_i: list[str] = []
+        a_j: list[str] = []
+        a_k: list[str] = []
+        a_h: list[str] = []
+        func: list[int] = []
+        phi0: list[float] = []
+        cp: list[float] = []
+        mult: list[int] = []
+        for line in dihedrals:
+            if line.startswith(';'):
+                pass
+            else:
+                tmp = line.split()
+                tmp = [item for item in tmp if item]
+                line = ' '.join(tmp)
+                l_line = free_char_line(line)
+                a_i.append(str(l_line[0]))
+                a_j.append(str(l_line[1]))
+                a_k.append(str(l_line[2]))
+                a_h.append(str(l_line[3]))
+                func.append(int(l_line[4]))
+                phi0.append(float(l_line[5]))
+                cp.append(float(l_line[6]))
+                try:
+                    mult.append(int(l_line[7]))
+                except IndexError:
+                    mult.append(0)
+        self.df = self.mk_charmm_df(a_i, a_j, a_k, a_h, func, phi0, cp, mult)
 
-if __name__ == '__main__':
-    itp = Itp(sys.argv[1])
+    def mk_charmm_df(self,
+                     a_i: list[int],  # index of the 1st atom in the dihedrals
+                     a_j: list[int],  # index of the 2nd atom in the dihedrals
+                     a_k: list[int],  # index of the 3rd atom in the dihedrals
+                     a_h: list[int],  # index of the 4th atom in the dihedrals
+                     func: list[int],  # Type (function) of the dihedrals
+                     phi0: list[float],  # Equilibrium angle
+                     cp: list[float],  # Force constant
+                     mult: list[int]  # Multiplicity
+                     ) -> pd.DataFrame:
+        """make DataFrame and check if they are same as atoms name"""
+        # pylint: disable=too-many-arguments
+        df_dihedrals: pd.DataFrame
+        df_dihedrals = pd.DataFrame(
+            columns=['ai', 'aj', 'ak', 'ah', 'funct', 'phi0', 'cp', 'mult'])
+        df_dihedrals['ai'] = a_i
+        df_dihedrals['aj'] = a_j
+        df_dihedrals['ak'] = a_k
+        df_dihedrals['ah'] = a_h
+        df_dihedrals['funct'] = func
+        df_dihedrals['phi0'] = phi0
+        df_dihedrals['cp'] = cp
+        df_dihedrals['mult'] = mult
+        return df_dihedrals

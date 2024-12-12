@@ -53,7 +53,7 @@ class WriteTex:
             df: pd.DataFrame = atoms_df[atoms_df['resname'] == residue]
             for _, row in df.iterrows():
                 l_line: str = (
-                    '\\hspace*{{4em}}'
+                    '\\hspace*{{1em}}'
                     f'{row["element"].upper()}, {row["atomtype"].upper()} & '
                     f'{row["charge"]:.3f} & '
                     f'{row["sigma"]:.3f} & '
@@ -65,9 +65,9 @@ class WriteTex:
         fname: str = self.cfg.files.latex_path['atoms']
         with open(fname, 'w', encoding='utf-8') as file:
             content: str = ''.join(
-                self.cfg.files.latex_headers['atoms_header'] +
-                atoms_lines +
-                self.cfg.files.latex_headers['atoms_footer']
+                '\n'.join(self.cfg.files.latex_headers['atoms_header']) +
+                ''.join(atoms_lines) +
+                '\n'.join(self.cfg.files.latex_headers['atoms_footer'])
             )
             file.write(content)
         log.info(f'\tWrote the atoms to {fname}\n')
@@ -91,7 +91,7 @@ class WriteTex:
             df: pd.DataFrame = bonds_df[bonds_df['resname'] == residue]
             for _, row in df.iterrows():
                 l_line: str = (
-                    '\\hspace*{4em}'
+                    '\\hspace*{1em}'
                     f'{row["bondname"]} & '
                     f'{row["k"]:.3f} & {row["r"]:.3f} \\\\\n'
                 )
@@ -101,9 +101,9 @@ class WriteTex:
         fname: str = self.cfg.files.latex_path['bonds']
         with open(fname, 'w', encoding='utf-8') as file:
             content: str = ''.join(
-                self.cfg.files.latex_headers['bonds_header'] +
-                bonds_lines +
-                self.cfg.files.latex_headers['bonds_footer']
+                '\n'.join(self.cfg.files.latex_headers['bonds_header']) +
+                ''.join(bonds_lines) +
+                '\n'.join(self.cfg.files.latex_headers['bonds_footer'])
             )
             file.write(content)
         log.info(f'\tWrote the bonds to {fname}\n')

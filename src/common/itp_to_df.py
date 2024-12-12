@@ -67,6 +67,7 @@ class Itp:
             'moleculetype': [],
             'atomtypes': [],
             'bondtypes': [],
+            'angletypes': [],
         }
         self.initialize_empty_dfs()
         self.read_file(fname)
@@ -123,6 +124,11 @@ class Itp:
                                        bonds=self.sections['bondtypes'],
                                        style='charmm'
                                        ).df
+        if section is None or section == 'angletypes':
+            self.angletypes = AnglesInfo(atoms=self.atoms,
+                                         angles=self.sections['angletypes'],
+                                         style='charmm'
+                                         ).df
 
 
 class AtomsTypes:
@@ -422,10 +428,14 @@ class AnglesInfo:
     """get the angles list from Itp class and return a dataframe"""
     def __init__(self,
                  angles: list[str],  # lines of angles section by Itp class
-                 atoms: pd.DataFrame  # atoms df from AtomsInfo to get names
+                 atoms: pd.DataFrame,  # atoms df from AtomsInfo to get names
+                 style: str = 'normal'
                  ) -> None:
         """get the angles infos"""
-        self.mk_angles_df(angles, atoms)
+        if style == 'normal':
+            self.mk_angles_df(angles, atoms)
+        elif style == 'charmm':
+            self.mk_charmm_angles_df(angles)
 
     def mk_angles_df(self,
                      angles: list[str],  # lines of angles section
@@ -521,6 +531,68 @@ class AnglesInfo:
                             in zip(ai_name, aj_name, ak_name)]
         df_c['name'] = names
         return df_c
+
+    def mk_charmm_angles_df(self,
+                            angles: list[str]  # lines of angles section
+                            ) -> None:
+        """call all the methods to make the bonds DataFrame"""
+        # pylint: disable=invalid-name
+        a_i: list[str] = []
+        a_j: list[str] = []
+        a_k: list[str] = []
+        func: list[int] = []
+        theta: list[float] = []
+        cth: list[float] = []
+        s0: list[float] = []
+        kub: list[float] = []
+        for line in angles:
+            if line.startswith(';'):
+                pass
+            else:
+                tmp = line.split()
+                tmp = [item for item in tmp if item]
+                line = ' '.join(tmp)
+                l_line = free_char_line(line)
+                a_i.append(str(l_line[0]))
+                a_j.append(str(l_line[1]))
+                a_k.append(str(l_line[2]))
+                func.append(int(l_line[3]))
+                theta.append(float(l_line[4]))
+                cth.append(float(l_line[5]))
+                try:
+                    s0.append(float(l_line[6]))
+                except IndexError:
+                    s0.append(0.0)
+                try:
+                    kub.append(float(l_line[7]))
+                except IndexError:
+                    kub.append(0.0)
+        self.df = self.mk_charmm_df(a_i, a_j, a_k, func, theta, cth, s0, kub)
+
+    def mk_charmm_df(self,
+                     a_i: list[int],  # index of the 1st atom in the angles
+                     a_j: list[int],  # index of the 2nd atom in the angles
+                     a_k: list[int],  # index of the 3rd atom in the angles
+                     func: list[int],  # Type (function) of the angles
+                     theta: list[float],  # Equilibrium angle
+                     cth: list[float],  # Force constant
+                     s0: list[float],  # Force constant
+                     kub: list[float]  # Force constant
+                     ) -> pd.DataFrame:
+        """make DataFrame and check if they are same as atoms name"""
+        # pylint: disable=too-many-arguments
+        df_angles: pd.DataFrame
+        df_angles = pd.DataFrame(columns=['ai', 'aj', 'ak', 'funct', 'theta',
+                                          'cth', 's0', 'kub'])
+        df_angles['ai'] = a_i
+        df_angles['aj'] = a_j
+        df_angles['ak'] = a_k
+        df_angles['funct'] = func
+        df_angles['theta'] = theta
+        df_angles['cth'] = cth
+        df_angles['s0'] = s0
+        df_angles['kub'] = kub
+        return df_angles
 
 
 class DihedralsInfo:

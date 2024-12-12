@@ -15,7 +15,7 @@ if typing.TYPE_CHECKING:
 
 class ProccessForceField:
     """Reads and processes the force field parameters."""
-    __slots__ = ['cfg', 'atoms_df', 'bonds_df']
+    __slots__ = ['cfg', 'atoms_df', 'bonds_df', 'angle_df']
 
     atoms_df: pd.DataFrame
     bonds_df: pd.DataFrame
@@ -53,8 +53,10 @@ class ProccessForceField:
         """Writes the data to a LaTeX file."""
         charmm_atoms_types: pd.DataFrame = itps['charmm'].atomtypes
         charmm_bonds: pd.DataFrame = itps['charmm'].bondtypes
+        charmm_angles: pd.DataFrame = itps['charmm'].angletypes
         atoms_df_list: list[pd.DataFrame] = []
         bonds_df_list: list[pd.DataFrame] = []
+        angle_df_list: list[pd.DataFrame] = []
         for res, itp in itps.items():
             if res == 'charmm':
                 continue
@@ -62,8 +64,11 @@ class ProccessForceField:
                 self.atoms_to_latex_df(itp, charmm_atoms_types, log))
             bonds_df_list.append(
                 self.bonds_to_latex_df(res, itp, charmm_bonds, log))
+            angle_df_list.append(
+                self.angles_to_latex_df(res, itp, charmm_angles, log))
         self.atoms_df = pd.concat(atoms_df_list)
         self.bonds_df = pd.concat(bonds_df_list)
+        self.angle_df = pd.concat(angle_df_list)
 
     def atoms_to_latex_df(self,
                           itp: itp_to_df.Itp,
@@ -173,3 +178,72 @@ class ProccessForceField:
                 f"{str(row['ai_type']).upper()}-{str(row['aj_type']).upper()}",
                 axis=1)
         return blatex_df.reset_index(drop=True)
+
+    def angles_to_latex_df(self,
+                           res: str,
+                           itp: itp_to_df.Itp,
+                           charmm_angles: pd.DataFrame,
+                           log: logger.logging.Logger
+                           ) -> pd.DataFrame:
+        """Writes the angles to a LaTeX file."""
+        # pylint: disable=too-many-locals
+        if itp.angles is None or itp.atoms is None:
+            log.warning("Missing angles or atoms data.")
+            return pd.DataFrame()
+        # drop the duplicates if in rows m and n:
+        #  m(ai) == n(ai) and m(aj) == n(aj) and m(ak) == n(ak)
+        # or m(ai) == n(ak) and m(aj) == n(aj) and m(ak) == n(ai)
+        atomtype_map = itp.atoms.set_index('atomnr')['atomtype']
+        try:
+            a_i_names: pd.Series = itp.angles['ai'].map(atomtype_map)
+            a_j_names: pd.Series = itp.angles['aj'].map(atomtype_map)
+            a_k_names: pd.Series = itp.angles['ak'].map(atomtype_map)
+        except KeyError as e:
+            log.error(f"KeyError: {e}")
+            missing_atoms = \
+                set(itp.angles['ai']).union(itp.angles['aj']).union(
+                    itp.angles['ak']) - set(atomtype_map.index)
+            log.error(f"Missing atoms in atomtype map: {missing_atoms}")
+            return pd.DataFrame()
+        residue_col = pd.Series([res] * len(itp.angles['ai']), name='residue')
+        residue_col.index += 1
+        # Combine the data into a DataFrame for LaTeX export
+        anglatex_df = pd.DataFrame({
+            'typ': itp.angles['typ'],
+            'ai_type': a_i_names,
+            'aj_type': a_j_names,
+            'ak_type': a_k_names,
+            'resname': residue_col
+        })
+        anglatex_df = anglatex_df.drop_duplicates(
+            subset=['ai_type', 'aj_type', 'ak_type'])
+        # get the k and theta from the charmm_angles when the ai_type, aj_type
+        # and ak_type are the same as ai, aj and ak in anglatex_df
+        k_dict: dict[np.float64, np.float64] = {}
+        theta_dict: dict[np.float64, np.float64] = {}
+        s_0_dict: dict[np.float64, np.float64] = {}
+        cth_dict: dict[np.float64, np.float64] = {}
+        for i, row in anglatex_df.iterrows():
+            charmm_param = charmm_angles[
+                ((charmm_angles['ai'] == row['ai_type']) &
+                 (charmm_angles['aj'] == row['aj_type']) &
+                 (charmm_angles['ak'] == row['ak_type'])) |
+                ((charmm_angles['ai'] == row['ak_type']) &
+                 (charmm_angles['aj'] == row['aj_type']) &
+                 (charmm_angles['ak'] == row['ai_type']))
+                ]
+            k_dict[i] = charmm_param.iloc[0]['kub']
+            theta_dict[i] = charmm_param.iloc[0]['theta']
+            s_0_dict[i] = charmm_param.iloc[0]['s0']
+            cth_dict[i] = charmm_param.iloc[0]['cth']
+        anglatex_df['k'] = anglatex_df.index.map(k_dict)
+        anglatex_df['theta'] = anglatex_df.index.map(theta_dict)
+        anglatex_df['s_0'] = anglatex_df.index.map(s_0_dict)
+        anglatex_df['cth'] = anglatex_df.index.map(cth_dict)
+        anglatex_df['anglename'] = \
+            anglatex_df.apply(
+                lambda row:
+                f"{str(row['ai_type']).upper()}-{str(row['aj_type']).upper()}"
+                f"-{str(row['ak_type']).upper()}",
+                axis=1)
+        return anglatex_df.reset_index(drop=True)

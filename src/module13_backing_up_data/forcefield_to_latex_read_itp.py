@@ -15,10 +15,12 @@ if typing.TYPE_CHECKING:
 
 class ProccessForceField:
     """Reads and processes the force field parameters."""
-    __slots__ = ['cfg', 'atoms_df', 'bonds_df', 'angle_df']
+    __slots__ = ['cfg', 'atoms_df', 'bonds_df', 'angles_df', 'dihedrals_df']
 
     atoms_df: pd.DataFrame
     bonds_df: pd.DataFrame
+    angles_df: pd.DataFrame
+    dihedrals_df: pd.DataFrame
 
     def __init__(self,
                  cfg: "DictConfig",
@@ -54,9 +56,11 @@ class ProccessForceField:
         charmm_atoms_types: pd.DataFrame = itps['charmm'].atomtypes
         charmm_bonds: pd.DataFrame = itps['charmm'].bondtypes
         charmm_angles: pd.DataFrame = itps['charmm'].angletypes
+        charmm_dihedrals: pd.DataFrame = itps['charmm'].dihedraltypes
         atoms_df_list: list[pd.DataFrame] = []
         bonds_df_list: list[pd.DataFrame] = []
         angle_df_list: list[pd.DataFrame] = []
+        dihedrals_df_list: list[pd.DataFrame] = []
         for res, itp in itps.items():
             if res == 'charmm':
                 continue
@@ -66,9 +70,11 @@ class ProccessForceField:
                 self.bonds_to_latex_df(res, itp, charmm_bonds, log))
             angle_df_list.append(
                 self.angles_to_latex_df(res, itp, charmm_angles, log))
+            # dihedrals_df_list.append(
+                # self.dihedrals_to_latex_df(res, itp, charmm_dihedrals, log))
         self.atoms_df = pd.concat(atoms_df_list)
         self.bonds_df = pd.concat(bonds_df_list)
-        self.angle_df = pd.concat(angle_df_list)
+        self.angles_df = pd.concat(angle_df_list)
 
     def atoms_to_latex_df(self,
                           itp: itp_to_df.Itp,
@@ -247,3 +253,86 @@ class ProccessForceField:
                 f"-{str(row['ak_type']).upper()}",
                 axis=1)
         return anglatex_df.reset_index(drop=True)
+
+    def dihedrals_to_latex_df(self,
+                              res: str,
+                              itp: itp_to_df.Itp,
+                              charmm_dihedrals: pd.DataFrame,
+                              log: logger.logging.Logger
+                              ) -> pd.DataFrame:
+        """Writes the dihedrals to a LaTeX file."""
+        # pylint: disable=too-many-locals
+        if itp.dihedrals is None or itp.atoms is None:
+            log.warning("Missing dihedrals or atoms data.")
+            return pd.DataFrame()
+        # drop the duplicates if in rows m and n:
+        #  m(ai) == n(ai) and m(aj) == n(aj) and m(ak) == n(ak) and
+        #  m(ah) == n(ah)
+        # or m(ai) == n(ah) and m(aj) == n(ak) and m(ak) == n(aj) and
+        #  m(ah) == n(ai)
+        atomtype_map = itp.atoms.set_index('atomnr')['atomtype']
+
+        try:
+            a_i_names: pd.Series = itp.dihedrals['ai'].map(atomtype_map)
+            a_j_names: pd.Series = itp.dihedrals['aj'].map(atomtype_map)
+            a_k_names: pd.Series = itp.dihedrals['ak'].map(atomtype_map)
+            a_h_names: pd.Series = itp.dihedrals['ah'].map(atomtype_map)
+        except KeyError as e:
+            log.error(f"KeyError: {e}")
+            missing_atoms = \
+                set(itp.dihedrals['ai']).union(itp.dihedrals['aj']).union(
+                    itp.dihedrals['ak']).union(itp.dihedrals['ah']) - \
+                set(atomtype_map.index)
+            log.error(f"Missing atoms in atomtype map: {missing_atoms}")
+            return pd.DataFrame()
+        residue_col = pd.Series([res] * len(itp.dihedrals['ai']), name='residue')
+        residue_col.index += 1
+        # Combine the data into a DataFrame for LaTeX export
+        dihlatex_df = pd.DataFrame({
+            'typ': itp.dihedrals['typ'],
+            'ai_type': a_i_names,
+            'aj_type': a_j_names,
+            'ak_type': a_k_names,
+            'ah_type': a_h_names,
+            'resname': residue_col
+        })
+        dihlatex_df = dihlatex_df.drop_duplicates(
+            subset=['ai_type', 'aj_type', 'ak_type', 'ah_type'])
+        # get the k and theta from the charmm_dihedrals when the ai_type,
+        # aj_type, ak_type and ah_type are the same as ai, aj, ak and ah in
+        # dihlatex_df
+        # funct (int) phi0(float) cp(float) mult(int)
+        func_dict: dict[np.float64, np.int64] = {}
+        phi0_dict: dict[np.float64, np.float64] = {}
+        cp_dict: dict[np.float64, np.float64] = {}
+        mult_dict: dict[np.float64, np.int64] = {}
+        for i, row in dihlatex_df.iterrows():
+            charmm_param = charmm_dihedrals[
+                ((charmm_dihedrals['ai'] == row['ai_type']) &
+                 (charmm_dihedrals['aj'] == row['aj_type']) &
+                 (charmm_dihedrals['ak'] == row['ak_type']) &
+                 (charmm_dihedrals['ah'] == row['ah_type'])) |
+                ((charmm_dihedrals['ai'] == row['ah_type']) &
+                 (charmm_dihedrals['aj'] == row['ak_type']) &
+                 (charmm_dihedrals['ak'] == row['aj_type']) &
+                 (charmm_dihedrals['ah'] == row['ai_type']))
+                ]
+            if charmm_param.empty:
+                continue
+            func_dict[i] = charmm_param.iloc[0]['func']
+            phi0_dict[i] = charmm_param.iloc[0]['phi0']
+            cp_dict[i] = e.iloc[0]['cp']
+            mult_dict[i] = charmm_param.iloc[0]['mult']
+        if not func_dict:
+            return pd.DataFrame()
+        dihlatex_df['func'] = dihlatex_df.index.map(func_dict)
+        dihlatex_df['phi0'] = dihlatex_df.index.map(phi0_dict)
+        dihlatex_df['cp'] = dihlatex_df.index.map(cp_dict)
+        dihlatex_df['mult'] = dihlatex_df.index.map(mult_dict)
+        dihlatex_df['dihname'] = \
+            dihlatex_df.apply(
+                lambda row:
+                f"{str(row['ai_type']).upper()}-{str(row['aj_type']).upper()}"
+                f"-{str(row['ak_type']).upper()}-{str(row['ah_type']).upper()}",
+                axis=1)
+        return dihlatex_df.reset_index(drop=True)

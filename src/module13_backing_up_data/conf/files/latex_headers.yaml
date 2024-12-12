@@ -37,14 +37,14 @@ bonds_footer:
 angles_header:
   - '\begin{table}[h!]'
   - '\centering'
-  - '\caption{Angle Parameters}'
+  - '\caption{Angle Parameters,$V(\theta) = \frac{1}{2} c_\theta (\theta - \theta_0)^2 + S_0 (\theta - \theta_0)^3 + K_\text{ub} (\theta - \theta_0)^4$}'
   - '\begin{tabular}{lcrcc}'
   - '\hline'
   - '\textbf{Angle} & '
   - '\boldmath{$\theta_0$, degrees} & '
-  - '\boldmath{$k_{ub}$}, kcal mol\textsuperscript{-1} \AA\textsuperscript{-2} & '
   - '\boldmath{$c_\theta$}, kcal mol\textsuperscript{-1} rad\textsuperscript{-2} &'
-  - '\boldmath{$S_0$} \\'
+  - '\boldmath{$S_0$}, kcal mol\textsuperscript{-1} rad\textsuperscript{-3} & '
+  - '\boldmath{$k_{ub}$}, kcal mol\textsuperscript{-1} rad\textsuperscript{-4} \\'
   - '\hline'
 angles_footer:
   - '\hline'

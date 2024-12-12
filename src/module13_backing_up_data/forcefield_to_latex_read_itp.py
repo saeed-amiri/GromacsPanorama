@@ -143,28 +143,33 @@ class ProccessForceField:
         residue_col.index += 1
 
         # Combine the data into a DataFrame for LaTeX export
-        bonds_latex_df = pd.DataFrame({
+        blatex_df = pd.DataFrame({
             'typ': itp.bonds['typ'],
-            'ai_atomtype': a_i_names,
-            'aj_atomtype': a_j_names,
-            'residue': residue_col
+            'ai_type': a_i_names,
+            'aj_type': a_j_names,
+            'resname': residue_col
         })
         # Drop one of the rows of m and n if m(ai) == n(ai) and m(aj) == n(aj)
-        bonds_latex_df = bonds_latex_df.drop_duplicates(
-            subset=['ai_atomtype', 'aj_atomtype'])
-        # get the k and r from the charmm_bonds when the ai_atomtype and
-        # aj_atomtype are the same as ai and aj in bonds_latex_df
+        blatex_df = blatex_df.drop_duplicates(
+            subset=['ai_type', 'aj_type'])
+        # get the k and r from the charmm_bonds when the ai_type and
+        # aj_type are the same as ai and aj in blatex_df
         k_dict: dict[np.float64, np.float64] = {}
         r_dict: dict[np.float64, np.float64] = {}
-        for i, row in bonds_latex_df.iterrows():
+        for i, row in blatex_df.iterrows():
             charmm_param = charmm_bonds[
-                ((charmm_bonds['ai'] == row['ai_atomtype']) &
-                 (charmm_bonds['aj'] == row['aj_atomtype'])) |
-                ((charmm_bonds['ai'] == row['aj_atomtype']) &
-                 (charmm_bonds['aj'] == row['ai_atomtype']))
+                ((charmm_bonds['ai'] == row['ai_type']) &
+                 (charmm_bonds['aj'] == row['aj_type'])) |
+                ((charmm_bonds['ai'] == row['aj_type']) &
+                 (charmm_bonds['aj'] == row['ai_type']))
                 ]
             k_dict[i] = charmm_param.iloc[0]['k']
             r_dict[i] = charmm_param.iloc[0]['r']
-        bonds_latex_df['k'] = bonds_latex_df.index.map(k_dict)
-        bonds_latex_df['r'] = bonds_latex_df.index.map(r_dict)
-        return bonds_latex_df.reset_index(drop=True)
+        blatex_df['k'] = blatex_df.index.map(k_dict)
+        blatex_df['r'] = blatex_df.index.map(r_dict)
+        blatex_df['bondname'] = \
+            blatex_df.apply(
+                lambda row:
+                f"{str(row['ai_type']).upper()}-{str(row['aj_type']).upper()}",
+                axis=1)
+        return blatex_df.reset_index(drop=True)

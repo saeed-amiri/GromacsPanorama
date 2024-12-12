@@ -938,7 +938,7 @@
       HC    NH3      HC     5   109.500000   368.192000   0.00000000         0.00 ; ALLOW   POL
       
 [ dihedraltypes ]
-; i	j	k	l	func	phi0	cp	mult
+; i	j	k	l	typ	phi0	cp	mult
       C     NHL    CTL1    CTO1     9  0.000000e+00  7.531200e+00      3
       C     NHL    CTL1    CTO1     9  0.000000e+00  1.707072e+01      1
       C     NHL    CTL1    CTO1     9  1.800000e+02  6.527040e+00      2

@@ -51,6 +51,8 @@ class WriteTex:
                 self.cfg.files.residue_names.get(residue.upper(), residue)
             atoms_lines.append(f'\\textbf{{{residue_name}}} & & & \\\\\n')
             df: pd.DataFrame = atoms_df[atoms_df['resname'] == residue]
+            # sort the df by the atomtypes
+            df = df.sort_values(by=['element', 'atomtype'])
             for _, row in df.iterrows():
                 l_line: str = (
                     '\\hspace*{{1em}}'
@@ -89,6 +91,8 @@ class WriteTex:
             bonds_lines.append(f'\\textbf{{{residue_name}}} & & & \\\\\n')
 
             df: pd.DataFrame = bonds_df[bonds_df['resname'] == residue]
+            # sort the df by the atomtypes
+            df = df.sort_values(by=['ai_type', 'aj_type'])
             for _, row in df.iterrows():
                 l_line: str = (
                     '\\hspace*{1em}'
@@ -150,6 +154,8 @@ class WriteTex:
             angles_lines.append(f'\\textbf{{{residue_name}}} & & & \\\\\n')
 
             df: pd.DataFrame = angles_df[angles_df['resname'] == residue]
+            # sort by ai_type, aj_type, ak_type
+            df = df.sort_values(by=['ai_type', 'aj_type', 'ak_type'])
             for _, row in df.iterrows():
                 l_line: str = (
                     '\\hspace*{1em}'

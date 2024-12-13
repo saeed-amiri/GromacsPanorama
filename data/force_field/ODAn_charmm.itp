@@ -1,0 +1,404 @@
+; input pdb SMILES:
+
+[ moleculetype ]
+; Name		nrexcl
+   ODM		3
+
+[ atoms ]
+; atomnr  atomtype  resnr  resname  atomname  chargegrp  charge  mass     element
+      1      CT3      1      ODM       CT3          1  -0.180  12.011  ;    CT3
+      2      HA3      1      ODM      HA31          1   0.060   1.008  ;    HA3
+      3      HA3      1      ODM      HA32          1   0.060   1.008  ;    HA3
+      4      HA3      1      ODM      HA33          1   0.060   1.008  ;    HA3
+      5      CT2      1      ODM      CT21          1  -0.120  12.011  ;    CT2
+      6      HA2      1      ODM      HA21          1   0.060   1.008  ;    HA2
+      7      HA2      1      ODM      HA22          1   0.060   1.008  ;    HA2
+      8      CT2      1      ODM      CT22          1  -0.120  12.011  ;    CT2
+      9      HA2      1      ODM      HA23          1   0.060   1.008  ;    HA2
+     10      HA2      1      ODM      HA24          1   0.060   1.008  ;    HA2
+     11      CT2      1      ODM      CT23          1  -0.120  12.011  ;    CT2
+     12      HA2      1      ODM      HA25          1   0.060   1.008  ;    HA2
+     13      HA2      1      ODM      HA26          1   0.060   1.008  ;    HA2
+     14      CT2      1      ODM      CT24          1  -0.120  12.011  ;    CT2
+     15      HA2      1      ODM      HA27          1   0.060   1.008  ;    HA2
+     16      HA2      1      ODM      HA28          1   0.060   1.008  ;    HA2
+     17      CT2      1      ODM      CT25          1  -0.120  12.011  ;    CT2
+     18      HA2      1      ODM      HA29          1   0.060   1.008  ;    HA2
+     19      HA2      1      ODM     HA210          1   0.060   1.008  ;    HA2
+     20      CT2      1      ODM      CT26          1  -0.120  12.011  ;    CT2
+     21      HA2      1      ODM     HA211          1   0.060   1.008  ;    HA2
+     22      HA2      1      ODM     HA212          1   0.060   1.008  ;    HA2
+     23      CT2      1      ODM      CT27          1  -0.120  12.011  ;    CT2
+     24      HA2      1      ODM     HA213          1   0.060   1.008  ;    HA2
+     25      HA2      1      ODM     HA214          1   0.060   1.008  ;    HA2
+     26      CT2      1      ODM      CT28          1  -0.120  12.011  ;    CT2
+     27      HA2      1      ODM     HA215          1   0.060   1.008  ;    HA2
+     28      HA2      1      ODM     HA216          1   0.060   1.008  ;    HA2
+     29      CT2      1      ODM      CT29          1  -0.120  12.011  ;    CT2
+     30      HA2      1      ODM     HA217          1   0.060   1.008  ;    HA2
+     31      HA2      1      ODM     HA218          1   0.060   1.008  ;    HA2
+     32      CT2      1      ODM     CT210          1  -0.120  12.011  ;    CT2
+     33      HA2      1      ODM     HA219          1   0.060   1.008  ;    HA2
+     34      HA2      1      ODM     HA220          1   0.060   1.008  ;    HA2
+     35      CT2      1      ODM     CT211          1  -0.120  12.011  ;    CT2
+     36      HA2      1      ODM     HA221          1   0.060   1.008  ;    HA2
+     37      HA2      1      ODM     HA222          1   0.060   1.008  ;    HA2
+     38      CT2      1      ODM     CT212          1  -0.120  12.011  ;    CT2
+     39      HA2      1      ODM     HA223          1   0.060   1.008  ;    HA2
+     40      HA2      1      ODM     HA224          1   0.060   1.008  ;    HA2
+     41      CT2      1      ODM     CT213          1  -0.120  12.011  ;    CT2
+     42      HA2      1      ODM     HA225          1   0.060   1.008  ;    HA2
+     43      HA2      1      ODM     HA226          1   0.060   1.008  ;    HA2
+     44      CT2      1      ODM     CT214          1  -0.120  12.011  ;    CT2
+     45      HA2      1      ODM     HA227          1   0.060   1.008  ;    HA2
+     46      HA2      1      ODM     HA228          1   0.060   1.008  ;    HA2
+     47      CT2      1      ODM     CT215          1  -0.120  12.011  ;    CT2
+     48      HA2      1      ODM     HA229          1   0.060   1.008  ;    HA2
+     49      HA2      1      ODM     HA230          1   0.060   1.008  ;    HA2
+     50      CT2      1      ODM     CT216          1  -0.120  12.011  ;    CT2
+     51      HA2      1      ODM     HA231          1   0.060   1.008  ;    HA2
+     52      HA2      1      ODM     HA232          1   0.060   1.008  ;    HA2
+     53      CT2      1      ODM     CT217          1   0.060  12.011  ;    CT2
+     54      HA2      1      ODM     HA233          1   0.060   1.008  ;    HA2
+     55      HA2      1      ODM     HA234          1   0.060   1.008  ;    HA2
+     56      NH2      1      ODM       NH2          1  -0.900  14.007  ;    NH2
+     57       HC      1      ODM       HC1          1   0.360   1.008  ;     HC
+     58       HC      1      ODM       HC2          1   0.360   1.008  ;     HC
+; Total charge : -1.1102230246251565e-16
+
+[ bonds ]
+; ai aj funct r k   name
+1	2	1	 	 	;	CT3_HA3
+1	3	1	 	 	;	CT3_HA3
+1	4	1	 	 	;	CT3_HA3
+1	5	1	 	 	;	CT3_CT2
+5	8	1	 	 	;	CT2_CT2
+5	7	1	 	 	;	CT2_HA2
+5	6	1	 	 	;	CT2_HA2
+8	11	1	 	 	;	CT2_CT2
+8	9	1	 	 	;	CT2_HA2
+8	10	1	 	 	;	CT2_HA2
+11	14	1	 	 	;	CT2_CT2
+11	12	1	 	 	;	CT2_HA2
+11	13	1	 	 	;	CT2_HA2
+14	15	1	 	 	;	CT2_HA2
+14	16	1	 	 	;	CT2_HA2
+14	17	1	 	 	;	CT2_CT2
+17	18	1	 	 	;	CT2_HA2
+17	19	1	 	 	;	CT2_HA2
+17	20	1	 	 	;	CT2_CT2
+20	22	1	 	 	;	CT2_HA2
+20	23	1	 	 	;	CT2_CT2
+20	21	1	 	 	;	CT2_HA2
+23	26	1	 	 	;	CT2_CT2
+23	25	1	 	 	;	CT2_HA2
+23	24	1	 	 	;	CT2_HA2
+26	27	1	 	 	;	CT2_HA2
+26	29	1	 	 	;	CT2_CT2
+26	28	1	 	 	;	CT2_HA2
+29	32	1	 	 	;	CT2_CT2
+29	31	1	 	 	;	CT2_HA2
+29	30	1	 	 	;	CT2_HA2
+32	35	1	 	 	;	CT2_CT2
+32	33	1	 	 	;	CT2_HA2
+32	34	1	 	 	;	CT2_HA2
+35	37	1	 	 	;	CT2_HA2
+35	36	1	 	 	;	CT2_HA2
+35	38	1	 	 	;	CT2_CT2
+38	41	1	 	 	;	CT2_CT2
+38	40	1	 	 	;	CT2_HA2
+38	39	1	 	 	;	CT2_HA2
+41	44	1	 	 	;	CT2_CT2
+41	43	1	 	 	;	CT2_HA2
+41	42	1	 	 	;	CT2_HA2
+44	46	1	 	 	;	CT2_HA2
+44	45	1	 	 	;	CT2_HA2
+44	47	1	 	 	;	CT2_CT2
+47	49	1	 	 	;	CT2_HA2
+47	48	1	 	 	;	CT2_HA2
+47	50	1	 	 	;	CT2_CT2
+50	52	1	 	 	;	CT2_HA2
+50	51	1	 	 	;	CT2_HA2
+50	53	1	 	 	;	CT2_CT2
+53	55	1	 	 	;	CT2_HA2
+53	54	1	 	 	;	CT2_HA2
+53	56	1	 	 	;	CT2_NH2
+56	57	1	 	 	;	NH2_HC
+56	58	1	 	 	;	NH2_HC
+
+[ angles ]
+; ai aj ak funct theta cth   name
+1	5	8	5	 	 	;	CT3_CT2_CT2
+1	5	7	5	 	 	;	CT3_CT2_HA2
+1	5	6	5	 	 	;	CT3_CT2_HA2
+2	1	5	5	 	 	;	HA3_CT3_CT2
+2	1	4	5	 	 	;	HA3_CT3_HA3
+2	1	3	5	 	 	;	HA3_CT3_HA3
+3	1	5	5	 	 	;	HA3_CT3_CT2
+3	1	4	5	 	 	;	HA3_CT3_HA3
+4	1	5	5	 	 	;	HA3_CT3_CT2
+5	8	10	5	 	 	;	CT2_CT2_HA2
+5	8	9	5	 	 	;	CT2_CT2_HA2
+5	8	11	5	 	 	;	CT2_CT2_CT2
+6	5	7	5	 	 	;	HA2_CT2_HA2
+6	5	8	5	 	 	;	HA2_CT2_CT2
+7	5	8	5	 	 	;	HA2_CT2_CT2
+8	11	14	5	 	 	;	CT2_CT2_CT2
+8	11	13	5	 	 	;	CT2_CT2_HA2
+8	11	12	5	 	 	;	CT2_CT2_HA2
+9	8	11	5	 	 	;	HA2_CT2_CT2
+9	8	10	5	 	 	;	HA2_CT2_HA2
+10	8	11	5	 	 	;	HA2_CT2_CT2
+11	14	15	5	 	 	;	CT2_CT2_HA2
+11	14	16	5	 	 	;	CT2_CT2_HA2
+11	14	17	5	 	 	;	CT2_CT2_CT2
+12	11	13	5	 	 	;	HA2_CT2_HA2
+12	11	14	5	 	 	;	HA2_CT2_CT2
+13	11	14	5	 	 	;	HA2_CT2_CT2
+14	17	19	5	 	 	;	CT2_CT2_HA2
+14	17	18	5	 	 	;	CT2_CT2_HA2
+14	17	20	5	 	 	;	CT2_CT2_CT2
+15	14	17	5	 	 	;	HA2_CT2_CT2
+15	14	16	5	 	 	;	HA2_CT2_HA2
+16	14	17	5	 	 	;	HA2_CT2_CT2
+17	20	22	5	 	 	;	CT2_CT2_HA2
+17	20	21	5	 	 	;	CT2_CT2_HA2
+17	20	23	5	 	 	;	CT2_CT2_CT2
+18	17	20	5	 	 	;	HA2_CT2_CT2
+18	17	19	5	 	 	;	HA2_CT2_HA2
+19	17	20	5	 	 	;	HA2_CT2_CT2
+20	23	25	5	 	 	;	CT2_CT2_HA2
+20	23	24	5	 	 	;	CT2_CT2_HA2
+20	23	26	5	 	 	;	CT2_CT2_CT2
+21	20	23	5	 	 	;	HA2_CT2_CT2
+21	20	22	5	 	 	;	HA2_CT2_HA2
+22	20	23	5	 	 	;	HA2_CT2_CT2
+23	26	27	5	 	 	;	CT2_CT2_HA2
+23	26	28	5	 	 	;	CT2_CT2_HA2
+23	26	29	5	 	 	;	CT2_CT2_CT2
+24	23	26	5	 	 	;	HA2_CT2_CT2
+24	23	25	5	 	 	;	HA2_CT2_HA2
+25	23	26	5	 	 	;	HA2_CT2_CT2
+26	29	32	5	 	 	;	CT2_CT2_CT2
+26	29	30	5	 	 	;	CT2_CT2_HA2
+26	29	31	5	 	 	;	CT2_CT2_HA2
+27	26	29	5	 	 	;	HA2_CT2_CT2
+27	26	28	5	 	 	;	HA2_CT2_HA2
+28	26	29	5	 	 	;	HA2_CT2_CT2
+29	32	35	5	 	 	;	CT2_CT2_CT2
+29	32	33	5	 	 	;	CT2_CT2_HA2
+29	32	34	5	 	 	;	CT2_CT2_HA2
+30	29	31	5	 	 	;	HA2_CT2_HA2
+30	29	32	5	 	 	;	HA2_CT2_CT2
+31	29	32	5	 	 	;	HA2_CT2_CT2
+32	35	36	5	 	 	;	CT2_CT2_HA2
+32	35	37	5	 	 	;	CT2_CT2_HA2
+32	35	38	5	 	 	;	CT2_CT2_CT2
+33	32	35	5	 	 	;	HA2_CT2_CT2
+33	32	34	5	 	 	;	HA2_CT2_HA2
+34	32	35	5	 	 	;	HA2_CT2_CT2
+35	38	41	5	 	 	;	CT2_CT2_CT2
+35	38	40	5	 	 	;	CT2_CT2_HA2
+35	38	39	5	 	 	;	CT2_CT2_HA2
+36	35	38	5	 	 	;	HA2_CT2_CT2
+36	35	37	5	 	 	;	HA2_CT2_HA2
+37	35	38	5	 	 	;	HA2_CT2_CT2
+38	41	44	5	 	 	;	CT2_CT2_CT2
+38	41	43	5	 	 	;	CT2_CT2_HA2
+38	41	42	5	 	 	;	CT2_CT2_HA2
+39	38	40	5	 	 	;	HA2_CT2_HA2
+39	38	41	5	 	 	;	HA2_CT2_CT2
+40	38	41	5	 	 	;	HA2_CT2_CT2
+41	44	46	5	 	 	;	CT2_CT2_HA2
+41	44	47	5	 	 	;	CT2_CT2_CT2
+41	44	45	5	 	 	;	CT2_CT2_HA2
+42	41	43	5	 	 	;	HA2_CT2_HA2
+42	41	44	5	 	 	;	HA2_CT2_CT2
+43	41	44	5	 	 	;	HA2_CT2_CT2
+44	47	48	5	 	 	;	CT2_CT2_HA2
+44	47	49	5	 	 	;	CT2_CT2_HA2
+44	47	50	5	 	 	;	CT2_CT2_CT2
+45	44	47	5	 	 	;	HA2_CT2_CT2
+45	44	46	5	 	 	;	HA2_CT2_HA2
+46	44	47	5	 	 	;	HA2_CT2_CT2
+47	50	53	5	 	 	;	CT2_CT2_CT2
+47	50	52	5	 	 	;	CT2_CT2_HA2
+47	50	51	5	 	 	;	CT2_CT2_HA2
+48	47	49	5	 	 	;	HA2_CT2_HA2
+48	47	50	5	 	 	;	HA2_CT2_CT2
+49	47	50	5	 	 	;	HA2_CT2_CT2
+50	53	56	5	 	 	;	CT2_CT2_NH2
+50	53	54	5	 	 	;	CT2_CT2_HA2
+50	53	55	5	 	 	;	CT2_CT2_HA2
+51	50	53	5	 	 	;	HA2_CT2_CT2
+51	50	52	5	 	 	;	HA2_CT2_HA2
+52	50	53	5	 	 	;	HA2_CT2_CT2
+53	56	57	5	 	 	;	CT2_NH2_HC
+53	56	58	5	 	 	;	CT2_NH2_HC
+54	53	55	5	 	 	;	HA2_CT2_HA2
+54	53	56	5	 	 	;	HA2_CT2_NH2
+55	53	56	5	 	 	;	HA2_CT2_NH2
+57	56	58	5	 	 	;	HC_NH2_HC
+
+[ dihedrals ]
+; ai aj ak ah funct C0 C1 C2 C3 C4 C5   name
+1	5	8	11	9	 	 	 	 	 	 	;	CT3_CT2_CT2_CT2
+1	5	8	10	9	 	 	 	 	 	 	;	CT3_CT2_CT2_HA2
+1	5	8	9	9	 	 	 	 	 	 	;	CT3_CT2_CT2_HA2
+2	1	5	6	9	 	 	 	 	 	 	;	HA3_CT3_CT2_HA2
+2	1	5	8	9	 	 	 	 	 	 	;	HA3_CT3_CT2_CT2
+2	1	5	7	9	 	 	 	 	 	 	;	HA3_CT3_CT2_HA2
+3	1	5	6	9	 	 	 	 	 	 	;	HA3_CT3_CT2_HA2
+3	1	5	7	9	 	 	 	 	 	 	;	HA3_CT3_CT2_HA2
+3	1	5	8	9	 	 	 	 	 	 	;	HA3_CT3_CT2_CT2
+4	1	5	6	9	 	 	 	 	 	 	;	HA3_CT3_CT2_HA2
+4	1	5	7	9	 	 	 	 	 	 	;	HA3_CT3_CT2_HA2
+4	1	5	8	9	 	 	 	 	 	 	;	HA3_CT3_CT2_CT2
+5	8	11	12	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+5	8	11	13	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+5	8	11	14	9	 	 	 	 	 	 	;	CT2_CT2_CT2_CT2
+6	5	8	11	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+6	5	8	10	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+6	5	8	9	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+7	5	8	11	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+7	5	8	10	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+7	5	8	9	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+8	11	14	17	9	 	 	 	 	 	 	;	CT2_CT2_CT2_CT2
+8	11	14	16	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+8	11	14	15	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+9	8	11	12	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+9	8	11	13	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+9	8	11	14	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+10	8	11	14	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+10	8	11	13	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+10	8	11	12	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+11	14	17	20	9	 	 	 	 	 	 	;	CT2_CT2_CT2_CT2
+11	14	17	18	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+11	14	17	19	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+12	11	14	16	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+12	11	14	15	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+12	11	14	17	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+13	11	14	15	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+13	11	14	17	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+13	11	14	16	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+14	17	20	22	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+14	17	20	21	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+14	17	20	23	9	 	 	 	 	 	 	;	CT2_CT2_CT2_CT2
+15	14	17	19	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+15	14	17	20	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+15	14	17	18	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+16	14	17	20	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+16	14	17	19	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+16	14	17	18	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+17	20	23	25	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+17	20	23	24	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+17	20	23	26	9	 	 	 	 	 	 	;	CT2_CT2_CT2_CT2
+18	17	20	21	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+18	17	20	23	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+18	17	20	22	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+19	17	20	21	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+19	17	20	23	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+19	17	20	22	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+20	23	26	28	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+20	23	26	27	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+20	23	26	29	9	 	 	 	 	 	 	;	CT2_CT2_CT2_CT2
+21	20	23	25	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+21	20	23	24	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+21	20	23	26	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+22	20	23	26	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+22	20	23	25	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+22	20	23	24	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+23	26	29	32	9	 	 	 	 	 	 	;	CT2_CT2_CT2_CT2
+23	26	29	31	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+23	26	29	30	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+24	23	26	27	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+24	23	26	28	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+24	23	26	29	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+25	23	26	27	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+25	23	26	28	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+25	23	26	29	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+26	29	32	33	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+26	29	32	35	9	 	 	 	 	 	 	;	CT2_CT2_CT2_CT2
+26	29	32	34	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+27	26	29	30	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+27	26	29	31	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+27	26	29	32	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+28	26	29	32	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+28	26	29	30	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+28	26	29	31	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+29	32	35	36	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+29	32	35	38	9	 	 	 	 	 	 	;	CT2_CT2_CT2_CT2
+29	32	35	37	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+30	29	32	34	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+30	29	32	35	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+30	29	32	33	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+31	29	32	34	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+31	29	32	35	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+31	29	32	33	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+32	35	38	41	9	 	 	 	 	 	 	;	CT2_CT2_CT2_CT2
+32	35	38	39	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+32	35	38	40	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+33	32	35	36	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+33	32	35	37	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+33	32	35	38	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+34	32	35	38	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+34	32	35	36	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+34	32	35	37	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+35	38	41	42	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+35	38	41	44	9	 	 	 	 	 	 	;	CT2_CT2_CT2_CT2
+35	38	41	43	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+36	35	38	39	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+36	35	38	40	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+36	35	38	41	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+37	35	38	40	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+37	35	38	39	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+37	35	38	41	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+38	41	44	45	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+38	41	44	46	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+38	41	44	47	9	 	 	 	 	 	 	;	CT2_CT2_CT2_CT2
+39	38	41	42	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+39	38	41	43	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+39	38	41	44	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+40	38	41	44	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+40	38	41	43	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+40	38	41	42	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+41	44	47	50	9	 	 	 	 	 	 	;	CT2_CT2_CT2_CT2
+41	44	47	48	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+41	44	47	49	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+42	41	44	45	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+42	41	44	46	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+42	41	44	47	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+43	41	44	46	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+43	41	44	45	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+43	41	44	47	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+44	47	50	53	9	 	 	 	 	 	 	;	CT2_CT2_CT2_CT2
+44	47	50	51	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+44	47	50	52	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+45	44	47	49	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+45	44	47	48	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+45	44	47	50	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+46	44	47	48	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+46	44	47	49	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+46	44	47	50	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+47	50	53	54	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+47	50	53	55	9	 	 	 	 	 	 	;	CT2_CT2_CT2_HA2
+47	50	53	56	9	 	 	 	 	 	 	;	CT2_CT2_CT2_NH2
+48	47	50	53	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+48	47	50	51	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+48	47	50	52	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+49	47	50	52	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+49	47	50	51	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+49	47	50	53	9	 	 	 	 	 	 	;	HA2_CT2_CT2_CT2
+50	53	56	57	9	 	 	 	 	 	 	;	CT2_CT2_NH2_HC
+50	53	56	58	9	 	 	 	 	 	 	;	CT2_CT2_NH2_HC
+51	50	53	56	9	 	 	 	 	 	 	;	HA2_CT2_CT2_NH2
+51	50	53	54	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+51	50	53	55	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+52	50	53	54	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+52	50	53	55	9	 	 	 	 	 	 	;	HA2_CT2_CT2_HA2
+52	50	53	56	9	 	 	 	 	 	 	;	HA2_CT2_CT2_NH2
+54	53	56	57	9	 	 	 	 	 	 	;	HA2_CT2_NH2_HC
+54	53	56	58	9	 	 	 	 	 	 	;	HA2_CT2_NH2_HC
+55	53	56	57	9	 	 	 	 	 	 	;	HA2_CT2_NH2_HC
+55	53	56	58	9	 	 	 	 	 	 	;	HA2_CT2_NH2_HC
+

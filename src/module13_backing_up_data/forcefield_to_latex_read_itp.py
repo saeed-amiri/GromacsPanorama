@@ -285,7 +285,8 @@ class ProccessForceField:
                 set(atomtype_map.index)
             log.error(f"Missing atoms in atomtype map: {missing_atoms}")
             return pd.DataFrame()
-        residue_col = pd.Series([res] * len(itp.dihedrals['ai']), name='residue')
+        residue_col = pd.Series(
+            [res] * len(itp.dihedrals['ai']), name='residue')
         residue_col.index += 1
         # Combine the data into a DataFrame for LaTeX export
         dihlatex_df = pd.DataFrame({
@@ -333,6 +334,6 @@ class ProccessForceField:
             dihlatex_df.apply(
                 lambda row:
                 f"{str(row['ai_type']).upper()}-{str(row['aj_type']).upper()}"
-                f"-{str(row['ak_type']).upper()}-{str(row['ah_type']).upper()}",
-                axis=1)
+                f"-{str(row['ak_type']).upper()}-{str(row['ah_type']).upper()}"
+                , axis=1)
         return dihlatex_df.reset_index(drop=True)

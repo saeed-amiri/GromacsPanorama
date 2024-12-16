@@ -1,3 +1,10 @@
+structure_list:
+  - D10
+  - ODN
+  - ODM
+  - APT
+  - APTP
+
 D10:
   '\chemname
   {\chemfig{
@@ -7,7 +14,7 @@ D10:
     -CT2(-[2]HA2)(-[6]HA2)
     -CT3(-[2]HA3)(-[6]HA3)-HA3
   }} {}'
-ODA:
+ODN:
   '\chemname
   {\chemfig{
     HA3-CT3(-[2]HA3)(-[6]HA3)
@@ -31,7 +38,7 @@ ODM:
     -CT2(-[2]HA2)(-[6]HA2)
     -CT2(-[2]HA2)(-[6]HA2)
     -CN(-[2]HA2)(-[6]HA2)
-    -NH2(-[2]HC)(-[0]HC)(-[6]HC)
+    -NH2(-[2]HC)(-[6]HC)
   }}{}'
 APT:
   '\chemname

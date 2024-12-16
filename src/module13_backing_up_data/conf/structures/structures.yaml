@@ -1,0 +1,51 @@
+D10:
+  '\chemname
+  {\chemfig{
+    HA3-CT3(-[2]HA3)(-[6]HA3)
+    -CT2(-[2]HA2)(-[6]HA2)
+    -CT2(-[2]HA2)(-[6]HA2)
+    -CT2(-[2]HA2)(-[6]HA2)
+    -CT3(-[2]HA3)(-[6]HA3)-HA3
+  }} {}'
+ODA:
+  '\chemname
+  {\chemfig{
+    HA3-CT3(-[2]HA3)(-[6]HA3)
+    -CT2(-[2]HA2)(-[6]HA2)
+    -CT2(-[2]HA2)(-[6]HA2)
+    -CT2(-[2]HA2)(-[6]HA2)
+    -CT2(-[2]HA2)(-[6]HA2)
+    -CT2(-[2]HA2)(-[6]HA2)
+    -CT2(-[2]HA2)(-[6]HA2)
+    -CN(-[2]HA2)(-[6]HA2)
+    -NH2(-[2]HC)(-[0]HC)(-[6]HC)
+  }}{}'
+ODM:
+  '\chemname
+  {\chemfig{
+    HA3-CT3(-[2]HA3)(-[6]HA3)
+    -CT2(-[2]HA2)(-[6]HA2)
+    -CT2(-[2]HA2)(-[6]HA2)
+    -CT2(-[2]HA2)(-[6]HA2)
+    -CT2(-[2]HA2)(-[6]HA2)
+    -CT2(-[2]HA2)(-[6]HA2)
+    -CT2(-[2]HA2)(-[6]HA2)
+    -CN(-[2]HA2)(-[6]HA2)
+    -NH2(-[2]HC)(-[0]HC)(-[6]HC)
+  }}{}'
+APT:
+  '\chemname
+  {\chemfig{
+    HA3-CT3(-[2]HA3)(-[6]HA3)
+    -CT2(-[2]HA2)(-[6]HA2)
+    -CN(-[2]HA2)(-[6]HA2)
+    -NH2(-[2]HC)(-[0]HC)(-[6]HC)
+  }}{}'
+APTP:
+  '\chemname
+  {\chemfig{
+    HA3-CT3(-[2]HA3)(-[6]HA3)
+    -CT2(-[2]HA2)(-[6]HA2)
+    -CN(-[2]HA2)(-[6]HA2)
+    -NH2(-[2]HC)(-[0]HC)(-[6]HC)
+  }}{}'

@@ -1,6 +1,7 @@
 # conf/config.yaml
 defaults:
  - files@files.ff_path: ff_path  # path to the forcefield 
- - files@files.residue_names: residue_names  # residue_names for the residues
  - files@files.latex_path: latex_path  # path to the latex template
  - files@files.latex_headers: latex_headers  # headers for the latex template
+ - files@files.residue_names: residue_names  # residue_names for the residues
+ - structures@structures.structures: structures  # Structures for the resudies

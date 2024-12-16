@@ -6,4 +6,8 @@ itps:
   CLA: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/CLA.itp  # Chloride, Cl-
   D10: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/D10_charmm.itp  # Decane
   ODA: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/ODAp_charmm.itp  # protonated ODA
+  ODM: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/ODAn_charmm.itp  # protonated ODA
   APT_COR: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/APT_COR.itp  # APT on COR
+data:
+  APT: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/aminopropyl.data
+  APTP: /scratch/saeed/MyScripts/GromacsPanorama/data/force_field/aminopropyl_pro.data``

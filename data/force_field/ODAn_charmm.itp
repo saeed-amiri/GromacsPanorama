@@ -127,7 +127,7 @@
 56	58	1	 	 	;	NH2_HC
 
 [ angles ]
-; ai aj ak funct theta cth   name
+; ai aj ak typ cmt   name
 1	5	8	5	 	 	;	CT3_CT2_CT2
 1	5	7	5	 	 	;	CT3_CT2_HA2
 1	5	6	5	 	 	;	CT3_CT2_HA2
@@ -241,7 +241,7 @@
 57	56	58	5	 	 	;	HC_NH2_HC
 
 [ dihedrals ]
-; ai aj ak ah funct C0 C1 C2 C3 C4 C5   name
+; ai aj ak ah typ cmt  name
 1	5	8	11	9	 	 	 	 	 	 	;	CT3_CT2_CT2_CT2
 1	5	8	10	9	 	 	 	 	 	 	;	CT3_CT2_CT2_HA2
 1	5	8	9	9	 	 	 	 	 	 	;	CT3_CT2_CT2_HA2

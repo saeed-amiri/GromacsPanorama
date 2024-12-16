@@ -46,6 +46,8 @@ class WriteTex:
         """Writes the atoms to a LaTeX file."""
         residues: list[str] = list(atoms_df['resname'].unique())
         atoms_lines: list[str] = []
+        structure_list: list[str] = \
+            self.cfg.structures.structures['structure_list']
         for residue in residues:
             residue_name: str = \
                 self.cfg.files.residue_names.get(residue.upper(), residue)
@@ -53,6 +55,13 @@ class WriteTex:
             df: pd.DataFrame = atoms_df[atoms_df['resname'] == residue]
             # sort the df by the atomtypes
             df = df.sort_values(by=['element', 'atomtype'])
+            if residue.upper() in structure_list:
+                structure: str = self.cfg.structures.structures[residue.upper()]
+                atoms_lines.append('\\multicolumn{4}{c}{{}}\\\ \n')
+                atoms_lines.append(
+                    f"\\multicolumn{{4}}{{c}}{{{structure}}}\\\ \n")
+            else:
+                pass
             for _, row in df.iterrows():
                 l_line: str = (
                     '\\hspace*{{1em}}'

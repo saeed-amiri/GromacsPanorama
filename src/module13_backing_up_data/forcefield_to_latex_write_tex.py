@@ -52,7 +52,6 @@ class WriteTex:
         fname: str = self.cfg.files.latex_path['atoms']
         with open(fname, 'w', encoding='utf-8') as file:
             for group in residue_table_groups:
-                print(f'group: {group}')
                 atoms_lines: list[str] = self._make_atoms_lines(
                     group, residues, atoms_df)
                 content: str = ''.join(
@@ -84,7 +83,6 @@ class WriteTex:
             df: pd.DataFrame = atoms_df[atoms_df['resname'] == residue.lower()]
             # sort the df by the atomtypes
             df = df.sort_values(by=['element', 'atomtype'])
-            print(f'df: {df}')
             if residue in structure_list:
                 structure: str = \
                     self.cfg.structures.structures[residue]

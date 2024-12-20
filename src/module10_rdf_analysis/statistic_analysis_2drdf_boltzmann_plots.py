@@ -95,7 +95,7 @@ class PlotRdfBoltzmann:
 
         self._plot_all_rdf(
             boltzmann_data, axes[last_ind + 1], boltzmann_x, 'boltzmann')
-        self._add_label(axes[last_ind + 1], r'All $\psi$(r$^*$)')
+        self._add_label(axes[last_ind + 1], r'All $c(r^*)$')
         axes[last_ind + 1].set_ylim(self.config.ylim)
         axes[last_ind + 1].set_xlim(rdf_x_lims)
 

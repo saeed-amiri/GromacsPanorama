@@ -20,3 +20,4 @@ colors: null
 markers: null
 linestyles: null
 add_rectangles: True
+add_indices_label: True

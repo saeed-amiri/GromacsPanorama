@@ -1,0 +1,4 @@
+xvg_file: 'maas_data.xvg'
+salt_column_name: 'c_NaCl_mM_L'
+oda_column_name: 'c_ODA_mM_L'
+ift_column_name: 'IFT_ODA_with_particles_nN_m'  # options: IFT_ODA_nN_m, IFT_ODA_with_particles_nN_m

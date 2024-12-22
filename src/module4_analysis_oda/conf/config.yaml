@@ -7,3 +7,5 @@ defaults:
   - inputs@inputs.molar_mass: molar_mass   # Includes inputs/molar_mass.yaml
   - inputs@inputs.langmuir_terms: langmuir_terms # Includes inputs/langmuir_terms.yaml
   - inputs@inputs.joeri: joeri             # Includes inputs/joeri.yaml
+  - inputs@inputs.maas: maas               # Includes inputs/maas.yaml
+experiment: 'maas'  # joeri (from yaml), or maas (from a xvg file)

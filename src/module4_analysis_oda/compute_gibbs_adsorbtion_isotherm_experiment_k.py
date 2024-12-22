@@ -198,10 +198,16 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
         """
         salt_values: list[float] = \
             data[self.config.maas.salt_column_name].unique()
-        for salt_value in salt_values:
+        colors: list[str] = list(elsevier_plot_tools.CLEAR_COLOR_GRADIENT)
+        colors = colors[::-1]
+        markers: list[str] = list(elsevier_plot_tools.MARKER_STYLES)
+        for i, salt_value in enumerate(salt_values):
             df_i = data[data[self.config.maas.salt_column_name] == salt_value]
             ax_i.plot(df_i[self.config.maas.oda_column_name],
                       df_i[self.config.maas.ift_column_name],
-                      'o:',
+                      markers[i],
+                      ls=':',
+                      color=colors[i],
                       markersize=3,
-                      label=f"NaCl: {salt_value:.2f} mM")
+                      label=f"NaCl: {salt_value:.2f} mM",
+                      )

@@ -160,11 +160,19 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
         fig_i, ax_i = figure
         plt.xlabel("Concentration [mM]")
         plt.ylabel("Surface tension [mN/m]")
+        if config.log_x:
+            ax_i.set_xscale('log')
+            data[self.config.maas.oda_column_name] = \
+                self.handel_log_zero(
+                    data[self.config.maas.oda_column_name])
+        if config.log_y:
+            ax_i.set_yscale('log')
 
         if config.experiment == "joeri":
             self.plot_joeri(data, ax_i)
         elif config.experiment == "maas":
             self.plot_maas(data, ax_i)
+        # ax_i.set_xlim(left=1e-10)
         elsevier_plot_tools.save_close_fig(
             fig_i, 'tensio_exp.jpg', loc='upper right')
 
@@ -211,3 +219,11 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
                       markersize=3,
                       label=f"NaCl: {salt_value:.2f} mM",
                       )
+    @staticmethod
+    def handel_log_zero(data: pd.Series
+                        ) -> pd.Series:
+        """
+        Handle zero values in the data when plotting in log scale.
+        """
+        data[data == 0] = data[data != 0].min()/10
+        return data

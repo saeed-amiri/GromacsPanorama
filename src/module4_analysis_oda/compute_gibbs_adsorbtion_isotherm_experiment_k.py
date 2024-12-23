@@ -172,12 +172,12 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
             self.plot_joeri(data, ax_i)
         elif config.experiment == "maas":
             self.plot_maas(data, ax_i)
-        # ax_i.set_xlim(left=1e-10)
         elsevier_plot_tools.save_close_fig(
-            fig_i, 'tensio_exp.jpg', loc='upper right')
+            fig_i, fname := 'tensio_exp.jpg', loc='upper right')
+        log.info(f"\tSaved plot to {fname}\n")
 
-    def plot_joeri(self,
-                   data: pd.DataFrame,
+    @staticmethod
+    def plot_joeri(data: pd.DataFrame,
                    ax_i: plt.Axes
                    ) -> None:
         """

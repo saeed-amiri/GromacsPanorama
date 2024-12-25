@@ -92,6 +92,8 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
         This method uses finite differences to approximate
         d(gamma)/dln_concentration locally at each point.
         """
+        gamma_vals: np.ndarray = np.array([])
+        ln_concentration: np.ndarray = np.array([])
         if config.experiment == "joeri":
             # Convert index (C) to a column so we can easily handle it
             data["C"] = data.index * 1e-3  # Convert to mol/L
@@ -158,8 +160,8 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
         figure: tuple[plt.Figure, plt.Axes] = elsevier_plot_tools.mk_canvas(
             "single_column", aspect_ratio=1)
         fig_i, ax_i = figure
-        plt.xlabel("Concentration [mM]")
-        plt.ylabel("Surface tension [mN/m]")
+        plt.xlabel("ODA [mM]")
+        plt.ylabel(r"$\gamma$ [mN/m]")
         if config.log_x:
             ax_i.set_xscale('log')
             data[self.config.maas.oda_column_name] = \
@@ -173,7 +175,7 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
         elif config.experiment == "maas":
             self.plot_maas(data, ax_i)
         elsevier_plot_tools.save_close_fig(
-            fig_i, fname := 'tensio_exp.jpg', loc='upper right')
+            fig_i, fname := 'tensio_exp.jpg', loc='lower left')
         log.info(f"\tSaved plot to {fname}\n")
 
     @staticmethod
@@ -219,6 +221,7 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
                       markersize=3,
                       label=f"NaCl: {salt_value:.2f} mM",
                       )
+
     @staticmethod
     def handel_log_zero(data: pd.Series
                         ) -> pd.Series:

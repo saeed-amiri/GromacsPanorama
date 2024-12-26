@@ -74,7 +74,8 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
                 xvg_to_dataframe.XvgParser(xvg_file, log, x_type=float).xvg_df
             columns: list[str] = [self.config.maas.salt_column_name,
                                   self.config.maas.oda_column_name,
-                                  self.config.maas.ift_column_name,
+                                  self.config.maas.ift_column_name1,
+                                  self.config.maas.ift_column_name2,
                                   ]
             return data[columns]
         log.error(msg := "\tExperiment not recognized\n")
@@ -108,7 +109,8 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
 
             # Extract arrays for convenience
             ln_concentration = data["ln_concentration"].values
-            gamma_vals = data[self.config.maas.ift_column_name].values
+            gamma_vals = data[self.config.maas.ift_column_name1].values - \
+                data[self.config.maas.ift_column_name2].values
 
         # Prepare an array for d_gamma/d_ln_concentration
         d_gamma_d_ln_concentration = np.zeros(len(data))
@@ -213,8 +215,10 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
         markers: list[str] = list(elsevier_plot_tools.MARKER_STYLES)
         for i, salt_value in enumerate(salt_values):
             df_i = data[data[self.config.maas.salt_column_name] == salt_value]
+            y_data = df_i[self.config.maas.ift_column_name1] - \
+                df_i[self.config.maas.ift_column_name2]
             ax_i.plot(df_i[self.config.maas.oda_column_name],
-                      df_i[self.config.maas.ift_column_name],
+                      y_data,
                       markers[i],
                       ls=':',
                       color=colors[i],

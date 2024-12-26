@@ -210,6 +210,8 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
         """
         salt_values: list[float] = \
             data[self.config.maas.salt_column_name].unique()
+        oda_values: list[float] = \
+            data[self.config.maas.oda_column_name].unique()
         colors: list[str] = list(elsevier_plot_tools.CLEAR_COLOR_GRADIENT)
         colors = colors[::-1]
         markers: list[str] = list(elsevier_plot_tools.MARKER_STYLES)
@@ -226,6 +228,10 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
                       label=f"NaCl: {salt_value:.1f} mM",
                       )
         ax_i.set_ylim(self.config.maas.ylow, self.config.maas.yhigh)
+
+        ax_i.minorticks_off()
+        ax_i.set_xticks(oda_values)
+        ax_i.set_xticklabels([f'{oda:.1f}' for oda in oda_values])
 
     @staticmethod
     def handel_log_zero(data: pd.Series

@@ -177,7 +177,7 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
         elif config.experiment == "maas":
             self.plot_maas(data, ax_i)
         elsevier_plot_tools.save_close_fig(
-            fig_i, fname := 'tensio_exp.jpg', loc='lower left')
+            fig_i, fname := 'tensio_exp.jpg', loc='upper left')
         log.info(f"\tSaved plot to {fname}\n")
 
     @staticmethod
@@ -223,8 +223,9 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
                       ls=':',
                       color=colors[i],
                       markersize=3,
-                      label=f"NaCl: {salt_value:.2f} mM",
+                      label=f"NaCl: {salt_value:.1f} mM",
                       )
+        ax_i.set_ylim(self.config.maas.ylow, self.config.maas.yhigh)
 
     @staticmethod
     def handel_log_zero(data: pd.Series

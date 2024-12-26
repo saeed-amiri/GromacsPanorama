@@ -5,3 +5,4 @@ ift_column_name1: 'IFT_ODA_with_particles_nN_m'  # options: IFT_ODA_nN_m, IFT_OD
 ift_column_name2: 'IFT_ODA_nN_m'  # options: IFT_ODA_nN_m, IFT_ODA_with_particles_nN_m
 ylow: -2.5
 yhigh: 5.5
+y_label: '$\gamma_{NP}-\gamma_{no\_NP}$ [mN/m]'

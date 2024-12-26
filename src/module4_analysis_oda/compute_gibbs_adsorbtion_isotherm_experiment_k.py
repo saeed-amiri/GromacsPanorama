@@ -232,6 +232,7 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
         ax_i.minorticks_off()
         ax_i.set_xticks(oda_values)
         ax_i.set_xticklabels([f'{oda:.1f}' for oda in oda_values])
+        ax_i.set_ylabel(self.config.maas.y_label)
 
     @staticmethod
     def handel_log_zero(data: pd.Series

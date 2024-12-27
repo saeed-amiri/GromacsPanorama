@@ -77,7 +77,7 @@ class BaseConfig:
     colors: list[str] = \
         field(default_factory=lambda: ['black', 'red', 'blue', 'green'])
 
-    y_unit: str = r'[mN/nm$^2$]'
+    y_unit: str = r'[mN/m]'
 
     log_x_axis: bool = False
     show_title: bool = False
@@ -139,7 +139,7 @@ class PreprintDataLog(LogGraph):
     """plot both data"""
     graph_suffix: str = 'log_xscale_both.png'
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
-        'label': 'without NP',
+        'label': r'$\gamma_{no\_NP}$',
         'color': 'black',
         'marker': 'o',
         'linestyle': '--',
@@ -300,7 +300,7 @@ class PlotTension:
                       linestyle='--',
                       markersize=elsevier_plot_tools.MARKER_SIZE,
                       linewidth=elsevier_plot_tools.LINE_WIDTH,
-                      label='with NP')
+                      label=r'$\gamma_{NP}$')
             if self.configs.if_label:
                 ax_i.text(-0.11,
                           1,

@@ -140,11 +140,11 @@ class PreprintDataLog(LogGraph):
     graph_suffix: str = 'log_xscale_both.png'
     graph_styles: dict[str, typing.Any] = field(default_factory=lambda: {
         'label': r'$\gamma_{no\_NP}$',
-        'color': 'black',
-        'marker': 'o',
+        'color': elsevier_plot_tools.CLEAR_COLOR_GRADIENT[-1],
+        'marker': elsevier_plot_tools.MARKER_STYLES[1],
         'linestyle': '--',
         'linewidth': elsevier_plot_tools.LINE_WIDTH,
-        'markersize': elsevier_plot_tools.MARKER_SIZE,
+        'markersize': elsevier_plot_tools.MARKER_SIZE + 1,
     })
     label_b: str = r'$\Delta\gamma_{np}$'
 
@@ -295,10 +295,10 @@ class PlotTension:
             fig_i, ax_i = returned_fig
             ax_i.plot(converted_dict['no_np']['surf_oda_per_area'],
                       converted_dict['no_np']['converted_tension_with_np'],
-                      c='#ff7f0e',
-                      marker='o',
-                      linestyle='--',
-                      markersize=elsevier_plot_tools.MARKER_SIZE,
+                      c=elsevier_plot_tools.CLEAR_COLOR_GRADIENT[3],
+                      marker=elsevier_plot_tools.MARKER_STYLES[0],
+                      linestyle=':',
+                      markersize=elsevier_plot_tools.MARKER_SIZE + 1,
                       linewidth=elsevier_plot_tools.LINE_WIDTH,
                       label=r'$\gamma_{NP}$')
             if self.configs.if_label:

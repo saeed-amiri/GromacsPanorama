@@ -98,8 +98,18 @@ class ToroidalRadiusPlot:
                       ) -> None:
         """Plot the toroidal radius scheme"""
         self._ax_add_fig_labels(ax_i, 2, 'Exclusion zone')
-        ax_i.imshow(plt.imread(self.config.schem_fig))
-        self.info_msg += f'\tThe scheme figure is `{self.config.schem_fig}`\n'
+        try:
+            ax_i.imshow(plt.imread(self.config.schem_fig))
+            self.info_msg += \
+                f'\tThe scheme figure is `{self.config.schem_fig}`\n'
+        except FileNotFoundError:
+            self.info_msg += (f'\t{bcolors.WARNING}The scheme figure is '
+                              f'not found{bcolors.ENDC}\n')
+        finally:
+            self.info_msg += (f'\t{bcolors.CAUTION}Trying scheme figure as '
+                              f'`{self.config.schem_fig_name}`{bcolors.ENDC}\n'
+                              )
+            ax_i.imshow(plt.imread(self.config.schem_fig_name))
         ax_i.axis('off')
 
     def _plot_toroidal_radius(self,

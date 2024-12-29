@@ -74,7 +74,7 @@ class ToroidalConfig(BasePlotConfig):
     # pylint: disable=too-many-instance-attributes
     fout: str = f'toroidal_radius.{elsevier_plot_tools.IMG_FORMAT}'
 
-    y_label: str = r'Z$_{ex}$ [nm]'
+    y_label: str = r'A$_{ex}$ [nm]'
     x_label_surfactant: str = r'c$_{ODA}$ [mM]'
     x_label_salt: str = r'c$_{NaCl}$ [mM]'
 

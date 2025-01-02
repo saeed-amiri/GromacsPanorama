@@ -341,8 +341,8 @@ class SurfactantDensityPlotter:
         plt.rcParams.update(original_rc_params)
 
     def plot_2d_rdf_paper(self,
-                        config: "Rdf2dGraphConfig"
-                        ) -> None:
+                          config: "Rdf2dGraphConfig"
+                          ) -> None:
         """
         Plot a simple graph of 2d rdf vs distance, for the presntation
         at the BPM.

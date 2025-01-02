@@ -68,6 +68,7 @@ from common import xvg_to_dataframe
 from module4_analysis_oda.compute_gibbs_adsorbtion_isotherm_experiment_k \
     import ComputeGibbsAdsorbtionIsothermExperimentK
 
+
 # Constants
 class Constants(Enum):
     """Physical constants"""

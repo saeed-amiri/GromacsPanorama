@@ -23,7 +23,6 @@ if typing.TYPE_CHECKING:
         import SurfactantDensityAroundNanoparticle
 
 
-
 class PlotSurfactantComXY:
     """plot the seurfactants xy positions"""
 
@@ -36,7 +35,7 @@ class PlotSurfactantComXY:
         self.amino_arr = amino_arr[:-2]
         self._initiate(log)
         self.write_msg(log)
-        
+
     def _initiate(self,
                   log: logger.logging.Logger
                   ) -> None:
@@ -57,7 +56,7 @@ class PlotSurfactantComXY:
         pbc_data: dict[int, np.ndarray] = \
             self.apply_pbc(centered_data, np_com, box)
         for i, frame in pbc_data.items():
-            plt.scatter(frame[0,:], frame[1,:])
+            plt.scatter(frame[0, :], frame[1, :])
         plt.show()
 
     def get_data_dict(self) -> dict[int, np.ndarray]:
@@ -78,7 +77,7 @@ class PlotSurfactantComXY:
         return centered_data
 
     def apply_pbc(self,
-                  data_dict:dict[int, np.ndarray],
+                  data_dict: dict[int, np.ndarray],
                   np_com: np.ndarray,
                   box: np.ndarray
                   ) -> dict[int, np.ndarray]:
@@ -97,17 +96,17 @@ class PlotSurfactantComXY:
         Load and return the nanoparticle center of mass data from XVG
         file."""
         return xvg.XvgParser('coord.xvg', log).xvg_df
- 
+
     def load_box_data(self, log: logger.logging.Logger) -> pd.DataFrame:
         """Load and return the box dimension data from XVG file."""
-        return xvg.XvgParser('box.xvg', log).xvg_df 
-    
+        return xvg.XvgParser('box.xvg', log).xvg_df
+
     @staticmethod
     def parse_gmx_xvg(np_com_df: pd.DataFrame
                       ) -> np.ndarray:
         """return the nanoparticle center of mass as an array"""
         unit_nm_to_angestrom: float = 10
-        return np_com_df.iloc[:, 1:4].to_numpy() * unit_nm_to_angestrom  
+        return np_com_df.iloc[:, 1:4].to_numpy() * unit_nm_to_angestrom
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

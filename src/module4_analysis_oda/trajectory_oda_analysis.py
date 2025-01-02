@@ -46,7 +46,7 @@ class OdaAnalysis:
     def __init__(self,
                  fname: str,  # Name of the com file
                  log: logger.logging.Logger,
-                 compute_config: "ComputationCalculations" = \
+                 compute_config: "ComputationCalculations" =
                  ComputationCalculations()
                  ) -> None:
         self.parsed_com = GetCom(fname)

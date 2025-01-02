@@ -121,9 +121,9 @@ class FitRdf2dTo5PL2S:
         return radii, rdf_values
 
     def find_r_of_half_max(self,
-                            radii: np.ndarray,
-                            rdf_values: np.ndarray
-                            ) -> np.float64:
+                           radii: np.ndarray,
+                           rdf_values: np.ndarray
+                           ) -> np.float64:
         """find the r of half max"""
         max_rdf: np.float64 = np.mean(rdf_values[-7:])  # the last 7 values
         half_max_rdf: np.float64 = max_rdf / 2
@@ -253,8 +253,10 @@ class FitStatistics:
         Initialize the FitStatistics object.
 
         Parameters:
-            rdf_2d (dict[float, float]): Actual RDF data with radii as keys and RDF values as values.
-            fitted_rdf (dict[float, float]): Fitted RDF data with radii as keys and RDF values as values.
+            rdf_2d (dict[float, float]): Actual RDF data with radii as
+            keys and RDF values as values.
+            fitted_rdf (dict[float, float]): Fitted RDF data with radii
+            as keys and RDF values as values.
             log (logging.Logger): Logger for recording fit statistics.
         """
         self.rdf_2d = np.array(list(rdf_2d.keys()))
@@ -274,7 +276,8 @@ class FitStatistics:
     def calculate_statistics(self) -> None:
         """Calculate the fit statistics."""
         if len(self.rdf_2d) == 0 or len(self.fitted_rdf) == 0:
-            raise ValueError("rdf_2d and fitted_rdf must be non-empty dictionaries.")
+            raise ValueError(
+                "rdf_2d and fitted_rdf must be non-empty dictionaries.")
 
         # Sort the fitted_rdf for interpolation
         sorted_indices = np.argsort(self.fitted_rdf)
@@ -298,7 +301,8 @@ class FitStatistics:
         self.wsse = self._calculate_wsse(variances, residuals)
 
         # Calculate additional statistics
-        self.r_squared = self._calculate_r_squared(self.actual_rdf_values, predicted_rdf_values)
+        self.r_squared = self._calculate_r_squared(
+            self.actual_rdf_values, predicted_rdf_values)
         self.rmse = self._calculate_rmse(residuals)
         self.mae = self._calculate_mae(residuals)
         self.fit_probability = self._calculate_fit_probability()
@@ -342,9 +346,9 @@ class FitStatistics:
 
     @staticmethod
     def _get_corresponded_radii_in_fitted(radii: np.ndarray,
-                                         fitted_radii: np.ndarray,
-                                         fitted_values: np.ndarray
-                                         ) -> np.ndarray:
+                                          fitted_radii: np.ndarray,
+                                          fitted_values: np.ndarray
+                                          ) -> np.ndarray:
         """Calculate the corresponding radii in fitted data using
         interpolation."""
         try:
@@ -391,7 +395,6 @@ class FitStatistics:
                        ) -> float:
         """Calculate the Mean Absolute Error."""
         return np.mean(np.abs(residuals))
-
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

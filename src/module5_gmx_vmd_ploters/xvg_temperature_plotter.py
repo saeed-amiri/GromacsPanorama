@@ -119,7 +119,7 @@ class PlotXvg:
         ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
         plot_tools.save_close_fig(fig_i, ax_i, fname=fout)
         self.info_msg += (f'\tThe fig for {self.configs.f_names} is saved '
-                         f'with name {fout}\n')
+                          f'with name {fout}\n')
 
     def _plot_single_ycol_multi_files(self,
                                       dfs_plot: list[pd.DataFrame]
@@ -149,7 +149,7 @@ class PlotXvg:
         ax_i.grid(True, linestyle='--', color='gray', alpha=0.5)
         plot_tools.save_close_fig(fig_i, ax_i, fname=fout, loc='lower left')
         self.info_msg += (f'\tThe fig for {self.configs.f_names} is saved '
-                         f'with name {fout}\n')
+                          f'with name {fout}\n')
 
     def _write_msg(self,
                    log: logger.logging.Logger  # To log

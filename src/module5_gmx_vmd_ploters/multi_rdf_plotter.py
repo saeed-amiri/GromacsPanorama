@@ -529,12 +529,13 @@ class MultiRdfPlotter:
 
         y_column: str = \
             getattr(self.configs, f'{viewpoint}_files')[s_i]['y_col']
-        line, = ax_i.plot(rdf_df['r_nm'],
-                  rdf_df[y_column] / norm_factor,
-                  c=self.configs.plot_configs.colors[y_column],
-                  ls=self.configs.plot_configs.line_styles[y_column],
-                  label=self.configs.plot_configs.legends[y_column],
-                  **self.configs.plot_configs.graph_styles)
+        line, = ax_i.plot(
+            rdf_df['r_nm'],
+            rdf_df[y_column] / norm_factor,
+            c=self.configs.plot_configs.colors[y_column],
+            ls=self.configs.plot_configs.line_styles[y_column],
+            label=self.configs.plot_configs.legends[y_column],
+            **self.configs.plot_configs.graph_styles)
         if self.configs.plot_configs.legends[y_column] == 'Na':
             line.set_dashes((4, 1, 1, 1, 1, 1))
         return ax_i

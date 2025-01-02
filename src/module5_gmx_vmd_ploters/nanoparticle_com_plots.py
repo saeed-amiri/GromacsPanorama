@@ -132,7 +132,7 @@ class PlotNpCom:
         if not self.configs.show_mirror_axis:
             elsevier_plot_tools.remove_mirror_axes(ax_i)
         elsevier_plot_tools.save_close_fig(fig_i,
-                                           fname  := self.configs.output_file,
+                                           fname := self.configs.output_file,
                                            loc='lower left',
                                            horizontal_legend=True)
         self.info_msg += f'The plot is saved as `{fname}`\n'

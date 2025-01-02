@@ -10,6 +10,7 @@ from common import xvg_to_dataframe
 
 from module10_rdf_analysis.config import StatisticsConfig
 
+
 class ReadData:
     """Read the data from the files"""
     # pylint: disable=too-few-public-methods

@@ -116,6 +116,7 @@ class Rdf2dWithBoltzmann:
                          vlines_data,
                          log,
                          self.config.plots.boltzmann_rdf)
+
     @staticmethod
     def normalize_rdf(data: pd.DataFrame,
                       normalize: bool

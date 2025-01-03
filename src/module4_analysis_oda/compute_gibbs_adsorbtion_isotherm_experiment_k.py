@@ -233,6 +233,21 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
         ax_i.set_xticks(oda_values)
         ax_i.set_xticklabels([f'{oda:.2f}' for oda in oda_values])
         ax_i.set_ylabel(self.config.maas.y_label)
+        self.add_text(ax_i, 'a)')
+
+    def add_text(self,
+                    ax_i: plt.Axes,
+                    text: str
+                    ) -> None:
+        """add text to the axes"""
+        ax_i.text(-0.15,
+                  1,
+                  text,
+                  horizontalalignment='left',
+                  verticalalignment='top',
+                  transform=ax_i.transAxes,
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT-2,
+                  )
 
     @staticmethod
     def handel_log_zero(data: pd.Series

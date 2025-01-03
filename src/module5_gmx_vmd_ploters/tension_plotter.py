@@ -311,6 +311,7 @@ class PlotTension:
                           fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT)
             fname: str = \
                 f'interface_tension_log.{elsevier_plot_tools.IMG_FORMAT}'
+            self.add_text(ax_i, 'b)')
             elsevier_plot_tools.save_close_fig(
                 fig_i, fname=fname, loc='lower left')
             self.info_msg += \
@@ -412,6 +413,20 @@ class PlotTension:
         tension['surf_oda_per_area'] = tension['surf.Oda'] / \
             (self.configs.box_dimension[0] * self.configs.box_dimension[1])
         return tension
+
+    def add_text(self,
+                    ax_i: plt.Axes,
+                    text: str
+                    ) -> None:
+        """add text to the axes"""
+        ax_i.text(-0.15,
+                  1,
+                  text,
+                  horizontalalignment='left',
+                  verticalalignment='top',
+                  transform=ax_i.transAxes,
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT-2,
+                  )
 
     def write_msg(self,
                   log: logger.logging.Logger  # To log

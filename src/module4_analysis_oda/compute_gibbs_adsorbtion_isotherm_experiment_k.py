@@ -246,7 +246,7 @@ class ComputeGibbsAdsorbtionIsothermExperimentK:
                   horizontalalignment='left',
                   verticalalignment='top',
                   transform=ax_i.transAxes,
-                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT-2,
+                  fontsize=elsevier_plot_tools.LABEL_FONT_SIZE_PT,
                   )
 
     @staticmethod

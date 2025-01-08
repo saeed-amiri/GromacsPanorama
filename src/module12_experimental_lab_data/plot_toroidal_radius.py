@@ -150,9 +150,11 @@ class ToroidalRadiusPlot:
                 item + 1.0 if i == 1 else item for i, item in enumerate(xticks)
                 ]
             x_label_adjusted: list[int] = [
-                item - 1.0 if i == 0 else item for i, item in enumerate(xticks)
+                item - 1.5 if i == 0 else item for i, item in enumerate(xticks)
                 ]
             ax_i.set_xticks(x_label_adjusted)
+            xticks_labels = [
+                f'{item:.1f}' if item != 0 else '0' for item in xticks_labels]
         else:
             xticks = first_group[f'log_{x_column}'][1:]
             xticks_labels = first_group[x_column][1:]
